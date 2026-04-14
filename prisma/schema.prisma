@@ -1,0 +1,394 @@
+// Mongolian Spelling & Dictation App — Phase 1 Content Schema
+// Prisma 7 + PostgreSQL
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Variant {
+  A // Grades 1–2, gamified, 5–8 min sessions
+  B // Grades 2–4, structured, 10–15 min sessions
+}
+
+enum LevelCode {
+  M0
+  M1
+  M2
+  M3
+  M4
+  M5
+}
+
+enum SkillCode {
+  S1 // Үсэг-авиа ялгалт (Letter-sound discrimination)
+  S2 // Үгийн зөв бичлэг (Word spelling)
+  S3 // Урт/богино эгшиг (Long/short vowel)
+  S4 // Балархай эгшиг (Reduced vowel)
+  S5 // Залгавар, нөхцөл (Suffix/agreement)
+  S6 // Өгүүлбэрийн тэмдэглэгээ (Punctuation/caps)
+  S7 // Сонсголоор буулгах (Dictation)
+  S8 // Алдаа засах (Error correction)
+}
+
+enum ErrorCode {
+  A1
+  A2
+  A3
+  B1
+  B2
+  B3
+  B4
+  C1
+  C2
+  C3
+  C4
+  C5
+  C6
+  D3
+  D5
+  E1
+  E2
+  E7
+  G1
+  G2
+  H1
+  H4
+}
+
+enum TaskType {
+  TT1_CHOICE     // Зөвийг сонгох
+  TT2_FILL       // Нөхөх
+  TT3_CORRECTION // Засвар
+  TT4_DICTATION  // Сонсоод бичих
+  TT5_MINI_TEXT  // Жижиг эх
+  TT6_SELF_CHECK // Өөрийгөө шалгах
+}
+
+enum LessonSlot {
+  WARM_UP
+  CORE
+  MIXED
+  END
+}
+
+enum Confidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DiagnosticPhase {
+  PHASE_A // 8 non-adaptive screening tasks
+  PHASE_B // 8 adaptive follow-up on weak skills
+  PHASE_C // 4 boundary validation tasks
+}
+
+enum DiagnosticStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum PlanTemplate {
+  BALANCED
+  INTENSIVE
+  STABILIZATION
+}
+
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+  REPLACED
+}
+
+enum PlanSource {
+  DIAGNOSTIC
+  CHECKPOINT
+  MANUAL
+}
+
+enum LessonStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum CheckpointDecision {
+  CONTINUE_PLAN
+  NEW_PLAN
+  LEVEL_UP
+}
+
+enum CheckpointStatus {
+  PENDING
+  COMPLETED
+}
+
+enum AttemptContext {
+  DIAGNOSTIC
+  LESSON
+  CHECKPOINT
+}
+
+// ─── Tables ──────────────────────────────────────────────────────────────────
+
+model Parent {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  created_at    DateTime @default(now())
+
+  learners Learner[]
+}
+
+model Learner {
+  id            String   @id @default(uuid())
+  parent_id     String
+  name          String
+  grade         Int
+  daily_minutes Int      @default(10)
+  variant       Variant
+  created_at    DateTime @default(now())
+
+  parent              Parent              @relation(fields: [parent_id], references: [id])
+  skill_state         LearnerSkillState?
+  diagnostic_sessions DiagnosticSession[]
+  plans               Plan[]
+  lessons             Lesson[]
+  attempts            Attempt[]
+}
+
+model LearnerSkillState {
+  id            String    @id @default(uuid())
+  learner_id    String    @unique
+  general_level LevelCode @default(M0)
+
+  // Per-skill scores (0.0 – 1.0, weighted average)
+  s1_score Float @default(0)
+  s2_score Float @default(0)
+  s3_score Float @default(0)
+  s4_score Float @default(0)
+  s5_score Float @default(0)
+  s6_score Float @default(0)
+  s7_score Float @default(0)
+  s8_score Float @default(0)
+
+  // Per-skill levels (derived from score thresholds)
+  s1_level LevelCode @default(M0)
+  s2_level LevelCode @default(M0)
+  s3_level LevelCode @default(M0)
+  s4_level LevelCode @default(M0)
+  s5_level LevelCode @default(M0)
+  s6_level LevelCode @default(M0)
+  s7_level LevelCode @default(M0)
+  s8_level LevelCode @default(M0)
+
+  // Per-skill confidence (based on item count)
+  s1_confidence Confidence @default(LOW)
+  s2_confidence Confidence @default(LOW)
+  s3_confidence Confidence @default(LOW)
+  s4_confidence Confidence @default(LOW)
+  s5_confidence Confidence @default(LOW)
+  s6_confidence Confidence @default(LOW)
+  s7_confidence Confidence @default(LOW)
+  s8_confidence Confidence @default(LOW)
+
+  // Analytics & planning fields
+  top_error_codes          String[] // Top 3 most frequent error codes
+  weak_skills              String[] // Current 2–3 weakest skills e.g. ["S3","S5"]
+  recent_error_codes       String[] // Last 7 days error codes
+  recent_task_ids          String[] // Last 20 task IDs (dedup guard)
+  preferred_session_length Int      @default(10) // 10 / 15 / 20
+  current_streak           Int      @default(0)
+  longest_streak           Int      @default(0)
+
+  updated_at DateTime @updatedAt
+
+  learner Learner @relation(fields: [learner_id], references: [id])
+}
+
+/// Seed-content word bank. Standalone — not linked to Learner.
+model Word {
+  id              String   @id // W001, W002, …
+  word            String
+  category        String
+  grade_band      String[] // ["G1"], ["G1","G2"], ["G2"], etc.
+  char_count      Int
+  syllable_count  Int
+  skill_tags      String[] // ["S1","S2"]
+  error_tags      String[] // ["A2","B1"]
+  image_ok        Boolean
+  audio_ok        Boolean
+  image_prompt    String?
+  audio_text      String?
+  sample_sentence String?
+  distractors     String[] // Incorrect choices for TT1
+  blank_hint      String?  // Hint text for TT2
+
+  @@index([grade_band], type: Gin)
+  @@index([skill_tags], type: Gin)
+}
+
+/// Task bank. Standalone — not linked to a specific Learner.
+/// Task.id is human-readable, e.g. "G12-001", "G24-001".
+model Task {
+  id                     String     @id // G12-001, G24-001, etc.
+  task_type              TaskType
+  title                  String
+  prompt_text            String
+  correct_answer         String
+  /// JSONB — structure varies by TaskType (see TT1–TT6 in Pre_Coding_Design_Document)
+  options                Json
+  audio_url              String?
+  image_url              String?
+  primary_skill          SkillCode
+  secondary_skill        SkillCode?
+  level_target           String     // M0, M1, M1-M2, M2, …
+  error_targets          String[]   // ["C1","C2"]
+  grade_band             String[]   // ["G1"], ["G1","G2"], etc.
+  difficulty             Int        // 1–5
+  estimated_time_seconds Int
+  review_after_days      Int[]      // [1, 3, 7]
+  lesson_slot_fit        LessonSlot
+  feedback_text          String
+
+  attempts Attempt[]
+
+  @@index([primary_skill, level_target])
+  @@index([grade_band], type: Gin)
+}
+
+model DiagnosticSession {
+  id                   String           @id @default(uuid())
+  learner_id           String
+  status               DiagnosticStatus @default(IN_PROGRESS)
+  current_phase        DiagnosticPhase  @default(PHASE_A)
+  phase_a_completed    Boolean          @default(false)
+  phase_b_completed    Boolean          @default(false)
+  weak_skills_detected String[]         // Populated after Phase A
+  /// JSONB: { general_level, skill_levels, top_errors, priority_skills }
+  result               Json?
+  started_at           DateTime         @default(now())
+  completed_at         DateTime?
+
+  learner  Learner   @relation(fields: [learner_id], references: [id])
+  attempts Attempt[]
+
+  @@index([learner_id, status])
+}
+
+model Plan {
+  id              String       @id @default(uuid())
+  learner_id      String
+  template        PlanTemplate
+  status          PlanStatus   @default(ACTIVE)
+  priority_skills String[]     // ["S3","S5"]
+  target_errors   String[]     // ["C1","C4"]
+  daily_minutes   Int          // 10 / 15 / 20
+  duration_days   Int          // 7 or 14
+  source          PlanSource
+  started_at      DateTime     @default(now())
+  ended_at        DateTime?
+
+  learner     Learner      @relation(fields: [learner_id], references: [id])
+  lessons     Lesson[]
+  checkpoints Checkpoint[]
+
+  @@index([learner_id, status])
+}
+
+model Lesson {
+  id                         String       @id @default(uuid())
+  learner_id                 String
+  plan_id                    String
+  day_number                 Int          // 1–14
+  primary_skill              SkillCode
+  secondary_skill            SkillCode?
+  session_length             Int          // 10 / 15 / 20
+  lesson_goal                String?
+  task_ids                   String[]     // Ordered task IDs
+  estimated_duration_seconds Int
+  status                     LessonStatus @default(PENDING)
+  completed_tasks            Int          @default(0)
+  total_tasks                Int
+  accuracy                   Float?       // Populated on completion
+  scheduled_date             DateTime     @db.Date
+  started_at                 DateTime?
+  completed_at               DateTime?
+
+  learner  Learner   @relation(fields: [learner_id], references: [id])
+  plan     Plan      @relation(fields: [plan_id], references: [id])
+  attempts Attempt[]
+
+  @@index([plan_id, day_number])
+  @@index([learner_id, scheduled_date])
+}
+
+model Checkpoint {
+  id             String              @id @default(uuid())
+  learner_id     String
+  plan_id        String
+  task_ids       String[]
+  /// JSONB: { skill_deltas, level_changes, new_plan_needed }
+  result         Json?
+  decision       CheckpointDecision?
+  status         CheckpointStatus    @default(PENDING)
+  scheduled_date DateTime            @db.Date
+  completed_at   DateTime?
+
+  plan     Plan      @relation(fields: [plan_id], references: [id])
+  attempts Attempt[]
+
+  @@index([plan_id, status])
+}
+
+model Attempt {
+  id                    String         @id @default(uuid())
+  learner_id            String
+  task_id               String
+  lesson_id             String?
+  diagnostic_session_id String?
+  checkpoint_id         String?
+  input_text            String
+  score                 Float          // 0 | 0.25 | 0.5 | 0.75 | 1.0
+  time_seconds          Int
+  self_corrected        Boolean        @default(false)
+  error_codes           String[]       // Quick lookup; detail in ErrorLog
+  context               AttemptContext
+  created_at            DateTime       @default(now())
+
+  learner            Learner            @relation(fields: [learner_id], references: [id])
+  task               Task               @relation(fields: [task_id], references: [id])
+  lesson             Lesson?            @relation(fields: [lesson_id], references: [id])
+  diagnostic_session DiagnosticSession? @relation(fields: [diagnostic_session_id], references: [id])
+  checkpoint         Checkpoint?        @relation(fields: [checkpoint_id], references: [id])
+  error_logs         ErrorLog[]
+
+  @@index([learner_id, created_at(sort: Desc)])
+  @@index([learner_id, task_id])
+}
+
+model ErrorLog {
+  id               String    @id @default(uuid())
+  attempt_id       String
+  error_code       ErrorCode
+  severity         Int       // 1 = minor, 2 = rule-based, 3 = core
+  position_in_word Int?
+  expected_char    String?
+  actual_char      String?
+  context_word     String?
+
+  attempt Attempt @relation(fields: [attempt_id], references: [id])
+
+  @@index([attempt_id])
+  @@index([error_code, attempt_id])
+}
