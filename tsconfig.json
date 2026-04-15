@@ -1,17 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "CommonJS",
-    "lib": ["ES2020"],
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node10",
     "types": ["node", "jest"],
-    "ignoreDeprecations": "6.0"
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": ["prisma/**/*", "src/**/*"],
   "exclude": ["node_modules", "dist"]
