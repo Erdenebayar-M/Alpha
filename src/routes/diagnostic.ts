@@ -337,6 +337,11 @@ diagnostic.post('/next-phase', async (c) => {
     const finalResult = calculateFinalResult(allAttempts, session.learner.grade);
 
     const confidence = finalResult.confidence as any;
+    const avgScore =
+      Object.values(finalResult.skill_scores).reduce((a, b) => a + b, 0) / 8;
+    const template =
+      avgScore < 0.4 ? 'INTENSIVE' : avgScore < 0.7 ? 'BALANCED' : 'STABILIZATION';
+
     const skillStateData = {
       general_level: finalResult.general_level as any,
       s1_score: finalResult.skill_scores['S1'],
@@ -368,7 +373,7 @@ diagnostic.post('/next-phase', async (c) => {
       preferred_session_length: finalResult.recommended_daily_minutes,
     };
 
-    await prisma.$transaction([
+    const [, , newPlan] = await prisma.$transaction([
       prisma.diagnosticSession.update({
         where: { id: session_id },
         data: {
@@ -387,9 +392,22 @@ diagnostic.post('/next-phase', async (c) => {
         },
         update: skillStateData,
       }),
-    ]);
+      prisma.plan.create({
+        data: {
+          learner_id: session.learner_id,
+          template: template as any,
+          status: 'ACTIVE',
+          priority_skills: finalResult.priority_skills,
+          target_errors: finalResult.top_error_codes,
+          daily_minutes: finalResult.recommended_daily_minutes,
+          duration_days: 14,
+          source: 'DIAGNOSTIC',
+        },
+        select: { id: true },
+      }),
+    ]) as any;
 
-    return c.json({ completed: true, result: finalResult });
+    return c.json({ completed: true, result: finalResult, plan_id: newPlan.id });
   }
 
   return ERRORS.UNPROCESSABLE('Session is in an unexpected phase state');

@@ -18,6 +18,7 @@ jest.mock('../../lib/db/client', () => ({
     attempt: { findFirst: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     errorLog: { createMany: jest.fn() },
     learnerSkillState: { upsert: jest.fn() },
+    plan: { create: jest.fn() },
     $transaction: jest.fn((ops: unknown[]) => Promise.all(ops)),
   },
 }));
@@ -42,6 +43,7 @@ const mockAttemptFindFirst  = prisma.attempt.findFirst              as jest.Mock
 const mockAttemptCount      = prisma.attempt.count                  as jest.MockedFunction<any>;
 const mockAttemptFindMany   = prisma.attempt.findMany               as jest.MockedFunction<any>;
 const mockSkillStateUpsert  = prisma.learnerSkillState.upsert       as jest.MockedFunction<any>;
+const mockPlanCreate        = prisma.plan.create                    as jest.MockedFunction<any>;
 const mockTransaction       = prisma.$transaction                   as jest.MockedFunction<any>;
 const mockProcessAttempt    = processAttempt                        as jest.MockedFunction<typeof processAttempt>;
 const mockVerify            = verifyToken                           as jest.MockedFunction<typeof verifyToken>;
@@ -128,6 +130,7 @@ const ALL_SKILLS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
 beforeEach(() => {
   jest.clearAllMocks();
   mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
+  mockPlanCreate.mockResolvedValue({ id: 'test-plan-id' });
 });
 
 // ─── POST /api/diagnostic/start ──────────────────────────────────────────────
