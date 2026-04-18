@@ -1,0 +1,193 @@
+[
+  {
+    "code": "B1",
+    "input": "ном",
+    "expected_outputs": ["ом", "нм", "но"]
+  },
+  {
+    "code": "B1",
+    "input": "гэр",
+    "expected_outputs": ["эр", "гр", "гэ"]
+  },
+  {
+    "code": "B1",
+    "input": "сар",
+    "expected_outputs": ["ар", "ср", "са"]
+  },
+
+  {
+    "code": "C1",
+    "input": "тогоо",
+    "expected_outputs": ["того", "тгоо"]
+  },
+  {
+    "code": "C1",
+    "input": "аасан",
+    "expected_outputs": ["асан", "аасн"]
+  },
+  {
+    "code": "C1",
+    "input": "ооб",
+    "expected_outputs": ["об"]
+  },
+
+  {
+    "code": "C2",
+    "input": "ном",
+    "expected_outputs": ["ноом"]
+  },
+  {
+    "code": "C2",
+    "input": "гэр",
+    "expected_outputs": ["гээр"]
+  },
+  {
+    "code": "C2",
+    "input": "алим",
+    "expected_outputs": ["аалим"]
+  },
+
+  {
+    "code": "C4",
+    "input": "дэвтэр",
+    "expected_outputs": ["дэвтр"]
+  },
+  {
+    "code": "C4",
+    "input": "гутал",
+    "expected_outputs": ["гутл"]
+  },
+  {
+    "code": "C4",
+    "input": "хурдан",
+    "expected_outputs": ["хурдн"]
+  },
+
+  {
+    "code": "D3",
+    "input": "ном",
+    "expected_outputs": ["мом"]
+  },
+  {
+    "code": "D3",
+    "input": "гэр",
+    "expected_outputs": ["кэр"]
+  },
+  {
+    "code": "D3",
+    "input": "дом",
+    "expected_outputs": ["том"]
+  },
+
+  {
+    "code": "B3",
+    "input": "ном",
+    "expected_outputs": ["онм"]
+  },
+  {
+    "code": "B3",
+    "input": "гэр",
+    "expected_outputs": ["эгр"]
+  },
+  {
+    "code": "B3",
+    "input": "мон",
+    "expected_outputs": ["омн"]
+  },
+
+  {
+    "code": "E1",
+    "input": "гэрт",
+    "expected_outputs": ["гэр"]
+  },
+  {
+    "code": "E1",
+    "input": "номаас",
+    "expected_outputs": ["ном"]
+  },
+  {
+    "code": "E1",
+    "input": "гэртэй",
+    "expected_outputs": ["гэр"]
+  },
+
+  {
+    "code": "E2",
+    "input": "гэрт",
+    "expected_outputs": ["гэрд"]
+  },
+  {
+    "code": "E2",
+    "input": "номаас",
+    "expected_outputs": ["номээс"]
+  },
+  {
+    "code": "E2",
+    "input": "гэртэй",
+    "expected_outputs": ["гэртай"]
+  },
+
+  {
+    "code": "E7",
+    "input": "гэр",
+    "expected_outputs": ["гар"]
+  },
+  {
+    "code": "E7",
+    "input": "ном",
+    "expected_outputs": ["нөм"]
+  },
+  {
+    "code": "E7",
+    "input": "дэвтэр",
+    "expected_outputs": ["дэвтар"]
+  },
+
+  {
+    "code": "G1",
+    "input": "Ном",
+    "expected_outputs": ["ном"]
+  },
+  {
+    "code": "G1",
+    "input": "Гэр",
+    "expected_outputs": ["гэр"]
+  },
+  {
+    "code": "G1",
+    "input": "Би явна.",
+    "expected_outputs": ["би явна."]
+  },
+
+  {
+    "code": "G2",
+    "input": "Ном.",
+    "expected_outputs": ["Ном"]
+  },
+  {
+    "code": "G2",
+    "input": "Гэр.",
+    "expected_outputs": ["Гэр"]
+  },
+  {
+    "code": "G2",
+    "input": "Би явна.",
+    "expected_outputs": ["Би явна"]
+  },
+
+  {
+    "code": "H4",
+    "input": "ном",
+    "expected_outputs": ["ном"]
+  },
+  {
+    "code": "H4",
+    "input": "гэр",
+    "expected_outputs": ["гэр"]
+  },
+  {
+    "code": "H4",
+    "input": "алим",
+    "expected_outputs": ["алим"]
+  }
+]
