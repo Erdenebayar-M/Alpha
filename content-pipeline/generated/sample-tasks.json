@@ -1,0 +1,774 @@
+{
+  "count": 20,
+  "tasks": [
+    {
+      "id": "G12-001-a",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсож сонгох",
+      "prompt_text": "Аудио: 'ном'",
+      "correct_answer": "ном",
+      "options": {
+        "choices": [
+          {
+            "text": "ном",
+            "is_correct": true
+          },
+          {
+            "text": "нум",
+            "is_correct": false
+          },
+          {
+            "text": "мод",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "A1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "'ном' гэдэг үгэнд о авиаг сонслоо."
+    },
+    {
+      "id": "G12-001-b",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсож сонгох",
+      "prompt_text": "Аудио: 'сар'",
+      "correct_answer": "сар",
+      "options": {
+        "choices": [
+          {
+            "text": "сар",
+            "is_correct": true
+          },
+          {
+            "text": "нар",
+            "is_correct": false
+          },
+          {
+            "text": "сав",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "A1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв сонслоо."
+    },
+    {
+      "id": "G12-002",
+      "task_type": "TT2_FILL",
+      "title": "Үсэг нөхөх",
+      "prompt_text": "н_м",
+      "correct_answer": "о",
+      "options": {
+        "display_text": "н_м",
+        "blank_position": 1,
+        "blank_answer": "о",
+        "context_word": "ном"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "A2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "'ном' гэж бүтэн уншаад шалга."
+    },
+    {
+      "id": "G12-003-a",
+      "task_type": "TT1_CHOICE",
+      "title": "Зураг-үг тааруулах",
+      "prompt_text": "Зураг: алим",
+      "correct_answer": "алим",
+      "options": {
+        "choices": [
+          {
+            "text": "алим",
+            "is_correct": true
+          },
+          {
+            "text": "гутал",
+            "is_correct": false
+          },
+          {
+            "text": "цас",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зурагтай үгийг зөв таарууллаа."
+    },
+    {
+      "id": "G12-003-b",
+      "task_type": "TT1_CHOICE",
+      "title": "Зураг-үг тааруулах",
+      "prompt_text": "Зураг: гэр",
+      "correct_answer": "гэр",
+      "options": {
+        "choices": [
+          {
+            "text": "гэр",
+            "is_correct": true
+          },
+          {
+            "text": "морь",
+            "is_correct": false
+          },
+          {
+            "text": "ном",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зураг нь монгол гэр байна."
+    },
+    {
+      "id": "G12-004",
+      "task_type": "TT2_FILL",
+      "title": "Хуулж бичих",
+      "prompt_text": "Энэ бол ном.",
+      "correct_answer": "Энэ бол ном.",
+      "options": {
+        "display_text": "Энэ бол ном.",
+        "blank_position": 0,
+        "blank_answer": "Энэ бол ном.",
+        "context_word": "Энэ бол ном."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B3"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Үсгийн дараалал, цэгээ шалга."
+    },
+    {
+      "id": "G12-005-a",
+      "task_type": "TT1_CHOICE",
+      "title": "Зөвийг сонгох",
+      "prompt_text": "аль нь зөв бэ?",
+      "correct_answer": "тогоо",
+      "options": {
+        "choices": [
+          {
+            "text": "тогоо",
+            "is_correct": true
+          },
+          {
+            "text": "того",
+            "is_correct": false
+          },
+          {
+            "text": "тогуу",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Урт эгшгийг анзаар."
+    },
+    {
+      "id": "G12-005-b",
+      "task_type": "TT1_CHOICE",
+      "title": "Зөвийг сонгох",
+      "prompt_text": "аль нь зөв бэ?",
+      "correct_answer": "сүү",
+      "options": {
+        "choices": [
+          {
+            "text": "сүү",
+            "is_correct": true
+          },
+          {
+            "text": "су",
+            "is_correct": false
+          },
+          {
+            "text": "сү",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Урт эгшигтэй хэлбэрийг сонго."
+    },
+    {
+      "id": "G12-006-a",
+      "task_type": "TT2_FILL",
+      "title": "Нөхөж бичих",
+      "prompt_text": "бөмб_г",
+      "correct_answer": "ө",
+      "options": {
+        "display_text": "бөмб_г",
+        "blank_position": 4,
+        "blank_answer": "ө",
+        "context_word": "бөмбөг"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Дундах эгшгийг зөв нөх."
+    },
+    {
+      "id": "G12-006-b",
+      "task_type": "TT2_FILL",
+      "title": "Нөхөж бичих",
+      "prompt_text": "шув_у",
+      "correct_answer": "у",
+      "options": {
+        "display_text": "шув_у",
+        "blank_position": 3,
+        "blank_answer": "у",
+        "context_word": "шувуу"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Давхар эгшгийн хэлбэрийг анзаар."
+    },
+    {
+      "id": "G12-007",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу үсэг",
+      "prompt_text": "Аудио+текст: дэвт_р",
+      "correct_answer": "э",
+      "options": {
+        "display_text": "дэвт_р",
+        "blank_position": 4,
+        "blank_answer": "э",
+        "context_word": "дэвтэр"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S4",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Балархай эгшгийг нөхөж бич."
+    },
+    {
+      "id": "G12-008",
+      "task_type": "TT4_DICTATION",
+      "title": "Үгийн багц диктант",
+      "prompt_text": "Аудио: ном, гэр, нар",
+      "correct_answer": "ном; гэр; нар",
+      "options": {
+        "audio_text": "ном, гэр, нар",
+        "word_count": 3,
+        "expected_answers": [
+          "ном",
+          "гэр",
+          "нар"
+        ],
+        "allow_partial": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 90,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Сонссон дарааллаар бичээрэй."
+    },
+    {
+      "id": "G12-009-a",
+      "task_type": "TT3_CORRECTION",
+      "title": "Том үсэг, цэг",
+      "prompt_text": "би явна",
+      "correct_answer": "Би явна.",
+      "options": {
+        "incorrect_text": "би явна",
+        "correct_text": "Би явна.",
+        "error_type": "G1",
+        "hint": "Эхний үсэг том, төгсгөлд цэг."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Эхний үсэг том, төгсгөлд цэг."
+    },
+    {
+      "id": "G12-009-b",
+      "task_type": "TT3_CORRECTION",
+      "title": "Том үсэг, цэг",
+      "prompt_text": "бат ирлээ",
+      "correct_answer": "Бат ирлээ.",
+      "options": {
+        "incorrect_text": "бат ирлээ",
+        "correct_text": "Бат ирлээ.",
+        "error_type": "G1",
+        "hint": "Нэрний эхний үсэг том."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Нэрний эхний үсэг том."
+    },
+    {
+      "id": "G12-010",
+      "task_type": "TT1_CHOICE",
+      "title": "Энгийн залгавар",
+      "prompt_text": "аль нь зөв бэ?",
+      "correct_answer": "гэрт",
+      "options": {
+        "choices": [
+          {
+            "text": "гэрт",
+            "is_correct": true
+          },
+          {
+            "text": "гэрд",
+            "is_correct": false
+          },
+          {
+            "text": "гэр",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S5",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "E1",
+        "E2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Түгээмэл залгаврын хэлбэрийг тань."
+    },
+    {
+      "id": "G12-011-a",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдаа олох",
+      "prompt_text": "номм",
+      "correct_answer": "ном",
+      "options": {
+        "incorrect_text": "номм",
+        "correct_text": "ном",
+        "error_type": "H4",
+        "hint": "Илүү үсгийг хас."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Илүү үсгийг хас."
+    },
+    {
+      "id": "G12-011-b",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдаа олох",
+      "prompt_text": "того",
+      "correct_answer": "тогоо",
+      "options": {
+        "incorrect_text": "того",
+        "correct_text": "тогоо",
+        "error_type": "H4",
+        "hint": "Урт эгшгийг дутуу бичсэн байна."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Урт эгшгийг дутуу бичсэн байна."
+    },
+    {
+      "id": "G12-012",
+      "task_type": "TT6_SELF_CHECK",
+      "title": "Өөрийгөө шалгах",
+      "prompt_text": "Чи бичсэн: сү / Загвар: сүү",
+      "correct_answer": "сүү",
+      "options": {
+        "original_attempt": "сү",
+        "model_answer": "сүү",
+        "comparison_mode": "side_by_side"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Хоёр үсгийн ялгааг өөрөө ол."
+    },
+    {
+      "id": "G12-013",
+      "task_type": "TT4_DICTATION",
+      "title": "2 үгийн диктант",
+      "prompt_text": "Аудио: ном, сар",
+      "correct_answer": "ном; сар",
+      "options": {
+        "audio_text": "ном, сар",
+        "word_count": 2,
+        "expected_answers": [
+          "ном",
+          "сар"
+        ],
+        "allow_partial": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 90,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Хоёр үгийг дарааллаар нь бич."
+    },
+    {
+      "id": "G12-014",
+      "task_type": "TT2_FILL",
+      "title": "Үгийн төгсгөл",
+      "prompt_text": "гэ_",
+      "correct_answer": "р",
+      "options": {
+        "display_text": "гэ_",
+        "blank_position": 2,
+        "blank_answer": "р",
+        "context_word": "гэр"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "D5"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Төгсгөлийн үсгийг зөв бич."
+    }
+  ]
+}

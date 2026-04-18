@@ -1,0 +1,1112 @@
+{
+  "count": 40,
+  "words": [
+    {
+      "id": "W001",
+      "word": "ном",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A2",
+        "B1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "цагаан дэвсгэр дээр ганц ном, хүүхдэд ойлгомжтой энгийн зураг",
+      "audio_text": "ном",
+      "sentence": "Энэ бол ном.",
+      "distractors": [
+        "нум",
+        "мод"
+      ],
+      "blank_template": "н_м",
+      "correct_spelling": "ном",
+      "review_status": "seed"
+    },
+    {
+      "id": "W002",
+      "word": "нум",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "A2"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "цагаан дэвсгэр дээр нум сумгүйгээр, энгийн дүрслэл",
+      "audio_text": "нум",
+      "sentence": "Нум өлгөөтэй байна.",
+      "distractors": [
+        "ном",
+        "нуур"
+      ],
+      "blank_template": "н_м",
+      "correct_spelling": "нум",
+      "review_status": "seed"
+    },
+    {
+      "id": "W003",
+      "word": "мод",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "B1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ногоон навчтай ганц мод",
+      "audio_text": "мод",
+      "sentence": "Хашаанд мод байна.",
+      "distractors": [
+        "ном",
+        "мол"
+      ],
+      "blank_template": "м_д",
+      "correct_spelling": "мод",
+      "review_status": "seed"
+    },
+    {
+      "id": "W004",
+      "word": "гэр",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 4,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S7"
+      ],
+      "errors": [
+        "B1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "монгол гэрийг урдаас харуулсан энгийн зураг",
+      "audio_text": "гэр",
+      "sentence": "Дулаахан гэр.",
+      "distractors": [
+        "гар",
+        "гөл"
+      ],
+      "blank_template": "гэ_",
+      "correct_spelling": "гэр",
+      "review_status": "seed"
+    },
+    {
+      "id": "W005",
+      "word": "нар",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "инээмсэглэсэн биш, энгийн шар нар",
+      "audio_text": "нар",
+      "sentence": "Нар мандлаа.",
+      "distractors": [
+        "сар",
+        "нур"
+      ],
+      "blank_template": "н_р",
+      "correct_spelling": "нар",
+      "review_status": "seed"
+    },
+    {
+      "id": "W006",
+      "word": "сар",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "шөнийн тэнгэргүйгээр ганц хавирган сар",
+      "audio_text": "сар",
+      "sentence": "Сар тод байна.",
+      "distractors": [
+        "нар",
+        "сор"
+      ],
+      "blank_template": "с_р",
+      "correct_spelling": "сар",
+      "review_status": "seed"
+    },
+    {
+      "id": "W007",
+      "word": "ус",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 2,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "устай аяга эсвэл усны дусал",
+      "audio_text": "ус",
+      "sentence": "Ус тунгалаг.",
+      "distractors": [
+        "үс",
+        "үнс"
+      ],
+      "blank_template": "_с",
+      "correct_spelling": "ус",
+      "review_status": "seed"
+    },
+    {
+      "id": "W008",
+      "word": "цас",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S3"
+      ],
+      "errors": [
+        "B1",
+        "C1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "цагаан цасан овоо",
+      "audio_text": "цас",
+      "sentence": "Цас орлоо.",
+      "distractors": [
+        "цэц",
+        "тас"
+      ],
+      "blank_template": "ц_с",
+      "correct_spelling": "цас",
+      "review_status": "seed"
+    },
+    {
+      "id": "W009",
+      "word": "мал",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S5"
+      ],
+      "errors": [
+        "B1",
+        "E1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "малын ерөнхий энгийн дүрс, олон амьтан биш",
+      "audio_text": "мал",
+      "sentence": "Мал бэлчинэ.",
+      "distractors": [
+        "малд",
+        "мол"
+      ],
+      "blank_template": "м_л",
+      "correct_spelling": "мал",
+      "review_status": "seed"
+    },
+    {
+      "id": "W010",
+      "word": "гал",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "B1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "аюулгүй, жижиг галын дөл",
+      "audio_text": "гал",
+      "sentence": "Гал дүрэлзэв.",
+      "distractors": [
+        "гар",
+        "гол"
+      ],
+      "blank_template": "г_л",
+      "correct_spelling": "гал",
+      "review_status": "seed"
+    },
+    {
+      "id": "W011",
+      "word": "тогоо",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S3",
+        "S2"
+      ],
+      "errors": [
+        "C1",
+        "C2"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "гал дээр биш, ганц тогоо",
+      "audio_text": "тогоо",
+      "sentence": "Тогоо том.",
+      "distractors": [
+        "того",
+        "тогуу"
+      ],
+      "blank_template": "т_г_о",
+      "correct_spelling": "тогоо",
+      "review_status": "seed"
+    },
+    {
+      "id": "W012",
+      "word": "бөмбөг",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S3"
+      ],
+      "errors": [
+        "B1",
+        "C1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "улаан бөмбөг, цагаан дэвсгэртэй",
+      "audio_text": "бөмбөг",
+      "sentence": "Би бөмбөг шидэв.",
+      "distractors": [
+        "бөмбөгг",
+        "бөмбөгө"
+      ],
+      "blank_template": "бөмб_г",
+      "correct_spelling": "бөмбөг",
+      "review_status": "seed"
+    },
+    {
+      "id": "W013",
+      "word": "шувуу",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S3",
+        "S2"
+      ],
+      "errors": [
+        "C1",
+        "C2"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц жижиг шувуу",
+      "audio_text": "шувуу",
+      "sentence": "Шувуу нисэв.",
+      "distractors": [
+        "шуву",
+        "шувүү"
+      ],
+      "blank_template": "шув_у",
+      "correct_spelling": "шувуу",
+      "review_status": "seed"
+    },
+    {
+      "id": "W014",
+      "word": "хүүхэд",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S3"
+      ],
+      "errors": [
+        "B3",
+        "C4"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "хүүхэд ганцаараа зогсож буй энгийн зураг",
+      "audio_text": "хүүхэд",
+      "sentence": "Хүүхэд инээв.",
+      "distractors": [
+        "хүү_эд",
+        "хүүхэдд"
+      ],
+      "blank_template": "хүү_эд",
+      "correct_spelling": "хүүхэд",
+      "review_status": "seed"
+    },
+    {
+      "id": "W015",
+      "word": "цэцэг",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S3"
+      ],
+      "errors": [
+        "B1",
+        "C1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц цэцэг, энгийн дүрс",
+      "audio_text": "цэцэг",
+      "sentence": "Цэцэг ургав.",
+      "distractors": [
+        "цэцэг",
+        "цэцэгг"
+      ],
+      "blank_template": "цэц_г",
+      "correct_spelling": "цэцэг",
+      "review_status": "seed"
+    },
+    {
+      "id": "W016",
+      "word": "авдар",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S4",
+        "S2"
+      ],
+      "errors": [
+        "C4",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "модон авдар, урдаас харсан",
+      "audio_text": "авдар",
+      "sentence": "Авдар өрөөнд байна.",
+      "distractors": [
+        "авдр",
+        "автар"
+      ],
+      "blank_template": "авд_р",
+      "correct_spelling": "авдар",
+      "review_status": "seed"
+    },
+    {
+      "id": "W017",
+      "word": "өндөг",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S3",
+        "S2"
+      ],
+      "errors": [
+        "C1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц өндөг эсвэл хоёр өндөг",
+      "audio_text": "өндөг",
+      "sentence": "Өндөг чанав.",
+      "distractors": [
+        "өндөгг",
+        "өнд_г"
+      ],
+      "blank_template": "өнд_г",
+      "correct_spelling": "өндөг",
+      "review_status": "seed"
+    },
+    {
+      "id": "W018",
+      "word": "дэвтэр",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 7,
+      "word_count": 2,
+      "skills": [
+        "S4",
+        "S2"
+      ],
+      "errors": [
+        "C4",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "хаалттай дэвтэр",
+      "audio_text": "дэвтэр",
+      "sentence": "Дэвтэр цэвэр.",
+      "distractors": [
+        "дэвтр",
+        "дэвтэрр"
+      ],
+      "blank_template": "дэвт_р",
+      "correct_spelling": "дэвтэр",
+      "review_status": "seed"
+    },
+    {
+      "id": "W019",
+      "word": "сандал",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 7,
+      "word_count": 2,
+      "skills": [
+        "S4",
+        "S2"
+      ],
+      "errors": [
+        "C4",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц сандал, хажуу талаас",
+      "audio_text": "сандал",
+      "sentence": "Сандал модон.",
+      "distractors": [
+        "сандл",
+        "сандалд"
+      ],
+      "blank_template": "санд_л",
+      "correct_spelling": "сандал",
+      "review_status": "seed"
+    },
+    {
+      "id": "W020",
+      "word": "цонх",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 4,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S4"
+      ],
+      "errors": [
+        "B1",
+        "C4"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "байшингийн ганц цонх",
+      "audio_text": "цонх",
+      "sentence": "Цонх нээлттэй.",
+      "distractors": [
+        "цонхх",
+        "цон_"
+      ],
+      "blank_template": "цон_",
+      "correct_spelling": "цонх",
+      "review_status": "seed"
+    },
+    {
+      "id": "W021",
+      "word": "харандаа",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 8,
+      "word_count": 3,
+      "skills": [
+        "S4",
+        "S2"
+      ],
+      "errors": [
+        "C4",
+        "B3"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "шар харандаа ганцаараа",
+      "audio_text": "харандаа",
+      "sentence": "Харандаа хурц.",
+      "distractors": [
+        "харанда",
+        "харандааа"
+      ],
+      "blank_template": "харанд_а",
+      "correct_spelling": "харандаа",
+      "review_status": "seed"
+    },
+    {
+      "id": "W022",
+      "word": "сүү",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S3",
+        "S7"
+      ],
+      "errors": [
+        "C1",
+        "H1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "шилэн аягатай сүү",
+      "audio_text": "сүү",
+      "sentence": "Сүү цагаан.",
+      "distractors": [
+        "су",
+        "сү"
+      ],
+      "blank_template": "с_ү",
+      "correct_spelling": "сүү",
+      "review_status": "seed"
+    },
+    {
+      "id": "W023",
+      "word": "алим",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 4,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S7"
+      ],
+      "errors": [
+        "B1",
+        "H1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "улаан алим ганцаараа",
+      "audio_text": "алим",
+      "sentence": "Алим амттай.",
+      "distractors": [
+        "алимм",
+        "ал_м"
+      ],
+      "blank_template": "ал_м",
+      "correct_spelling": "алим",
+      "review_status": "seed"
+    },
+    {
+      "id": "W024",
+      "word": "гутал",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S7"
+      ],
+      "errors": [
+        "B1",
+        "H1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "хос гутал",
+      "audio_text": "гутал",
+      "sentence": "Гутал цэвэр.",
+      "distractors": [
+        "гутл",
+        "гуталл"
+      ],
+      "blank_template": "гут_л",
+      "correct_spelling": "гутал",
+      "review_status": "seed"
+    },
+    {
+      "id": "W025",
+      "word": "туулай",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 6,
+      "word_count": 2,
+      "skills": [
+        "S3",
+        "S2"
+      ],
+      "errors": [
+        "C1",
+        "B1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "цагаан туулай ганцаараа",
+      "audio_text": "туулай",
+      "sentence": "Туулай хурдан.",
+      "distractors": [
+        "туулайй",
+        "тулай"
+      ],
+      "blank_template": "т_улай",
+      "correct_spelling": "туулай",
+      "review_status": "seed"
+    },
+    {
+      "id": "W026",
+      "word": "багш",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 5,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S6"
+      ],
+      "errors": [
+        "B1",
+        "G1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "багш самбарын өмнө биш, энгийн хөрөг маягаар",
+      "audio_text": "багш",
+      "sentence": "Багш ирлээ.",
+      "distractors": [
+        "багш."
+      ],
+      "blank_template": "баг_",
+      "correct_spelling": "багш",
+      "review_status": "seed"
+    },
+    {
+      "id": "W027",
+      "word": "сургууль",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 8,
+      "word_count": 2,
+      "skills": [
+        "S5",
+        "S6"
+      ],
+      "errors": [
+        "E1",
+        "G1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "сургуулийн барилгын энгийн зураг",
+      "audio_text": "сургууль",
+      "sentence": "Сургууль эхэллээ.",
+      "distractors": [
+        "сургуули",
+        "сургуль"
+      ],
+      "blank_template": "сургуу_ь",
+      "correct_spelling": "сургууль",
+      "review_status": "seed"
+    },
+    {
+      "id": "W028",
+      "word": "хоол",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 4,
+      "word_count": 1,
+      "skills": [
+        "S3",
+        "S5"
+      ],
+      "errors": [
+        "C1",
+        "E1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "уур савссан аяга хоол",
+      "audio_text": "хоол",
+      "sentence": "Хоол халуун.",
+      "distractors": [
+        "хол",
+        "хоолл"
+      ],
+      "blank_template": "х_ол",
+      "correct_spelling": "хоол",
+      "review_status": "seed"
+    },
+    {
+      "id": "W029",
+      "word": "ээж",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S3",
+        "S6"
+      ],
+      "errors": [
+        "C1",
+        "G1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ээж инээмсэглэж зогсож буй энгийн зураг",
+      "audio_text": "ээж",
+      "sentence": "Ээж ирэв.",
+      "distractors": [
+        "эж",
+        "ээж."
+      ],
+      "blank_template": "_эж",
+      "correct_spelling": "ээж",
+      "review_status": "seed"
+    },
+    {
+      "id": "W030",
+      "word": "аав",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S3",
+        "S6"
+      ],
+      "errors": [
+        "C1",
+        "G1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "аав энгийн хөрөг",
+      "audio_text": "аав",
+      "sentence": "Аав ажиллав.",
+      "distractors": [
+        "ав",
+        "аав."
+      ],
+      "blank_template": "_ав",
+      "correct_spelling": "аав",
+      "review_status": "seed"
+    },
+    {
+      "id": "W031",
+      "word": "Бат",
+      "category": "Оноосон нэр",
+      "grade_band": "G2",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S6"
+      ],
+      "errors": [
+        "G1"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг хэрэглэхгүй",
+      "audio_text": "Бат",
+      "sentence": "Бат ирлээ.",
+      "distractors": [
+        "бат"
+      ],
+      "blank_template": "Б_т",
+      "correct_spelling": "Бат",
+      "review_status": "seed"
+    },
+    {
+      "id": "W032",
+      "word": "би явна",
+      "category": "Богино өгүүлбэр",
+      "grade_band": "G1-G2",
+      "letter_count": 7,
+      "word_count": 3,
+      "skills": [
+        "S6"
+      ],
+      "errors": [
+        "G1",
+        "G2"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг хэрэглэхгүй",
+      "audio_text": "Би явна.",
+      "sentence": "Би явна.",
+      "distractors": [
+        "би явна",
+        "Би явна"
+      ],
+      "blank_template": "би явна",
+      "correct_spelling": "Би явна.",
+      "review_status": "seed"
+    },
+    {
+      "id": "W033",
+      "word": "тэр ирэв",
+      "category": "Богино өгүүлбэр",
+      "grade_band": "G1-G2",
+      "letter_count": 8,
+      "word_count": 3,
+      "skills": [
+        "S6"
+      ],
+      "errors": [
+        "G1",
+        "G2"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг хэрэглэхгүй",
+      "audio_text": "Тэр ирэв.",
+      "sentence": "Тэр ирэв.",
+      "distractors": [
+        "тэр ирэв",
+        "Тэр ирэв"
+      ],
+      "blank_template": "тэр ирэв",
+      "correct_spelling": "Тэр ирэв.",
+      "review_status": "seed"
+    },
+    {
+      "id": "W034",
+      "word": "номоо",
+      "category": "Залгавартай үг",
+      "grade_band": "G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S5"
+      ],
+      "errors": [
+        "E1",
+        "E2"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг хэрэглэхгүй",
+      "audio_text": "номоо",
+      "sentence": "Би номоо авлаа.",
+      "distractors": [
+        "номо",
+        "номаа"
+      ],
+      "blank_template": "ном_о",
+      "correct_spelling": "номоо",
+      "review_status": "seed"
+    },
+    {
+      "id": "W035",
+      "word": "гэрт",
+      "category": "Залгавартай үг",
+      "grade_band": "G2",
+      "letter_count": 4,
+      "word_count": 1,
+      "skills": [
+        "S5"
+      ],
+      "errors": [
+        "E1",
+        "E2"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг хэрэглэхгүй",
+      "audio_text": "гэрт",
+      "sentence": "Би гэртээ байна.",
+      "distractors": [
+        "гэрд",
+        "гэр"
+      ],
+      "blank_template": "гэр_",
+      "correct_spelling": "гэрт",
+      "review_status": "seed"
+    },
+    {
+      "id": "W036",
+      "word": "морь",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 4,
+      "word_count": 1,
+      "skills": [
+        "S2",
+        "S14"
+      ],
+      "errors": [
+        "B1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц морь, хажуу талаас",
+      "audio_text": "морь",
+      "sentence": "Морь хурдан.",
+      "distractors": [
+        "мор",
+        "морй"
+      ],
+      "blank_template": "мор_",
+      "correct_spelling": "морь",
+      "review_status": "seed"
+    },
+    {
+      "id": "W037",
+      "word": "тоног",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S14"
+      ],
+      "errors": [
+        "D5"
+      ],
+      "image_ok": false,
+      "audio_ok": true,
+      "image_prompt": "зураг шаардлагагүй",
+      "audio_text": "тоног",
+      "sentence": "Тоног бэлэн.",
+      "distractors": [
+        "тонод",
+        "тоногг"
+      ],
+      "blank_template": "тоно_",
+      "correct_spelling": "тоног",
+      "review_status": "seed"
+    },
+    {
+      "id": "W038",
+      "word": "хивс",
+      "category": "Нэр үг",
+      "grade_band": "G2",
+      "letter_count": 5,
+      "word_count": 1,
+      "skills": [
+        "S14"
+      ],
+      "errors": [
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц хивс дээрээс биш, бага өнцгөөр",
+      "audio_text": "хивс",
+      "sentence": "Хивс цэвэр.",
+      "distractors": [
+        "хив",
+        "хивсс"
+      ],
+      "blank_template": "хив_",
+      "correct_spelling": "хивс",
+      "review_status": "seed"
+    },
+    {
+      "id": "W039",
+      "word": "зураг",
+      "category": "Нэр үг",
+      "grade_band": "G1-G2",
+      "letter_count": 5,
+      "word_count": 2,
+      "skills": [
+        "S2",
+        "S14"
+      ],
+      "errors": [
+        "B1",
+        "D5"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "хананд өлгөсөн ганц зураг",
+      "audio_text": "зураг",
+      "sentence": "Зураг гоё.",
+      "distractors": [
+        "зурак",
+        "зура"
+      ],
+      "blank_template": "зура_",
+      "correct_spelling": "зураг",
+      "review_status": "seed"
+    },
+    {
+      "id": "W040",
+      "word": "сав",
+      "category": "Нэр үг",
+      "grade_band": "G1",
+      "letter_count": 3,
+      "word_count": 1,
+      "skills": [
+        "S1",
+        "S2"
+      ],
+      "errors": [
+        "A1",
+        "B1"
+      ],
+      "image_ok": true,
+      "audio_ok": true,
+      "image_prompt": "ганц сав",
+      "audio_text": "сав",
+      "sentence": "Сав хоосон.",
+      "distractors": [
+        "сар",
+        "сов"
+      ],
+      "blank_template": "с_в",
+      "correct_spelling": "сав",
+      "review_status": "seed"
+    }
+  ]
+}

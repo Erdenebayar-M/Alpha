@@ -1,0 +1,112 @@
+{
+  "M0": [
+    {
+      "correct": "бага",
+      "misspelling": "баг",
+      "task": "Аудиотой нөхөх"
+    },
+    {
+      "correct": "мөнгө",
+      "misspelling": "мөнг",
+      "task": "дутуу үсэг нөхөх"
+    },
+    {
+      "correct": "өнгө",
+      "misspelling": "өнг",
+      "task": "сонгох + нөхөх"
+    },
+    {
+      "correct": "цэцэг",
+      "misspelling": "цэцг",
+      "task": "хуулж бичих + нөхөх"
+    }
+  ],
+  "M1": [
+    {
+      "correct": "газар",
+      "misspelling": "газр",
+      "task": "дутуу үсэг нөхөх"
+    },
+    {
+      "correct": "самбар",
+      "misspelling": "самбр",
+      "task": "үеэр нь задалж бичих"
+    },
+    {
+      "correct": "дэвтэр",
+      "misspelling": "дэвтр",
+      "task": "зөв/буруу ялгах"
+    },
+    {
+      "correct": "хүүхэд",
+      "misspelling": "хүүхд",
+      "task": "сонсоод нөхөх"
+    }
+  ],
+  "M2": [
+    {
+      "correct": "байшин",
+      "misspelling": "байшн",
+      "task": "дутуу үсэг нөхөх"
+    },
+    {
+      "correct": "хувцас",
+      "misspelling": "хувцс",
+      "task": "алдаатай үг засах"
+    },
+    {
+      "correct": "эрдэнэ",
+      "misspelling": "эрднэ",
+      "task": "харьцуулсан бичлэг"
+    },
+    {
+      "correct": "оньсого",
+      "misspelling": "оньсг",
+      "task": "сонсоод бичих"
+    }
+  ],
+  "M3": [
+    {
+      "correct": "хундага",
+      "misspelling": "хундга",
+      "task": "алдаатай үг засах"
+    },
+    {
+      "correct": "янзага",
+      "misspelling": "янзга",
+      "task": "дутуу үсэг нөхөх"
+    },
+    {
+      "correct": "жинхэнэ",
+      "misspelling": "жинхнэ",
+      "task": "зөв хэлбэр сонгох"
+    },
+    {
+      "correct": "бортого",
+      "misspelling": "бортг",
+      "task": "сонсоод бичих"
+    }
+  ],
+  "M5": [
+    {
+      "correct": "эмнэлэг",
+      "misspelling": "эмнэлг",
+      "task": "correction"
+    },
+    {
+      "correct": "салбар",
+      "misspelling": "салбр",
+      "task": "correction + dictation"
+    },
+    {
+      "correct": "асуудал",
+      "misspelling": "асуудл",
+      "task": "үг доторх эгшиг олох"
+    },
+    {
+      "correct": "түвшин",
+      "misspelling": "түвшн",
+      "task": "диктант"
+    }
+  ]
+}
