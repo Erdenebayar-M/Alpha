@@ -1,0 +1,286 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task",
+  "description": "A single task in the Mongolian Spelling & Dictation task bank (Task table in DB)",
+  "type": "object",
+  "required": [
+    "id", "task_type", "title", "prompt_text", "correct_answer", "options",
+    "primary_skill", "level_target", "error_targets", "grade_band",
+    "difficulty", "estimated_time_seconds", "review_after_days",
+    "lesson_slot_fit", "feedback_text"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Human-readable ID. Format: G12-NNN (Grades 1–2) or G24-NNN (Grades 2–4)",
+      "examples": ["G12-001", "G24-015"]
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "TT1_CHOICE",
+        "TT2_FILL",
+        "TT3_CORRECTION",
+        "TT4_DICTATION",
+        "TT5_MINI_TEXT",
+        "TT6_SELF_CHECK"
+      ],
+      "description": "Task type determines the shape of the 'options' JSONB field"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short display title (Mongolian)"
+    },
+    "prompt_text": {
+      "type": "string",
+      "description": "Instruction shown to the learner (Mongolian)"
+    },
+    "correct_answer": {
+      "type": "string",
+      "description": "Canonical correct answer string. Use semicolons for multi-part answers (dictation). 'PLACEHOLDER' for unfinished tasks."
+    },
+    "options": {
+      "description": "JSONB payload — shape depends on task_type (see $defs below)",
+      "oneOf": [
+        { "$ref": "#/$defs/TT1Options" },
+        { "$ref": "#/$defs/TT2Options" },
+        { "$ref": "#/$defs/TT3Options" },
+        { "$ref": "#/$defs/TT4Options" },
+        { "$ref": "#/$defs/TT5Options" },
+        { "$ref": "#/$defs/TT6Options" },
+        {
+          "type": "object",
+          "description": "Empty object for placeholder tasks",
+          "additionalProperties": false,
+          "maxProperties": 0
+        }
+      ]
+    },
+    "audio_url": {
+      "type": ["string", "null"],
+      "description": "URL to audio asset (null until asset pipeline is ready)"
+    },
+    "image_url": {
+      "type": ["string", "null"],
+      "description": "URL to image asset (null until asset pipeline is ready)"
+    },
+    "primary_skill": {
+      "$ref": "#/$defs/SkillCode"
+    },
+    "secondary_skill": {
+      "oneOf": [
+        { "$ref": "#/$defs/SkillCode" },
+        { "type": "null" }
+      ]
+    },
+    "level_target": {
+      "type": "string",
+      "description": "Mastery level(s) this task targets",
+      "examples": ["M0", "M1", "M1-M2", "M2", "M2-M3", "M3"]
+    },
+    "error_targets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Error codes this task is designed to surface or remediate",
+      "examples": [["C1", "C2"], ["B1"], ["Mixed"]]
+    },
+    "grade_band": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["G1", "G2", "G3", "G4"]
+      },
+      "minItems": 1,
+      "description": "Target grade(s): G1=Grade 1, G2=Grade 2, G3=Grade 3, G4=Grade 4"
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Difficulty level 1 (easiest) – 5 (hardest)"
+    },
+    "estimated_time_seconds": {
+      "type": "integer",
+      "description": "Expected completion time in seconds (e.g. 30, 45, 60, 120, 180)"
+    },
+    "review_after_days": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Spaced repetition schedule in days",
+      "examples": [[1, 3, 7]]
+    },
+    "lesson_slot_fit": {
+      "type": "string",
+      "enum": ["WARM_UP", "CORE", "MIXED", "END"],
+      "description": "Where in a lesson session this task fits best"
+    },
+    "feedback_text": {
+      "type": "string",
+      "description": "Short corrective feedback shown after an incorrect attempt (Mongolian)"
+    }
+  },
+
+  "$defs": {
+    "SkillCode": {
+      "type": "string",
+      "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"],
+      "description": "S1=Үсэг-авиа ялгалт, S2=Үгийн зөв бичлэг, S3=Урт/богино эгшиг, S4=Балархай эгшиг, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ, S7=Сонсголоор буулгах, S8=Алдаа засах"
+    },
+
+    "TT1Options": {
+      "title": "TT1_CHOICE options",
+      "description": "Зөвийг сонгох — learner picks the correct word/spelling from multiple choices",
+      "type": "object",
+      "required": ["choices", "audio_trigger"],
+      "additionalProperties": false,
+      "properties": {
+        "choices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["text", "is_correct"],
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string" },
+              "is_correct": { "type": "boolean" }
+            }
+          }
+        },
+        "audio_trigger": {
+          "type": "boolean",
+          "description": "true = play audio automatically; false = image-to-word or spelling task"
+        }
+      }
+    },
+
+    "TT2Options": {
+      "title": "TT2_FILL options",
+      "description": "Нөхөх — learner types the missing character(s) to complete the word",
+      "type": "object",
+      "required": ["display_text", "blank_position", "blank_answer", "context_word"],
+      "additionalProperties": false,
+      "properties": {
+        "display_text": {
+          "type": "string",
+          "description": "Word with underscore(s) marking the blank, e.g. 'н_м'"
+        },
+        "blank_position": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based character index of the blank in the full word"
+        },
+        "blank_answer": {
+          "type": "string",
+          "description": "The correct character(s) to fill the blank"
+        },
+        "context_word": {
+          "type": "string",
+          "description": "Full correct word (used for hints and answer-checking)"
+        }
+      }
+    },
+
+    "TT3Options": {
+      "title": "TT3_CORRECTION options",
+      "description": "Засвар — learner identifies and corrects an error in the given text",
+      "type": "object",
+      "required": ["incorrect_text", "correct_text", "error_type", "hint"],
+      "additionalProperties": false,
+      "properties": {
+        "incorrect_text": {
+          "type": "string",
+          "description": "Text containing the error(s) shown to the learner"
+        },
+        "correct_text": {
+          "type": "string",
+          "description": "The fully corrected target text"
+        },
+        "error_type": {
+          "type": "string",
+          "description": "Primary error code embedded in this task, e.g. 'G1', 'C1', 'H4'"
+        },
+        "hint": {
+          "type": "string",
+          "description": "Hint shown after a wrong attempt (Mongolian)"
+        }
+      }
+    },
+
+    "TT4Options": {
+      "title": "TT4_DICTATION options",
+      "description": "Сонсоод бичих — learner transcribes spoken words or a short sentence",
+      "type": "object",
+      "required": ["audio_text", "word_count", "expected_answers", "allow_partial"],
+      "additionalProperties": false,
+      "properties": {
+        "audio_text": {
+          "type": "string",
+          "description": "Comma-separated text that will be read aloud, e.g. 'ном, гэр, нар'"
+        },
+        "word_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of words / tokens in the dictation"
+        },
+        "expected_answers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered list of correct tokens"
+        },
+        "allow_partial": {
+          "type": "boolean",
+          "description": "true = partial credit for correctly transcribed tokens"
+        }
+      }
+    },
+
+    "TT5Options": {
+      "title": "TT5_MINI_TEXT options",
+      "description": "Жижиг эх — learner transcribes a short multi-sentence passage",
+      "type": "object",
+      "required": ["audio_text", "sentence_count", "expected_answers"],
+      "additionalProperties": false,
+      "properties": {
+        "audio_text": {
+          "type": "string",
+          "description": "Full passage text to be read aloud"
+        },
+        "sentence_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of sentences in the passage (typically 2–3)"
+        },
+        "expected_answers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of correct sentences in order"
+        }
+      }
+    },
+
+    "TT6Options": {
+      "title": "TT6_SELF_CHECK options",
+      "description": "Өөрийгөө шалгах — learner compares their earlier attempt to the model answer",
+      "type": "object",
+      "required": ["original_attempt", "model_answer", "comparison_mode"],
+      "additionalProperties": false,
+      "properties": {
+        "original_attempt": {
+          "type": "string",
+          "description": "The learner's previous (possibly incorrect) answer"
+        },
+        "model_answer": {
+          "type": "string",
+          "description": "The correct model answer shown for comparison"
+        },
+        "comparison_mode": {
+          "type": "string",
+          "enum": ["side_by_side", "highlight_diff"],
+          "description": "How the UI presents the comparison to the learner"
+        }
+      }
+    }
+  }
+}

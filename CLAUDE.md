@@ -74,3 +74,54 @@ Detailed specs live in `/docs/`:
 - `Phase1_Schema_Review.docx` — Schema design rationale
 - `0. Агуулгын бүтэц, тохиргоо.xlsx` — Source content bank (basis for seed data)
 - `1. Оношилгооны дасгалууд_матриц.xlsx` — Diagnostic task matrix
+
+## Content Pipeline (Phase 4)
+
+### Pipeline location: `content-pipeline/`
+
+All content authoring, validation, and LLM generation tooling lives here, separate from `src/` and `prisma/`.
+
+### Folder purposes
+
+| Folder | Purpose |
+|--------|---------|
+| `content-pipeline/seed-data/` | **Read-only** reference exports from master spreadsheets (never edit directly) |
+| `content-pipeline/stage1/` | Raw LLM-generated task drafts before any validation |
+| `content-pipeline/stage2/` | Tasks that passed schema validation, awaiting human review |
+| `content-pipeline/validated/` | Human-approved tasks ready for DB import |
+| `content-pipeline/flagged/` | Tasks with issues flagged by validator or reviewer — needs rework |
+| `content-pipeline/rejected/` | Permanently rejected tasks (kept for audit trail) |
+| `content-pipeline/scripts/` | Pipeline automation scripts (TypeScript) |
+| `content-pipeline/scripts/validators/` | Schema and content validators |
+| `content-pipeline/scripts/prompts/` | LLM prompt templates for task generation |
+| `content-pipeline/schemas/` | JSON Schema and reference docs (task.schema.json, error-codes.md) |
+| `content-pipeline/tests/fixtures/` | Test fixture tasks for validator unit tests |
+| `content-pipeline/audio/human/` | Human-recorded audio assets |
+| `content-pipeline/audio/tts/` | TTS-generated audio assets |
+
+### Conventions
+
+**Task ID format:** `G{band}-{num}-v{n}`
+- `band`: `12` (Grades 1–2) or `24` (Grades 2–4)
+- `num`: zero-padded 3-digit sequence, e.g. `001`
+- `v{n}`: version suffix for revised tasks, e.g. `v2`
+- Examples: `G12-001`, `G24-015-v2`
+
+**Skill codes:** `S1`–`S8`
+- S1=Үсэг-авиа ялгалт, S2=Үгийн зөв бичлэг, S3=Урт/богино эгшиг
+- S4=Балархай эгшиг, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ
+- S7=Сонсголоор буулгах, S8=Алдаа засах
+
+**MVP error codes (12):** `B1`, `B3`, `C1`, `C2`, `C4`, `D3`, `E1`, `E2`, `E7`, `G1`, `G2`, `H4`
+- Full definitions and examples: `content-pipeline/schemas/error-codes.md`
+- Classification priority order: C1 → C2 → C4 → D3 → E1 → E2 → E7 → B3 → B1 → G1 → G2 → H4
+
+**Task types (6):** `TT1_CHOICE`, `TT2_FILL`, `TT3_CORRECTION`, `TT4_DICTATION`, `TT5_MINI_TEXT`, `TT6_SELF_CHECK`
+- Full JSONB shape for each type: `content-pipeline/schemas/task.schema.json`
+
+### Hard rules
+
+1. **Never invent seed words.** All vocabulary must come from the master content bank (`docs/0. Агуулгын бүтэц, тохиргоо.xlsx`) or be explicitly approved by a human reviewer.
+2. **Never change error code definitions without asking.** The 12 MVP error codes are locked. Adding, renaming, or redefining a code requires explicit user approval and a schema version bump.
+3. **Never write directly to `seed-data/`.** That folder is read-only reference. Scripts may read from it but must never modify or overwrite its files.
+4. **Rejected tasks stay.** Move to `rejected/` with a rejection note — do not delete, as they form the audit trail.
