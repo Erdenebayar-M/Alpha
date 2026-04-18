@@ -31,8 +31,11 @@
     "xlsx": "^0.18.5"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
     "@hono/node-server": "^1.19.14",
     "@prisma/adapter-pg": "^7.7.0",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
     "bcrypt": "^6.0.0",
     "hono": "^4.12.14",
     "jose": "^6.2.2",
