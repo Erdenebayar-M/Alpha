@@ -1,0 +1,37 @@
+{
+  "id": "G12-011-rejected-20",
+  "task_type": "TT3_CORRECTION",
+  "title": "Алдааг засаарай",
+  "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+  "correct_answer": "ээж",
+  "options": {
+    "incorrect_text": "эж",
+    "correct_text": "ээж",
+    "error_type": "C1",
+    "hint": "\"эж\" гэж бичсэн нь буруу — \"ээж\" гэж засаарай."
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S8",
+  "secondary_skill": null,
+  "level_target": "M1",
+  "error_targets": [
+    "C1"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 2,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "CORE",
+  "feedback_text": "Зөв хариу: ээж",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

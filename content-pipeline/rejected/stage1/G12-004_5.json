@@ -1,0 +1,37 @@
+{
+  "id": "G12-004-rejected-5",
+  "task_type": "TT2_FILL",
+  "title": "Үгийг хуулж бичээрэй",
+  "prompt_text": "\"Алим амттай.\" — дутуу үсгийг нөхөж бичээрэй.",
+  "correct_answer": "алим",
+  "options": {
+    "display_text": "ал_м",
+    "blank_position": 2,
+    "blank_answer": "и",
+    "context_word": "алим"
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S2",
+  "secondary_skill": null,
+  "level_target": "M0",
+  "error_targets": [
+    "B3"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 1,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "WARM_UP",
+  "feedback_text": "Зөв хариу: алим",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

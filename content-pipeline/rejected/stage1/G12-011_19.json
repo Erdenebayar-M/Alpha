@@ -1,0 +1,37 @@
+{
+  "id": "G12-011-rejected-19",
+  "task_type": "TT3_CORRECTION",
+  "title": "Алдааг засаарай",
+  "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+  "correct_answer": "хоол",
+  "options": {
+    "incorrect_text": "хол",
+    "correct_text": "хоол",
+    "error_type": "C1",
+    "hint": "\"хол\" гэж бичсэн нь буруу — \"хоол\" гэж засаарай."
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S8",
+  "secondary_skill": null,
+  "level_target": "M1",
+  "error_targets": [
+    "C1"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 2,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "CORE",
+  "feedback_text": "Зөв хариу: хоол",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

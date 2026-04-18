@@ -1,0 +1,49 @@
+{
+  "id": "G12-005-rejected-1",
+  "task_type": "TT1_CHOICE",
+  "title": "Зөв үгийг сонгоорой",
+  "prompt_text": "Урт болон богино эгшгийг анхаарч зөв хэлбэрийг сонгоорой.",
+  "correct_answer": "туулай",
+  "options": {
+    "choices": [
+      {
+        "text": "туулай",
+        "is_correct": true
+      },
+      {
+        "text": "тулай",
+        "is_correct": false
+      },
+      {
+        "text": "туулаай",
+        "is_correct": false
+      }
+    ],
+    "audio_trigger": false
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S3",
+  "secondary_skill": null,
+  "level_target": "M1",
+  "error_targets": [
+    "C1",
+    "C2"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 2,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "CORE",
+  "feedback_text": "Зөв хариу: туулай",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

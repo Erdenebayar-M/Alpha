@@ -1,0 +1,37 @@
+{
+  "id": "G12-011-rejected-7",
+  "task_type": "TT3_CORRECTION",
+  "title": "Алдааг засаарай",
+  "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+  "correct_answer": "хүүхэд",
+  "options": {
+    "incorrect_text": "үхүхэд",
+    "correct_text": "хүүхэд",
+    "error_type": "B3",
+    "hint": "\"үхүхэд\" гэж бичсэн нь буруу — \"хүүхэд\" гэж засаарай."
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S8",
+  "secondary_skill": null,
+  "level_target": "M1",
+  "error_targets": [
+    "B3"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 2,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "CORE",
+  "feedback_text": "Зөв хариу: хүүхэд",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

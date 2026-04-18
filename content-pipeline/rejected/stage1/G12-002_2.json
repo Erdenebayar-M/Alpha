@@ -1,0 +1,37 @@
+{
+  "id": "G12-002-rejected-2",
+  "task_type": "TT2_FILL",
+  "title": "Дутуу үсгийг нөхөөрэй",
+  "prompt_text": "Дутуу үсгийг нөхөж бичээрэй.",
+  "correct_answer": "сар",
+  "options": {
+    "display_text": "с_р",
+    "blank_position": 1,
+    "blank_answer": "а",
+    "context_word": "сар"
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S1",
+  "secondary_skill": null,
+  "level_target": "M0",
+  "error_targets": [
+    "B1"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 1,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "WARM_UP",
+  "feedback_text": "Зөв хариу: сар",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

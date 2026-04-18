@@ -1,0 +1,49 @@
+{
+  "id": "G12-001-rejected-5",
+  "task_type": "TT1_CHOICE",
+  "title": "Сонсоод зөв үгийг олоорой",
+  "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+  "correct_answer": "сав",
+  "options": {
+    "choices": [
+      {
+        "text": "сав",
+        "is_correct": true
+      },
+      {
+        "text": "ав",
+        "is_correct": false
+      },
+      {
+        "text": "саав",
+        "is_correct": false
+      }
+    ],
+    "audio_trigger": true
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S1",
+  "secondary_skill": null,
+  "level_target": "M0",
+  "error_targets": [
+    "B1",
+    "C2"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 1,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "WARM_UP",
+  "feedback_text": "Зөв хариу: сав",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}

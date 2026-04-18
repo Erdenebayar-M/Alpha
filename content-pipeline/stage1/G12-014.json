@@ -1,0 +1,104 @@
+[
+  {
+    "id": "G12-014-v1",
+    "task_type": "TT2_FILL",
+    "title": "Сүүлийн үсгийг нөхөөрэй",
+    "prompt_text": "Үгийн сүүлийн үсгийг нөхөж бичээрэй.",
+    "correct_answer": "гэр",
+    "options": {
+      "display_text": "гэ_",
+      "blank_position": 2,
+      "blank_answer": "р",
+      "context_word": "гэр"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S8",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "D5"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: гэр"
+  },
+  {
+    "id": "G12-014-v2",
+    "task_type": "TT2_FILL",
+    "title": "Сүүлийн үсгийг нөхөөрэй",
+    "prompt_text": "Үгийн сүүлийн үсгийг нөхөж бичээрэй.",
+    "correct_answer": "цонх",
+    "options": {
+      "display_text": "цон_",
+      "blank_position": 3,
+      "blank_answer": "х",
+      "context_word": "цонх"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S8",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "D5"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: цонх"
+  },
+  {
+    "id": "G12-014-v3",
+    "task_type": "TT2_FILL",
+    "title": "Сүүлийн үсгийг нөхөөрэй",
+    "prompt_text": "Үгийн сүүлийн үсгийг нөхөж бичээрэй.",
+    "correct_answer": "багш",
+    "options": {
+      "display_text": "баг_",
+      "blank_position": 3,
+      "blank_answer": "ш",
+      "context_word": "багш"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S8",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "D5"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: багш"
+  }
+]

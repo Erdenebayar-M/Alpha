@@ -1,0 +1,104 @@
+[
+  {
+    "id": "G12-006-v1",
+    "task_type": "TT2_FILL",
+    "title": "Урт эгшгийг нөхөөрэй",
+    "prompt_text": "Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.",
+    "correct_answer": "тогоо",
+    "options": {
+      "display_text": "тог_о",
+      "blank_position": 3,
+      "blank_answer": "о",
+      "context_word": "тогоо"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S3",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "C1"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: тогоо"
+  },
+  {
+    "id": "G12-006-v2",
+    "task_type": "TT2_FILL",
+    "title": "Урт эгшгийг нөхөөрэй",
+    "prompt_text": "Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.",
+    "correct_answer": "шувуу",
+    "options": {
+      "display_text": "шув_у",
+      "blank_position": 3,
+      "blank_answer": "у",
+      "context_word": "шувуу"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S3",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "C1"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: шувуу"
+  },
+  {
+    "id": "G12-006-v3",
+    "task_type": "TT2_FILL",
+    "title": "Урт эгшгийг нөхөөрэй",
+    "prompt_text": "Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.",
+    "correct_answer": "хүүхэд",
+    "options": {
+      "display_text": "х_үхэд",
+      "blank_position": 1,
+      "blank_answer": "ү",
+      "context_word": "хүүхэд"
+    },
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S3",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "C1"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 30,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Зөв хариу: хүүхэд"
+  }
+]

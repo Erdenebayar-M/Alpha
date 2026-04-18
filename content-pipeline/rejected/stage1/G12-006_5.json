@@ -1,0 +1,37 @@
+{
+  "id": "G12-006-rejected-5",
+  "task_type": "TT2_FILL",
+  "title": "Урт эгшгийг нөхөөрэй",
+  "prompt_text": "Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.",
+  "correct_answer": "аав",
+  "options": {
+    "display_text": "_ав",
+    "blank_position": 0,
+    "blank_answer": "а",
+    "context_word": "аав"
+  },
+  "audio_url": null,
+  "image_url": null,
+  "primary_skill": "S3",
+  "secondary_skill": null,
+  "level_target": "M1",
+  "error_targets": [
+    "C1"
+  ],
+  "grade_band": [
+    "G1",
+    "G2"
+  ],
+  "difficulty": 2,
+  "estimated_time_seconds": 30,
+  "review_after_days": [
+    1,
+    3,
+    7
+  ],
+  "lesson_slot_fit": "CORE",
+  "feedback_text": "Зөв хариу: аав",
+  "rejection_reasons": [
+    "excess variant — already have 3 passing"
+  ]
+}
