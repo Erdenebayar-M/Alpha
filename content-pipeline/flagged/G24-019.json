@@ -1,0 +1,107 @@
+{
+  "task_id": "G24-019",
+  "variants": [
+    {
+      "id": "G24-019-v1",
+      "task_type": "TT5_MINI_TEXT",
+      "title": "Жижиг эх сонсоод бичээрэй",
+      "prompt_text": "Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.",
+      "correct_answer": "Цас орлоо.;Шувуу нисэв.;Сар тод байна.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "C1",
+        "C4",
+        "E1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 90,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
+      "options": {
+        "audio_text": "Цас орлоо. Шувуу нисэв. Сар тод байна.",
+        "sentence_count": 3,
+        "expected_answers": [
+          "Цас орлоо.",
+          "Шувуу нисэв.",
+          "Сар тод байна."
+        ]
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "weak-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "1. audio_url нь null байгаа бол audio_text-ийг ашиглахгүй байх эсвэл audio файл нэмэх. 2. Feedback текст нь 'Урт эгшиг болон балархай эгшигт анхаараарай' гэсэн нь энэ task-тай холбоогүй. Оронд нь 'Өгүүлбэр бүрийг цэгээр төгсгөж, дарааллаар бичээрэй' гэх мэт зөв feedback өгөх.",
+        "reviewed_at": "2026-04-19T06:05:37.693Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-019-v3",
+      "task_type": "TT5_MINI_TEXT",
+      "title": "Жижиг эх сонсоод бичээрэй",
+      "prompt_text": "Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.",
+      "correct_answer": "Дэвтэр цэвэр.;Мал бэлчинэ.;Хүүхэд инээв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "C1",
+        "C4",
+        "E1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 90,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
+      "options": {
+        "audio_text": "Дэвтэр цэвэр. Мал бэлчинэ. Хүүхэд инээв.",
+        "sentence_count": 3,
+        "expected_answers": [
+          "Дэвтэр цэвэр.",
+          "Мал бэлчинэ.",
+          "Хүүхэд инээв."
+        ]
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "1. audio_url нь null байна - audio_text байгаа бол audio файл байх ёстой. 2. Feedback текст 'Урт эгшиг болон балархай эгшигт анхаараарай' нь энэ task-тай холбоогүй - сонсоод бичих дадлагад орфографийн дүрэм биш, сонсох чадвар сайжруулах зөвлөмж байх ёстой. Жишээ: 'Өгүүлбэр бүрийг сайтар сонсоод цэгээр тусгаарлаж бичээрэй.'",
+        "reviewed_at": "2026-04-19T06:05:46.473Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

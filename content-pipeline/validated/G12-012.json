@@ -1,0 +1,47 @@
+{
+  "task_id": "G12-012",
+  "variants": [
+    {
+      "id": "G12-012-v2",
+      "task_type": "TT6_SELF_CHECK",
+      "title": "Өөрийгөө шалгаарай",
+      "prompt_text": "Өмнөх даалгаврын хариугаа загвартай харьцуул.",
+      "correct_answer": "мод",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 40,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Зөв хариу: мод",
+      "options": {
+        "original_attempt": "од",
+        "model_answer": "мод",
+        "comparison_mode": "side_by_side"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:00.280Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

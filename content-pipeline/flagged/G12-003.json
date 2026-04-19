@@ -1,0 +1,64 @@
+{
+  "task_id": "G12-003",
+  "variants": [
+    {
+      "id": "G12-003-v2",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "цас",
+      "options": {
+        "choices": [
+          {
+            "text": "цас",
+            "is_correct": true
+          },
+          {
+            "text": "ас",
+            "is_correct": false
+          },
+          {
+            "text": "цаас",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: цас",
+      "review": {
+        "approved": false,
+        "issues": [
+          "weak-distractor",
+          "vague-feedback",
+          "other"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "1. Distractor 'ас' нь бодит алдаа биш, зүгээр л богино үг. 'Цас' гэсэн үгийн эхний үсэг мартсан алдаа байх ёстой. 2. Distractor 'цаас' нь сайн (цас vs цаас - нийтлэг алдаа). 3. Feedback-ийг сайжруулах: 'Зөв! Цас гэдэг нь өвлийн цагт унадаг цагаан үнс юм.' гэж тайлбар нэмэх. 4. Image_url болон audio_url байхгүй байна - зургийн үзүүлэлт байх ёстой. 5. Error_targets B1, C2 нь G1-G2 ангийн сурагчдад хэтэрхий өндөр түвшин байж болно.",
+        "reviewed_at": "2026-04-19T06:01:58.724Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

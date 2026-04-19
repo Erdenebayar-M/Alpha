@@ -1,0 +1,134 @@
+{
+  "task_id": "G12-004",
+  "variants": [
+    {
+      "id": "G12-004-v1",
+      "task_type": "TT2_FILL",
+      "title": "Үгийг хуулж бичээрэй",
+      "prompt_text": "\"Дулаахан гэр.\" — дутуу үсгийг нөхөж бичээрэй.",
+      "correct_answer": "гэр",
+      "options": {
+        "display_text": "гэ_",
+        "blank_position": 2,
+        "blank_answer": "р",
+        "context_word": "гэр"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B3"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: гэр",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:07.668Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-004-v2",
+      "task_type": "TT2_FILL",
+      "title": "Үгийг хуулж бичээрэй",
+      "prompt_text": "\"Цас орлоо.\" — дутуу үсгийг нөхөж бичээрэй.",
+      "correct_answer": "цас",
+      "options": {
+        "display_text": "ц_с",
+        "blank_position": 1,
+        "blank_answer": "а",
+        "context_word": "цас"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B3"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: цас",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:09.804Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-004-v3",
+      "task_type": "TT2_FILL",
+      "title": "Үгийг хуулж бичээрэй",
+      "prompt_text": "\"Мал бэлчинэ.\" — дутуу үсгийг нөхөж бичээрэй.",
+      "correct_answer": "мал",
+      "options": {
+        "display_text": "м_л",
+        "blank_position": 1,
+        "blank_answer": "а",
+        "context_word": "мал"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B3"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: мал",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:13.362Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

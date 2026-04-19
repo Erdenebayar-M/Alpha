@@ -1,0 +1,91 @@
+{
+  "task_id": "G12-011",
+  "variants": [
+    {
+      "id": "G12-011-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "ном",
+      "options": {
+        "incorrect_text": "ом",
+        "correct_text": "ном",
+        "error_type": "B1",
+        "hint": "\"ом\" гэж бичсэн нь буруу — \"ном\" гэж засаарай."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: ном",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:57.071Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-011-v2",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "мод",
+      "options": {
+        "incorrect_text": "од",
+        "correct_text": "мод",
+        "error_type": "B1",
+        "hint": "\"од\" гэж бичсэн нь буруу — \"мод\" гэж засаарай."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:59.600Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

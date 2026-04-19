@@ -1,0 +1,36 @@
+{
+  "total_reviewed": 69,
+  "validated": 32,
+  "flagged": 11,
+  "rejected": 26,
+  "review_failures": [],
+  "by_issue": {
+    "audio-mismatch": 15,
+    "weak-distractor": 26,
+    "vague-feedback": 32,
+    "image-missing": 1,
+    "other": 3,
+    "wrong-spelling": 11,
+    "age-inappropriate": 1,
+    "weak-feedback": 3
+  },
+  "by_stage": {
+    "stage1": {
+      "total": 30,
+      "validated": 14,
+      "flagged": 4,
+      "rejected": 12
+    },
+    "stage2": {
+      "total": 39,
+      "validated": 18,
+      "flagged": 7,
+      "rejected": 14
+    }
+  },
+  "total_input_tokens": 51222,
+  "total_output_tokens": 13026,
+  "estimated_cost_usd": 0.0540036,
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-4-5"
+}

@@ -1,0 +1,93 @@
+{
+  "task_id": "G24-018",
+  "variants": [
+    {
+      "id": "G24-018-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв. Би явна.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "options": {
+        "incorrect_text": "Ээж ирэв би явна.",
+        "correct_text": "Ээж ирэв. Би явна.",
+        "error_type": "G2",
+        "hint": "Өгүүлбэр бүр цэгтэй байна."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:26.332Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-018-v3",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Багш ирлээ. Зураг гоё.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "options": {
+        "incorrect_text": "Багш ирлээ зураг гоё.",
+        "correct_text": "Багш ирлээ. Зураг гоё.",
+        "error_type": "G2",
+        "hint": "Өгүүлбэр бүр цэгтэй байна."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:33.802Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

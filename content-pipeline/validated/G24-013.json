@@ -1,0 +1,134 @@
+{
+  "task_id": "G24-013",
+  "variants": [
+    {
+      "id": "G24-013-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Морь хурдан, харандаа хурц.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Морь хурдан, харандаа хурц.",
+      "options": {
+        "incorrect_text": "Морь хурдан харандаа хурц.",
+        "correct_text": "Морь хурдан, харандаа хурц.",
+        "error_type": "G2",
+        "hint": "Хоёр бие даасан өгүүлбэрийг холбохдоо таслал тавина."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:48.510Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-013-v2",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв, аав ажиллав.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Ээж ирэв, аав ажиллав.",
+      "options": {
+        "incorrect_text": "Ээж ирэв аав ажиллав.",
+        "correct_text": "Ээж ирэв, аав ажиллав.",
+        "error_type": "G2",
+        "hint": "Нэгдсэн өгүүлбэрт таслал хэрэглэнэ."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:50.322Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-013-v3",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Хүүхэд инээв, туулай хурдан.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Хүүхэд инээв, туулай хурдан.",
+      "options": {
+        "incorrect_text": "Хүүхэд инээв туулай хурдан.",
+        "correct_text": "Хүүхэд инээв, туулай хурдан.",
+        "error_type": "G2",
+        "hint": "Хоёр өгүүлбэрийг нэгтгэхдээ таслал тавих хэрэгтэй."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:52.387Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

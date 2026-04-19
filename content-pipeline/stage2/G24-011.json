@@ -1,0 +1,104 @@
+[
+  {
+    "id": "G24-011-v1",
+    "task_type": "TT2_FILL",
+    "title": "Дутуу хэсгийг нөхөөрэй",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nЦонх нээлттэй, агаар сайхан орж байна.",
+    "correct_answer": "о",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S4",
+    "secondary_skill": null,
+    "level_target": "M2",
+    "error_targets": [
+      "C4"
+    ],
+    "grade_band": [
+      "G2",
+      "G3"
+    ],
+    "difficulty": 3,
+    "estimated_time_seconds": 25,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "\"цонх\" — балархай эгшигтэй үг.",
+    "options": {
+      "display_text": "Цонх нээлттэй, агаар сайхан орж байна.",
+      "blank_position": 0,
+      "blank_answer": "о",
+      "context_word": "цонх"
+    }
+  },
+  {
+    "id": "G24-011-v2",
+    "task_type": "TT2_FILL",
+    "title": "Дутуу хэсгийг нөхөөрэй",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nТ_ног бэлэн болсон байна.",
+    "correct_answer": "о",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S4",
+    "secondary_skill": null,
+    "level_target": "M2",
+    "error_targets": [
+      "C4"
+    ],
+    "grade_band": [
+      "G2",
+      "G3"
+    ],
+    "difficulty": 3,
+    "estimated_time_seconds": 25,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "\"тоног\" — балархай эгшигтэй үг.",
+    "options": {
+      "display_text": "Т_ног бэлэн болсон байна.",
+      "blank_position": 1,
+      "blank_answer": "о",
+      "context_word": "тоног"
+    }
+  },
+  {
+    "id": "G24-011-v3",
+    "task_type": "TT2_FILL",
+    "title": "Дутуу хэсгийг нөхөөрэй",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nСандал м_дон, маш бат бөх.",
+    "correct_answer": "о",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S4",
+    "secondary_skill": null,
+    "level_target": "M2",
+    "error_targets": [
+      "C4"
+    ],
+    "grade_band": [
+      "G2",
+      "G3"
+    ],
+    "difficulty": 3,
+    "estimated_time_seconds": 25,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "\"модон\" — балархай эгшигтэй үг.",
+    "options": {
+      "display_text": "Сандал м_дон, маш бат бөх.",
+      "blank_position": 8,
+      "blank_answer": "о",
+      "context_word": "модон"
+    }
+  }
+]

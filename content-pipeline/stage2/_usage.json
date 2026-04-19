@@ -1,0 +1,13 @@
+{
+  "total_calls": 15,
+  "total_input_tokens": 11886,
+  "total_output_tokens": 5958,
+  "estimated_cost_usd": 0.125028,
+  "model": "anthropic/claude-sonnet-4-5",
+  "provider": "openrouter",
+  "failed_task_ids": [],
+  "skipped_task_ids": [
+    "G24-020"
+  ],
+  "generated_at": "2026-04-19T05:49:54.850Z"
+}

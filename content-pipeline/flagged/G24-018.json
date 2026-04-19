@@ -1,0 +1,52 @@
+{
+  "task_id": "G24-018",
+  "variants": [
+    {
+      "id": "G24-018-v2",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Шувуу нисэв. Туулай хурдан.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр том үсгээр эхэлнэ.",
+      "options": {
+        "incorrect_text": "Шувуу нисэв. туулай хурдан.",
+        "correct_text": "Шувуу нисэв. Туулай хурдан.",
+        "error_type": "G1",
+        "hint": "Өгүүлбэр том үсгээр эхэлнэ."
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "weak-distractor",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "1. Feedback текст нь илүү тодорхой байх ёстой: 'Хоёр дахь өгүүлбэр \"Туулай хурдан\" нь том үсгээр эхэлнэ. Өгүүлбэр бүр том үсгээр эхэлдэг.' гэж өөрчил. 2. Distractor нь зөвхөн нэг жижиг үсгийн алдаа агуулж байгаа нь сайн боловч, G1 (том/жижиг үсэг) болон G2 (цэг/таслал) алдааг хоёуланг нь засуулах ёстой бол өөр distractor сонголт нэмэх хэрэгтэй. Жишээ нь: 'Шувуу нисэв туулай хурдан' (цэг дутуу) эсвэл 'шувуу нисэв. туулай хурдан' (хоёр том үсэг дутуу).",
+        "reviewed_at": "2026-04-19T06:05:31.763Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

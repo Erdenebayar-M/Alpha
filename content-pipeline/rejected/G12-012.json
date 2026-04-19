@@ -1,0 +1,51 @@
+{
+  "task_id": "G12-012",
+  "variants": [
+    {
+      "id": "G12-012-v1",
+      "task_type": "TT6_SELF_CHECK",
+      "title": "Өөрийгөө шалгаарай",
+      "prompt_text": "Өмнөх даалгаврын хариугаа загвартай харьцуул.",
+      "correct_answer": "ном",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H4"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 40,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Зөв хариу: ном",
+      "options": {
+        "original_attempt": "ом",
+        "model_answer": "ном",
+        "comparison_mode": "side_by_side"
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "age-inappropriate",
+          "vague-feedback",
+          "weak-distractor"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "G1-G2 ангийн сурагчдад 'ном' гэх нэг үг л шалгуулах нь хэтэрхий энгийн. Prompt_text нь 'Өмнөх даалгаврын хариугаа загвартай харьцуул' гэсэн нь энэ task-ийн контекст байхгүй. TT6_SELF_CHECK бол өмнөх даалгавартай холбоотой байх ёстой. Feedback нь зөвхөн 'Зөв хариу: ном' гэсэн энгийн мессеж бөгөөд алдааг ойлгуулахгүй. 'original_attempt: ом' нь 'ном'-ын алдаа биш, бүрэн өөр үг. Энэ task-ийг дахин дизайн хийх хэрэгтэй: (1) өмнөх даалгавартай холбоо тогтоох, (2) G1-G2-д тохиромжтой нарийн төвөгтэй байдал нэмэх, (3) алдааны хэв маяг (жишээ: 'ном' vs 'нам' vs 'ном' гэх мэт орфографийн алдаа) сонгох, (4) feedback-д алдааны шалтгаан тайлбарлах.",
+        "reviewed_at": "2026-04-19T06:03:57.868Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

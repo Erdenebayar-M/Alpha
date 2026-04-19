@@ -1,0 +1,63 @@
+{
+  "task_id": "G12-005",
+  "variants": [
+    {
+      "id": "G12-005-v1",
+      "task_type": "TT1_CHOICE",
+      "title": "Зөв үгийг сонгоорой",
+      "prompt_text": "Урт болон богино эгшгийг анхаарч зөв хэлбэрийг сонгоорой.",
+      "correct_answer": "тогоо",
+      "options": {
+        "choices": [
+          {
+            "text": "тогоо",
+            "is_correct": true
+          },
+          {
+            "text": "того",
+            "is_correct": false
+          },
+          {
+            "text": "тоогоо",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: тогоо",
+      "review": {
+        "approved": false,
+        "issues": [
+          "weak-distractor",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "1. Distractor 'того' нь бодит алдаа биш - энэ нь өөр үг юм. 'Тогоо' (сав) vs 'того' (тэр) гэсэн хоёр өөр үг. Distractor-ыг 'тогоо' → 'тогооо' (урт эгшиг нэмэх алдаа) эсвэл 'тогоо' → 'тогоо' (богино эгшиг) гэх мэт орфографийн алдаа болгоорой. 2. Feedback текстийг сайжруулаарай: 'Зөв хариу: тогоо (сав). Урт эгшиг ө-г анхаарч сонгоорой' гэх мэтээр алдааны шалтгааныг тайлбарлаарай.",
+        "reviewed_at": "2026-04-19T06:02:18.241Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}
