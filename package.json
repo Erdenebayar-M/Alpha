@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
+    "@google/genai": "^1.50.1",
     "@hono/node-server": "^1.19.14",
     "@prisma/adapter-pg": "^7.7.0",
     "ajv": "^8.18.0",
