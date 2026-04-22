@@ -1,0 +1,152 @@
+[
+  {
+    "id": "G12-010-v1",
+    "task_type": "TT1_CHOICE",
+    "title": "Зөвийг сонгоно уу",
+    "prompt_text": "Би ном___ авлаа.",
+    "correct_answer": "номоо",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S5",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "E1",
+      "E2"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 20,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Өөрийнхөө юм гэдгийг илэрхийлэхдээ 'оо' залгавар хэрэглэнэ.",
+    "options": {
+      "choices": [
+        {
+          "text": "оо",
+          "is_correct": true
+        },
+        {
+          "text": "ыг",
+          "is_correct": false
+        },
+        {
+          "text": "",
+          "is_correct": false
+        }
+      ],
+      "audio_trigger": false
+    },
+    "_rejection_reasons": [
+      "distractor: distractor \"ыг\" not derivable from \"номоо\" via [E1, E2]",
+      "distractor: distractor \"\" not derivable from \"номоо\" via [E1, E2]"
+    ]
+  },
+  {
+    "id": "G12-010-v2",
+    "task_type": "TT1_CHOICE",
+    "title": "Зөвийг сонгоно уу",
+    "prompt_text": "Хүүхэд инээ___.",
+    "correct_answer": "инээв",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S5",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "E1",
+      "E2"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 20,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Өнгөрсөн цагийн үйл үг 'в' залгавраар төгсөнө.",
+    "options": {
+      "choices": [
+        {
+          "text": "в",
+          "is_correct": true
+        },
+        {
+          "text": "лээ",
+          "is_correct": false
+        },
+        {
+          "text": "",
+          "is_correct": false
+        }
+      ],
+      "audio_trigger": false
+    },
+    "_rejection_reasons": [
+      "distractor: distractor \"лээ\" not derivable from \"инээв\" via [E1, E2]",
+      "distractor: distractor \"\" not derivable from \"инээв\" via [E1, E2]"
+    ]
+  },
+  {
+    "id": "G12-010-v3",
+    "task_type": "TT1_CHOICE",
+    "title": "Зөвийг сонгоно уу",
+    "prompt_text": "Сургууль___ эхэллээ.",
+    "correct_answer": "Сургууль",
+    "audio_url": null,
+    "image_url": null,
+    "primary_skill": "S5",
+    "secondary_skill": null,
+    "level_target": "M1",
+    "error_targets": [
+      "E1",
+      "E2"
+    ],
+    "grade_band": [
+      "G1",
+      "G2"
+    ],
+    "difficulty": 2,
+    "estimated_time_seconds": 20,
+    "review_after_days": [
+      1,
+      3,
+      7
+    ],
+    "lesson_slot_fit": "CORE",
+    "feedback_text": "Өгүүлбэрийн эзэн нь залгавар авахгүй.",
+    "options": {
+      "choices": [
+        {
+          "text": "",
+          "is_correct": true
+        },
+        {
+          "text": "д",
+          "is_correct": false
+        },
+        {
+          "text": "т",
+          "is_correct": false
+        }
+      ],
+      "audio_trigger": false
+    },
+    "_rejection_reasons": [
+      "distractor: distractor \"д\" not derivable from \"Сургууль\" via [E1, E2]",
+      "distractor: distractor \"т\" not derivable from \"Сургууль\" via [E1, E2]"
+    ]
+  }
+]
