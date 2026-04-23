@@ -284,7 +284,7 @@ describe('GET /learner/:id', () => {
     expect(body.data!.skill_state!.longest_streak).toBe(0);
   });
 
-  it("403 — cannot access another parent's learner", async () => {
+  it("404 — cannot access another parent's learner", async () => {
     // Learner belongs to a different parent
     mockFindUnique.mockResolvedValue({
       ...fakeLearner({ parent_id: 'other-parent-uuid' }),
@@ -293,9 +293,9 @@ describe('GET /learner/:id', () => {
 
     const res = await get('learner-uuid-1');
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
     const body = await json(res);
-    expect(body.error!.code).toBe('FORBIDDEN');
+    expect(body.error!.code).toBe('NOT_FOUND');
   });
 
   it('404 — learner not found', async () => {

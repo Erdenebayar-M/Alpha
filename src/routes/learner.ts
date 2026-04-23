@@ -72,7 +72,7 @@ learner.get('/:id', async (c) => {
   }
 
   if (found.parent_id !== parent_id) {
-    return ERRORS.FORBIDDEN(c, 'Access denied');
+    return ERRORS.NOT_FOUND(c, 'Learner not found');
   }
 
   const s = found.skill_state;
