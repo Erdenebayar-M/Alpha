@@ -1,3 +1,8 @@
+if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_PROD_SEED) {
+  console.error('Cannot run seed in production!');
+  process.exit(1);
+}
+
 import "dotenv/config";
 import * as fs from "fs";
 import * as path from "path";
@@ -100,6 +105,7 @@ interface TaskSeed {
   review_after_days: number[];
   lesson_slot_fit: LessonSlot;
   feedback_text: string;
+  is_diagnostic?: boolean;
 }
 
 const readyTasks: TaskSeed[] = [
@@ -415,6 +421,7 @@ interface ValidatedVariant {
   review_after_days: number[];
   lesson_slot_fit: string;
   feedback_text: string;
+  is_diagnostic?: boolean;
 }
 
 function loadValidatedTasks(): ValidatedVariant[] {
@@ -457,6 +464,19 @@ function loadSeedWords(): SeedWordEntry[] {
   const raw = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
   return Array.isArray(raw.words) ? raw.words : [];
 }
+
+// readyTasks G12-001 through G12-009 (including v2 variants) are the Phase A/B diagnostic pool.
+const DIAGNOSTIC_TASK_IDS = new Set([
+  "G12-001", "G12-001v2",
+  "G12-002",
+  "G12-003", "G12-003v2",
+  "G12-004",
+  "G12-005", "G12-005v2",
+  "G12-006", "G12-006v2",
+  "G12-007",
+  "G12-008",
+  "G12-009", "G12-009v2",
+]);
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -565,6 +585,7 @@ async function main() {
       review_after_days: t.review_after_days,
       lesson_slot_fit: t.lesson_slot_fit,
       feedback_text: t.feedback_text,
+      is_diagnostic: DIAGNOSTIC_TASK_IDS.has(t.id),
     };
     try {
       if (isDryRun) {
@@ -605,6 +626,7 @@ async function main() {
       review_after_days: v.review_after_days,
       lesson_slot_fit: v.lesson_slot_fit as LessonSlot,
       feedback_text: v.feedback_text,
+      is_diagnostic: v.is_diagnostic ?? false,
     };
     try {
       if (isDryRun) {
@@ -623,6 +645,32 @@ async function main() {
   }
 
   const taskTotal = taskCreated + taskUpdated;
+
+  // ── Test accounts (development only) ──────────────────────────────────────
+  if (process.env.NODE_ENV === 'development') {
+    const bcrypt = await import('bcrypt');
+    const passwordHash = await bcrypt.hash('password123', 12);
+
+    const parent = await prisma.parent.upsert({
+      where: { email: 'test@local.dev' },
+      update: {},
+      create: { email: 'test@local.dev', password_hash: passwordHash, name: 'Test Parent' },
+    });
+
+    await prisma.learner.upsert({
+      where: { id: 'test-learner-a' },
+      update: {},
+      create: { id: 'test-learner-a', parent_id: parent.id, name: 'Test A', grade: 1, variant: 'A' },
+    });
+
+    await prisma.learner.upsert({
+      where: { id: 'test-learner-b' },
+      update: {},
+      create: { id: 'test-learner-b', parent_id: parent.id, name: 'Test B', grade: 3, variant: 'B' },
+    });
+
+    console.log('Test accounts seeded (test@local.dev / password123)');
+  }
 
   // ── Coverage analysis ──────────────────────────────────────────────────────
   console.log("\n─── Seed Summary ───────────────────────────────────────");

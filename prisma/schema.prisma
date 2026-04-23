@@ -267,6 +267,7 @@ model Task {
   review_after_days      Int[]      // [1, 3, 7]
   lesson_slot_fit        LessonSlot
   feedback_text          String
+  is_diagnostic          Boolean    @default(false)
 
   attempts Attempt[]
 
