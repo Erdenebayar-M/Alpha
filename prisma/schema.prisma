@@ -145,9 +145,11 @@ model Parent {
   email         String   @unique
   password_hash String
   name          String
-  created_at    DateTime @default(now())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
 
   learners Learner[]
+
+  @@map("parents")
 }
 
 model Learner {
@@ -157,14 +159,16 @@ model Learner {
   grade         Int
   daily_minutes Int      @default(10)
   variant       Variant
-  created_at    DateTime @default(now())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
 
-  parent              Parent              @relation(fields: [parent_id], references: [id])
+  parent              Parent              @relation(fields: [parent_id], references: [id], onDelete: Cascade)
   skill_state         LearnerSkillState?
   diagnostic_sessions DiagnosticSession[]
   plans               Plan[]
   lessons             Lesson[]
   attempts            Attempt[]
+
+  @@map("learners")
 }
 
 model LearnerSkillState {
@@ -211,9 +215,11 @@ model LearnerSkillState {
   current_streak           Int      @default(0)
   longest_streak           Int      @default(0)
 
-  updated_at DateTime @updatedAt
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
 
-  learner Learner @relation(fields: [learner_id], references: [id])
+  learner Learner @relation(fields: [learner_id], references: [id], onDelete: Cascade)
+
+  @@map("learner_skill_states")
 }
 
 /// Seed-content word bank. Standalone — not linked to Learner.
@@ -236,6 +242,7 @@ model Word {
 
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
+  @@map("words")
 }
 
 /// Task bank. Standalone — not linked to a specific Learner.
@@ -265,6 +272,7 @@ model Task {
 
   @@index([primary_skill, level_target])
   @@index([grade_band], type: Gin)
+  @@map("tasks")
 }
 
 model DiagnosticSession {
@@ -277,13 +285,14 @@ model DiagnosticSession {
   weak_skills_detected String[]         // Populated after Phase A
   /// JSONB: { general_level, skill_levels, top_errors, priority_skills }
   result               Json?
-  started_at           DateTime         @default(now())
-  completed_at         DateTime?
+  started_at           DateTime         @default(now()) @db.Timestamptz(6)
+  completed_at         DateTime?        @db.Timestamptz(6)
 
-  learner  Learner   @relation(fields: [learner_id], references: [id])
+  learner  Learner   @relation(fields: [learner_id], references: [id], onDelete: Cascade)
   attempts Attempt[]
 
   @@index([learner_id, status])
+  @@map("diagnostic_sessions")
 }
 
 model Plan {
@@ -291,19 +300,22 @@ model Plan {
   learner_id      String
   template        PlanTemplate
   status          PlanStatus   @default(ACTIVE)
+  is_active       Boolean      @default(true)
   priority_skills String[]     // ["S3","S5"]
   target_errors   String[]     // ["C1","C4"]
   daily_minutes   Int          // 10 / 15 / 20
   duration_days   Int          // 7 or 14
   source          PlanSource
-  started_at      DateTime     @default(now())
-  ended_at        DateTime?
+  started_at      DateTime     @default(now()) @db.Timestamptz(6)
+  ended_at        DateTime?    @db.Timestamptz(6)
 
-  learner     Learner      @relation(fields: [learner_id], references: [id])
+  learner     Learner      @relation(fields: [learner_id], references: [id], onDelete: Cascade)
   lessons     Lesson[]
   checkpoints Checkpoint[]
 
   @@index([learner_id, status])
+  @@unique([learner_id, is_active])
+  @@map("plans")
 }
 
 model Lesson {
@@ -322,15 +334,16 @@ model Lesson {
   total_tasks                Int
   accuracy                   Float?       // Populated on completion
   scheduled_date             DateTime     @db.Date
-  started_at                 DateTime?
-  completed_at               DateTime?
+  started_at                 DateTime?    @db.Timestamptz(6)
+  completed_at               DateTime?    @db.Timestamptz(6)
 
-  learner  Learner   @relation(fields: [learner_id], references: [id])
-  plan     Plan      @relation(fields: [plan_id], references: [id])
+  learner  Learner   @relation(fields: [learner_id], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [plan_id],    references: [id], onDelete: Cascade)
   attempts Attempt[]
 
   @@index([plan_id, day_number])
   @@index([learner_id, scheduled_date])
+  @@map("lessons")
 }
 
 model Checkpoint {
@@ -343,12 +356,13 @@ model Checkpoint {
   decision       CheckpointDecision?
   status         CheckpointStatus    @default(PENDING)
   scheduled_date DateTime            @db.Date
-  completed_at   DateTime?
+  completed_at   DateTime?           @db.Timestamptz(6)
 
-  plan     Plan      @relation(fields: [plan_id], references: [id])
+  plan     Plan      @relation(fields: [plan_id], references: [id], onDelete: Cascade)
   attempts Attempt[]
 
   @@index([plan_id, status])
+  @@map("checkpoints")
 }
 
 model Attempt {
@@ -364,17 +378,18 @@ model Attempt {
   self_corrected        Boolean        @default(false)
   error_codes           String[]       // Quick lookup; detail in ErrorLog
   context               AttemptContext
-  created_at            DateTime       @default(now())
+  created_at            DateTime       @default(now()) @db.Timestamptz(6)
 
-  learner            Learner            @relation(fields: [learner_id], references: [id])
-  task               Task               @relation(fields: [task_id], references: [id])
-  lesson             Lesson?            @relation(fields: [lesson_id], references: [id])
-  diagnostic_session DiagnosticSession? @relation(fields: [diagnostic_session_id], references: [id])
-  checkpoint         Checkpoint?        @relation(fields: [checkpoint_id], references: [id])
+  learner            Learner            @relation(fields: [learner_id],            references: [id], onDelete: Cascade)
+  task               Task               @relation(fields: [task_id],               references: [id])
+  lesson             Lesson?            @relation(fields: [lesson_id],             references: [id], onDelete: SetNull)
+  diagnostic_session DiagnosticSession? @relation(fields: [diagnostic_session_id], references: [id], onDelete: SetNull)
+  checkpoint         Checkpoint?        @relation(fields: [checkpoint_id],         references: [id], onDelete: SetNull)
   error_logs         ErrorLog[]
 
   @@index([learner_id, created_at(sort: Desc)])
   @@index([learner_id, task_id])
+  @@map("attempts")
 }
 
 model ErrorLog {
@@ -387,8 +402,9 @@ model ErrorLog {
   actual_char      String?
   context_word     String?
 
-  attempt Attempt @relation(fields: [attempt_id], references: [id])
+  attempt Attempt @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
 
   @@index([attempt_id])
   @@index([error_code, attempt_id])
+  @@map("error_logs")
 }
