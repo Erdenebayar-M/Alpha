@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
+import { ok } from '../lib/response';
 
 const dashboard = new Hono<AuthEnv>();
 
@@ -11,29 +12,29 @@ dashboard.use('/*', withAuth);
 
 dashboard.get('/skills', async (c) => {
   const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR('learner_id is required', {});
+  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
-  if (!learner) return ERRORS.NOT_FOUND('Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
+  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
 
   const state = await prisma.learnerSkillState.findUnique({ where: { learner_id } });
-  if (!state) return ERRORS.NOT_FOUND('Skill state not found');
+  if (!state) return ERRORS.NOT_FOUND(c, 'Skill state not found');
 
-  return c.json({ skills: state });
+  return ok(c, { skills: state });
 });
 
 // ─── GET /api/dashboard/progress ─────────────────────────────────────────────
 
 dashboard.get('/progress', async (c) => {
   const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR('learner_id is required', {});
+  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
-  if (!learner) return ERRORS.NOT_FOUND('Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
+  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
 
   const state = await prisma.learnerSkillState.findUnique({
     where: { learner_id },
@@ -47,7 +48,7 @@ dashboard.get('/progress', async (c) => {
     select: { id: true, day_number: true, accuracy: true, completed_at: true },
   });
 
-  return c.json({
+  return ok(c, {
     current_streak: state?.current_streak ?? 0,
     longest_streak: state?.longest_streak ?? 0,
     recent_lessons: recentLessons,

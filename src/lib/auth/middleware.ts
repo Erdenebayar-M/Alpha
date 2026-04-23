@@ -19,7 +19,7 @@ export type AuthEnv = {
 export const withAuth = createMiddleware<AuthEnv>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
-    return ERRORS.UNAUTHORIZED('Missing or malformed Authorization header');
+    return ERRORS.UNAUTHORIZED(c, 'Missing or malformed Authorization header');
   }
 
   const token = authHeader.slice(7);
@@ -28,6 +28,6 @@ export const withAuth = createMiddleware<AuthEnv>(async (c, next) => {
     c.set('parent_id', parent_id);
     await next();
   } catch {
-    return ERRORS.UNAUTHORIZED('Invalid or expired token');
+    return ERRORS.UNAUTHORIZED(c, 'Invalid or expired token');
   }
 });

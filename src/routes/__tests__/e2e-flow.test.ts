@@ -246,10 +246,10 @@ describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
     const body = await json(res);
 
     expect(res.status).toBe(201);
-    expect(body.id).toBe(PARENT_ID);
-    expect(body.email).toBe('parent@test.mn');
-    expect(body.name).toBe('Батмөнх');
-    expect(body.token).toBe('e2e-test-token');
+    expect(body.data.id).toBe(PARENT_ID);
+    expect(body.data.email).toBe('parent@test.mn');
+    expect(body.data.name).toBe('Батмөнх');
+    expect(body.data.token).toBe('e2e-test-token');
     expect(m.parentCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ email: 'parent@test.mn', name: 'Батмөнх' }),
@@ -273,11 +273,11 @@ describe('2 – create learner (Болд, grade 2, variant A, 10 min)', () => {
     const body = await json(res);
 
     expect(res.status).toBe(201);
-    expect(body.name).toBe('Болд');
-    expect(body.grade).toBe(2);
-    expect(body.variant).toBe('A');
-    expect(body.daily_minutes).toBe(10);
-    expect(body.id).toBe(LEARNER_ID);
+    expect(body.data.name).toBe('Болд');
+    expect(body.data.grade).toBe(2);
+    expect(body.data.variant).toBe('A');
+    expect(body.data.daily_minutes).toBe(10);
+    expect(body.data.id).toBe(LEARNER_ID);
   });
 });
 
@@ -326,11 +326,11 @@ describe('4 – start diagnostic → 8 Phase A tasks', () => {
     const body = await json(res);
 
     expect(res.status).toBe(201);
-    expect(body.session_id).toBe(SESSION_ID);
-    expect(body.phase).toBe('A');
-    expect(body.total_phases).toBe(3);
-    expect(body.tasks).toHaveLength(8);
-    expect(body.tasks.map((t: any) => t.primary_skill)).toEqual([...ALL_SKILLS]);
+    expect(body.data.session_id).toBe(SESSION_ID);
+    expect(body.data.phase).toBe('A');
+    expect(body.data.total_phases).toBe(3);
+    expect(body.data.tasks).toHaveLength(8);
+    expect(body.data.tasks.map((t: any) => t.primary_skill)).toEqual([...ALL_SKILLS]);
   });
 });
 
@@ -370,12 +370,12 @@ describe('5 – submit 8 Phase A answers', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.score).toBe(PA_SCORES[skill]);
+      expect(body.data.score).toBe(PA_SCORES[skill]);
       if (PA_ERRORS[skill]?.length) {
-        expect(body.error_codes).toEqual(expect.arrayContaining(PA_ERRORS[skill]));
+        expect(body.data.error_codes).toEqual(expect.arrayContaining(PA_ERRORS[skill]));
       }
-      expect(body.phase_progress.total).toBe(8);
-      expect(body.phase_progress.completed).toBe(idx + 1);
+      expect(body.data.phase_progress.total).toBe(8);
+      expect(body.data.phase_progress.completed).toBe(idx + 1);
     });
   });
 });
@@ -422,12 +422,12 @@ describe('6 – next-phase A→B: Phase B targets S3 and S5', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.phase).toBe('B');
-    expect(body.tasks).toHaveLength(8);
-    expect(body.weak_skills).toContain('S3');
-    expect(body.weak_skills).toContain('S5');
-    expect(body.weak_skills).not.toContain('S1');
-    expect(body.weak_skills).not.toContain('S2');
+    expect(body.data.phase).toBe('B');
+    expect(body.data.tasks).toHaveLength(8);
+    expect(body.data.weak_skills).toContain('S3');
+    expect(body.data.weak_skills).toContain('S5');
+    expect(body.data.weak_skills).not.toContain('S1');
+    expect(body.data.weak_skills).not.toContain('S2');
 
     expect(m.sessionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -468,8 +468,8 @@ describe('7 – submit 8 Phase B answers (mix of correct and wrong)', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.score).toBe(PB_SCORES[i]);
-      expect(body.phase_progress.total).toBe(8);
+      expect(body.data.score).toBe(PB_SCORES[i]);
+      expect(body.data.phase_progress.total).toBe(8);
     });
   });
 });
@@ -511,10 +511,10 @@ describe('8 – next-phase B→C: Phase C tasks returned', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.phase).toBe('C');
-    expect(body.tasks).toHaveLength(4);
-    expect(typeof body.estimated_level).toBe('string');
-    expect(body.estimated_level).toMatch(/^M[0-5]$/);
+    expect(body.data.phase).toBe('C');
+    expect(body.data.tasks).toHaveLength(4);
+    expect(typeof body.data.estimated_level).toBe('string');
+    expect(body.data.estimated_level).toMatch(/^M[0-5]$/);
 
     expect(m.sessionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -552,8 +552,8 @@ describe('9 – submit 4 Phase C answers', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.score).toBe(PC_SCORES[i]);
-      expect(body.phase_progress.total).toBe(4);
+      expect(body.data.score).toBe(PC_SCORES[i]);
+      expect(body.data.phase_progress.total).toBe(4);
     });
   });
 });
@@ -601,11 +601,11 @@ describe('10–12 – next-phase C→COMPLETED: result, plan auto-created', () =
   });
 
   it('10 – completed = true', () => {
-    expect(completedBody.completed).toBe(true);
+    expect(completedBody.data.completed).toBe(true);
   });
 
   it('11 – result: general_level M1 or M2, S3/S5 priority, C1/E2 top errors', () => {
-    const r = completedBody.result;
+    const r = completedBody.data.result;
 
     expect(r.general_level).toMatch(/^M[12]$/);
     expect(r.priority_skills).toContain('S3');
@@ -622,7 +622,7 @@ describe('10–12 – next-phase C→COMPLETED: result, plan auto-created', () =
   });
 
   it('12 – plan auto-created with correct priority_skills and source', () => {
-    expect(completedBody.plan_id).toBe(PLAN_ID);
+    expect(completedBody.data.plan_id).toBe(PLAN_ID);
     expect(m.planCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -668,10 +668,10 @@ describe('11b – GET /diagnostic/result/:sessionId', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.result.general_level).toBe('M1');
-    expect(body.result.priority_skills).toEqual(['S3', 'S5']);
-    expect(body.result.top_error_codes).toContain('C1');
-    expect(body.result.top_error_codes).toContain('E2');
+    expect(body.data.result.general_level).toBe('M1');
+    expect(body.data.result.priority_skills).toEqual(['S3', 'S5']);
+    expect(body.data.result.top_error_codes).toContain('C1');
+    expect(body.data.result.top_error_codes).toContain('E2');
   });
 });
 
@@ -851,10 +851,10 @@ describe('15 – GET /dashboard/skills → scores updated after lesson', () => {
 
     expect(res.status).toBe(200);
     // S3 score updated from initial 0.375 → higher after correct lesson attempt
-    expect(body.skills.s3_score).toBeGreaterThan(0.375);
+    expect(body.data.skills.s3_score).toBeGreaterThan(0.375);
     // S5 score now above 0.6 (M3 level) after correct answer
-    expect(body.skills.s5_score).toBeGreaterThan(0.375);
-    expect(body.skills.general_level).toBe('M1');
+    expect(body.data.skills.s5_score).toBeGreaterThan(0.375);
+    expect(body.data.skills.general_level).toBe('M1');
   });
 });
 
@@ -883,10 +883,10 @@ describe('16 – GET /dashboard/progress → streak = 1', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.current_streak).toBe(1);
-    expect(body.longest_streak).toBe(1);
-    expect(body.recent_lessons).toHaveLength(1);
-    expect(body.recent_lessons[0].id).toBe(LESSON_ID);
-    expect(body.recent_lessons[0].accuracy).toBeCloseTo(0.875);
+    expect(body.data.current_streak).toBe(1);
+    expect(body.data.longest_streak).toBe(1);
+    expect(body.data.recent_lessons).toHaveLength(1);
+    expect(body.data.recent_lessons[0].id).toBe(LESSON_ID);
+    expect(body.data.recent_lessons[0].accuracy).toBeCloseTo(0.875);
   });
 });

@@ -3,6 +3,7 @@ import { Variant } from '../../generated/prisma';
 import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
+import { ok } from '../lib/response';
 import { createLearnerSchema } from '../lib/validators/learner';
 
 const learner = new Hono<AuthEnv>();
@@ -15,7 +16,7 @@ learner.post('/', async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = createLearnerSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR('Invalid request body', parsed.error.flatten().fieldErrors);
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
   const { name, grade, daily_minutes } = parsed.data;
@@ -41,7 +42,8 @@ learner.post('/', async (c) => {
     return created;
   });
 
-  return c.json(
+  return ok(
+    c,
     {
       id: newLearner.id,
       name: newLearner.name,
@@ -49,6 +51,7 @@ learner.post('/', async (c) => {
       daily_minutes: newLearner.daily_minutes,
       variant: newLearner.variant,
     },
+    undefined,
     201,
   );
 });
@@ -65,16 +68,16 @@ learner.get('/:id', async (c) => {
   });
 
   if (!found) {
-    return ERRORS.NOT_FOUND('Learner not found');
+    return ERRORS.NOT_FOUND(c, 'Learner not found');
   }
 
   if (found.parent_id !== parent_id) {
-    return ERRORS.FORBIDDEN('Access denied');
+    return ERRORS.FORBIDDEN(c, 'Access denied');
   }
 
   const s = found.skill_state;
 
-  return c.json({
+  return ok(c, {
     id: found.id,
     name: found.name,
     grade: found.grade,

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
+import { ok } from '../lib/response';
 import { startDiagnosticSchema, submitDiagnosticSchema, nextPhaseSchema } from '../lib/validators/diagnostic';
 import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
@@ -22,21 +23,21 @@ diagnostic.post('/start', async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = startDiagnosticSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR('Invalid request body', parsed.error.flatten().fieldErrors);
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
   const { learner_id } = parsed.data;
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
-  if (!learner) return ERRORS.NOT_FOUND('Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
+  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
 
   const existing = await prisma.diagnosticSession.findFirst({
     where: { learner_id, status: 'IN_PROGRESS' },
   });
   if (existing) {
-    return ERRORS.CONFLICT('A diagnostic session is already in progress');
+    return ERRORS.CONFLICT(c, 'A diagnostic session is already in progress');
   }
 
   const gradeBands = learner.variant === 'A' ? ['G1', 'G2'] : ['G2', 'G3', 'G4'];
@@ -76,7 +77,7 @@ diagnostic.post('/start', async (c) => {
     select: { id: true },
   });
 
-  return c.json({ session_id: session.id, phase: 'A', tasks, total_phases: 3 }, 201);
+  return ok(c, { session_id: session.id, phase: 'A', tasks, total_phases: 3 }, undefined, 201);
 });
 
 // ─── POST /api/diagnostic/submit ─────────────────────────────────────────────
@@ -85,7 +86,7 @@ diagnostic.post('/submit', async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = submitDiagnosticSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR('Invalid request body', parsed.error.flatten().fieldErrors);
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
   const { session_id, task_id, input_text, time_seconds } = parsed.data;
@@ -95,10 +96,10 @@ diagnostic.post('/submit', async (c) => {
     where: { id: session_id },
     include: { learner: true },
   });
-  if (!session) return ERRORS.NOT_FOUND('Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
+  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
   if (session.status !== 'IN_PROGRESS') {
-    return ERRORS.UNPROCESSABLE('Session is not in progress');
+    return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
   }
 
   const duplicate = await prisma.attempt.findFirst({
@@ -106,7 +107,7 @@ diagnostic.post('/submit', async (c) => {
     select: { id: true },
   });
   if (duplicate) {
-    return ERRORS.CONFLICT('Task already submitted for this session');
+    return ERRORS.CONFLICT(c, 'Task already submitted for this session');
   }
 
   const taskRepo: TaskRepository = {
@@ -171,7 +172,7 @@ diagnostic.post('/submit', async (c) => {
     session.current_phase === 'PHASE_A' ? 0 :
     session.current_phase === 'PHASE_B' ? 8 : 16;
 
-  return c.json({
+  return ok(c, {
     score: result.score,
     is_correct: result.isCorrect,
     error_codes: result.errorCodes,
@@ -201,7 +202,7 @@ diagnostic.post('/next-phase', async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = nextPhaseSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR('Invalid request body', parsed.error.flatten().fieldErrors);
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
   const { session_id } = parsed.data;
@@ -211,10 +212,10 @@ diagnostic.post('/next-phase', async (c) => {
     where: { id: session_id },
     include: { learner: true },
   });
-  if (!session) return ERRORS.NOT_FOUND('Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
+  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
   if (session.status !== 'IN_PROGRESS') {
-    return ERRORS.UNPROCESSABLE('Session is not in progress');
+    return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
   }
 
   const attempts = await prisma.attempt.findMany({
@@ -233,6 +234,7 @@ diagnostic.post('/next-phase', async (c) => {
   if (session.current_phase === 'PHASE_A') {
     if (attempts.length < 8) {
       return ERRORS.UNPROCESSABLE(
+        c,
         `Phase A is not complete: ${attempts.length} of 8 tasks submitted`,
       );
     }
@@ -260,7 +262,7 @@ diagnostic.post('/next-phase', async (c) => {
       select: TASK_SELECT,
     });
 
-    return c.json({ phase: 'B', tasks, weak_skills: weakSkills });
+    return ok(c, { phase: 'B', tasks, weak_skills: weakSkills });
   }
 
   // ── PHASE_B → PHASE_C ────────────────────────────────────────────────────
@@ -268,6 +270,7 @@ diagnostic.post('/next-phase', async (c) => {
   if (session.current_phase === 'PHASE_B') {
     if (attempts.length < 16) {
       return ERRORS.UNPROCESSABLE(
+        c,
         `Phase B is not complete: ${attempts.length - 8} of 8 tasks submitted`,
       );
     }
@@ -315,7 +318,7 @@ diagnostic.post('/next-phase', async (c) => {
       data: { phase_b_completed: true, current_phase: 'PHASE_C' },
     });
 
-    return c.json({ phase: 'C', tasks, estimated_level });
+    return ok(c, { phase: 'C', tasks, estimated_level });
   }
 
   // ── PHASE_C → COMPLETED ──────────────────────────────────────────────────
@@ -323,6 +326,7 @@ diagnostic.post('/next-phase', async (c) => {
   if (session.current_phase === 'PHASE_C') {
     if (attempts.length < 20) {
       return ERRORS.UNPROCESSABLE(
+        c,
         `Phase C is not complete: ${attempts.length - 16} of 4 tasks submitted`,
       );
     }
@@ -407,10 +411,10 @@ diagnostic.post('/next-phase', async (c) => {
       }),
     ]) as any;
 
-    return c.json({ completed: true, result: finalResult, plan_id: newPlan.id });
+    return ok(c, { completed: true, result: finalResult, plan_id: newPlan.id });
   }
 
-  return ERRORS.UNPROCESSABLE('Session is in an unexpected phase state');
+  return ERRORS.UNPROCESSABLE(c, 'Session is in an unexpected phase state');
 });
 
 // ─── GET /api/diagnostic/result/:sessionId ───────────────────────────────────
@@ -423,13 +427,13 @@ diagnostic.get('/result/:sessionId', async (c) => {
     where: { id: sessionId },
     include: { learner: true },
   });
-  if (!session) return ERRORS.NOT_FOUND('Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN();
+  if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
+  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
   if (session.status !== 'COMPLETED') {
-    return ERRORS.UNPROCESSABLE('Session is not yet completed');
+    return ERRORS.UNPROCESSABLE(c, 'Session is not yet completed');
   }
 
-  return c.json({ result: session.result });
+  return ok(c, { result: session.result });
 });
 
 export default diagnostic;

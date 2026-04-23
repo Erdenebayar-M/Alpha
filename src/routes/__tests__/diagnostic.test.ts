@@ -146,11 +146,11 @@ describe('POST /diagnostic/start', () => {
     const body = await json(res);
 
     expect(res.status).toBe(201);
-    expect(body.session_id).toBe(SESSION_ID);
-    expect(body.phase).toBe('A');
-    expect(body.total_phases).toBe(3);
-    expect(body.tasks).toHaveLength(8);
-    expect(body.tasks[0].primary_skill).toBe('S1');
+    expect(body.data.session_id).toBe(SESSION_ID);
+    expect(body.data.phase).toBe('A');
+    expect(body.data.total_phases).toBe(3);
+    expect(body.data.tasks).toHaveLength(8);
+    expect(body.data.tasks[0].primary_skill).toBe('S1');
   });
 
   it('201 — session created with IN_PROGRESS status and PHASE_A', async () => {
@@ -251,11 +251,11 @@ describe('POST /diagnostic/submit', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.score).toBe(1.0);
-    expect(body.is_correct).toBe(true);
-    expect(body.error_codes).toEqual([]);
-    expect(body.feedback).toBe('Зөв бичлээ! Баяр хүргэе!');
-    expect(body.phase_progress).toEqual({ completed: 1, total: 8 });
+    expect(body.data.score).toBe(1.0);
+    expect(body.data.is_correct).toBe(true);
+    expect(body.data.error_codes).toEqual([]);
+    expect(body.data.feedback).toBe('Зөв бичлээ! Баяр хүргэе!');
+    expect(body.data.phase_progress).toEqual({ completed: 1, total: 8 });
   });
 
   it('200 — incorrect answer returns error codes and lower score', async () => {
@@ -265,9 +265,9 @@ describe('POST /diagnostic/submit', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.score).toBe(0.5);
-    expect(body.is_correct).toBe(false);
-    expect(body.error_codes).toContain('C1');
+    expect(body.data.score).toBe(0.5);
+    expect(body.data.is_correct).toBe(false);
+    expect(body.data.error_codes).toContain('C1');
   });
 
   it('200 — phase_progress reflects completed count', async () => {
@@ -282,8 +282,8 @@ describe('POST /diagnostic/submit', () => {
     const res = await postSubmit(VALID_SUBMIT);
     const body = await json(res);
 
-    expect(body.phase_progress.completed).toBe(5);
-    expect(body.phase_progress.total).toBe(8);
+    expect(body.data.phase_progress.completed).toBe(5);
+    expect(body.data.phase_progress.total).toBe(8);
   });
 
   it('200 — processAttempt called with correct DIAGNOSTIC context params', async () => {
@@ -439,9 +439,9 @@ describe('POST /diagnostic/next-phase', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.phase).toBe('B');
-      expect(Array.isArray(body.tasks)).toBe(true);
-      expect(Array.isArray(body.weak_skills)).toBe(true);
+      expect(body.data.phase).toBe('B');
+      expect(Array.isArray(body.data.tasks)).toBe(true);
+      expect(Array.isArray(body.data.weak_skills)).toBe(true);
     });
 
     it('transitions session to PHASE_B with correct weak_skills_detected', async () => {
@@ -498,9 +498,9 @@ describe('POST /diagnostic/next-phase', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.phase).toBe('C');
-      expect(body.tasks).toHaveLength(4);
-      expect(typeof body.estimated_level).toBe('string');
+      expect(body.data.phase).toBe('C');
+      expect(body.data.tasks).toHaveLength(4);
+      expect(typeof body.data.estimated_level).toBe('string');
     });
 
     it('transitions session to PHASE_C', async () => {
@@ -552,12 +552,12 @@ describe('POST /diagnostic/next-phase', () => {
       const body = await json(res);
 
       expect(res.status).toBe(200);
-      expect(body.completed).toBe(true);
-      expect(body.result).toHaveProperty('general_level');
-      expect(body.result).toHaveProperty('skill_levels');
-      expect(body.result).toHaveProperty('skill_scores');
-      expect(body.result).toHaveProperty('priority_skills');
-      expect(body.result).toHaveProperty('top_error_codes');
+      expect(body.data.completed).toBe(true);
+      expect(body.data.result).toHaveProperty('general_level');
+      expect(body.data.result).toHaveProperty('skill_levels');
+      expect(body.data.result).toHaveProperty('skill_scores');
+      expect(body.data.result).toHaveProperty('priority_skills');
+      expect(body.data.result).toHaveProperty('top_error_codes');
     });
 
     it('upserts LearnerSkillState and marks session COMPLETED', async () => {
@@ -659,9 +659,9 @@ describe('GET /diagnostic/result/:sessionId', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.result.general_level).toBe('M1');
-    expect(body.result.priority_skills).toEqual(['S3', 'S5']);
-    expect(body.result.top_error_codes).toContain('C1');
+    expect(body.data.result.general_level).toBe('M1');
+    expect(body.data.result.priority_skills).toEqual(['S3', 'S5']);
+    expect(body.data.result.top_error_codes).toContain('C1');
   });
 
   it('422 — session is IN_PROGRESS', async () => {
@@ -739,8 +739,8 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
     const startRes = await postStart({ learner_id: LEARNER_ID });
     expect(startRes.status).toBe(201);
     const startBody = await json(startRes);
-    expect(startBody.session_id).toBe(SESSION_ID);
-    expect(startBody.tasks).toHaveLength(8);
+    expect(startBody.data.session_id).toBe(SESSION_ID);
+    expect(startBody.data.tasks).toHaveLength(8);
 
     // ── Phase A — 8 submissions ────────────────────────────────────────────
     mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_A' }));
@@ -765,7 +765,7 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
       });
       expect(res.status).toBe(200);
       const b = await json(res);
-      expect(b.phase_progress.total).toBe(8);
+      expect(b.data.phase_progress.total).toBe(8);
     }
 
     // ── Next-phase A → B ───────────────────────────────────────────────────
@@ -800,10 +800,10 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
     const nextARes = await postNextPhase({ session_id: SESSION_ID });
     expect(nextARes.status).toBe(200);
     const nextABody = await json(nextARes);
-    expect(nextABody.phase).toBe('B');
-    expect(nextABody.tasks).toHaveLength(8);
-    expect(nextABody.weak_skills).toContain('S3');
-    expect(nextABody.weak_skills).toContain('S5');
+    expect(nextABody.data.phase).toBe('B');
+    expect(nextABody.data.tasks).toHaveLength(8);
+    expect(nextABody.data.weak_skills).toContain('S3');
+    expect(nextABody.data.weak_skills).toContain('S5');
 
     // ── Phase B — 8 submissions ────────────────────────────────────────────
     mockSessionFindUnique.mockResolvedValue(
@@ -856,9 +856,9 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
     const nextBRes = await postNextPhase({ session_id: SESSION_ID });
     expect(nextBRes.status).toBe(200);
     const nextBBody = await json(nextBRes);
-    expect(nextBBody.phase).toBe('C');
-    expect(nextBBody.tasks).toHaveLength(4);
-    expect(typeof nextBBody.estimated_level).toBe('string');
+    expect(nextBBody.data.phase).toBe('C');
+    expect(nextBBody.data.tasks).toHaveLength(4);
+    expect(typeof nextBBody.data.estimated_level).toBe('string');
 
     // ── Phase C — 4 submissions ────────────────────────────────────────────
     mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_C' }));
@@ -904,15 +904,15 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
     expect(completedRes.status).toBe(200);
     const completedBody = await json(completedRes);
 
-    expect(completedBody.completed).toBe(true);
-    expect(completedBody.result.general_level).toMatch(/^M[0-5]$/);
-    expect(completedBody.result.priority_skills).toContain('S3');
-    expect(completedBody.result.priority_skills).toContain('S5');
-    expect(completedBody.result.top_error_codes).toContain('C1');
+    expect(completedBody.data.completed).toBe(true);
+    expect(completedBody.data.result.general_level).toMatch(/^M[0-5]$/);
+    expect(completedBody.data.result.priority_skills).toContain('S3');
+    expect(completedBody.data.result.priority_skills).toContain('S5');
+    expect(completedBody.data.result.top_error_codes).toContain('C1');
 
     // ── GET /result/:sessionId ─────────────────────────────────────────────
     mockSessionFindUnique.mockResolvedValueOnce(
-      fakeSession({ status: 'COMPLETED', result: completedBody.result }),
+      fakeSession({ status: 'COMPLETED', result: completedBody.data.result }),
     );
 
     const resultRes = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
@@ -922,9 +922,9 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
     expect(resultRes.status).toBe(200);
     const resultBody = await json(resultRes);
 
-    expect(resultBody.result.general_level).toMatch(/^M[0-5]$/);
-    expect(resultBody.result.priority_skills).toContain('S3');
-    expect(resultBody.result.priority_skills).toContain('S5');
-    expect(resultBody.result.top_error_codes).toContain('C1');
+    expect(resultBody.data.result.general_level).toMatch(/^M[0-5]$/);
+    expect(resultBody.data.result.priority_skills).toContain('S3');
+    expect(resultBody.data.result.priority_skills).toContain('S5');
+    expect(resultBody.data.result.top_error_codes).toContain('C1');
   });
 });

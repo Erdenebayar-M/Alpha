@@ -40,10 +40,8 @@ function post(path: string, body: unknown) {
 }
 
 interface AuthBody {
-  id?: string;
-  email?: string;
-  name?: string;
-  token?: string;
+  success?: boolean;
+  data?: { id?: string; email?: string; name?: string; token?: string };
   error?: { code: string; message: string };
 }
 
@@ -78,7 +76,7 @@ describe('POST /register', () => {
 
     expect(res.status).toBe(201);
     const body = await json(res);
-    expect(body).toEqual({
+    expect(body.data).toEqual({
       id: FAKE_PARENT.id,
       email: FAKE_PARENT.email,
       name: FAKE_PARENT.name,
@@ -99,7 +97,7 @@ describe('POST /register', () => {
 
     expect(res.status).toBe(409);
     const body = await json(res);
-    expect(body.error!.code).toBe('CONFLICT');
+    expect(body.error!.code).toBe('DUPLICATE_EMAIL');
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
@@ -154,7 +152,7 @@ describe('POST /login', () => {
 
     expect(res.status).toBe(200);
     const body = await json(res);
-    expect(body).toEqual({
+    expect(body.data).toEqual({
       id: FAKE_PARENT.id,
       email: FAKE_PARENT.email,
       name: FAKE_PARENT.name,
@@ -173,7 +171,7 @@ describe('POST /login', () => {
 
     expect(res.status).toBe(401);
     const body = await json(res);
-    expect(body.error!.code).toBe('UNAUTHORIZED');
+    expect(body.error!.code).toBe('INVALID_CREDENTIALS');
     expect(mockSign).not.toHaveBeenCalled();
   });
 
@@ -187,7 +185,7 @@ describe('POST /login', () => {
 
     expect(res.status).toBe(401);
     const body = await json(res);
-    expect(body.error!.code).toBe('UNAUTHORIZED');
+    expect(body.error!.code).toBe('INVALID_CREDENTIALS');
   });
 
   it('400 — missing email', async () => {

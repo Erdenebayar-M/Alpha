@@ -31,13 +31,18 @@ const mockVerify      = verifyToken                as jest.MockedFunction<typeof
 const PARENT_ID   = 'parent-uuid-1';
 const BEARER      = 'Bearer test-token';
 
-interface LearnerBody {
+interface LearnerData {
   id?: string;
   name?: string;
   grade?: number;
   daily_minutes?: number;
   variant?: string;
   skill_state?: Record<string, unknown> | null;
+}
+
+interface LearnerBody {
+  success?: boolean;
+  data?: LearnerData;
   error?: { code: string; message: string };
 }
 
@@ -126,8 +131,8 @@ describe('POST /learner', () => {
 
     expect(res.status).toBe(201);
     const body = await json(res);
-    expect(body.variant).toBe('A');
-    expect(body.grade).toBe(1);
+    expect(body.data!.variant).toBe('A');
+    expect(body.data!.grade).toBe(1);
 
     expect(tx.learner.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -144,7 +149,7 @@ describe('POST /learner', () => {
 
     expect(res.status).toBe(201);
     const body = await json(res);
-    expect(body.variant).toBe('A');
+    expect(body.data!.variant).toBe('A');
 
     expect(tx.learner.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -161,8 +166,8 @@ describe('POST /learner', () => {
 
     expect(res.status).toBe(201);
     const body = await json(res);
-    expect(body.variant).toBe('B');
-    expect(body.grade).toBe(4);
+    expect(body.data!.variant).toBe('B');
+    expect(body.data!.grade).toBe(4);
 
     expect(tx.learner.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -267,16 +272,16 @@ describe('GET /learner/:id', () => {
     expect(res.status).toBe(200);
     const body = await json(res);
 
-    expect(body.id).toBe('learner-uuid-1');
-    expect(body.name).toBe('Bat');
-    expect(body.skill_state).not.toBeNull();
-    expect(body.skill_state!.general_level).toBe('M0');
-    expect(body.skill_state!.s1_score).toBe(0);
-    expect(body.skill_state!.s8_level).toBe('M0');
-    expect(body.skill_state!.top_error_codes).toEqual([]);
-    expect(body.skill_state!.weak_skills).toEqual([]);
-    expect(body.skill_state!.current_streak).toBe(0);
-    expect(body.skill_state!.longest_streak).toBe(0);
+    expect(body.data!.id).toBe('learner-uuid-1');
+    expect(body.data!.name).toBe('Bat');
+    expect(body.data!.skill_state).not.toBeNull();
+    expect(body.data!.skill_state!.general_level).toBe('M0');
+    expect(body.data!.skill_state!.s1_score).toBe(0);
+    expect(body.data!.skill_state!.s8_level).toBe('M0');
+    expect(body.data!.skill_state!.top_error_codes).toEqual([]);
+    expect(body.data!.skill_state!.weak_skills).toEqual([]);
+    expect(body.data!.skill_state!.current_streak).toBe(0);
+    expect(body.data!.skill_state!.longest_streak).toBe(0);
   });
 
   it("403 — cannot access another parent's learner", async () => {

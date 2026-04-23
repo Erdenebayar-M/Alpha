@@ -1,50 +1,28 @@
-// Standard API error response builder.
-// Every error from the API returns:
-// { "error": { "code": "...", "message": "...", "details": {} } }
-
-interface ErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-}
-
-export function apiError(
-  code: string,
-  message: string,
-  status: number,
-  details?: unknown
-): Response {
-  const body: ErrorBody = {
-    error: {
-      code,
-      message,
-      ...(details !== undefined && { details }),
-    },
-  };
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+import type { Context } from 'hono';
+import { fail } from './response';
 
 export const ERRORS = {
-  VALIDATION_ERROR: (message: string, details?: unknown) =>
-    apiError('VALIDATION_ERROR', message, 400, details),
+  VALIDATION_ERROR: (c: Context, message: string, details?: unknown) =>
+    fail(c, 'VALIDATION_ERROR', message, details, 400),
 
-  UNAUTHORIZED: (message = 'Unauthorized') =>
-    apiError('UNAUTHORIZED', message, 401),
+  UNAUTHORIZED: (c: Context, message = 'Unauthorized') =>
+    fail(c, 'UNAUTHORIZED', message, undefined, 401),
 
-  NOT_FOUND: (message: string) =>
-    apiError('NOT_FOUND', message, 404),
+  INVALID_CREDENTIALS: (c: Context) =>
+    fail(c, 'INVALID_CREDENTIALS', 'Invalid email or password', undefined, 401),
 
-  FORBIDDEN: (message = 'Forbidden') =>
-    apiError('FORBIDDEN', message, 403),
+  NOT_FOUND: (c: Context, message: string) =>
+    fail(c, 'NOT_FOUND', message, undefined, 404),
 
-  CONFLICT: (message: string) =>
-    apiError('CONFLICT', message, 409),
+  FORBIDDEN: (c: Context, message = 'Forbidden') =>
+    fail(c, 'FORBIDDEN', message, undefined, 403),
 
-  UNPROCESSABLE: (message: string, details?: unknown) =>
-    apiError('UNPROCESSABLE', message, 422, details),
+  CONFLICT: (c: Context, message: string) =>
+    fail(c, 'CONFLICT', message, undefined, 409),
+
+  DUPLICATE_EMAIL: (c: Context) =>
+    fail(c, 'DUPLICATE_EMAIL', 'Email already registered', undefined, 409),
+
+  UNPROCESSABLE: (c: Context, message: string, details?: unknown) =>
+    fail(c, 'UNPROCESSABLE', message, details, 422),
 };
