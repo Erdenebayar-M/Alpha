@@ -22,6 +22,10 @@ export interface AnswerDiff {
   extraChars: { char: string; position: number }[];
   wrongChars: { expected: string; actual: string; position: number }[];
   transpositions: { chars: [string, string]; position: number }[];
+  /** Populated when checkAnswer is called with a taskType (sentence-aware context). */
+  caseErrors?: { position: number; expected: string; actual: string }[];
+  /** Populated when checkAnswer is called with a taskType (sentence-aware context). */
+  missingPunctuation?: { char: string; position: number }[];
 }
 
 export interface WordDiff {
@@ -283,9 +287,16 @@ function computeOperations(expected: string, actual: string): CharDiff[] {
   return ops;
 }
 
-// ─── checkAnswer ─────────────────────────────────────────────────────────────
+// ─── checkAnswer (core word-level) ───────────────────────────────────────────
 
-export function checkAnswer(expected: string, actual: string): AnswerDiff {
+/** NFC-normalise, trim, collapse internal spaces. */
+function normalizeStr(s: string): string {
+  return s.normalize('NFC').trim().replace(/\s+/g, ' ');
+}
+
+const TERMINAL_PUNCT_SET = new Set(['.', '?', '!']);
+
+function wordLevelDiff(expected: string, actual: string): AnswerDiff {
   if (expected === actual) {
     const ops: CharDiff[] = expected.split('').map((ch, i) => ({
       type: 'match' as const,
@@ -306,10 +317,7 @@ export function checkAnswer(expected: string, actual: string): AnswerDiff {
   }
 
   const operations = computeOperations(expected, actual);
-
-  // Compute edit distance from operations
   const editDistance = operations.filter((op) => op.type !== 'match').length;
-
   const missingChars: AnswerDiff['missingChars'] = [];
   const extraChars: AnswerDiff['extraChars'] = [];
   const wrongChars: AnswerDiff['wrongChars'] = [];
@@ -324,30 +332,148 @@ export function checkAnswer(expected: string, actual: string): AnswerDiff {
         extraChars.push({ char: op.actual!, position: op.actualPosition });
         break;
       case 'substitution':
-        wrongChars.push({
-          expected: op.expected!,
-          actual: op.actual!,
-          position: op.position,
-        });
+        wrongChars.push({ expected: op.expected!, actual: op.actual!, position: op.position });
         break;
       case 'transposition':
-        transpositions.push({
-          chars: [op.expected![0], op.expected![1]],
-          position: op.position,
-        });
+        transpositions.push({ chars: [op.expected![0], op.expected![1]], position: op.position });
         break;
     }
   }
 
-  return {
-    isCorrect: false,
-    editDistance,
-    operations,
-    missingChars,
-    extraChars,
-    wrongChars,
-    transpositions,
+  return { isCorrect: false, editDistance, operations, missingChars, extraChars, wrongChars, transpositions };
+}
+
+/**
+ * Sentence-aware word diff: extracts case errors and missing terminal
+ * punctuation before running the char-level diff on the stripped content.
+ */
+function sentenceAwareDiff(expected: string, actual: string): AnswerDiff {
+  const caseErrors: NonNullable<AnswerDiff['caseErrors']> = [];
+  const missingPunctuation: NonNullable<AnswerDiff['missingPunctuation']> = [];
+
+  // First-character capitalisation
+  if (expected.length > 0 && actual.length > 0) {
+    const eFirst = expected[0];
+    const aFirst = actual[0];
+    if (eFirst !== aFirst && eFirst.toLowerCase() === aFirst.toLowerCase()) {
+      caseErrors.push({ position: 0, expected: eFirst, actual: aFirst });
+    }
+  }
+
+  // Terminal punctuation
+  const eLast = expected[expected.length - 1];
+  const aLast = actual[actual.length - 1];
+  if (TERMINAL_PUNCT_SET.has(eLast) && !TERMINAL_PUNCT_SET.has(aLast)) {
+    missingPunctuation.push({ char: eLast, position: expected.length - 1 });
+  }
+
+  // Strip terminal punctuation and lowercase first char before char diff
+  function stripForDiff(s: string): string {
+    let r = s;
+    if (r.length > 0 && TERMINAL_PUNCT_SET.has(r[r.length - 1])) {
+      r = r.slice(0, -1).trimEnd();
+    }
+    if (r.length > 0) r = r[0].toLowerCase() + r.slice(1);
+    return r;
+  }
+
+  const base = wordLevelDiff(stripForDiff(expected), stripForDiff(actual));
+  return { ...base, caseErrors, missingPunctuation };
+}
+
+/** Word-by-word diff for TT4_DICTATION. */
+function dictationDiff(expected: string, actual: string): AnswerDiff {
+  const split = (s: string) => s.split(/[\s,]+/).filter(Boolean);
+  const expWords = split(expected);
+  const actWords = split(actual);
+  const len = Math.max(expWords.length, actWords.length);
+
+  const merged: AnswerDiff = {
+    isCorrect: false, editDistance: 0, operations: [],
+    missingChars: [], extraChars: [], wrongChars: [], transpositions: [],
+    caseErrors: [], missingPunctuation: [],
   };
+
+  for (let w = 0; w < len; w++) {
+    const expWord = expWords[w] ?? '';
+    const actWord = actWords[w] ?? '';
+    if (!expWord) {
+      for (let k = 0; k < actWord.length; k++) {
+        merged.extraChars.push({ char: actWord[k], position: k });
+      }
+      continue;
+    }
+    if (!actWord) {
+      for (let k = 0; k < expWord.length; k++) {
+        merged.missingChars.push({ char: expWord[k], position: k });
+      }
+      continue;
+    }
+    const d = wordLevelDiff(expWord, actWord);
+    merged.missingChars.push(...d.missingChars);
+    merged.extraChars.push(...d.extraChars);
+    merged.wrongChars.push(...d.wrongChars);
+    merged.transpositions.push(...d.transpositions);
+    merged.editDistance += d.editDistance;
+  }
+
+  merged.isCorrect =
+    merged.missingChars.length === 0 &&
+    merged.extraChars.length === 0 &&
+    merged.wrongChars.length === 0 &&
+    merged.transpositions.length === 0;
+  return merged;
+}
+
+/**
+ * Compares a learner's answer against the expected answer.
+ *
+ * When `taskType` is provided the appropriate logic is applied:
+ *   TT1_CHOICE   — exact match (NFC-normalised, whitespace-collapsed)
+ *   TT2_FILL     — case-insensitive single-blank comparison
+ *   TT4_DICTATION — word-by-word character diff
+ *   TT5_MINI_TEXT — sentence-by-sentence (delegates to checkSentence internals)
+ *   TT3/TT6/other — full sentence-aware diff (case errors + punctuation)
+ *
+ * Without `taskType` the original word-level Wagner-Fischer diff is used
+ * (backward-compatible with all existing callers).
+ */
+export function checkAnswer(expected: string, actual: string, taskType?: string): AnswerDiff {
+  if (taskType !== undefined) {
+    const exp = normalizeStr(expected);
+    const act = normalizeStr(actual);
+
+    const emptyCorrect = (): AnswerDiff => ({
+      isCorrect: true, editDistance: 0, operations: [],
+      missingChars: [], extraChars: [], wrongChars: [], transpositions: [],
+      caseErrors: [], missingPunctuation: [],
+    });
+
+    switch (taskType) {
+      case 'TT1_CHOICE':
+        if (exp === act) return emptyCorrect();
+        return { ...wordLevelDiff(exp, act), caseErrors: [], missingPunctuation: [] };
+
+      case 'TT2_FILL': {
+        if (exp.toLowerCase() === act.toLowerCase()) return emptyCorrect();
+        return {
+          isCorrect: false, editDistance: 1, operations: [],
+          missingChars: [], extraChars: [],
+          wrongChars: [{ expected: exp, actual: act, position: 0 }],
+          transpositions: [], caseErrors: [], missingPunctuation: [],
+        };
+      }
+
+      case 'TT4_DICTATION':
+        return dictationDiff(exp, act);
+
+      default: // TT3_CORRECTION, TT6_SELF_CHECK, TT5_MINI_TEXT, unknown
+        return sentenceAwareDiff(exp, act);
+    }
+  }
+
+  // Original word-level behaviour (no taskType)
+  return wordLevelDiff(expected, actual);
 }
 
 // ─── checkSentence ───────────────────────────────────────────────────────────

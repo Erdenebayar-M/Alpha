@@ -410,6 +410,34 @@ describe('H4 — Өөрийгөө шалгаагүй', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// E-family — auto-suffix detection (no knownRoot needed)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Auto-detect only matches suffixes of length >= 2; 1-char suffixes (т, д, г) are skipped
+// to avoid false positives with root-final consonants.
+describe('E-family — auto-suffix detection (no knownRoot)', () => {
+  it('номоо → ном: E1 (suffix -оо absent)', () => {
+    const errors = classifyWord('номоо', 'ном');
+    expect(codes(errors)).toContain('E1');
+  });
+
+  it('номийг → номыг: E2 (-ыг instead of -ийг)', () => {
+    const errors = classifyWord('номийг', 'номыг');
+    expect(codes(errors)).toContain('E2');
+  });
+
+  it('номоо → номоа: E7 (spelling error within suffix)', () => {
+    const errors = classifyWord('номоо', 'номоа');
+    expect(codes(errors)).toContain('E7');
+  });
+
+  it('гэртээ → гэрте: E7 (missing second э in -ээ)', () => {
+    const errors = classifyWord('гэртээ', 'гэрте');
+    expect(codes(errors)).toContain('E7');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // calculateScore
 // ═══════════════════════════════════════════════════════════════════════════════
 

@@ -48,7 +48,11 @@ export {
   syllabify,
   extractSuffix,
   isLongVowelPart,
+  isLongVowelPosition,
   isReducedVowelPosition,
+  isVowel,
+  isConsonant,
+  isConsonantConfusionPair,
   LONG_VOWEL_PAIRS,
   CONFUSABLE_CONSONANT_PAIRS,
 } from './mongolian-utils';

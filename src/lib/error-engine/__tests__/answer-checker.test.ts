@@ -217,3 +217,113 @@ describe('checkSentence', () => {
     expect(result.extraWords.length).toBeGreaterThanOrEqual(1);
   });
 });
+
+// ─── checkAnswer with taskType ────────────────────────────────────────────────
+
+describe('TT1_CHOICE via taskType', () => {
+  it('exact match → isCorrect: true, empty arrays', () => {
+    const r = checkAnswer('ном', 'ном', 'TT1_CHOICE');
+    expect(r.isCorrect).toBe(true);
+    expect(r.missingChars).toHaveLength(0);
+    expect(r.caseErrors).toHaveLength(0);
+    expect(r.missingPunctuation).toHaveLength(0);
+  });
+
+  it('mismatch → isCorrect: false', () => {
+    expect(checkAnswer('ном', 'нум', 'TT1_CHOICE').isCorrect).toBe(false);
+  });
+
+  it('case differs → isCorrect: false (case-sensitive)', () => {
+    expect(checkAnswer('ном', 'Ном', 'TT1_CHOICE').isCorrect).toBe(false);
+  });
+
+  it('whitespace is normalised before comparison', () => {
+    expect(checkAnswer('ном', '  ном  ', 'TT1_CHOICE').isCorrect).toBe(true);
+  });
+
+  it('NFC normalisation: composed and decomposed forms are equal', () => {
+    expect(checkAnswer('э', 'э', 'TT1_CHOICE').isCorrect).toBe(true);
+  });
+
+  it('collapses multiple internal spaces', () => {
+    expect(checkAnswer('ном гэр', 'ном  гэр', 'TT1_CHOICE').isCorrect).toBe(true);
+  });
+});
+
+describe('TT2_FILL via taskType', () => {
+  it('correct fill → isCorrect: true', () => {
+    expect(checkAnswer('о', 'о', 'TT2_FILL').isCorrect).toBe(true);
+  });
+
+  it('wrong fill → wrongChars entry', () => {
+    const r = checkAnswer('о', 'у', 'TT2_FILL');
+    expect(r.isCorrect).toBe(false);
+    expect(r.wrongChars).toHaveLength(1);
+    expect(r.wrongChars[0]).toMatchObject({ expected: 'о', actual: 'у', position: 0 });
+  });
+
+  it("case-insensitive: 'а' matches 'А'", () => {
+    expect(checkAnswer('а', 'А', 'TT2_FILL').isCorrect).toBe(true);
+  });
+});
+
+describe('TT4_DICTATION via taskType', () => {
+  it('exact word-list → isCorrect: true', () => {
+    expect(checkAnswer('ном гэр нар', 'ном гэр нар', 'TT4_DICTATION').isCorrect).toBe(true);
+  });
+
+  it("'ном гр нар' vs 'ном гэр нар' → missingChars includes 'э'", () => {
+    const r = checkAnswer('ном гэр нар', 'ном гр нар', 'TT4_DICTATION');
+    expect(r.isCorrect).toBe(false);
+    expect(r.missingChars.some((c) => c.char === 'э')).toBe(true);
+  });
+
+  it("wrong word 'ном кэр нар' → wrongChars with г→к", () => {
+    const r = checkAnswer('ном гэр нар', 'ном кэр нар', 'TT4_DICTATION');
+    expect(r.wrongChars.some((w) => w.expected === 'г' && w.actual === 'к')).toBe(true);
+  });
+
+  it('comma-separated input handled like spaces', () => {
+    expect(checkAnswer('ном гэр нар', 'ном,гэр,нар', 'TT4_DICTATION').isCorrect).toBe(true);
+  });
+});
+
+describe('TT3_CORRECTION case errors via taskType', () => {
+  it("'би явна.' vs 'Би явна.' → caseError at pos 0, no missingPunctuation", () => {
+    const r = checkAnswer('Би явна.', 'би явна.', 'TT3_CORRECTION');
+    expect(r.caseErrors).toHaveLength(1);
+    expect(r.caseErrors![0]).toMatchObject({ expected: 'Б', actual: 'б', position: 0 });
+    expect(r.missingPunctuation).toHaveLength(0);
+  });
+
+  it('same case → no caseError', () => {
+    const r = checkAnswer('Би явна.', 'Би явна.', 'TT3_CORRECTION');
+    expect(r.caseErrors).toHaveLength(0);
+    expect(r.isCorrect).toBe(true);
+  });
+});
+
+describe('TT3_CORRECTION missing punctuation via taskType', () => {
+  it("'Би явна' vs 'Би явна.' → missingPunctuation for '.'", () => {
+    const r = checkAnswer('Би явна.', 'Би явна', 'TT3_CORRECTION');
+    expect(r.missingPunctuation).toHaveLength(1);
+    expect(r.missingPunctuation![0].char).toBe('.');
+    expect(r.caseErrors).toHaveLength(0);
+  });
+
+  it('input already has period → no missingPunctuation', () => {
+    expect(checkAnswer('Би явна.', 'Би явна.', 'TT3_CORRECTION').missingPunctuation).toHaveLength(0);
+  });
+});
+
+describe('TT6_SELF_CHECK via taskType', () => {
+  it('identical → isCorrect: true', () => {
+    expect(checkAnswer('гэр', 'гэр', 'TT6_SELF_CHECK').isCorrect).toBe(true);
+  });
+
+  it('wrong char → isCorrect: false', () => {
+    const r = checkAnswer('гэр', 'кэр', 'TT6_SELF_CHECK');
+    expect(r.isCorrect).toBe(false);
+    expect(r.wrongChars[0]).toMatchObject({ expected: 'г', actual: 'к' });
+  });
+});

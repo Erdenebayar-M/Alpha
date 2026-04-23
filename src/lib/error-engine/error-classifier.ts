@@ -116,15 +116,15 @@ export function classifyWordErrors(
   const classifiedTranspositions = new Set<number>();
 
   // Determine suffix info for E-family classification.
-  // Only attempt suffix extraction when a knownRoot is explicitly provided —
-  // auto-detection is too aggressive and misclassifies root-final characters.
+  // When knownRoot is provided, use it for strict extraction.
+  // Otherwise fall back to auto-detection via the suffix table.
   const knownRoot = taskMeta?.knownRoot;
   const expectedSuffix = knownRoot
     ? extractSuffix(expectedWord, knownRoot)
-    : null;
+    : extractSuffix(expectedWord);
   const actualSuffix = knownRoot
     ? extractSuffix(actualWord, knownRoot)
-    : null;
+    : extractSuffix(actualWord);
 
   // Even when extractSuffix fails (compound/unknown suffix), if knownRoot is
   // provided and the expected word extends beyond the root, treat the tail as

@@ -2,7 +2,11 @@ import {
   LONG_VOWEL_PAIRS,
   CONFUSABLE_CONSONANT_PAIRS,
   isLongVowelPart,
+  isLongVowelPosition,
   isReducedVowelPosition,
+  isVowel,
+  isConsonant,
+  isConsonantConfusionPair,
   syllabify,
   extractSuffix,
 } from "../mongolian-utils";
@@ -393,5 +397,161 @@ describe("extractSuffix", () => {
   // Empty suffix (word === root) → null
   it('returns null when word equals root (no suffix)', () => {
     expect(extractSuffix("ном", "ном")).toBeNull();
+  });
+});
+
+// ─── extractSuffix (auto-detect, no knownRoot) ────────────────────────────────
+
+describe("extractSuffix — auto-detect (no knownRoot)", () => {
+  it("'гэрт' → null (1-char suffix not auto-detected to avoid false positives)", () => {
+    expect(extractSuffix("гэрт")).toBeNull();
+  });
+
+  it("'гэрд' → null (1-char suffix not auto-detected)", () => {
+    expect(extractSuffix("гэрд")).toBeNull();
+  });
+
+  it("'номоо' → root 'ном', suffix 'оо'", () => {
+    const r = extractSuffix("номоо");
+    expect(r!.root).toBe("ном");
+    expect(r!.suffix).toBe("оо");
+  });
+
+  it("'номийг' → root 'ном', suffix 'ийг' (longer match wins over 'г')", () => {
+    const r = extractSuffix("номийг");
+    expect(r!.root).toBe("ном");
+    expect(r!.suffix).toBe("ийг");
+  });
+
+  it("'гэраас' → root 'гэр', suffix 'аас'", () => {
+    const r = extractSuffix("гэраас");
+    expect(r!.root).toBe("гэр");
+    expect(r!.suffix).toBe("аас");
+  });
+
+  it("'ном' → null (no known suffix)", () => {
+    expect(extractSuffix("ном")).toBeNull();
+  });
+
+  it("'гэр' → null (no known suffix)", () => {
+    expect(extractSuffix("гэр")).toBeNull();
+  });
+
+  it("'д' → null (suffix would consume whole word)", () => {
+    expect(extractSuffix("д")).toBeNull();
+  });
+
+  it("'т' → null (suffix would consume whole word)", () => {
+    expect(extractSuffix("т")).toBeNull();
+  });
+
+  it("'сургуулиас' → null (suffix '-иас' not in MVP list)", () => {
+    expect(extractSuffix("сургуулиас")).toBeNull();
+  });
+});
+
+// ─── isLongVowelPosition (second-char only) ───────────────────────────────────
+
+describe("isLongVowelPosition", () => {
+  it("тогоо pos 4 → true (second о of оо)", () => {
+    expect(isLongVowelPosition("тогоо", 4)).toBe(true);
+  });
+
+  it("тогоо pos 3 → false (first о of оо — only second char returns true)", () => {
+    expect(isLongVowelPosition("тогоо", 3)).toBe(false);
+  });
+
+  it("сүү pos 2 → true (second ү of үү)", () => {
+    expect(isLongVowelPosition("сүү", 2)).toBe(true);
+  });
+
+  it("сүү pos 1 → false (first ү)", () => {
+    expect(isLongVowelPosition("сүү", 1)).toBe(false);
+  });
+
+  it("ном pos 1 → false (о is not part of a long vowel)", () => {
+    expect(isLongVowelPosition("ном", 1)).toBe(false);
+  });
+
+  it("ээж pos 1 → true (second э of ээ)", () => {
+    expect(isLongVowelPosition("ээж", 1)).toBe(true);
+  });
+
+  it("ийм pos 1 → true (й is second of ий pair)", () => {
+    expect(isLongVowelPosition("ийм", 1)).toBe(true);
+  });
+
+  it("туулай pos 2 → true (second у of уу)", () => {
+    expect(isLongVowelPosition("туулай", 2)).toBe(true);
+  });
+
+  it("pos 0 → false (can never be second of a pair)", () => {
+    expect(isLongVowelPosition("аа", 0)).toBe(false);
+  });
+});
+
+// ─── isVowel ──────────────────────────────────────────────────────────────────
+
+describe("isVowel", () => {
+  it.each(["а", "э", "и", "о", "у", "ө", "ү"])("'%s' is a vowel", (ch) => {
+    expect(isVowel(ch)).toBe(true);
+  });
+
+  it.each(["б", "г", "н", "с", "т", "х"])("'%s' is not a vowel", (ch) => {
+    expect(isVowel(ch)).toBe(false);
+  });
+});
+
+// ─── isConsonant ──────────────────────────────────────────────────────────────
+
+describe("isConsonant", () => {
+  it.each(["б", "в", "г", "д", "ж", "з", "й", "к", "л", "м", "н", "п", "р", "с", "т", "х", "ц", "ч", "ш"])(
+    "'%s' is a consonant",
+    (ch) => { expect(isConsonant(ch)).toBe(true); },
+  );
+
+  it.each(["а", "э", "и", "о", "у", "ө", "ү"])("'%s' is not a consonant", (ch) => {
+    expect(isConsonant(ch)).toBe(false);
+  });
+});
+
+// ─── isConsonantConfusionPair ─────────────────────────────────────────────────
+
+describe("isConsonantConfusionPair", () => {
+  it.each([["г","к"],["к","г"],["д","т"],["т","д"],["н","м"],["м","н"],["б","п"],["п","б"],["з","с"],["с","з"],["ж","ш"],["ш","ж"]])(
+    "(%s, %s) → true",
+    (a, b) => { expect(isConsonantConfusionPair(a, b)).toBe(true); },
+  );
+
+  it("('а','э') → false (not a consonant pair)", () => {
+    expect(isConsonantConfusionPair("а", "э")).toBe(false);
+  });
+
+  it("('г','д') → false (not a recognised pair)", () => {
+    expect(isConsonantConfusionPair("г", "д")).toBe(false);
+  });
+
+  it("('г','г') → false (same letter)", () => {
+    expect(isConsonantConfusionPair("г", "г")).toBe(false);
+  });
+});
+
+// ─── isReducedVowelPosition — new words ──────────────────────────────────────
+
+describe("isReducedVowelPosition — хүүхэд and мөнгө", () => {
+  it("хүүхэд pos 4 → true (reduced э: х.ү.ү.х.*э*.д)", () => {
+    expect(isReducedVowelPosition("хүүхэд", 4)).toBe(true);
+  });
+
+  it("хүүхэд pos 1 → false (first ү is not reduced)", () => {
+    expect(isReducedVowelPosition("хүүхэд", 1)).toBe(false);
+  });
+
+  it("мөнгө pos 4 → true (reduced final ө)", () => {
+    expect(isReducedVowelPosition("мөнгө", 4)).toBe(true);
+  });
+
+  it("мөнгө pos 1 → false (first ө is not reduced)", () => {
+    expect(isReducedVowelPosition("мөнгө", 1)).toBe(false);
   });
 });

@@ -89,6 +89,8 @@ const REDUCED_VOWEL_LOOKUP: ReadonlyMap<string, ReadonlySet<number>> = new Map([
   ["оньсого",  new Set([4])],   // о(0) н(1) ь(2) с(3) *о(4)* г(5) о(6)
   ["асуудал",  new Set([5])],   // а(0) с(1) у(2) у(3) д(4) *а(5)* л(6)
   ["эрдэнэ",   new Set([3])],   // э(0) р(1) д(2) *э(3)* н(4) э(5)
+  ["хүүхэд",   new Set([4])],   // х(0) ү(1) ү(2) х(3) *э(4)* д(5)
+  ["мөнгө",    new Set([4])],   // м(0) ө(1) н(2) г(3) *ө(4)*
 ]);
 
 /**
@@ -101,6 +103,40 @@ export function isReducedVowelPosition(word: string, position: number): boolean 
   if (position < 0 || position >= word.length) return false;
   const positions = REDUCED_VOWEL_LOOKUP.get(word);
   return positions !== undefined && positions.has(position);
+}
+
+// ─── Vowel / consonant helpers ───────────────────────────────────────────────
+
+/** Mongolian Cyrillic vowel characters. */
+export function isVowel(char: string): boolean {
+  return new Set<string>(['а', 'э', 'и', 'о', 'у', 'ө', 'ү', 'е', 'ё']).has(char);
+}
+
+/** Mongolian Cyrillic consonant characters. */
+export function isConsonant(char: string): boolean {
+  return 'бвгджзйклмнпрстфхцчшщъь'.includes(char);
+}
+
+/**
+ * Returns true if `a` and `b` form a known confusable consonant pair (D3).
+ * The check is symmetric: both directions return true.
+ */
+export function isConsonantConfusionPair(a: string, b: string): boolean {
+  for (const [x, y] of CONFUSABLE_CONSONANT_PAIRS) {
+    if ((a === x && b === y) || (a === y && b === x)) return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true when the character at `position` is the **second** character
+ * of a long-vowel digraph (e.g. the second 'о' in "тогоо").
+ * Unlike `isLongVowelPart`, this returns false for the first character.
+ */
+export function isLongVowelPosition(word: string, position: number): boolean {
+  if (position < 1 || position >= word.length) return false;
+  const pair = word[position - 1] + word[position];
+  return (LONG_VOWEL_PAIRS as readonly string[]).includes(pair);
 }
 
 // ─── Syllabification ─────────────────────────────────────────────────────────
@@ -230,33 +266,46 @@ const SUFFIX_TABLE: ReadonlyArray<[string, SuffixType]> = [
 ];
 
 /**
- * Given a surface `word` and its known `knownRoot`, extracts the suffix and
- * classifies it.
+ * Extract a suffix from `word`.
  *
- * Returns `null` when:
- *   - `word` equals `knownRoot` (no suffix present), or
- *   - the suffix is not in the MVP table.
+ * With `knownRoot`: validates that `word` starts with `knownRoot` and the
+ * remainder is a known suffix (strict, existing behaviour).
  *
- * Examples:
+ * Without `knownRoot`: auto-detects by stripping the longest known suffix
+ * from the end of the word (greedy).
+ *
+ * Returns `null` when no known suffix matches.
+ *
+ * Examples (explicit root):
  *   extractSuffix("гэрт",  "гэр")  → { root: "гэр",  suffix: "т",  suffixType: "dative-locative" }
- *   extractSuffix("номоо", "ном")  → { root: "ном",  suffix: "оо", suffixType: "possessive-reflexive" }
  *   extractSuffix("гэр",   "гэр")  → null
+ *
+ * Examples (auto-detect, 2+ char suffixes only):
+ *   extractSuffix("номоо")         → { root: "ном",  suffix: "оо", suffixType: "possessive-reflexive" }
+ *   extractSuffix("гэрт")          → null  (1-char suffix not auto-detected)
+ *   extractSuffix("ном")           → null
  */
-export function extractSuffix(
-  word: string,
-  knownRoot: string,
-): SuffixResult | null {
-  if (word === knownRoot) return null;
-  if (!word.startsWith(knownRoot)) return null;
-
-  const rawSuffix = word.slice(knownRoot.length);
-
-  // Try to match the raw suffix against the table (longest first)
-  for (const [suffix, suffixType] of SUFFIX_TABLE) {
-    if (rawSuffix === suffix) {
-      return { root: knownRoot, suffix, suffixType };
+export function extractSuffix(word: string, knownRoot: string): SuffixResult | null;
+export function extractSuffix(word: string): SuffixResult | null;
+export function extractSuffix(word: string, knownRoot?: string): SuffixResult | null {
+  if (knownRoot !== undefined) {
+    if (word === knownRoot) return null;
+    if (!word.startsWith(knownRoot)) return null;
+    const rawSuffix = word.slice(knownRoot.length);
+    for (const [suffix, suffixType] of SUFFIX_TABLE) {
+      if (rawSuffix === suffix) {
+        return { root: knownRoot, suffix, suffixType };
+      }
     }
+    return null;
   }
 
+  // Auto-detect: strip longest known suffix from the end (2+ chars only to avoid false positives
+  // with single-char root-final consonants like г, д, т that appear in the suffix table)
+  for (const [suffix, suffixType] of SUFFIX_TABLE) {
+    if (suffix.length >= 2 && word.length > suffix.length && word.endsWith(suffix)) {
+      return { root: word.slice(0, word.length - suffix.length), suffix, suffixType };
+    }
+  }
   return null;
 }
