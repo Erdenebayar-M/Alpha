@@ -32,6 +32,10 @@ jest.mock('../../lib/error-engine/attempt-processor', () => ({
   processAttempt: jest.fn(),
 }));
 
+jest.mock('../../lib/engines/plan-generator', () => ({
+  generatePlanLessons: jest.fn().mockResolvedValue(undefined),
+}));
+
 const mockLearnerFind       = prisma.learner.findUnique              as jest.MockedFunction<any>;
 const mockSessionFindFirst  = prisma.diagnosticSession.findFirst    as jest.MockedFunction<any>;
 const mockSessionFindUnique = prisma.diagnosticSession.findUnique   as jest.MockedFunction<any>;

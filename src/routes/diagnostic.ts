@@ -9,6 +9,7 @@ import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../l
 import type { ErrorCode } from '../../generated/prisma';
 import { selectPhaseB, calculateFinalResult, shouldBypassPhaseB } from '../lib/engines/diagnostic-branching';
 import type { PhaseAAttempt, DiagnosticAttempt } from '../lib/engines/diagnostic-branching';
+import { generatePlanLessons } from '../lib/engines/plan-generator';
 
 const diagnostic = new Hono<AuthEnv>();
 
@@ -457,6 +458,8 @@ diagnostic.post('/next-phase', async (c) => {
         select: { id: true },
       }),
     ]) as any;
+
+    await generatePlanLessons(newPlan.id, prisma);
 
     return ok(c, { completed: true, result: finalResult, plan_id: newPlan.id });
   }
