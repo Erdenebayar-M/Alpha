@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
+import { ok, fail } from '../lib/response';
 import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode } from '../../generated/prisma';
@@ -34,27 +35,34 @@ lesson.get('/today', async (c) => {
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
   if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Learner not found');
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
 
   const lessonRecord = await prisma.lesson.findFirst({
-    where: { learner_id, status: { in: ['PENDING', 'IN_PROGRESS'] } },
-    orderBy: { day_number: 'asc' },
+    where: {
+      learner_id,
+      scheduled_date: today,
+      status: { in: ['PENDING', 'IN_PROGRESS'] },
+    },
   });
-  if (!lessonRecord) return ERRORS.NOT_FOUND(c, 'No lesson available today');
+  if (!lessonRecord) return fail(c, 'NO_LESSON_TODAY', 'No lesson scheduled for today', undefined, 404);
 
   const tasks = await prisma.task.findMany({
     where: { id: { in: lessonRecord.task_ids } },
     select: TASK_SELECT,
   });
 
+  let updatedLesson = lessonRecord;
   if (lessonRecord.status === 'PENDING') {
-    await prisma.lesson.update({
+    updatedLesson = await prisma.lesson.update({
       where: { id: lessonRecord.id },
-      data: { status: 'IN_PROGRESS' },
+      data: { status: 'IN_PROGRESS', started_at: new Date() },
     });
   }
 
-  return c.json({ lesson: lessonRecord, tasks }, 200);
+  return ok(c, { lesson: { ...updatedLesson, tasks } });
 });
 
 // ─── POST /attempt ────────────────────────────────────────────────────────────
@@ -74,7 +82,7 @@ lesson.post('/attempt', async (c) => {
     include: { learner: true },
   });
   if (!lessonRecord) return ERRORS.NOT_FOUND(c, 'Lesson not found');
-  if (lessonRecord.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (lessonRecord.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Lesson not found');
 
   const duplicate = await prisma.attempt.findFirst({
     where: { lesson_id, task_id },
@@ -152,22 +160,34 @@ lesson.post('/attempt', async (c) => {
     );
   }
 
-  const updatedLesson = await prisma.lesson.update({
+  await prisma.lesson.update({
     where: { id: lesson_id },
     data: { completed_tasks: { increment: 1 } },
-    select: { completed_tasks: true, total_tasks: true },
   });
 
-  return c.json({
+  const skillState = await prisma.learnerSkillState.findUnique({
+    where: { learner_id: lessonRecord.learner_id },
+  });
+  const n = taskRecord?.primary_skill ? parseInt(taskRecord.primary_skill.slice(1), 10) : 0;
+  const updated_skills =
+    skillState && n >= 1 && n <= 8
+      ? [
+          {
+            skill: taskRecord!.primary_skill,
+            score: (skillState as any)[`s${n}_score`],
+            level: (skillState as any)[`s${n}_level`],
+            confidence: (skillState as any)[`s${n}_confidence`],
+          },
+        ]
+      : [];
+
+  return ok(c, {
     score: result.score,
     is_correct: result.isCorrect,
-    error_codes: result.errorCodes,
+    errors: result.errorCodes,
     feedback: result.feedback,
-    lesson_progress: {
-      completed: updatedLesson.completed_tasks,
-      total: updatedLesson.total_tasks,
-    },
-  }, 200);
+    updated_skills,
+  });
 });
 
 // ─── POST /:id/complete ───────────────────────────────────────────────────────
@@ -181,7 +201,7 @@ lesson.post('/:id/complete', async (c) => {
     include: { learner: true },
   });
   if (!lessonRecord) return ERRORS.NOT_FOUND(c, 'Lesson not found');
-  if (lessonRecord.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (lessonRecord.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Lesson not found');
 
   const attempts = await prisma.attempt.findMany({
     where: { lesson_id: id },
@@ -193,12 +213,13 @@ lesson.post('/:id/complete', async (c) => {
       ? attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
       : 0;
 
-  const updatedLesson = await prisma.lesson.update({
+  const completedAt = new Date();
+  await prisma.lesson.update({
     where: { id },
-    data: { status: 'COMPLETED' as any, accuracy, completed_at: new Date() },
+    data: { status: 'COMPLETED' as any, accuracy, completed_at: completedAt },
   });
 
-  return c.json({ completed: true, lesson: updatedLesson }, 200);
+  return ok(c, { lesson_id: id, accuracy, completed_at: completedAt });
 });
 
 export default lesson;
