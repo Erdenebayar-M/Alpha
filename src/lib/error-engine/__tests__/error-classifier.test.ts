@@ -59,6 +59,30 @@ describe('B1 — Үсэг орхигдол', () => {
     expect(codes(errors)).toContain('C4');
     expect(codes(errors)).not.toContain('B1');
   });
+
+  it('"тэнгэр" → "энгэр" → B1 (т deleted from start)', () => {
+    const errors = classifyWord('тэнгэр', 'энгэр');
+    expect(codes(errors)).toContain('B1');
+    const b1 = errors.find((e) => e.errorCode === 'B1');
+    expect(b1!.expectedChar).toBe('т');
+    expect(b1!.severity).toBe(2);
+  });
+
+  it('"тэнгэр" → "тэгэр" → B1 (н deleted from middle)', () => {
+    const errors = classifyWord('тэнгэр', 'тэгэр');
+    expect(codes(errors)).toContain('B1');
+    const b1 = errors.find((e) => e.errorCode === 'B1');
+    expect(b1!.expectedChar).toBe('н');
+    expect(b1!.severity).toBe(2);
+  });
+
+  it('"тэнгэр" → "тэнгэ" → B1 (р deleted from end)', () => {
+    const errors = classifyWord('тэнгэр', 'тэнгэ');
+    expect(codes(errors)).toContain('B1');
+    const b1 = errors.find((e) => e.errorCode === 'B1');
+    expect(b1!.expectedChar).toBe('р');
+    expect(b1!.severity).toBe(2);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -173,6 +197,34 @@ describe('D3 — Гийгүүлэгч андуурал', () => {
     expect(codes(errors)).toContain('E2');
     expect(codes(errors)).not.toContain('D3');
   });
+
+  it.each([
+    ['нохой', 'мохой', 'н', 'м'],
+    ['шувуу', 'жувуу', 'ш', 'ж'],
+    ['сургууль', 'зургууль', 'с', 'з'],
+    ['байшин', 'байжин', 'ш', 'ж'],
+    ['дэвтэр', 'тэвтэр', 'д', 'т'],
+  ])('"%s" → "%s" → D3 (%s/%s, root position)', (expected, actual, expChar, actChar) => {
+    const errors = classifyWord(expected, actual);
+    expect(codes(errors)).toContain('D3');
+    const d3 = errors.find((e) => e.errorCode === 'D3');
+    expect(d3!.severity).toBe(2);
+    expect(d3!.expectedChar).toBe(expChar);
+    expect(d3!.actualChar).toBe(actChar);
+  });
+
+  // D3 over E2: confusable pair in root of suffixed word → D3, not E2
+  it('гэрт→кэрт (knownRoot=гэр) → D3 not E2 (г/к in root, suffix unchanged)', () => {
+    const errors = classifyWord('гэрт', 'кэрт', { taskType: 'TT4', knownRoot: 'гэр' });
+    expect(codes(errors)).toContain('D3');
+    expect(codes(errors)).not.toContain('E2');
+  });
+
+  it('номоо→момоо (knownRoot=ном) → D3 not E2 (н/м in root, suffix unchanged)', () => {
+    const errors = classifyWord('номоо', 'момоо', { taskType: 'TT4', knownRoot: 'ном' });
+    expect(codes(errors)).toContain('D3');
+    expect(codes(errors)).not.toContain('E2');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -245,6 +297,28 @@ describe('B3 — Үсгийн байрлал солигдол', () => {
     ['алим', 'алми'],  // #5
   ])('"%s" → "%s" → B3', (expected, actual) => {
     const errors = classifyWord(expected, actual);
+    expect(codes(errors)).toContain('B3');
+    const b3 = errors.find((e) => e.errorCode === 'B3');
+    expect(b3!.severity).toBe(1);
+  });
+
+  it('"дэвтэр" → "дэтвэр" → B3 (в↔т consonant cluster transposition, not C1)', () => {
+    const errors = classifyWord('дэвтэр', 'дэтвэр');
+    expect(codes(errors)).toContain('B3');
+    expect(codes(errors)).not.toContain('C1');
+    const b3 = errors.find((e) => e.errorCode === 'B3');
+    expect(b3!.severity).toBe(1);
+  });
+
+  it('"самбар" → "сабмар" → B3 (м↔б consonant cluster transposition)', () => {
+    const errors = classifyWord('самбар', 'сабмар');
+    expect(codes(errors)).toContain('B3');
+    const b3 = errors.find((e) => e.errorCode === 'B3');
+    expect(b3!.severity).toBe(1);
+  });
+
+  it('"хундага" → "худнага" → B3 (н↔д consonant cluster transposition)', () => {
+    const errors = classifyWord('хундага', 'худнага');
     expect(codes(errors)).toContain('B3');
     const b3 = errors.find((e) => e.errorCode === 'B3');
     expect(b3!.severity).toBe(1);
