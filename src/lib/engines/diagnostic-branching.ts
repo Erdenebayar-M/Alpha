@@ -80,6 +80,19 @@ function includesM2Plus(levelTarget: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * Returns true when the overall Phase A average is below 0.25 — learner is at
+ * the M0 floor across the board, so targeted Phase B drilling adds no signal.
+ * Skip straight to Phase C boundary tasks for level calibration.
+ */
+export function shouldBypassPhaseB(phaseAAttempts: PhaseAAttempt[]): boolean {
+  if (phaseAAttempts.length === 0) return false;
+  const avg = avgPerSkill(phaseAAttempts);
+  const values = Object.values(avg);
+  const overall = values.reduce((s, v) => s + v, 0) / values.length;
+  return overall < 0.25;
+}
+
+/**
  * Pure function: returns up to 2 weak skills (<60% avg) from Phase A attempts,
  * ordered by tiebreak priority (S7 > S2 > S3 > S5 > S4 > S6 > S8 > S1).
  */

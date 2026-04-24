@@ -7,7 +7,7 @@ import { startDiagnosticSchema, submitDiagnosticSchema, nextPhaseSchema } from '
 import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode } from '../../generated/prisma';
-import { selectPhaseB, calculateFinalResult } from '../lib/engines/diagnostic-branching';
+import { selectPhaseB, calculateFinalResult, shouldBypassPhaseB } from '../lib/engines/diagnostic-branching';
 import type { PhaseAAttempt, DiagnosticAttempt } from '../lib/engines/diagnostic-branching';
 
 const diagnostic = new Hono<AuthEnv>();
@@ -245,6 +245,53 @@ diagnostic.post('/next-phase', async (c) => {
       score: a.score,
       error_codes: a.error_codes,
     }));
+
+    if (shouldBypassPhaseB(phaseAAttempts)) {
+      const seenIds = attempts.map((a) => a.task_id);
+      const partial = calculateFinalResult(
+        phaseAAttempts.map((a) => ({ ...a, primary_skill: a.primary_skill })),
+        session.learner.grade,
+      );
+
+      const [mixedDictation, sentenceDictation, correction, boundary] = await Promise.all([
+        prisma.task.findFirst({
+          where: { task_type: 'TT4_DICTATION', id: { notIn: seenIds } },
+          orderBy: { difficulty: 'asc' },
+          select: TASK_SELECT,
+        }),
+        prisma.task.findFirst({
+          where: { task_type: 'TT5_MINI_TEXT', id: { notIn: seenIds } },
+          orderBy: { difficulty: 'asc' },
+          select: TASK_SELECT,
+        }),
+        prisma.task.findFirst({
+          where: { task_type: 'TT3_CORRECTION', id: { notIn: seenIds } },
+          orderBy: { difficulty: 'asc' },
+          select: TASK_SELECT,
+        }),
+        prisma.task.findFirst({
+          where: { id: { notIn: seenIds }, difficulty: { gte: 3 } },
+          orderBy: { difficulty: 'desc' },
+          select: TASK_SELECT,
+        }),
+      ]);
+
+      const tasks = [mixedDictation, sentenceDictation, correction, boundary].filter(
+        (t): t is NonNullable<typeof t> => t !== null,
+      );
+
+      await prisma.diagnosticSession.update({
+        where: { id: session_id },
+        data: {
+          phase_a_completed: true,
+          phase_b_completed: false,
+          current_phase: 'PHASE_C',
+          weak_skills_detected: [],
+        },
+      });
+
+      return ok(c, { phase: 'C', tasks, estimated_level: partial.general_level, bypassed_phase_b: true });
+    }
 
     const { weakSkills, phaseBTaskIds } = await selectPhaseB(phaseAAttempts, prisma);
 
