@@ -31,7 +31,7 @@ diagnostic.post('/start', async (c) => {
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
   if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Learner not found');
 
   const existing = await prisma.diagnosticSession.findFirst({
     where: { learner_id, status: 'IN_PROGRESS' },
@@ -97,7 +97,7 @@ diagnostic.post('/submit', async (c) => {
     include: { learner: true },
   });
   if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (session.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
   if (session.status !== 'IN_PROGRESS') {
     return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
   }
@@ -213,7 +213,7 @@ diagnostic.post('/next-phase', async (c) => {
     include: { learner: true },
   });
   if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (session.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
   if (session.status !== 'IN_PROGRESS') {
     return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
   }
@@ -428,7 +428,7 @@ diagnostic.get('/result/:sessionId', async (c) => {
     include: { learner: true },
   });
   if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (session.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
   if (session.status !== 'COMPLETED') {
     return ERRORS.UNPROCESSABLE(c, 'Session is not yet completed');
   }

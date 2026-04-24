@@ -184,12 +184,12 @@ describe('POST /diagnostic/start', () => {
     expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 
-  it('403 — learner belongs to a different parent', async () => {
+  it('404 — learner belongs to a different parent', async () => {
     mockLearnerFind.mockResolvedValue(fakeLearner({ parent_id: 'other-parent' }));
 
     const res = await postStart({ learner_id: LEARNER_ID });
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
     expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 
@@ -327,14 +327,14 @@ describe('POST /diagnostic/submit', () => {
     expect(body.error.code).toBe('UNPROCESSABLE');
   });
 
-  it('403 — session belongs to a different parent', async () => {
+  it('404 — session belongs to a different parent', async () => {
     mockSessionFindUnique.mockResolvedValue(
       fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
     );
 
     const res = await postSubmit(VALID_SUBMIT);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 
   it('404 — session not found', async () => {
@@ -606,12 +606,12 @@ describe('POST /diagnostic/next-phase', () => {
     expect(res.status).toBe(404);
   });
 
-  it('403 — session belongs to a different parent', async () => {
+  it('404 — session belongs to a different parent', async () => {
     mockSessionFindUnique.mockResolvedValue(
       fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
     );
     const res = await postNextPhase({ session_id: SESSION_ID });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 
   it('422 — session already COMPLETED', async () => {
@@ -673,7 +673,7 @@ describe('GET /diagnostic/result/:sessionId', () => {
     expect(res.status).toBe(422);
   });
 
-  it('403 — session belongs to a different parent', async () => {
+  it('404 — session belongs to a different parent', async () => {
     mockSessionFindUnique.mockResolvedValueOnce(
       fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
     );
@@ -681,7 +681,7 @@ describe('GET /diagnostic/result/:sessionId', () => {
       method: 'GET',
       headers: { Authorization: BEARER },
     });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 
   it('404 — session not found', async () => {
