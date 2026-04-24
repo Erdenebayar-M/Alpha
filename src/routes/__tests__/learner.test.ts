@@ -9,6 +9,7 @@ jest.mock('../../lib/db/client', () => ({
     learner: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findMany: jest.fn(),
     },
     learnerSkillState: {
       create: jest.fn(),
@@ -23,6 +24,7 @@ jest.mock('../../lib/auth/jwt', () => ({
 }));
 
 const mockFindUnique  = prisma.learner.findUnique  as jest.MockedFunction<typeof prisma.learner.findUnique>;
+const mockFindMany    = prisma.learner.findMany    as jest.MockedFunction<typeof prisma.learner.findMany>;
 const mockTransaction = prisma.$transaction        as jest.MockedFunction<typeof prisma.$transaction>;
 const mockVerify      = verifyToken                as jest.MockedFunction<typeof verifyToken>;
 
@@ -60,6 +62,12 @@ function post(body: unknown) {
 
 function get(id: string) {
   return learnerRouter.request(`/${id}`, {
+    headers: { Authorization: BEARER },
+  });
+}
+
+function getAll() {
+  return learnerRouter.request('/', {
     headers: { Authorization: BEARER },
   });
 }
@@ -312,5 +320,80 @@ describe('GET /learner/:id', () => {
     const res = await learnerRouter.request('/learner-uuid-1');
 
     expect(res.status).toBe(401);
+  });
+});
+
+// ─── GET /api/learner ─────────────────────────────────────────────────────────
+
+interface LearnersBody {
+  success?: boolean;
+  data?: { learners: LearnerData[] };
+  error?: { code: string; message: string };
+}
+
+async function jsonList(res: Response): Promise<LearnersBody> {
+  return res.json() as Promise<LearnersBody>;
+}
+
+describe('GET /learner', () => {
+  it('200 — returns learners belonging to the authenticated parent', async () => {
+    const skillState = fakeSkillState();
+    const learner1 = { ...fakeLearner(), skill_state: skillState };
+    mockFindMany.mockResolvedValue([learner1] as never);
+
+    const res = await getAll();
+
+    expect(res.status).toBe(200);
+    const body = await jsonList(res);
+    expect(body.success).toBe(true);
+    expect(body.data!.learners).toHaveLength(1);
+    expect(body.data!.learners[0].id).toBe('learner-uuid-1');
+    expect(body.data!.learners[0].name).toBe('Bat');
+    expect(body.data!.learners[0].skill_state).not.toBeNull();
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { parent_id: PARENT_ID } }),
+    );
+  });
+
+  it('200 — returns empty array when parent has no learners', async () => {
+    mockFindMany.mockResolvedValue([] as never);
+
+    const res = await getAll();
+
+    expect(res.status).toBe(200);
+    const body = await jsonList(res);
+    expect(body.data!.learners).toEqual([]);
+  });
+
+  it('200 — returns correct count when parent has 2 learners', async () => {
+    const skillState = fakeSkillState();
+    const learner1 = { ...fakeLearner({ id: 'learner-uuid-1', name: 'Bat' }), skill_state: skillState };
+    const learner2 = { ...fakeLearner({ id: 'learner-uuid-2', name: 'Nomin' }), skill_state: skillState };
+    mockFindMany.mockResolvedValue([learner1, learner2] as never);
+
+    const res = await getAll();
+
+    expect(res.status).toBe(200);
+    const body = await jsonList(res);
+    expect(body.data!.learners).toHaveLength(2);
+    expect(body.data!.learners[0].name).toBe('Bat');
+    expect(body.data!.learners[1].name).toBe('Nomin');
+  });
+
+  it('200 — does not return learners belonging to a different parent', async () => {
+    // DB enforces the filter; verify findMany is called with the correct parent_id
+    mockFindMany.mockResolvedValue([] as never);
+
+    const res = await getAll();
+
+    expect(res.status).toBe(200);
+    const body = await jsonList(res);
+    expect(body.data!.learners).toHaveLength(0);
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { parent_id: PARENT_ID } }),
+    );
+    expect(mockFindMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: { parent_id: 'other-parent-uuid' } }),
+    );
   });
 });

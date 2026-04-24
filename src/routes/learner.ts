@@ -56,6 +56,56 @@ learner.post('/', async (c) => {
   );
 });
 
+// ─── GET /api/learner ────────────────────────────────────────────────────────
+
+learner.get('/', async (c) => {
+  const parent_id = c.get('parent_id');
+
+  const learners = await prisma.learner.findMany({
+    where: { parent_id },
+    include: { skill_state: true },
+  });
+
+  return ok(c, {
+    learners: learners.map((l) => {
+      const s = l.skill_state;
+      return {
+        id: l.id,
+        name: l.name,
+        grade: l.grade,
+        variant: l.variant,
+        daily_minutes: l.daily_minutes,
+        created_at: l.created_at,
+        skill_state: s
+          ? {
+              general_level: s.general_level,
+              s1_score: s.s1_score,
+              s2_score: s.s2_score,
+              s3_score: s.s3_score,
+              s4_score: s.s4_score,
+              s5_score: s.s5_score,
+              s6_score: s.s6_score,
+              s7_score: s.s7_score,
+              s8_score: s.s8_score,
+              s1_level: s.s1_level,
+              s2_level: s.s2_level,
+              s3_level: s.s3_level,
+              s4_level: s.s4_level,
+              s5_level: s.s5_level,
+              s6_level: s.s6_level,
+              s7_level: s.s7_level,
+              s8_level: s.s8_level,
+              top_error_codes: s.top_error_codes,
+              weak_skills: s.weak_skills,
+              current_streak: s.current_streak,
+              longest_streak: s.longest_streak,
+            }
+          : null,
+      };
+    }),
+  });
+});
+
 // ─── GET /api/learner/:id ─────────────────────────────────────────────────────
 
 learner.get('/:id', async (c) => {
