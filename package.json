@@ -7,6 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node src/index.ts",
     "test": "jest",
     "seed": "ts-node prisma/seed.ts",
     "db:seed": "ts-node prisma/seed.ts",
