@@ -16,7 +16,7 @@ export function fail(
   code: string,
   message: string,
   details?: unknown,
-  statusCode: 400 | 401 | 403 | 404 | 409 | 422 | 500 = 400,
+  statusCode: 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 = 400,
 ) {
   return c.json(
     {

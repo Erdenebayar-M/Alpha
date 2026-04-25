@@ -54,7 +54,7 @@ const mockVerify            = verifyToken                         as jest.Mocked
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PARENT_ID     = 'parent-uuid-1';
-const LEARNER_ID    = 'learner-uuid-1';
+const LEARNER_ID    = '11111111-1111-4111-8111-111111111111';
 const PLAN_ID       = 'plan-uuid-1';
 const CHECKPOINT_ID = 'checkpoint-uuid-1';
 const TASK_ID       = 'task-uuid-1';

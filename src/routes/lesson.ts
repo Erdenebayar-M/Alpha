@@ -8,6 +8,7 @@ import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../l
 import type { ErrorCode } from '../../generated/prisma';
 import { updateSkillState } from '../lib/engines/skill-engine';
 import { lessonAttemptSchema } from '../lib/validators/lesson';
+import { learnerIdQuerySchema } from '../lib/validators/common';
 
 const lesson = new Hono<AuthEnv>();
 
@@ -28,9 +29,11 @@ const TASK_SELECT = {
 // ─── GET /today?learner_id=... ────────────────────────────────────────────────
 
 lesson.get('/today', async (c) => {
-  const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
-
+  const parsedQuery = learnerIdQuerySchema.safeParse(c.req.query());
+  if (!parsedQuery.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query parameters', parsedQuery.error.flatten().fieldErrors);
+  }
+  const { learner_id } = parsedQuery.data;
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });

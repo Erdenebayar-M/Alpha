@@ -3,6 +3,7 @@ import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
+import { learnerIdQuerySchema } from '../lib/validators/common';
 
 const dashboard = new Hono<AuthEnv>();
 
@@ -11,8 +12,11 @@ dashboard.use('/*', withAuth);
 // ─── GET /api/dashboard/skills ────────────────────────────────────────────────
 
 dashboard.get('/skills', async (c) => {
-  const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
+  const parsedQuery = learnerIdQuerySchema.safeParse(c.req.query());
+  if (!parsedQuery.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query parameters', parsedQuery.error.flatten().fieldErrors);
+  }
+  const { learner_id } = parsedQuery.data;
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
@@ -28,8 +32,11 @@ dashboard.get('/skills', async (c) => {
 // ─── GET /api/dashboard/progress ─────────────────────────────────────────────
 
 dashboard.get('/progress', async (c) => {
-  const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
+  const parsedQuery = learnerIdQuerySchema.safeParse(c.req.query());
+  if (!parsedQuery.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query parameters', parsedQuery.error.flatten().fieldErrors);
+  }
+  const { learner_id } = parsedQuery.data;
   const parent_id = c.get('parent_id');
 
   const learner = await prisma.learner.findUnique({ where: { id: learner_id } });

@@ -5,6 +5,7 @@ import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { registerSchema, loginSchema } from '../lib/validators/auth';
+import { loginLimiter } from '../lib/auth/rateLimit';
 
 const auth = new Hono();
 
@@ -33,7 +34,7 @@ auth.post('/register', async (c) => {
 });
 
 // POST /api/auth/login
-auth.post('/login', async (c) => {
+auth.post('/login', loginLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {

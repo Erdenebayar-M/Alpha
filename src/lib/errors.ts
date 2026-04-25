@@ -25,4 +25,7 @@ export const ERRORS = {
 
   UNPROCESSABLE: (c: Context, message: string, details?: unknown) =>
     fail(c, 'UNPROCESSABLE', message, details, 422),
+
+  RATE_LIMITED: (c: Context, message = 'Хэт олон оролдлого хийсэн. Хэсэг хүлээгээд дахин оролдоно уу.') =>
+    fail(c, 'RATE_LIMITED', message, undefined, 429),
 };

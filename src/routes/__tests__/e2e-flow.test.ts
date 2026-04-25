@@ -111,7 +111,7 @@ const m = {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PARENT_ID  = 'parent-e2e-1';
-const LEARNER_ID = 'learner-e2e-1';
+const LEARNER_ID = '22222222-2222-4222-8222-222222222222';
 const SESSION_ID = 'session-e2e-1';
 const PLAN_ID    = 'plan-e2e-1';
 const LESSON_ID  = 'lesson-e2e-1';

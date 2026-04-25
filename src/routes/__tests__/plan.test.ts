@@ -23,7 +23,7 @@ const mockVerify     = verifyToken             as jest.MockedFunction<typeof ver
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PARENT_ID  = 'parent-uuid-1';
-const LEARNER_ID = 'learner-uuid-1';
+const LEARNER_ID = '11111111-1111-4111-8111-111111111111';
 const BEARER     = 'Bearer test-token';
 
 function get(learnerId: string) {

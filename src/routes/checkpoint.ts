@@ -9,6 +9,7 @@ import type { ErrorCode } from '../../generated/prisma';
 import { updateSkillState } from '../lib/engines/skill-engine';
 import { generatePlanLessons } from '../lib/engines/plan-generator';
 import { checkpointSubmitSchema } from '../lib/validators/checkpoint';
+import { learnerIdQuerySchema } from '../lib/validators/common';
 
 const checkpoint = new Hono<AuthEnv>();
 checkpoint.use('/*', withAuth);
@@ -56,8 +57,11 @@ function computeDeltas(
 // ─── GET /api/checkpoint?learner_id=<id> ─────────────────────────────────────
 
 checkpoint.get('/', async (c) => {
-  const learner_id = c.req.query('learner_id');
-  if (!learner_id) return ERRORS.VALIDATION_ERROR(c, 'learner_id is required');
+  const parsedQuery = learnerIdQuerySchema.safeParse(c.req.query());
+  if (!parsedQuery.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query parameters', parsedQuery.error.flatten().fieldErrors);
+  }
+  const { learner_id } = parsedQuery.data;
 
   const parent_id = c.get('parent_id');
 
