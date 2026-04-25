@@ -160,7 +160,7 @@ lesson.post('/attempt', async (c) => {
     );
   }
 
-  await prisma.lesson.update({
+  const updatedLesson = await prisma.lesson.update({
     where: { id: lesson_id },
     data: { completed_tasks: { increment: 1 } },
   });
@@ -187,6 +187,10 @@ lesson.post('/attempt', async (c) => {
     errors: result.errorCodes,
     feedback: result.feedback,
     updated_skills,
+    lesson_progress: {
+      completed: updatedLesson.completed_tasks,
+      total: updatedLesson.total_tasks,
+    },
   });
 });
 
@@ -219,7 +223,7 @@ lesson.post('/:id/complete', async (c) => {
     data: { status: 'COMPLETED' as any, accuracy, completed_at: completedAt },
   });
 
-  return ok(c, { lesson_id: id, accuracy, completed_at: completedAt });
+  return ok(c, { completed: true, lesson_id: id, accuracy, completed_at: completedAt });
 });
 
 export default lesson;

@@ -70,6 +70,10 @@ jest.mock('../../lib/engines/skill-engine', () => ({
   updateSkillState: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('../../lib/engines/plan-generator', () => ({
+  generatePlanLessons: jest.fn().mockResolvedValue(undefined),
+}));
+
 // ─── Mock references ─────────────────────────────────────────────────────────
 
 const m = {
@@ -699,7 +703,18 @@ describe("13 – GET today's lesson → tasks targeting S3 and S5", () => {
       fakeTask(LES_IDS[0], 'S3'),
       fakeTask(LES_IDS[1], 'S5'),
     ]);
-    m.lessonUpdate.mockResolvedValue({});
+    m.lessonUpdate.mockResolvedValue({
+      id: LESSON_ID,
+      learner_id: LEARNER_ID,
+      plan_id: PLAN_ID,
+      day_number: 1,
+      primary_skill: 'S3',
+      secondary_skill: 'S5',
+      task_ids: LES_IDS,
+      status: 'IN_PROGRESS',
+      completed_tasks: 0,
+      total_tasks: 2,
+    });
 
     const res = await lessonRouter.request(`/today?learner_id=${LEARNER_ID}`, {
       method: 'GET',
@@ -708,10 +723,10 @@ describe("13 – GET today's lesson → tasks targeting S3 and S5", () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.lesson.primary_skill).toBe('S3');
-    expect(body.lesson.secondary_skill).toBe('S5');
-    expect(body.tasks).toHaveLength(2);
-    expect(body.tasks.map((t: any) => t.id)).toEqual(expect.arrayContaining(LES_IDS));
+    expect(body.data.lesson.primary_skill).toBe('S3');
+    expect(body.data.lesson.secondary_skill).toBe('S5');
+    expect(body.data.lesson.tasks).toHaveLength(2);
+    expect(body.data.lesson.tasks.map((t: any) => t.id)).toEqual(expect.arrayContaining(LES_IDS));
 
     // Lesson marked IN_PROGRESS on first fetch
     expect(m.lessonUpdate).toHaveBeenCalledWith(
@@ -756,9 +771,9 @@ describe('14 – submit lesson tasks and complete lesson', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.score).toBe(0.75);
-    expect(body.lesson_progress.completed).toBe(1);
-    expect(body.lesson_progress.total).toBe(2);
+    expect(body.data.score).toBe(0.75);
+    expect(body.data.lesson_progress.completed).toBe(1);
+    expect(body.data.lesson_progress.total).toBe(2);
   });
 
   it('submits S5 task (score 1.0)', async () => {
@@ -781,9 +796,9 @@ describe('14 – submit lesson tasks and complete lesson', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.score).toBe(1.0);
-    expect(body.lesson_progress.completed).toBe(2);
-    expect(body.lesson_progress.total).toBe(2);
+    expect(body.data.score).toBe(1.0);
+    expect(body.data.lesson_progress.completed).toBe(2);
+    expect(body.data.lesson_progress.total).toBe(2);
   });
 
   it('completes lesson → status COMPLETED, accuracy calculated', async () => {
@@ -811,8 +826,8 @@ describe('14 – submit lesson tasks and complete lesson', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.completed).toBe(true);
-    expect(body.lesson.accuracy).toBeCloseTo(0.875, 2);
+    expect(body.data.completed).toBe(true);
+    expect(body.data.accuracy).toBeCloseTo(0.875, 2);
     expect(m.lessonUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'COMPLETED' }),
