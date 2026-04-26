@@ -4,39 +4,69 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **Phase 1** of a Mongolian Spelling & Dictation Learning Application — a database-first backend for an adaptive educational system targeting Grades 1–4. The current codebase is schema + seeding infrastructure only; no API or frontend exists yet.
+Phase 2 of a Mongolian Spelling & Dictation Learning Application — adaptive educational system for Grades 1–4. The repo is now an **npm workspaces monorepo** with three packages:
+
+| Workspace | Purpose |
+|-----------|---------|
+| `backend/` | Hono + Prisma API on Postgres. Phase 1 routes (auth, learner, diagnostic, lesson, plan, checkpoint, dashboard) and seed scripts. |
+| `frontend/` | Next.js 16 (App Router, React 19, Turbopack). UI for parent dashboard, diagnostic, and daily lesson flows. |
+| `shared/` | `@app/shared` — Zod schemas and shared TS types imported by both backend and frontend. Single source of truth for request/response contracts. |
+
+`content-pipeline/` stays at the repo root and is **not** a workspace; it shares backend's Prisma client via a relative import.
 
 ## Environment Setup
 
-Requires PostgreSQL 18+ running on port **5433** with database `mongolian_app`.
+Requires PostgreSQL 18+ on port **5433**, database `mongolian_app`.
 
-`.env` file (not committed):
+`backend/.env` (not committed):
 ```
 DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5433/mongolian_app?schema=public"
+JWT_SECRET="<at least 64 chars>"
+CORS_ORIGIN="http://localhost:3000"
+NODE_ENV="development"
+```
+
+`frontend/.env.local` (not committed):
+```
+API_URL=http://localhost:3001
 ```
 
 Setup sequence:
 ```bash
-npm install
-npx prisma migrate deploy   # apply schema migrations
-npm run seed                # populate Word and Task tables
+npm install                              # installs all workspaces
+npm --workspace=@app/backend run db:generate
+npm --workspace=@app/backend run db:migrate
+npm --workspace=@app/backend run seed
 ```
 
-## Key Commands
+Run dev servers in two terminals:
+```bash
+npm run dev:backend     # Hono on :3001
+npm run dev:frontend    # Next.js on :3000 (proxies /api/* to backend)
+```
+
+## Key Commands (run from repo root unless noted)
 
 | Command | Purpose |
 |---------|---------|
-| `npm run seed` | Seed database (`ts-node prisma/seed.ts`) |
-| `npx prisma migrate dev --name <name>` | Create a new migration from schema changes |
-| `npx prisma migrate deploy` | Apply pending migrations |
-| `npx prisma generate` | Regenerate Prisma client after schema changes |
-| `npx prisma studio` | Browse database in browser UI |
-
-> **Note**: `npm test` is not yet configured — it exits with an error.
+| `npm run dev:backend` | Start Hono backend |
+| `npm run dev:frontend` | Start Next.js dev server |
+| `npm run test:backend` | Jest suite (583 tests) |
+| `npm run seed` | Seed Word and Task tables |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run db:generate` | Regenerate Prisma client |
+| `npm --workspace=@app/frontend run build` | Production build of frontend |
+| `npm --workspace=@app/backend run db:studio` | Browse database |
 
 ## Architecture
 
-### Data Model (3-tier structure in `prisma/schema.prisma`)
+### Auth model
+JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`). Set by `POST /api/auth/login` and `POST /api/auth/register`, cleared by `POST /api/auth/logout`, profile fetched via `GET /api/auth/me`. The `withAuth` middleware reads the cookie first; a `Bearer` header is accepted as a fallback for tests/legacy callers. **Never** expose the token to JS — frontend Zustand store holds only the parent profile.
+
+### Frontend ↔ Backend wiring
+Same-origin via Next.js rewrites: `/api/:path*` → `http://localhost:3001/api/:path*`. Cookies "just work" without CORS contortions. Server Components forward incoming cookies via `lib/api/server.ts` (`cookies()` from `next/headers`); browser fetches use `lib/api/client.ts` with `credentials: 'include'`.
+
+### Data Model (3-tier structure in `backend/prisma/schema.prisma`)
 
 **User tier**: `Parent` → `Learner` → `LearnerSkillState`
 - Learners have a `variant` (A = Grades 1–2, gamified, 5–8 min; B = Grades 2–4, structured, 10–15 min)
@@ -57,13 +87,21 @@ npm run seed                # populate Word and Task tables
 
 ### Prisma Client
 
-Auto-generated into `/generated/prisma/` (gitignored). Always run `npx prisma generate` after schema changes. Import from `"../generated/prisma"` in TypeScript files.
+Auto-generated into `backend/generated/prisma/` (gitignored). Always run `npm run db:generate` after schema changes. Import from `"../generated/prisma"` (relative to `backend/src/...`) inside backend code. **Do not import the Prisma client from frontend** — frontend communicates via the API only and pulls types from `@app/shared`.
+
+### Shared Zod schemas
+
+`shared/src/validators/*` define request schemas (`registerSchema`, `loginSchema`, `createLearnerSchema`, etc.). Both sides import them as:
+```ts
+import { createLearnerSchema } from '@app/shared';
+```
+TS path aliases are wired in both `backend/tsconfig.json` and `frontend/tsconfig.json`. **Don't duplicate schemas** — change them once in `shared/`.
 
 ### TypeScript Config
 
-- Strict mode enabled, CommonJS output, target ES2020
-- `ts-node` used for running `.ts` scripts directly (seeding)
-- `prisma.config.ts` loads `DATABASE_URL` from `.env` via `dotenv`
+- Backend: strict, CommonJS, target ES2022, `ts-node` for runtime
+- Frontend: Next.js defaults (ESM, bundler resolution, JSX preserve)
+- Shared: emits `.d.ts` so editor tooling resolves types in both consumers
 
 ## Reference Documentation
 
@@ -79,7 +117,7 @@ Detailed specs live in `/docs/`:
 
 ### Pipeline location: `content-pipeline/`
 
-All content authoring, validation, and LLM generation tooling lives here, separate from `src/` and `prisma/`.
+All content authoring, validation, and LLM generation tooling lives here, separate from `backend/` and `frontend/`. Scripts that need DB access import the Prisma client from `../../backend/generated/prisma`.
 
 ### Folder purposes
 
@@ -119,7 +157,22 @@ All content authoring, validation, and LLM generation tooling lives here, separa
 **Task types (6):** `TT1_CHOICE`, `TT2_FILL`, `TT3_CORRECTION`, `TT4_DICTATION`, `TT5_MINI_TEXT`, `TT6_SELF_CHECK`
 - Full JSONB shape for each type: `content-pipeline/schemas/task.schema.json`
 
-### Hard rules
+## Frontend conventions
+
+- **Next.js 16, not 14/15.** The `middleware.ts` file convention has been renamed to `proxy.ts` (export `proxy()` not `middleware()`). When in doubt, read `frontend/node_modules/next/dist/docs/` before writing — the AGENTS.md inside `frontend/` enforces this.
+- **Locale:** `<html lang="mn">`. Body copy is Mongolian (Cyrillic).
+- **State:**
+  - Server data → React Query (`@tanstack/react-query`).
+  - URL-shareable state → search params, never `useState`.
+  - Form state → `react-hook-form` + Zod resolver against `@app/shared` schemas.
+  - Auth profile (no token) → Zustand store in `lib/stores/authStore.ts`.
+- **API access:**
+  - Server Components: `lib/api/server.ts` (forwards cookies via `next/headers`).
+  - Client Components: `lib/api/client.ts` (uses `credentials: 'include'`, same-origin via rewrite).
+  - Both throw a typed `ApiError` / `UnauthorizedError` on `success: false`.
+- **Diagnostic / lesson state:** server-side only (`DiagnosticSession`, `Lesson` rows). **Do not** mirror progress into `sessionStorage` or localStorage.
+
+## Hard rules
 
 1. **Never invent seed words.** All vocabulary must come from the master content bank (`docs/0. Агуулгын бүтэц, тохиргоо.xlsx`) or be explicitly approved by a human reviewer.
 2. **Never change error code definitions without asking.** The 12 MVP error codes are locked. Adding, renaming, or redefining a code requires explicit user approval and a schema version bump.
