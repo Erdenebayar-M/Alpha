@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 import * as fs from "fs";
 import * as path from "path";
 import * as readline from "readline";
-import "dotenv/config";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: path.resolve(__dirname, "../../backend/.env") });
 
 const AUDIO_DIR = path.resolve(__dirname, "../audio");
 const CSV_PATH = path.resolve(__dirname, "../audio/audio-queue.csv");

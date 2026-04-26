@@ -22,7 +22,7 @@ import { validateTask } from './validators/schemaValidator';
 import { validateDistractors } from './validators/distractor';
 import { findDuplicates } from './validators/uniqueness';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../backend/.env') });
 
 // ─── CLI flags ────────────────────────────────────────────────────────────────
 
