@@ -7,8 +7,8 @@ import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode } from '../../generated/prisma';
 import { updateSkillState } from '../lib/engines/skill-engine';
-import { lessonAttemptSchema } from '../lib/validators/lesson';
-import { learnerIdQuerySchema } from '../lib/validators/common';
+import { lessonAttemptSchema } from '@app/shared';
+import { learnerIdQuerySchema } from '@app/shared';
 
 const lesson = new Hono<AuthEnv>();
 

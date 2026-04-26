@@ -13,9 +13,11 @@
     "resolveJsonModule": true,
     "types": ["node", "jest"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@app/shared": ["../shared/src"],
+      "@app/shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["prisma/**/*", "src/**/*"],
+  "include": ["prisma/**/*", "src/**/*", "../shared/src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,2 +1,6 @@
-// Zod schemas per endpoint.
-// TODO: add schemas as routes are implemented
+export * from './auth';
+export * from './checkpoint';
+export * from './common';
+export * from './diagnostic';
+export * from './learner';
+export * from './lesson';

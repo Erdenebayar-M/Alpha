@@ -3,7 +3,7 @@ import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { startDiagnosticSchema, submitDiagnosticSchema, nextPhaseSchema } from '../lib/validators/diagnostic';
+import { startDiagnosticSchema, submitDiagnosticSchema, nextPhaseSchema } from '@app/shared';
 import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode } from '../../generated/prisma';

@@ -1,12 +1,15 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   testEnvironment: 'node',
-  roots: ['<rootDir>/src', '<rootDir>/content-pipeline'],
+  rootDir: '..',
+  roots: ['<rootDir>/backend/src', '<rootDir>/content-pipeline'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/tests/**/*.test.ts'],
   transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
+    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/backend/tsconfig.test.json' }],
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/backend/$1',
+    '^@app/shared$': '<rootDir>/shared/src',
+    '^@app/shared/(.*)$': '<rootDir>/shared/src/$1',
   },
 };

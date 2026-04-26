@@ -8,8 +8,8 @@ import type { TaskRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode } from '../../generated/prisma';
 import { updateSkillState } from '../lib/engines/skill-engine';
 import { generatePlanLessons } from '../lib/engines/plan-generator';
-import { checkpointSubmitSchema } from '../lib/validators/checkpoint';
-import { learnerIdQuerySchema } from '../lib/validators/common';
+import { checkpointSubmitSchema } from '@app/shared';
+import { learnerIdQuerySchema } from '@app/shared';
 
 const checkpoint = new Hono<AuthEnv>();
 checkpoint.use('/*', withAuth);

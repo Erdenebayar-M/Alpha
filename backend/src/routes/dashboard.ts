@@ -3,7 +3,7 @@ import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { learnerIdQuerySchema } from '../lib/validators/common';
+import { learnerIdQuerySchema } from '@app/shared';
 
 const dashboard = new Hono<AuthEnv>();
 

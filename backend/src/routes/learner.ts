@@ -4,7 +4,7 @@ import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { createLearnerSchema } from '../lib/validators/learner';
+import { createLearnerSchema } from '@app/shared';
 
 const learner = new Hono<AuthEnv>();
 

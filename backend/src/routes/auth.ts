@@ -1,13 +1,28 @@
 import { Hono } from 'hono';
+import { setCookie, deleteCookie } from 'hono/cookie';
+import type { Context } from 'hono';
 import { prisma } from '../lib/db/client';
 import { hashPassword, comparePassword } from '../lib/auth/password';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { registerSchema, loginSchema } from '../lib/validators/auth';
+import { registerSchema, loginSchema } from '@app/shared';
 import { loginLimiter } from '../lib/auth/rateLimit';
+import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
-const auth = new Hono();
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+
+function setAuthCookie(c: Context, token: string) {
+  setCookie(c, AUTH_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: COOKIE_MAX_AGE,
+    path: '/',
+  });
+}
+
+const auth = new Hono<AuthEnv>();
 
 // POST /api/auth/register
 auth.post('/register', async (c) => {
@@ -30,6 +45,7 @@ auth.post('/register', async (c) => {
   });
 
   const token = await signToken({ parent_id: parent.id });
+  setAuthCookie(c, token);
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token }, undefined, 201);
 });
 
@@ -54,7 +70,27 @@ auth.post('/login', loginLimiter, async (c) => {
   }
 
   const token = await signToken({ parent_id: parent.id });
+  setAuthCookie(c, token);
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token });
+});
+
+// POST /api/auth/logout — clears the auth cookie
+auth.post('/logout', async (c) => {
+  deleteCookie(c, AUTH_COOKIE, { path: '/' });
+  return ok(c, { ok: true });
+});
+
+// GET /api/auth/me — returns the authenticated parent's profile
+auth.get('/me', withAuth, async (c) => {
+  const parent_id = c.get('parent_id');
+  const parent = await prisma.parent.findUnique({
+    where: { id: parent_id },
+    select: { id: true, email: true, name: true },
+  });
+  if (!parent) {
+    return ERRORS.UNAUTHORIZED(c, 'Account no longer exists');
+  }
+  return ok(c, parent);
 });
 
 export default auth;

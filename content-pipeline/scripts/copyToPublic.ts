@@ -98,7 +98,7 @@ async function main() {
   console.log(`\nStep 3: Updating Task.audio_url in database...`);
 
   // Only import Prisma when actually needed (avoids startup error if DB is not ready)
-  const { PrismaClient } = await import("../../generated/prisma");
+  const { PrismaClient } = await import("../../backend/generated/prisma");
   const prisma = new PrismaClient();
 
   try {
