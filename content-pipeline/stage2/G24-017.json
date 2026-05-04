@@ -38,8 +38,8 @@
     "id": "G24-017-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай хөдөө___ гарав.",
-    "correct_answer": "рөө",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай хөл___ хурдан.",
+    "correct_answer": "өө",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -61,12 +61,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: хөдөөрөө",
+    "feedback_text": "Зөв хэлбэр: хөлөө",
     "options": {
-      "display_text": "Туулай хөдөө___ гарав.",
-      "blank_position": 12,
-      "blank_answer": "рөө",
-      "context_word": "хөдөөрөө"
+      "display_text": "Туулай хөл___ хурдан.",
+      "blank_position": 10,
+      "blank_answer": "өө",
+      "context_word": "хөлөө"
     }
   },
   {
@@ -74,7 +74,7 @@
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
     "prompt_text": "Хоосон зайг нөхөөрэй:\nСар орой___ гэрэлтэнэ.",
-    "correct_answer": "доо",
+    "correct_answer": "н",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -96,12 +96,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: ройдоо",
+    "feedback_text": "Зөв хэлбэр: оройн",
     "options": {
       "display_text": "Сар орой___ гэрэлтэнэ.",
       "blank_position": 8,
-      "blank_answer": "доо",
-      "context_word": "ройдоо"
+      "blank_answer": "н",
+      "context_word": "оройн"
     }
   }
 ]

@@ -3,7 +3,7 @@
     "id": "G24-012-v1",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Ээж___ дуу сонсогдов.",
+    "prompt_text": "Ээж___ дуу сайхан.",
     "correct_answer": "ээжийн",
     "audio_url": null,
     "image_url": null,
@@ -25,7 +25,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Эгшиг давхар үгэнд '-ийн' залгана: ээжийн.",
+    "feedback_text": "Харьяалах тийн ялгал: ээжийн.",
     "options": {
       "choices": [
         {
@@ -74,7 +74,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Орших тийн ялгал: сургуульд.",
+    "feedback_text": "Байрлах тийн ялгал: сургуульд.",
     "options": {
       "choices": [
         {
@@ -101,8 +101,8 @@
     "id": "G24-012-v3",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Алим___ өнгө улаан.",
-    "correct_answer": "алимын",
+    "prompt_text": "Хүүхэд шувуу___ харав.",
+    "correct_answer": "шувууг",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -123,27 +123,27 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Гийгүүлэгч '-ын' залгана: алимын.",
+    "feedback_text": "Заах тийн ялгал: шувууг.",
     "options": {
       "choices": [
         {
-          "text": "ын",
+          "text": "г",
           "is_correct": true
         },
         {
-          "text": "ийн",
+          "text": "д",
           "is_correct": false
         },
         {
-          "text": "г",
+          "text": "ын",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"ийн\" not derivable from \"алимын\" via [E2]",
-      "distractor: distractor \"г\" not derivable from \"алимын\" via [E2]"
+      "distractor: distractor \"д\" not derivable from \"шувууг\" via [E2]",
+      "distractor: distractor \"ын\" not derivable from \"шувууг\" via [E2]"
     ]
   }
 ]

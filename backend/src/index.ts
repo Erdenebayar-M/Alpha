@@ -13,11 +13,13 @@ import lesson from './routes/lesson';
 import plan from './routes/plan';
 import checkpoint from './routes/checkpoint';
 import dashboard from './routes/dashboard';
+import content from './routes/content';
 
 const app = new Hono();
 
 app.use('*', secureHeaders());
-app.use('*', cors({ origin: env.CORS_ORIGIN, credentials: true }));
+const corsOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
+app.use('*', cors({ origin: corsOrigins, credentials: true }));
 if (env.NODE_ENV !== 'test') app.use('*', requestLogger);
 
 app.onError((err, c) => {
@@ -41,6 +43,7 @@ app.route('/api/lesson', lesson);
 app.route('/api/plan', plan);
 app.route('/api/checkpoint', checkpoint);
 app.route('/api/dashboard', dashboard);
+app.route('/api/admin/content', content);
 
 if (require.main === module) {
   serve({ fetch: app.fetch, port: env.PORT }, () => {

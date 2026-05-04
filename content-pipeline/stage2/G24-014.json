@@ -4,7 +4,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Бат сургууль ирлээ.;Номоо уншив.",
+    "correct_answer": "Багш ирлээ.;Номоо уншлаа.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -28,11 +28,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Бат сургууль ирлээ. Номоо уншив.",
+      "audio_text": "Багш ирлээ. Номоо уншлаа.",
       "word_count": 2,
       "expected_answers": [
-        "Бат сургууль ирлээ.",
-        "Номоо уншив."
+        "Багш ирлээ.",
+        "Номоо уншлаа."
       ],
       "allow_partial": true
     }
@@ -42,7 +42,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Дэвтэр цэвэр байна.;Алим амттай.",
+    "correct_answer": "Дэвтэр цэвэр байна.;Туулай хурдан.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -66,11 +66,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Дэвтэр цэвэр байна. Алим амттай.",
+      "audio_text": "Дэвтэр цэвэр байна. Туулай хурдан.",
       "word_count": 2,
       "expected_answers": [
         "Дэвтэр цэвэр байна.",
-        "Алим амттай."
+        "Туулай хурдан."
       ],
       "allow_partial": true
     }
@@ -80,7 +80,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Туулай хурдан гүйв.;Багш номоо авлаа.",
+    "correct_answer": "Сургууль эхэллээ.;Алим амттай байна.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -104,11 +104,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Туулай хурдан гүйв. Багш номоо авлаа.",
+      "audio_text": "Сургууль эхэллээ. Алим амттай байна.",
       "word_count": 2,
       "expected_answers": [
-        "Туулай хурдан гүйв.",
-        "Багш номоо авлаа."
+        "Сургууль эхэллээ.",
+        "Алим амттай байна."
       ],
       "allow_partial": true
     }

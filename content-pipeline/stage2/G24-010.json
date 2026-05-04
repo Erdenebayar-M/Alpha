@@ -3,7 +3,7 @@
     "id": "G24-010-v1",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ном_о уншиж байна.",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ном_ авлаа.",
     "correct_answer": "о",
     "audio_url": null,
     "image_url": null,
@@ -28,7 +28,7 @@
     "lesson_slot_fit": "CORE",
     "feedback_text": "\"номоо\" — урт эгшигтэй.",
     "options": {
-      "display_text": "Би ном_о уншиж байна.",
+      "display_text": "Би ном_ авлаа.",
       "blank_position": 6,
       "blank_answer": "о",
       "context_word": "номоо"
@@ -38,7 +38,7 @@
     "id": "G24-010-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nШув_у тэнгэрт нисэв.",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nШув__ нисэж байна.",
     "correct_answer": "у",
     "audio_url": null,
     "image_url": null,
@@ -63,7 +63,7 @@
     "lesson_slot_fit": "CORE",
     "feedback_text": "\"шувуу\" — урт эгшигтэй.",
     "options": {
-      "display_text": "Шув_у тэнгэрт нисэв.",
+      "display_text": "Шув__ нисэж байна.",
       "blank_position": 3,
       "blank_answer": "у",
       "context_word": "шувуу"
@@ -73,7 +73,7 @@
     "id": "G24-010-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nХаранд_а шинэ байна.",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nХаранд__ хурц байна.",
     "correct_answer": "а",
     "audio_url": null,
     "image_url": null,
@@ -98,7 +98,7 @@
     "lesson_slot_fit": "CORE",
     "feedback_text": "\"харандаа\" — урт эгшигтэй.",
     "options": {
-      "display_text": "Харанд_а шинэ байна.",
+      "display_text": "Харанд__ хурц байна.",
       "blank_position": 6,
       "blank_answer": "а",
       "context_word": "харандаа"

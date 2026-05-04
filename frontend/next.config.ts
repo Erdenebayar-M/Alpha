@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const API_URL = process.env.API_URL ?? "http://localhost:3001";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.figma.com',
+        pathname: '/api/mcp/asset/**',
+      },
+    ],
+  },
   async rewrites() {
     return [
       {

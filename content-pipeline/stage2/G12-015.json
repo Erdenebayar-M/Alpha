@@ -71,8 +71,8 @@
     "id": "G12-015-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\n___ хурдан давхина.",
-    "correct_answer": "Морь",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nМал ___ байна.",
+    "correct_answer": "бэлчинэ",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S2",
@@ -93,12 +93,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: Морь",
+    "feedback_text": "Зөв хэлбэр: бэлчинэ",
     "options": {
-      "display_text": "___ хурдан давхина.",
-      "blank_position": 0,
-      "blank_answer": "Морь",
-      "context_word": "Морь"
+      "display_text": "Мал ___ байна.",
+      "blank_position": 4,
+      "blank_answer": "бэлчинэ",
+      "context_word": "бэлчинэ"
     }
   }
 ]

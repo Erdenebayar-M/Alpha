@@ -6,7 +6,6 @@
     "ignoreDeprecations": "6.0",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,10 +13,10 @@
     "types": ["node", "jest"],
     "paths": {
       "@/*": ["./*"],
-      "@app/shared": ["../shared/src"],
-      "@app/shared/*": ["../shared/src/*"]
+      "@app/shared": ["../shared/dist"],
+      "@app/shared/*": ["../shared/dist/*"]
     }
   },
-  "include": ["prisma/**/*", "src/**/*", "../shared/src/**/*"],
+  "include": ["prisma/**/*", "src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

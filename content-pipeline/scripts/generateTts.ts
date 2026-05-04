@@ -12,7 +12,7 @@ const LOG_PATH = path.resolve(__dirname, "../audio/audio-generation-log.json");
 const ERRORS_PATH = path.resolve(__dirname, "../audio/audio-errors.json");
 
 const MODEL = "gemini-3.1-flash-tts-preview";
-const RATE_LIMIT_MS = 1200;
+const RATE_LIMIT_MS = 2000;
 const COST_CAP_USD = 5;
 
 const SYSTEM_DICTATION =
@@ -130,7 +130,7 @@ async function generateOne(
   const spokenText = `${system}\n\n${row.text}`;
   const outputPath = path.join(AUDIO_DIR, row.filename);
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       const response = await ai.models.generateContent({
         model: MODEL,
@@ -157,9 +157,11 @@ async function generateOne(
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (attempt === 1 && msg.includes("429")) {
-        console.log(`  429 rate limit — waiting 6s then retrying...`);
-        await sleep(6000);
+      const isQuotaError = msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
+      if (attempt < 3 && isQuotaError) {
+        const wait = 6000 * Math.pow(2, attempt - 1); // 6s, 12s
+        console.log(`  quota error (attempt ${attempt}) — waiting ${wait / 1000}s then retrying...`);
+        await sleep(wait);
         continue;
       }
       errors.push({ task_id: row.task_id, filename: row.filename, error: msg, attempt });

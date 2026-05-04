@@ -12,12 +12,14 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(14).default(12),
 
-  CORS_ORIGIN: z.string().url(),
+  CORS_ORIGIN: z.string(),
 
   OPENROUTER_API_KEY: z.string().startsWith("sk-or-"),
   GEMINI_API_KEY: z.string().startsWith("AIza"),
+  OPENAI_API_KEY: z.string().startsWith("sk-").optional(),
 
   ALLOW_PROD_SEED: z.string().optional(),
+  ADMIN_SECRET: z.string().min(32).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -3,8 +3,8 @@
     "id": "G24-011-v1",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nЦонх нээлттэй, агаар сайхан орж байна.",
-    "correct_answer": "о",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nЦонх нээлтт_й байна.",
+    "correct_answer": "э",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S4",
@@ -25,19 +25,19 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"цонх\" — балархай эгшигтэй үг.",
+    "feedback_text": "\"нээлттэй\" гэж бичнэ. Балархай эгшиг \"э\" орно.",
     "options": {
-      "display_text": "Цонх нээлттэй, агаар сайхан орж байна.",
-      "blank_position": 0,
-      "blank_answer": "о",
-      "context_word": "цонх"
+      "display_text": "Цонх нээлтт_й байна.",
+      "blank_position": 11,
+      "blank_answer": "э",
+      "context_word": "нээлттэй"
     }
   },
   {
     "id": "G24-011-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nТ_ног бэлэн болсон байна.",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nСандал м_дон байна.",
     "correct_answer": "о",
     "audio_url": null,
     "image_url": null,
@@ -59,20 +59,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"тоног\" — балархай эгшигтэй үг.",
+    "feedback_text": "\"модон\" гэж бичнэ. Балархай эгшиг \"о\" орно.",
     "options": {
-      "display_text": "Т_ног бэлэн болсон байна.",
-      "blank_position": 1,
+      "display_text": "Сандал м_дон байна.",
+      "blank_position": 8,
       "blank_answer": "о",
-      "context_word": "тоног"
+      "context_word": "модон"
     }
   },
   {
     "id": "G24-011-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nСандал м_дон, маш бат бөх.",
-    "correct_answer": "о",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай х_рдан гүйнэ.",
+    "correct_answer": "у",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S4",
@@ -93,12 +93,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"модон\" — балархай эгшигтэй үг.",
+    "feedback_text": "\"хурдан\" гэж бичнэ. Балархай эгшиг \"у\" орно.",
     "options": {
-      "display_text": "Сандал м_дон, маш бат бөх.",
+      "display_text": "Туулай х_рдан гүйнэ.",
       "blank_position": 8,
-      "blank_answer": "о",
-      "context_word": "модон"
+      "blank_answer": "у",
+      "context_word": "хурдан"
     }
   }
 ]

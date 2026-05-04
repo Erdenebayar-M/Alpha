@@ -389,6 +389,7 @@ function buildTT2(spec: TaskSpec, v: Record<string, unknown>, idx: number): Task
 }
 
 function buildTT3(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+  const incorrectText = (v['incorrect_text'] as string) ?? '';
   const correctText = (v['correct_text'] as string) ?? '';
   const explanation = (v['explanation'] as string) ?? '';
   const feedbackText =
@@ -403,8 +404,9 @@ function buildTT3(spec: TaskSpec, v: Record<string, unknown>, idx: number): Task
       feedbackText,
       correctText,
     ),
+    initial_text: incorrectText,
     options: {
-      incorrect_text: (v['incorrect_text'] as string) ?? '',
+      incorrect_text: incorrectText,
       correct_text: correctText,
       error_type: (v['error_type'] as string) ?? spec.error_targets[0] ?? '',
       hint: (v['hint'] as string) ?? feedbackText,

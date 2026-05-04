@@ -1,0 +1,852 @@
+{
+  "info": {
+    "name": "Mongolian Spelling App — Backend Audit",
+    "_postman_id": "mongolian-spelling-app-v1",
+    "description": "Full manual test flow for the Mongolian spelling/dictation app backend.\n\nHOW TO USE:\n1. Set the 'base_url' variable to your server (default: http://localhost:3000)\n2. Run requests IN ORDER — each step depends on the previous\n3. Tokens and IDs are saved automatically by the collection scripts\n4. Check the 'Variables' tab to see saved values after each request",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",       "value": "http://localhost:3000", "type": "string" },
+    { "key": "token",          "value": "", "type": "string" },
+    { "key": "learner_id",     "value": "", "type": "string" },
+    { "key": "session_id",     "value": "", "type": "string" },
+    { "key": "lesson_id",      "value": "", "type": "string" },
+    { "key": "task_id_diag",   "value": "", "type": "string" },
+    { "key": "task_id_lesson", "value": "", "type": "string" },
+    { "key": "intruder_token", "value": "", "type": "string" },
+    { "key": "checkpoint_id",  "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01 — SETUP",
+      "item": [
+        {
+          "name": "01 Register parent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status is 201 or 200', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Token returned', () => pm.expect(json.data.token).to.be.a('string'));",
+                  "if (json?.data?.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    console.log('✅ Token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testparent@test.com\",\n  \"password\": \"Password123\",\n  \"name\": \"Test Parent\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "02 Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Token returned', () => pm.expect(json.data.token).to.be.a('string'));",
+                  "if (json?.data?.token) {",
+                  "    pm.collectionVariables.set('token', json.data.token);",
+                  "    console.log('✅ Token saved from login');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testparent@test.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "03 Login — wrong password (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 401', () => pm.expect(pm.response.code).to.equal(401));",
+                  "pm.test('success is false', () => pm.expect(json.success).to.be.false);",
+                  "pm.test('Error code is INVALID_CREDENTIALS', () => pm.expect(json.error.code).to.equal('INVALID_CREDENTIALS'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testparent@test.com\",\n  \"password\": \"WrongPassword999\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "04 Register — duplicate email (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 409', () => pm.expect(pm.response.code).to.equal(409));",
+                  "pm.test('success is false', () => pm.expect(json.success).to.be.false);",
+                  "pm.test('Error code is DUPLICATE_EMAIL', () => pm.expect(json.error.code).to.equal('DUPLICATE_EMAIL'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testparent@test.com\",\n  \"password\": \"Password123\",\n  \"name\": \"Duplicate\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "05 Register — weak password (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 400', () => pm.expect(pm.response.code).to.equal(400));",
+                  "pm.test('success is false', () => pm.expect(json.success).to.be.false);",
+                  "pm.test('Error code is VALIDATION_ERROR', () => pm.expect(json.error.code).to.equal('VALIDATION_ERROR'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"weak@test.com\",\n  \"password\": \"123\",\n  \"name\": \"Weak\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "06 Any route — no token (expect 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401', () => pm.expect(pm.response.code).to.equal(401));",
+                  "pm.test('success is false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/learner", "host": ["{{base_url}}"], "path": ["api", "learner"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — LEARNER",
+      "item": [
+        {
+          "name": "07 Create learner",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Learner has id', () => pm.expect(json.data.learner.id).to.be.a('string'));",
+                  "pm.test('Grade is 2', () => pm.expect(json.data.learner.grade).to.equal(2));",
+                  "if (json?.data?.learner?.id) {",
+                  "    pm.collectionVariables.set('learner_id', json.data.learner.id);",
+                  "    console.log('✅ Learner ID saved:', json.data.learner.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Болд\",\n  \"grade\": 2,\n  \"variant\": \"A\",\n  \"daily_minutes\": 10\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/learner", "host": ["{{base_url}}"], "path": ["api", "learner"] }
+          }
+        },
+        {
+          "name": "08 List learners",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Returns array', () => pm.expect(json.data.learners).to.be.an('array'));",
+                  "pm.test('Has at least 1 learner', () => pm.expect(json.data.learners.length).to.be.at.least(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/learner", "host": ["{{base_url}}"], "path": ["api", "learner"] }
+          }
+        },
+        {
+          "name": "09 Get learner by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Correct learner returned', () => pm.expect(json.data.learner.id).to.equal(pm.collectionVariables.get('learner_id')));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/learner/{{learner_id}}", "host": ["{{base_url}}"], "path": ["api", "learner", "{{learner_id}}"] }
+          }
+        },
+        {
+          "name": "10 Create learner — invalid grade (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400', () => pm.expect(pm.response.code).to.equal(400));",
+                  "pm.test('VALIDATION_ERROR', () => pm.expect(pm.response.json().error.code).to.equal('VALIDATION_ERROR'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Grade\",\n  \"grade\": 9,\n  \"variant\": \"A\",\n  \"daily_minutes\": 10\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/learner", "host": ["{{base_url}}"], "path": ["api", "learner"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — DIAGNOSTIC",
+      "item": [
+        {
+          "name": "11 Start diagnostic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Session ID returned', () => pm.expect(json.data.session.id).to.be.a('string'));",
+                  "pm.test('Tasks returned', () => pm.expect(json.data.tasks).to.be.an('array').with.length.above(0));",
+                  "if (json?.data?.session?.id) {",
+                  "    pm.collectionVariables.set('session_id', json.data.session.id);",
+                  "    console.log('✅ Session ID saved:', json.data.session.id);",
+                  "}",
+                  "if (json?.data?.tasks?.[0]?.id) {",
+                  "    pm.collectionVariables.set('task_id_diag', json.data.tasks[0].id);",
+                  "    console.log('✅ First diagnostic task ID saved:', json.data.tasks[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learner_id\": \"{{learner_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/diagnostic/start", "host": ["{{base_url}}"], "path": ["api", "diagnostic", "start"] }
+          }
+        },
+        {
+          "name": "12 Submit diagnostic answer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Score returned', () => pm.expect(json.data.score).to.be.a('number'));",
+                  "pm.test('is_correct returned', () => pm.expect(json.data.is_correct).to.be.a('boolean'));",
+                  "pm.test('errors array returned', () => pm.expect(json.data.errors).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"task_id\": \"{{task_id_diag}}\",\n  \"input_text\": \"тэнгэр\",\n  \"time_seconds\": 5\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/diagnostic/submit", "host": ["{{base_url}}"], "path": ["api", "diagnostic", "submit"] }
+          }
+        },
+        {
+          "name": "13 Submit — intentional wrong answer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "console.log('Errors found:', JSON.stringify(json.data.errors));",
+                  "console.log('Score:', json.data.score);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"task_id\": \"{{task_id_diag}}\",\n  \"input_text\": \"тенгер\",\n  \"time_seconds\": 8\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/diagnostic/submit", "host": ["{{base_url}}"], "path": ["api", "diagnostic", "submit"] }
+          }
+        },
+        {
+          "name": "14 Get diagnostic result",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "console.log('Skill profile:', JSON.stringify(json.data, null, 2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/diagnostic/result/{{session_id}}", "host": ["{{base_url}}"], "path": ["api", "diagnostic", "result", "{{session_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — PLAN",
+      "item": [
+        {
+          "name": "15 Get current plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Plan has lessons', () => pm.expect(json.data.plan.lessons).to.be.an('array').with.length.above(0));",
+                  "pm.test('Plan has checkpoints', () => pm.expect(json.data.plan.checkpoints).to.be.an('array').with.length.above(0));",
+                  "pm.test('Plan status is ACTIVE', () => pm.expect(json.data.plan.status).to.equal('ACTIVE'));",
+                  "const cp = json?.data?.plan?.checkpoints?.[0]?.id;",
+                  "if (cp) {",
+                  "    pm.collectionVariables.set('checkpoint_id', cp);",
+                  "    console.log('✅ Checkpoint ID saved:', cp);",
+                  "}",
+                  "console.log('Lesson count:', json?.data?.plan?.lessons?.length);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/plan/current?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plan", "current"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        },
+        {
+          "name": "16 Get plan — no active plan (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.equal(404));",
+                  "pm.test('Error code NO_ACTIVE_PLAN', () => pm.expect(pm.response.json().error.code).to.equal('NO_ACTIVE_PLAN'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/plan/current?learner_id=non-existent-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plan", "current"],
+              "query": [{ "key": "learner_id", "value": "non-existent-id" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — LESSON",
+      "item": [
+        {
+          "name": "17 Get today's lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Lesson has tasks', () => pm.expect(json.data.lesson.tasks).to.be.an('array').with.length.above(0));",
+                  "pm.test('Lesson status is IN_PROGRESS', () => pm.expect(json.data.lesson.status).to.equal('IN_PROGRESS'));",
+                  "if (json?.data?.lesson?.id) {",
+                  "    pm.collectionVariables.set('lesson_id', json.data.lesson.id);",
+                  "    console.log('✅ Lesson ID saved:', json.data.lesson.id);",
+                  "}",
+                  "if (json?.data?.lesson?.tasks?.[0]?.id) {",
+                  "    pm.collectionVariables.set('task_id_lesson', json.data.lesson.tasks[0].id);",
+                  "    console.log('✅ First lesson task ID saved:', json.data.lesson.tasks[0].id);",
+                  "}",
+                  "console.log('Tasks in lesson:', json?.data?.lesson?.tasks?.length);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/lesson/today?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lesson", "today"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        },
+        {
+          "name": "18 Submit lesson attempt — correct",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('Score returned', () => pm.expect(json.data.score).to.be.a('number'));",
+                  "pm.test('updated_skills returned', () => pm.expect(json.data.updated_skills).to.exist);",
+                  "console.log('Score:', json?.data?.score);",
+                  "console.log('Errors:', JSON.stringify(json?.data?.errors));",
+                  "console.log('Updated skills:', JSON.stringify(json?.data?.updated_skills));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lesson_id\": \"{{lesson_id}}\",\n  \"task_id\": \"{{task_id_lesson}}\",\n  \"input_text\": \"тэнгэр\",\n  \"time_seconds\": 4\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lesson/attempt", "host": ["{{base_url}}"], "path": ["api", "lesson", "attempt"] }
+          }
+        },
+        {
+          "name": "19 Submit lesson attempt — wrong answer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('is_correct is false', () => pm.expect(json.data.is_correct).to.be.false);",
+                  "pm.test('Errors array has items', () => pm.expect(json.data.errors.length).to.be.above(0));",
+                  "console.log('Error codes:', json?.data?.errors?.map(e => e.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lesson_id\": \"{{lesson_id}}\",\n  \"task_id\": \"{{task_id_lesson}}\",\n  \"input_text\": \"тенгер\",\n  \"time_seconds\": 9\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lesson/attempt", "host": ["{{base_url}}"], "path": ["api", "lesson", "attempt"] }
+          }
+        },
+        {
+          "name": "20 Complete lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "pm.test('accuracy returned', () => pm.expect(json.data.accuracy).to.be.a('number'));",
+                  "pm.test('completed_at returned', () => pm.expect(json.data.completed_at).to.exist);",
+                  "console.log('Accuracy:', json?.data?.accuracy);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/lesson/{{lesson_id}}/complete", "host": ["{{base_url}}"], "path": ["api", "lesson", "{{lesson_id}}", "complete"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 — DASHBOARD",
+      "item": [
+        {
+          "name": "21 Get skill dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "console.log('Skills:', JSON.stringify(json?.data?.skills, null, 2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/skills?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "skills"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        },
+        {
+          "name": "22 Get progress dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.equal(200));",
+                  "pm.test('success is true', () => pm.expect(json.success).to.be.true);",
+                  "console.log('Progress:', JSON.stringify(json?.data, null, 2));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/progress?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "progress"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 — CHECKPOINT",
+      "item": [
+        {
+          "name": "23 Get pending checkpoint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test('Status 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Has tasks', () => pm.expect(json.data.checkpoint.tasks).to.be.an('array'));",
+                  "    console.log('Checkpoint tasks:', json?.data?.checkpoint?.tasks?.length);",
+                  "} else {",
+                  "    console.log('No pending checkpoint yet — this is normal if mid-plan day has not arrived');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/checkpoint?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "checkpoint"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 — SECURITY CHECKS",
+      "item": [
+        {
+          "name": "24 Register intruder account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) {",
+                  "    pm.collectionVariables.set('intruder_token', json.data.token);",
+                  "    console.log('✅ Intruder token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"intruder@test.com\",\n  \"password\": \"Password123\",\n  \"name\": \"Intruder\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "25 Intruder reads other parent's learner (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 NOT 403', () => pm.expect(pm.response.code).to.equal(404));",
+                  "pm.test('success is false', () => pm.expect(pm.response.json().success).to.be.false);",
+                  "pm.test('Error code is NOT_FOUND', () => pm.expect(pm.response.json().error.code).to.equal('NOT_FOUND'));",
+                  "if (pm.response.code === 403) {",
+                  "    console.log('❌ BUG: Got 403 — this leaks that the learner exists. Fix ownership check in learner.ts');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{intruder_token}}" }],
+            "url": { "raw": "{{base_url}}/api/learner/{{learner_id}}", "host": ["{{base_url}}"], "path": ["api", "learner", "{{learner_id}}"] }
+          }
+        },
+        {
+          "name": "26 Intruder starts diagnostic for other parent's learner (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 NOT 403', () => pm.expect(pm.response.code).to.equal(404));",
+                  "pm.test('Error code is NOT_FOUND', () => pm.expect(pm.response.json().error.code).to.equal('NOT_FOUND'));",
+                  "if (pm.response.code === 403) {",
+                  "    console.log('❌ BUG: Got 403 — fix ownership check in diagnostic.ts');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{intruder_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learner_id\": \"{{learner_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/diagnostic/start", "host": ["{{base_url}}"], "path": ["api", "diagnostic", "start"] }
+          }
+        },
+        {
+          "name": "27 Intruder reads other parent's plan (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 NOT 403', () => pm.expect(pm.response.code).to.equal(404));",
+                  "pm.test('Error code is NOT_FOUND', () => pm.expect(pm.response.json().error.code).to.equal('NOT_FOUND'));",
+                  "if (pm.response.code === 403) {",
+                  "    console.log('❌ BUG: Got 403 in plan route — fix ownership check in plan.ts');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{intruder_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/plan/current?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "plan", "current"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        },
+        {
+          "name": "28 Intruder gets today's lesson for other parent's learner (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404 NOT 403', () => pm.expect(pm.response.code).to.equal(404));",
+                  "if (pm.response.code === 403) {",
+                  "    console.log('❌ BUG: Got 403 in lesson route — fix ownership check in lesson.ts');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{intruder_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/lesson/today?learner_id={{learner_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lesson", "today"],
+              "query": [{ "key": "learner_id", "value": "{{learner_id}}" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -25,7 +25,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: бөмбөгийг. Эгшиг дуусах үгэнд -ийг залгана.",
+    "feedback_text": "Заах тийн ялгал: бөмбөгийг. Эгшиг дуусвар үгэнд 'ийг' залгана.",
     "options": {
       "choices": [
         {
@@ -74,7 +74,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: хоолыг. Гийгүүлэгч дуусах үгэнд -ыг залгана.",
+    "feedback_text": "Заах тийн ялгал: хоолыг. Гийгүүлэгч дуусвар үгэнд 'ыг' залгана.",
     "options": {
       "choices": [
         {
@@ -101,8 +101,8 @@
     "id": "G24-004-v3",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Ээж туулай___ харав.",
-    "correct_answer": "туулайг",
+    "prompt_text": "Ээж сургууль___ явав.",
+    "correct_answer": "сургуульд",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -123,11 +123,11 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: туулайг. Эгшиг дуусах үгэнд -г залгана.",
+    "feedback_text": "Орших оршихын тийн ялгал: сургуульд. Зөөлөн гийгүүлэгчийн дараа 'д' залгана.",
     "options": {
       "choices": [
         {
-          "text": "г",
+          "text": "д",
           "is_correct": true
         },
         {
@@ -135,15 +135,15 @@
           "is_correct": false
         },
         {
-          "text": "ыг",
+          "text": "т",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"\" not derivable from \"туулайг\" via [E2]",
-      "distractor: distractor \"ыг\" not derivable from \"туулайг\" via [E2]"
+      "distractor: distractor \"\" not derivable from \"сургуульд\" via [E2]",
+      "distractor: distractor \"т\" not derivable from \"сургуульд\" via [E2]"
     ]
   }
 ]

@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-const VALIDATED_DIR = path.resolve(__dirname, "../validated");
 const AUDIO_DIR = path.resolve(__dirname, "../audio");
 
 interface Variant {
@@ -22,11 +21,20 @@ function variantSuffix(variantId: string): string {
   return match ? `v${match[1]}` : "v1";
 }
 
-function loadTasks(): TaskFile[] {
-  const files = fs.readdirSync(VALIDATED_DIR).filter((f) => f.endsWith(".json"));
-  return files.map((f) =>
-    JSON.parse(fs.readFileSync(path.join(VALIDATED_DIR, f), "utf8"))
+function loadTasks(sourceDir: string): TaskFile[] {
+  const files = fs.readdirSync(sourceDir).filter(
+    (f) => f.endsWith(".json") && !f.startsWith("_")
   );
+  return files.flatMap((f) => {
+    const raw = JSON.parse(fs.readFileSync(path.join(sourceDir, f), "utf8"));
+    // stage2 files are flat arrays; validated files are { task_id, variants }
+    if (Array.isArray(raw)) {
+      if (raw.length === 0) return [];
+      const taskId = (raw[0] as Variant).id.replace(/-v\d+$/, "");
+      return [{ task_id: taskId, variants: raw as Variant[] }];
+    }
+    return [raw as TaskFile];
+  });
 }
 
 function addPauses(audioText: string): string {
@@ -130,9 +138,18 @@ function buildQueue(tasks: TaskFile[]): QueueRow[] {
 }
 
 function main() {
+  const args = process.argv.slice(2);
+  const sourceArg = args.find((a, i) => args[i - 1] === "--source") ?? "validated";
+  const sourceDir = path.resolve(__dirname, `../${sourceArg}`);
+
+  if (!fs.existsSync(sourceDir)) {
+    console.error(`Source directory not found: ${sourceDir}`);
+    process.exit(1);
+  }
+
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
-  const tasks = loadTasks();
+  const tasks = loadTasks(sourceDir);
   const queue = buildQueue(tasks);
 
   const headers = ["task_id", "variant", "slot", "text", "voice", "language_code", "filename", "type"];
@@ -148,6 +165,7 @@ function main() {
 
   console.log(`\nAudio Queue Plan`);
   console.log(`================`);
+  console.log(`Source:          ${sourceDir}`);
   console.log(`Total files:     ${queue.length}`);
   console.log(`  Dictation:     ${dictRows.length}`);
   console.log(`  Prompt:        ${promptRows.length}`);

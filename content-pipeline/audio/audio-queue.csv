@@ -1,0 +1,50 @@
+task_id,variant,slot,text,voice,language_code,filename,type
+G12-008,v3,dictation,ном [short pause] гал [short pause] багш,Kore,mn-MN,dict_G12-008-v3.wav,TT4_DICTATION
+G12-008,v3,prompt,Сонссон үгс болон өгүүлбэрийг бичээрэй.,Kore,mn-MN,prompt_G12-008-v3.wav,TT4_DICTATION
+G12-009,v1,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G12-009-v1.wav,TT3_CORRECTION
+G12-009,v2,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G12-009-v2.wav,TT3_CORRECTION
+G12-009,v3,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G12-009-v3.wav,TT3_CORRECTION
+G12-012,v1,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G12-012-v1.wav,TT6_SELF_CHECK
+G12-012,v2,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G12-012-v2.wav,TT6_SELF_CHECK
+G12-012,v3,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G12-012-v3.wav,TT6_SELF_CHECK
+G12-015,v1,prompt,Хоосон зайг нөхөөрэй: Би ___ авлаа.,Kore,mn-MN,prompt_G12-015-v1.wav,TT2_FILL
+G12-015,v2,prompt,Хоосон зайг нөхөөрэй: Би ___ байна.,Kore,mn-MN,prompt_G12-015-v2.wav,TT2_FILL
+G12-015,v3,prompt,Хоосон зайг нөхөөрэй: Мал ___ байна.,Kore,mn-MN,prompt_G12-015-v3.wav,TT2_FILL
+G12-TT3C-001,v1,prompt,Дараах өгүүлбэрийн буруу бичлэгийг олоод засаарай.,Kore,mn-MN,prompt_G12-TT3C-001-v1.wav,TT3_CORRECTION
+G12-TT3C-001,v2,prompt,Дараах өгүүлбэрийн буруу бичлэгийг олоод засаарай.,Kore,mn-MN,prompt_G12-TT3C-001-v2.wav,TT3_CORRECTION
+G24-010,v1,prompt,Хоосон зайг нөхөөрэй: Би ном_ авлаа.,Kore,mn-MN,prompt_G24-010-v1.wav,TT2_FILL
+G24-010,v2,prompt,Хоосон зайг нөхөөрэй: Шув__ нисэж байна.,Kore,mn-MN,prompt_G24-010-v2.wav,TT2_FILL
+G24-010,v3,prompt,Хоосон зайг нөхөөрэй: Харанд__ хурц байна.,Kore,mn-MN,prompt_G24-010-v3.wav,TT2_FILL
+G24-011,v1,prompt,Хоосон зайг нөхөөрэй: Цонх нээлтт_й байна.,Kore,mn-MN,prompt_G24-011-v1.wav,TT2_FILL
+G24-011,v2,prompt,Хоосон зайг нөхөөрэй: Сандал м_дон байна.,Kore,mn-MN,prompt_G24-011-v2.wav,TT2_FILL
+G24-011,v3,prompt,Хоосон зайг нөхөөрэй: Туулай х_рдан гүйнэ.,Kore,mn-MN,prompt_G24-011-v3.wav,TT2_FILL
+G24-013,v1,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-013-v1.wav,TT3_CORRECTION
+G24-013,v2,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-013-v2.wav,TT3_CORRECTION
+G24-013,v3,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-013-v3.wav,TT3_CORRECTION
+G24-014,v1,dictation,Багш ирлээ. Номоо уншлаа.,Kore,mn-MN,dict_G24-014-v1.wav,TT4_DICTATION
+G24-014,v1,prompt,Сонссон үгс болон өгүүлбэрийг бичээрэй.,Kore,mn-MN,prompt_G24-014-v1.wav,TT4_DICTATION
+G24-014,v2,dictation,Дэвтэр цэвэр байна. Туулай хурдан.,Kore,mn-MN,dict_G24-014-v2.wav,TT4_DICTATION
+G24-014,v2,prompt,Сонссон үгс болон өгүүлбэрийг бичээрэй.,Kore,mn-MN,prompt_G24-014-v2.wav,TT4_DICTATION
+G24-014,v3,dictation,Сургууль эхэллээ. Алим амттай байна.,Kore,mn-MN,dict_G24-014-v3.wav,TT4_DICTATION
+G24-014,v3,prompt,Сонссон үгс болон өгүүлбэрийг бичээрэй.,Kore,mn-MN,prompt_G24-014-v3.wav,TT4_DICTATION
+G24-017,v1,prompt,Хоосон зайг нөхөөрэй: Аав ажил___ явлаа.,Kore,mn-MN,prompt_G24-017-v1.wav,TT2_FILL
+G24-017,v2,prompt,Хоосон зайг нөхөөрэй: Туулай хөл___ хурдан.,Kore,mn-MN,prompt_G24-017-v2.wav,TT2_FILL
+G24-017,v3,prompt,Хоосон зайг нөхөөрэй: Сар орой___ гэрэлтэнэ.,Kore,mn-MN,prompt_G24-017-v3.wav,TT2_FILL
+G24-018,v1,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-018-v1.wav,TT3_CORRECTION
+G24-018,v2,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-018-v2.wav,TT3_CORRECTION
+G24-018,v3,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-018-v3.wav,TT3_CORRECTION
+G24-019,v1,dictation,Цас орлоо. Шувуу нисэв. Сар тод байна.,Kore,mn-MN,dict_G24-019-v1.wav,TT5_MINI_TEXT
+G24-019,v1,prompt,Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.,Kore,mn-MN,prompt_G24-019-v1.wav,TT5_MINI_TEXT
+G24-019,v2,dictation,Туулай хурдан. Цэцэг ургав. Ус тунгалаг.,Kore,mn-MN,dict_G24-019-v2.wav,TT5_MINI_TEXT
+G24-019,v2,prompt,Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.,Kore,mn-MN,prompt_G24-019-v2.wav,TT5_MINI_TEXT
+G24-019,v3,dictation,Би номоо авлаа. Хүүхэд инээв.,Kore,mn-MN,dict_G24-019-v3.wav,TT5_MINI_TEXT
+G24-019,v3,prompt,Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.,Kore,mn-MN,prompt_G24-019-v3.wav,TT5_MINI_TEXT
+G24-020,v1,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G24-020-v1.wav,TT6_SELF_CHECK
+G24-020,v2,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G24-020-v2.wav,TT6_SELF_CHECK
+G24-020,v3,prompt,Өмнөх даалгаврын хариугаа загвартай харьцуул.,Kore,mn-MN,prompt_G24-020-v3.wav,TT6_SELF_CHECK
+G24-022,v1,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-022-v1.wav,TT3_CORRECTION
+G24-022,v2,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-022-v2.wav,TT3_CORRECTION
+G24-022,v3,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-022-v3.wav,TT3_CORRECTION
+G24-024,v1,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-024-v1.wav,TT3_CORRECTION
+G24-024,v2,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-024-v2.wav,TT3_CORRECTION
+G24-024,v3,prompt,Дараах өгүүлбэрт алдаа байна. Зөв засаарай.,Kore,mn-MN,prompt_G24-024-v3.wav,TT3_CORRECTION

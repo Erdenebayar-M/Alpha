@@ -4,7 +4,7 @@ import { runValidation } from "./validateAudio";
 
 const AUDIO_DIR = path.resolve(__dirname, "../audio");
 const CSV_PATH = path.resolve(__dirname, "../audio/audio-queue.csv");
-const PUBLIC_AUDIO_DIR = path.resolve(__dirname, "../../public/audio");
+const PUBLIC_AUDIO_DIR = path.resolve(__dirname, "../../frontend/public/audio");
 
 interface CsvRow {
   task_id: string;

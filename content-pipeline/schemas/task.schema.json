@@ -9,6 +9,12 @@
     "difficulty", "estimated_time_seconds", "review_after_days",
     "lesson_slot_fit", "feedback_text"
   ],
+  "allOf": [
+    {
+      "if": { "properties": { "task_type": { "const": "TT3_CORRECTION" } } },
+      "then": { "required": ["initial_text"] }
+    }
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -117,6 +123,10 @@
     "feedback_text": {
       "type": "string",
       "description": "Short corrective feedback shown after an incorrect attempt (Mongolian)"
+    },
+    "initial_text": {
+      "type": "string",
+      "description": "For TT3_CORRECTION tasks: the incorrect text shown to the learner first (must match options.incorrect_text). Required for correction tasks."
     }
   },
 
