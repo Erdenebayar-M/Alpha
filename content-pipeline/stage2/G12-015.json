@@ -37,8 +37,8 @@
     "id": "G12-015-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ___ байна.",
-    "correct_answer": "гэртээ",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\n___ тод байна.",
+    "correct_answer": "Сар",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S2",
@@ -59,20 +59,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: гэртээ",
+    "feedback_text": "Зөв хэлбэр: Сар",
     "options": {
-      "display_text": "Би ___ байна.",
-      "blank_position": 3,
-      "blank_answer": "гэртээ",
-      "context_word": "гэртээ"
+      "display_text": "___ тод байна.",
+      "blank_position": 0,
+      "blank_answer": "Сар",
+      "context_word": "Сар"
     }
   },
   {
     "id": "G12-015-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nМал ___ байна.",
-    "correct_answer": "бэлчинэ",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ___ шидэв.",
+    "correct_answer": "бөмбөг",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S2",
@@ -93,12 +93,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: бэлчинэ",
+    "feedback_text": "Зөв хэлбэр: бөмбөг",
     "options": {
-      "display_text": "Мал ___ байна.",
-      "blank_position": 4,
-      "blank_answer": "бэлчинэ",
-      "context_word": "бэлчинэ"
+      "display_text": "Би ___ шидэв.",
+      "blank_position": 3,
+      "blank_answer": "бөмбөг",
+      "context_word": "бөмбөг"
     }
   }
 ]

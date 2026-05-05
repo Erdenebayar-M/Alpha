@@ -144,6 +144,9 @@ function main() {
       if (v.task_type === "TT1_CHOICE") {
         word = v.correct_answer;
       } else if (v.task_type === "TT2_FILL") {
+        // context_word is often an inflected/verb form (e.g. "бэлчинэ", "ажилдаа").
+        // Only generate an image when the word has an explicit seed entry with image_ok=true.
+        // Fallback (auto-prompt) is skipped for TT2_FILL — abstract words produce bad images.
         word = String((v.options as { context_word?: string }).context_word ?? v.correct_answer);
       }
 
@@ -151,6 +154,10 @@ function main() {
 
       const resolved = resolvePrompt(word, seedWords);
       if (!resolved) continue; // image_ok=false for this word
+
+      // Skip TT2_FILL words that only have a fallback prompt — they are typically
+      // verbs, adjectives, or inflected forms that cannot be meaningfully illustrated.
+      if (v.task_type === "TT2_FILL" && resolved.source === "fallback") continue;
 
       rows.push({
         task_id: task.task_id,

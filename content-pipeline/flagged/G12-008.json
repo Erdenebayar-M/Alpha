@@ -1,0 +1,157 @@
+{
+  "task_id": "G12-008",
+  "variants": [
+    {
+      "id": "G12-008-v1",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "гал;ном;цас",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "гал, ном, цас",
+        "word_count": 3,
+        "expected_answers": [
+          "гал",
+          "ном",
+          "цас"
+        ],
+        "allow_partial": true
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "correct_answer талбарт үгсийг таслалаар биш, зайгаар тусгаарлаж бичих хэрэгтэй. Жишээ нь: \"гал ном цас\". Мөн feedback_text-ийг илүү тодорхой болгох хэрэгтэй. Жишээ нь: \"Таны бичсэн үгс зөв байна. 'Гал', 'ном', 'цас' гэсэн үгсийг зөв бичжээ.\"",
+        "reviewed_at": "2026-05-04T03:56:11.891Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-008-v1",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "гал;ном;цас",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "гал, ном, цас",
+        "word_count": 3,
+        "expected_answers": [
+          "гал",
+          "ном",
+          "цас"
+        ],
+        "allow_partial": true
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "correct_answer талбарт үгсийг таслалаар биш, зайгаар тусгаарлаж бичих хэрэгтэй. Жишээ нь: \"гал ном цас\". Мөн feedback_text-ийг илүү тодорхой болгох хэрэгтэй. Жишээ нь: \"Таны бичсэн үгс зөв байна. 'Гал', 'ном', 'цас' гэсэн үгсийг зөв бичжээ.\"",
+        "reviewed_at": "2026-05-04T04:01:11.369Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-008-v3",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "бөмбөг;өндөг;гэрт",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "бөмбөг, өндөг, гэрт",
+        "word_count": 3,
+        "expected_answers": [
+          "бөмбөг",
+          "өндөг",
+          "гэрт"
+        ],
+        "allow_partial": true
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "Feedback текстийг илүү тодорхой болгох. Жишээ нь: 'Бөмбөг, өндөг, гэрт гэсэн үгсийг зөв бичлээ. Сайн байна!' эсвэл 'Бөмбөг, өндөг, гэрт гэсэн үгсийг зөв бичсэн эсэхээ шалгаарай.' гэх мэт.",
+        "reviewed_at": "2026-05-04T04:01:15.841Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

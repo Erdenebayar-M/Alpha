@@ -4,7 +4,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Багш ирлээ.;Номоо уншлаа.",
+    "correct_answer": "Багш ирлээ.;Алим амттай.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -28,11 +28,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Багш ирлээ. Номоо уншлаа.",
+      "audio_text": "Багш ирлээ. Алим амттай.",
       "word_count": 2,
       "expected_answers": [
         "Багш ирлээ.",
-        "Номоо уншлаа."
+        "Алим амттай."
       ],
       "allow_partial": true
     }
@@ -42,7 +42,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Дэвтэр цэвэр байна.;Туулай хурдан.",
+    "correct_answer": "Хүүхэд инээв.;Аав ажиллав.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -66,11 +66,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Дэвтэр цэвэр байна. Туулай хурдан.",
+      "audio_text": "Хүүхэд инээв. Аав ажиллав.",
       "word_count": 2,
       "expected_answers": [
-        "Дэвтэр цэвэр байна.",
-        "Туулай хурдан."
+        "Хүүхэд инээв.",
+        "Аав ажиллав."
       ],
       "allow_partial": true
     }
@@ -80,7 +80,7 @@
     "task_type": "TT4_DICTATION",
     "title": "Сонсоод бичээрэй",
     "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "Сургууль эхэллээ.;Алим амттай байна.",
+    "correct_answer": "Дэвтэр цэвэр.;Туулай хурдан.",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S7",
@@ -104,11 +104,11 @@
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшигт анхаараарай.",
     "options": {
-      "audio_text": "Сургууль эхэллээ. Алим амттай байна.",
+      "audio_text": "Дэвтэр цэвэр. Туулай хурдан.",
       "word_count": 2,
       "expected_answers": [
-        "Сургууль эхэллээ.",
-        "Алим амттай байна."
+        "Дэвтэр цэвэр.",
+        "Туулай хурдан."
       ],
       "allow_partial": true
     }

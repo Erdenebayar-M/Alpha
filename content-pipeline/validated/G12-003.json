@@ -1,0 +1,170 @@
+{
+  "task_id": "G12-003",
+  "variants": [
+    {
+      "id": "G12-003-v2",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "цас",
+      "options": {
+        "choices": [
+          {
+            "text": "цас",
+            "is_correct": true
+          },
+          {
+            "text": "ас",
+            "is_correct": false
+          },
+          {
+            "text": "цаас",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: цас",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T03:55:26.423Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-003-v3",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "мал",
+      "options": {
+        "choices": [
+          {
+            "text": "мал",
+            "is_correct": true
+          },
+          {
+            "text": "ал",
+            "is_correct": false
+          },
+          {
+            "text": "маал",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: мал",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T03:55:28.167Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-003-v3",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "мал",
+      "options": {
+        "choices": [
+          {
+            "text": "мал",
+            "is_correct": true
+          },
+          {
+            "text": "ал",
+            "is_correct": false
+          },
+          {
+            "text": "маал",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: мал",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:00:23.119Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

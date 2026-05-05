@@ -3,7 +3,7 @@
     "id": "G24-012-v1",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Ээж___ дуу сайхан.",
+    "prompt_text": "Ээж___ алим амттай.",
     "correct_answer": "ээжийн",
     "audio_url": null,
     "image_url": null,
@@ -52,8 +52,8 @@
     "id": "G24-012-v2",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Сургууль___ хичээл эхэллээ.",
-    "correct_answer": "сургуульд",
+    "prompt_text": "Шувуу___ үүр жижигхэн.",
+    "correct_answer": "шувууны",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -74,35 +74,35 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Байрлах тийн ялгал: сургуульд.",
+    "feedback_text": "Харьяалах тийн ялгал: шувууны.",
     "options": {
       "choices": [
         {
-          "text": "д",
+          "text": "ны",
           "is_correct": true
         },
         {
-          "text": "т",
+          "text": "ийн",
           "is_correct": false
         },
         {
-          "text": "ын",
+          "text": "д",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"т\" not derivable from \"сургуульд\" via [E2]",
-      "distractor: distractor \"ын\" not derivable from \"сургуульд\" via [E2]"
+      "distractor: distractor \"ийн\" not derivable from \"шувууны\" via [E2]",
+      "distractor: distractor \"д\" not derivable from \"шувууны\" via [E2]"
     ]
   },
   {
     "id": "G24-012-v3",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Хүүхэд шувуу___ харав.",
-    "correct_answer": "шувууг",
+    "prompt_text": "Сургууль___ хашаа өндөр.",
+    "correct_answer": "сургуулийн",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -123,27 +123,27 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: шувууг.",
+    "feedback_text": "Харьяалах тийн ялгал: сургуулийн.",
     "options": {
       "choices": [
         {
-          "text": "г",
+          "text": "ийн",
           "is_correct": true
         },
         {
-          "text": "д",
+          "text": "ын",
           "is_correct": false
         },
         {
-          "text": "ын",
+          "text": "д",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"д\" not derivable from \"шувууг\" via [E2]",
-      "distractor: distractor \"ын\" not derivable from \"шувууг\" via [E2]"
+      "distractor: distractor \"ын\" not derivable from \"сургуулийн\" via [E2]",
+      "distractor: distractor \"д\" not derivable from \"сургуулийн\" via [E2]"
     ]
   }
 ]

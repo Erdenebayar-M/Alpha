@@ -1,0 +1,154 @@
+{
+  "task_id": "G24-024",
+  "variants": [
+    {
+      "id": "G24-024-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
+      "initial_text": "Ээж ирэв.",
+      "options": {
+        "incorrect_text": "Ээж ирэв.",
+        "correct_text": "Ээж ирэв.",
+        "error_type": "E1",
+        "hint": "Энэ өгүүлбэрт алдаа байхгүй."
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback",
+          "other"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "correct_answer болон initial_text нь ижил байна. Энэ нь алдаа засах дасгал биш болж байна. Мөн feedback_text нь \"Энэ өгүүлбэрт алдаа байхгүй\" гэж байгаа нь дасгалын зорилготой зөрчилдөж байна. Хэрэв алдаагүй өгүүлбэр бол, өөр төрлийн дасгал болгох эсвэл алдаатай өгүүлбэрээр солих шаардлагатай.",
+        "reviewed_at": "2026-05-04T04:02:40.691Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-024-v2",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Харандаа хурц.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
+      "initial_text": "Харандаа хурц.",
+      "options": {
+        "incorrect_text": "Харандаа хурц.",
+        "correct_text": "Харандаа хурц.",
+        "error_type": "E1",
+        "hint": "Энэ өгүүлбэрт алдаа байхгүй."
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback",
+          "other"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Энэ дасгал нь алдааг засах дасгал боловч өгөгдсөн өгүүлбэр нь зөв байна. Тиймээс алдаатай өгүүлбэр өгөх эсвэл дасгалын төрлийг өөрчлөх шаардлагатай. Мөн feedback текст нь алдааг ойлгуулахуйц биш байна. Хэрэв алдаагүй бол 'Зөв бичсэн байна' гэх мэтээр хариулах хэрэгтэй.",
+        "reviewed_at": "2026-05-04T04:02:43.475Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-024-v3",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Тогоо том.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
+      "initial_text": "Тогоо том.",
+      "options": {
+        "incorrect_text": "Тогоо том.",
+        "correct_text": "Тогоо том.",
+        "error_type": "E1",
+        "hint": "Энэ өгүүлбэрт алдаа байхгүй."
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Энэ дасгал нь 'Алдааг засаарай' гэсэн гарчигтай боловч 'Тогоо том.' гэсэн өгүүлбэрт алдаа байхгүй тул дасгалын зорилготой зөрчилдөж байна. Хэрэв алдаагүй өгүүлбэр байх ёстой бол 'Алдааг олоорой' гэх мэт өөр төрлийн дасгал байх ёстой. Хэрэв алдаатай байх ёстой бол алдааг оруулж, зөв хариулт, санал болгох зөвлөмжийг өөрчлөх шаардлагатай. Одоогийн байдлаар 'feedback_text' болон 'hint' нь 'Энэ өгүүлбэрт алдаа байхгүй.' гэж байгаа нь дасгалын утгыг алдагдуулж байна.",
+        "reviewed_at": "2026-05-04T04:02:46.595Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

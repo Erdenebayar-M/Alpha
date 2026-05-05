@@ -1,0 +1,97 @@
+{
+  "task_id": "G12-011",
+  "variants": [
+    {
+      "id": "G12-011-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "ном",
+      "options": {
+        "incorrect_text": "ом",
+        "correct_text": "ном",
+        "error_type": "B1",
+        "hint": "\"ом\" гэж бичсэн нь буруу — \"ном\" гэж засаарай."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: ном",
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "weak-distractor"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Зөв хариулт нь 'ном' байхад, 'ом' гэдэг нь утгагүй үг. 'ом' гэдэг нь алдаа биш, харин өөр үг. 'ном' гэдэг үгийг 'нөм' эсвэл 'номм' гэх мэтээр алдаатай бичсэн байвал илүү тохиромжтой.",
+        "reviewed_at": "2026-05-04T03:55:52.939Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-011-v3",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "гэр",
+      "options": {
+        "incorrect_text": "эр",
+        "correct_text": "гэр",
+        "error_type": "B1",
+        "hint": "\"эр\" гэж бичсэн нь буруу — \"гэр\" гэж засаарай."
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: гэр",
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "correct_answer болон correct_text нь 'гэр' гэж бичигдсэн байхад incorrect_text нь 'эр' гэж бичигдсэн байна. Энэ нь үгийн утгыг бүрэн өөрчилж, 'г' үсгийг орхигдуулсан алдаа юм. Энэ нь 'B1' буюу үсэг орхигдуулсан алдаа гэдэгт тохирохгүй. 'гэр' гэдэг үгэнд 'г' үсэг нь эхний үсэг тул 'B1' алдаа гэж үзэх боломжгүй. Мөн feedback_text нь 'Зөв хариу: гэр' гэж бичигдсэн нь алдааг ойлгуулахуйц биш байна. 'г' үсгийг нэмж бичсэнээр зөв болно гэх мэтээр тайлбарлах хэрэгтэй.",
+        "reviewed_at": "2026-05-04T03:55:57.820Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

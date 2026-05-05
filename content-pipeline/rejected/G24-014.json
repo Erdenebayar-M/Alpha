@@ -100,6 +100,57 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G24-014-v2",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "Хүүхэд инээв.;Аав ажиллав.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "H1",
+        "C1"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 60,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Урт эгшигт анхаараарай.",
+      "options": {
+        "audio_text": "Хүүхэд инээв. Аав ажиллав.",
+        "word_count": 2,
+        "expected_answers": [
+          "Хүүхэд инээв.",
+          "Аав ажиллав."
+        ],
+        "allow_partial": true
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "correct_answer болон options.audio_text хоёрын хооронд цэг таслал болон зайны зөрүү байна. Үүнийг нэг мөр болгох хэрэгтэй. Мөн 'Хүүхэд инээв.' гэдэг нь 'Хүүхэд инээв' байх ёстой. 'Аав ажиллав.' гэдэг нь 'Аав ажиллав' байх ёстой. Учир нь өгүүлбэрийн төгсгөлд цэг тавих нь алдаа биш юм. Харин feedback текст нь ямар алдааг зааж байгаа нь тодорхойгүй байна. 'Урт эгшигт анхаараарай.' гэдэг нь энэ дасгалд хамаарахгүй.",
+        "reviewed_at": "2026-05-04T04:02:02.560Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

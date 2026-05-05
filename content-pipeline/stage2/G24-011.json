@@ -3,7 +3,7 @@
     "id": "G24-011-v1",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nЦонх нээлтт_й байна.",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nДэвт_р цэвэр байна.",
     "correct_answer": "э",
     "audio_url": null,
     "image_url": null,
@@ -25,20 +25,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"нээлттэй\" гэж бичнэ. Балархай эгшиг \"э\" орно.",
+    "feedback_text": "\"дэвтэр\" — балархай эгшигтэй.",
     "options": {
-      "display_text": "Цонх нээлтт_й байна.",
-      "blank_position": 11,
+      "display_text": "Дэвт_р цэвэр байна.",
+      "blank_position": 4,
       "blank_answer": "э",
-      "context_word": "нээлттэй"
+      "context_word": "дэвтэр"
     }
   },
   {
     "id": "G24-011-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nСандал м_дон байна.",
-    "correct_answer": "о",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nӨд_р бүр хичээллэдэг.",
+    "correct_answer": "ө",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S4",
@@ -59,20 +59,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"модон\" гэж бичнэ. Балархай эгшиг \"о\" орно.",
+    "feedback_text": "\"өдөр\" — балархай эгшигтэй.",
     "options": {
-      "display_text": "Сандал м_дон байна.",
-      "blank_position": 8,
-      "blank_answer": "о",
-      "context_word": "модон"
+      "display_text": "Өд_р бүр хичээллэдэг.",
+      "blank_position": 2,
+      "blank_answer": "ө",
+      "context_word": "өдөр"
     }
   },
   {
     "id": "G24-011-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай х_рдан гүйнэ.",
-    "correct_answer": "у",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nСанд_л модон байна.",
+    "correct_answer": "а",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S4",
@@ -93,12 +93,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "\"хурдан\" гэж бичнэ. Балархай эгшиг \"у\" орно.",
+    "feedback_text": "\"сандал\" — балархай эгшигтэй.",
     "options": {
-      "display_text": "Туулай х_рдан гүйнэ.",
-      "blank_position": 8,
-      "blank_answer": "у",
-      "context_word": "хурдан"
+      "display_text": "Санд_л модон байна.",
+      "blank_position": 4,
+      "blank_answer": "а",
+      "context_word": "сандал"
     }
   }
 ]

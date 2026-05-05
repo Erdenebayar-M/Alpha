@@ -34,16 +34,16 @@ const MAX_COST_ARG: number = (() => { const i = argv.indexOf('--max-cost'); retu
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MODEL = 'anthropic/claude-sonnet-4-5';
-const MAX_TOKENS = 2000;
+const MODEL = 'google/gemini-2.5-flash';
+const MAX_TOKENS = 4000;
 const TEMPERATURE = 0.4;
 const RETRY_LIMIT = 2;
-const RATE_LIMIT_MS = 1500;
+const RATE_LIMIT_MS = 1000;
 
-// OpenRouter pricing for claude-sonnet-4-5 (per million tokens)
-// Update from https://openrouter.ai/models if rate changes
-const COST_PER_M_IN = 3.0;
-const COST_PER_M_OUT = 15.0;
+// OpenRouter pricing for google/gemini-2.5-flash (per million tokens)
+// Verify current rates at https://openrouter.ai/google/gemini-2.5-flash
+const COST_PER_M_IN = 0.15;
+const COST_PER_M_OUT = 0.60;
 
 const BASE = path.resolve(__dirname, '../..');
 const PROMPTS_DIR = path.join(BASE, 'content-pipeline/scripts/prompts');
@@ -249,9 +249,20 @@ function formatSeedList(words: SeedWord[]): string {
 // ─── Prompt loader ────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT =
-  'Чи монгол хэлний зөв бичгийн дасгал үүсгэгч.\n' +
-  'Зөвхөн JSON буцаа. Markdown fence бүү бич. Өөр ямар ч тайлбар бүү бич.\n' +
-  'Хариуг { эсвэл [ тэмдэгтээр эхлүүлэх.';
+  'Чи монгол кирилл үсгээр бичих зөв бичгийн дасгал үүсгэгч.\n' +
+  '\n' +
+  'Монгол хэлний зөв бичгийн үндсэн дүрмүүд:\n' +
+  '• Эгшгийн зохицол: эрэгтэй (а, о, у) ба эмэгтэй (э, ө, ү) эгшиг нэг үгэнд хольж бичихгүй.\n' +
+  '• Урт эгшиг: аа, ии, уу, үү, ее, өө — бичихдээ хосоор бичнэ.\n' +
+  '• Балархай эгшиг: э/е зөв ялгаж бичнэ (гэр, дэвтэр, өдөр).\n' +
+  '• Залгавар: тийн ялгалын нөхцөлийг эгшгийн зохицолд нийцүүлэн залгана.\n' +
+  '• Бага ангийн үг: 1–2р ангид 2–6 үсэгтэй энгийн, өдөр тутмын үгс.\n' +
+  '• 3–4р ангид нийлмэл үг, өгүүлбэрийн бүтцийг ашиглаж болно.\n' +
+  '\n' +
+  'Гаралтын дүрэм:\n' +
+  '• Зөвхөн цэвэр JSON буцаа — markdown fence, тайлбар, мэдэгдэл огт бичихгүй.\n' +
+  '• Хариуг { эсвэл [ тэмдэгтээр шууд эхлүүлэх.\n' +
+  '• Монгол текст бүхэн зөв кирилл үсгээр бичигдсэн байх (Traditional Mongolian script бүү ашигла).';
 
 function loadUserPrompt(taskId: string, seedList: string): string {
   const p = path.join(PROMPTS_DIR, `${taskId}.md`);

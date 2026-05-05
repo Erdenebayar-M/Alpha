@@ -1,0 +1,137 @@
+{
+  "task_id": "G24-017",
+  "variants": [
+    {
+      "id": "G24-017-v1",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nБи аав___ хамт явна.",
+      "correct_answer": "тай",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S5",
+      "secondary_skill": null,
+      "level_target": "M2-M3",
+      "error_targets": [
+        "E2",
+        "E7"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хэлбэр: аавтай",
+      "options": {
+        "display_text": "Би аав___ хамт явна.",
+        "blank_position": 6,
+        "blank_answer": "тай",
+        "context_word": "аавтай"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:06.877Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-017-v2",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай сүү___ уув.",
+      "correct_answer": "г",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S5",
+      "secondary_skill": null,
+      "level_target": "M2-M3",
+      "error_targets": [
+        "E2",
+        "E7"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хэлбэр: сүүг",
+      "options": {
+        "display_text": "Туулай сүү___ уув.",
+        "blank_position": 10,
+        "blank_answer": "г",
+        "context_word": "сүүг"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:08.998Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-017-v3",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ном___ уншив.",
+      "correct_answer": "ыг",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S5",
+      "secondary_skill": null,
+      "level_target": "M2-M3",
+      "error_targets": [
+        "E2",
+        "E7"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хэлбэр: номыг",
+      "options": {
+        "display_text": "Би ном___ уншив.",
+        "blank_position": 6,
+        "blank_answer": "ыг",
+        "context_word": "номыг"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:10.753Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    }
+  ]
+}

@@ -95,6 +95,147 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G24-010-v1",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\n",
+      "correct_answer": "",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"тогоо\" — урт эгшигтэй.",
+      "options": {
+        "display_text": "",
+        "blank_position": 0,
+        "blank_answer": "",
+        "context_word": ""
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "correct_answer-т утга оруулах, feedback_text-ийг тодорхой болгох.",
+        "reviewed_at": "2026-05-04T04:01:40.215Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-010-v2",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\n",
+      "correct_answer": "",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"туулай\" — урт эгшигтэй.",
+      "options": {
+        "display_text": "",
+        "blank_position": 0,
+        "blank_answer": "",
+        "context_word": ""
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "correct_answer-т утга оноогоогүй байна. \"туулай\" гэсэн үг байх ёстой. Feedback текст нь \"туулай\" гэсэн үгний талаар тайлбарласан боловч ямар алдааг засах зорилготой нь тодорхойгүй байна. Жишээ нь, \"Урт эгшигтэй үгсийг зөв бичихдээ анхаараарай.\" гэх мэтээр тодорхой болгох хэрэгтэй.",
+        "reviewed_at": "2026-05-04T04:01:43.181Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G24-010-v3",
+      "task_type": "TT2_FILL",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\n",
+      "correct_answer": "",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C1",
+        "C2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"шувуу\" — урт эгшигтэй.",
+      "options": {
+        "display_text": "",
+        "blank_position": 0,
+        "blank_answer": "",
+        "context_word": ""
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "wrong-spelling",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Correct_answer болон options.blank_answer-т 'шувуу' гэж бичнэ. Feedback-т 'Шувуу гэдэг үг нь урт эгшигтэй тул 'уу' гэж бичнэ.' гэж бичнэ.",
+        "reviewed_at": "2026-05-04T04:01:45.601Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

@@ -25,7 +25,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: бөмбөгийг. Эгшиг дуусвар үгэнд 'ийг' залгана.",
+    "feedback_text": "Заах тийн ялгал: бөмбөгийг.",
     "options": {
       "choices": [
         {
@@ -33,7 +33,7 @@
           "is_correct": true
         },
         {
-          "text": "",
+          "text": "г",
           "is_correct": false
         },
         {
@@ -44,7 +44,7 @@
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"\" not derivable from \"бөмбөгийг\" via [E2]",
+      "distractor: distractor \"г\" not derivable from \"бөмбөгийг\" via [E2]",
       "distractor: distractor \"ыг\" not derivable from \"бөмбөгийг\" via [E2]"
     ]
   },
@@ -52,8 +52,8 @@
     "id": "G24-004-v2",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Хүүхэд хоол___ идэв.",
-    "correct_answer": "хоолыг",
+    "prompt_text": "Ээж___ хоол хийв.",
+    "correct_answer": "ээжд",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -74,34 +74,34 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Заах тийн ялгал: хоолыг. Гийгүүлэгч дуусвар үгэнд 'ыг' залгана.",
+    "feedback_text": "Өгөх оршихын тийн ялгал: ээжд.",
     "options": {
       "choices": [
         {
-          "text": "ыг",
+          "text": "д",
           "is_correct": true
         },
         {
-          "text": "г",
+          "text": "т",
           "is_correct": false
         },
         {
-          "text": "ийг",
+          "text": "та",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"г\" not derivable from \"хоолыг\" via [E2]",
-      "distractor: distractor \"ийг\" not derivable from \"хоолыг\" via [E2]"
+      "distractor: distractor \"т\" not derivable from \"ээжд\" via [E2]",
+      "distractor: distractor \"та\" not derivable from \"ээжд\" via [E2]"
     ]
   },
   {
     "id": "G24-004-v3",
     "task_type": "TT1_CHOICE",
     "title": "Зөвийг сонгоно уу",
-    "prompt_text": "Ээж сургууль___ явав.",
+    "prompt_text": "Сургууль___ хичээл эхэллээ.",
     "correct_answer": "сургуульд",
     "audio_url": null,
     "image_url": null,
@@ -123,7 +123,7 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Орших оршихын тийн ялгал: сургуульд. Зөөлөн гийгүүлэгчийн дараа 'д' залгана.",
+    "feedback_text": "Өгөх оршихын тийн ялгал: сургуульд.",
     "options": {
       "choices": [
         {
@@ -131,19 +131,19 @@
           "is_correct": true
         },
         {
-          "text": "",
+          "text": "т",
           "is_correct": false
         },
         {
-          "text": "т",
+          "text": "да",
           "is_correct": false
         }
       ],
       "audio_trigger": false
     },
     "_rejection_reasons": [
-      "distractor: distractor \"\" not derivable from \"сургуульд\" via [E2]",
-      "distractor: distractor \"т\" not derivable from \"сургуульд\" via [E2]"
+      "distractor: distractor \"т\" not derivable from \"сургуульд\" via [E2]",
+      "distractor: distractor \"да\" not derivable from \"сургуульд\" via [E2]"
     ]
   }
 ]

@@ -102,6 +102,57 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G24-019-v1",
+      "task_type": "TT5_MINI_TEXT",
+      "title": "Жижиг эх сонсоод бичээрэй",
+      "prompt_text": "Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.",
+      "correct_answer": "Цас орлоо.;Сар тод байна.;Би номоо авлаа.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "C1",
+        "C4",
+        "E1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 90,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
+      "options": {
+        "audio_text": "Цас орлоо. Сар тод байна. Би номоо авлаа.",
+        "sentence_count": 3,
+        "expected_answers": [
+          "Цас орлоо.",
+          "Сар тод байна.",
+          "Би номоо авлаа."
+        ]
+      },
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "correct_answer талбарт өгүүлбэрүүдийг цэгээр тусгаарласан байхад audio_text талбарт цэггүй байна. Энэ хоёрыг ижил болгох хэрэгтэй. Мөн feedback_text нь ямар алдааг зааж байгаа нь тодорхойгүй байна. Энэ дасгалд урт эгшиг, балархай эгшигтэй холбоотой алдаа гарах магадлал бага тул өөрчилж болно.",
+        "reviewed_at": "2026-05-04T04:02:20.460Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

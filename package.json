@@ -13,6 +13,12 @@
     "test:backend": "npm --workspace=@app/backend run test",
     "seed": "npm --workspace=@app/backend run seed",
     "db:migrate": "npm --workspace=@app/backend run db:migrate",
-    "db:generate": "npm --workspace=@app/backend run db:generate"
+    "db:generate": "npm --workspace=@app/backend run db:generate",
+    "pipeline:generate": "npx tsx content-pipeline/scripts/llmGenerate.ts",
+    "pipeline:review": "npx tsx content-pipeline/scripts/llmReview.ts",
+    "pipeline:clear-tasks": "npx tsx content-pipeline/scripts/clearTasks.ts",
+    "pipeline:import": "npx tsx content-pipeline/scripts/importValidated.ts",
+    "pipeline:tts": "npx tsx content-pipeline/scripts/generateTts.ts",
+    "pipeline:images": "npx tsx content-pipeline/scripts/generateImages.ts"
   }
 }

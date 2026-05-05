@@ -3,8 +3,8 @@
     "id": "G24-017-v1",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nАав ажил___ явлаа.",
-    "correct_answer": "даа",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи аав___ хамт явна.",
+    "correct_answer": "тай",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -26,20 +26,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: ажилдаа",
+    "feedback_text": "Зөв хэлбэр: аавтай",
     "options": {
-      "display_text": "Аав ажил___ явлаа.",
-      "blank_position": 8,
-      "blank_answer": "даа",
-      "context_word": "ажилдаа"
+      "display_text": "Би аав___ хамт явна.",
+      "blank_position": 6,
+      "blank_answer": "тай",
+      "context_word": "аавтай"
     }
   },
   {
     "id": "G24-017-v2",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай хөл___ хурдан.",
-    "correct_answer": "өө",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nТуулай сүү___ уув.",
+    "correct_answer": "г",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -61,20 +61,20 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: хөлөө",
+    "feedback_text": "Зөв хэлбэр: сүүг",
     "options": {
-      "display_text": "Туулай хөл___ хурдан.",
+      "display_text": "Туулай сүү___ уув.",
       "blank_position": 10,
-      "blank_answer": "өө",
-      "context_word": "хөлөө"
+      "blank_answer": "г",
+      "context_word": "сүүг"
     }
   },
   {
     "id": "G24-017-v3",
     "task_type": "TT2_FILL",
     "title": "Дутуу хэсгийг нөхөөрэй",
-    "prompt_text": "Хоосон зайг нөхөөрэй:\nСар орой___ гэрэлтэнэ.",
-    "correct_answer": "н",
+    "prompt_text": "Хоосон зайг нөхөөрэй:\nБи ном___ уншив.",
+    "correct_answer": "ыг",
     "audio_url": null,
     "image_url": null,
     "primary_skill": "S5",
@@ -96,12 +96,12 @@
       7
     ],
     "lesson_slot_fit": "CORE",
-    "feedback_text": "Зөв хэлбэр: оройн",
+    "feedback_text": "Зөв хэлбэр: номыг",
     "options": {
-      "display_text": "Сар орой___ гэрэлтэнэ.",
-      "blank_position": 8,
-      "blank_answer": "н",
-      "context_word": "оройн"
+      "display_text": "Би ном___ уншив.",
+      "blank_position": 6,
+      "blank_answer": "ыг",
+      "context_word": "номыг"
     }
   }
 ]

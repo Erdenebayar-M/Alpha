@@ -132,6 +132,51 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G24-022-v1",
+      "task_type": "TT3_CORRECTION",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Би номоо уншлаа.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S5",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E2",
+        "E7"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Би номоо уншлаа.",
+      "initial_text": "Би номаа уншлаа.",
+      "options": {
+        "incorrect_text": "Би номаа уншлаа.",
+        "correct_text": "Би номоо уншлаа.",
+        "error_type": "E2",
+        "hint": "Эгшгийн зохицлыг анхаарч, 'о' эгшигтэй үгэнд 'оо' залгаварыг зөв хэрэглээрэй."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:31.763Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

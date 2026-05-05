@@ -59,6 +59,180 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G12-003-v1",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "гэр",
+      "options": {
+        "choices": [
+          {
+            "text": "гэр",
+            "is_correct": true
+          },
+          {
+            "text": "эр",
+            "is_correct": false
+          },
+          {
+            "text": "гээр",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: гэр",
+      "review": {
+        "approved": false,
+        "issues": [
+          "age-inappropriate",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "Энэ дасгал нь 1-2-р ангийн хүүхдүүдэд хэтэрхий хялбар байна. Илүү төвөгтэй үгс эсвэл өгүүлбэр ашиглах хэрэгтэй. Мөн \"Зөв хариу: гэр\" гэсэн feedback нь алдааг ойлгуулахгүй байна. Яагаад \"гэр\" гэж бичих ёстойг тайлбарлах хэрэгтэй.",
+        "reviewed_at": "2026-05-04T03:55:20.154Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-003-v1",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "гэр",
+      "options": {
+        "choices": [
+          {
+            "text": "гэр",
+            "is_correct": true
+          },
+          {
+            "text": "эр",
+            "is_correct": false
+          },
+          {
+            "text": "гээр",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: гэр",
+      "review": {
+        "approved": false,
+        "issues": [
+          "age-inappropriate",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "Зурагт тохирох үгийг сонгох дасгал нь 1-2-р ангид тохиромжгүй. Энэ нь цэцэрлэгийн насны хүүхдүүдэд илүү тохиромжтой. Мөн \"Зөв хариу: гэр\" гэсэн хариу нь хэт ерөнхий байна. Яагаад \"гэр\" гэдэг нь зөв болохыг тайлбарлаж өгөх хэрэгтэй.",
+        "reviewed_at": "2026-05-04T04:00:16.624Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-003-v2",
+      "task_type": "TT1_CHOICE",
+      "title": "Зурагт тохирох үгийг сонгоорой",
+      "prompt_text": "Зургийг харж тохирох үгийг сонгоорой.",
+      "correct_answer": "цас",
+      "options": {
+        "choices": [
+          {
+            "text": "цас",
+            "is_correct": true
+          },
+          {
+            "text": "ас",
+            "is_correct": false
+          },
+          {
+            "text": "цаас",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": false
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S2",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: цас",
+      "review": {
+        "approved": false,
+        "issues": [
+          "age-inappropriate",
+          "vague-feedback"
+        ],
+        "severity": "minor",
+        "fix_suggestion": "Энэ дасгал нь 1-р ангийн хүүхдэд хэт хялбар байна. Үгийн утга, дүрслэлийг таних чадварыг шалгах зорилготой бол өөр үг сонгох эсвэл илүү төвөгтэй болгох хэрэгтэй. Мөн feedback текст нь яагаад зөв эсвэл буруу болохыг тайлбарласан байвал илүү үр дүнтэй. Жишээ нь: 'Цас бол өвлийн улиралд ордог цагаан зүйл шүү дээ. Зөв хариуллаа!'",
+        "reviewed_at": "2026-05-04T04:00:20.014Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

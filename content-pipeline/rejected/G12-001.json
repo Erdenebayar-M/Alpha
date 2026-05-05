@@ -177,6 +177,354 @@
         "model": "anthropic/claude-haiku-4-5",
         "provider": "openrouter"
       }
+    },
+    {
+      "id": "G12-001-v1",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "ном",
+      "options": {
+        "choices": [
+          {
+            "text": "ном",
+            "is_correct": true
+          },
+          {
+            "text": "ом",
+            "is_correct": false
+          },
+          {
+            "text": "ноом",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: ном",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй байна. 'ном' гэсэн үгийн дуудлагыг агуулсан аудио файл нэмэх шаардлагатай. Мөн feedback текст нь алдааг ойлгуулахуйц байх ёстой. Жишээ нь: 'Ном гэдэг нь унших зүйл. 'Ом' гэдэг нь утгагүй үг. 'Ноом' гэдэг нь буруу бичигдсэн үг.' гэх мэт.",
+        "reviewed_at": "2026-05-04T03:55:05.040Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-001-v2",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "нум",
+      "options": {
+        "choices": [
+          {
+            "text": "нум",
+            "is_correct": true
+          },
+          {
+            "text": "ум",
+            "is_correct": false
+          },
+          {
+            "text": "нуум",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: нум",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй байна. 'нум' гэсэн үгийг дуудсан аудиог нэмэх шаардлагатай. Мөн feedback текст нь алдааг тайлбарласан байх ёстой.",
+        "reviewed_at": "2026-05-04T03:55:07.368Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-001-v3",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "мод",
+      "options": {
+        "choices": [
+          {
+            "text": "мод",
+            "is_correct": true
+          },
+          {
+            "text": "од",
+            "is_correct": false
+          },
+          {
+            "text": "моод",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй тул 'correct_answer'-тай таарч байгаа эсэхийг шалгах боломжгүй байна. Аудио файлыг нэмэх шаардлагатай. Мөн feedback текст нь алдааг ойлгуулахуйц биш байна. Жишээ нь: 'Мод гэдэг нь ургамал юм. 'Од' гэдэг нь тэнгэрт гялалзах биет. 'Моод' гэдэг нь хувцас загварын чиг хандлага юм.' гэх мэтээр тайлбарлах хэрэгтэй.",
+        "reviewed_at": "2026-05-04T03:55:10.344Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-001-v1",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "ном",
+      "options": {
+        "choices": [
+          {
+            "text": "ном",
+            "is_correct": true
+          },
+          {
+            "text": "ом",
+            "is_correct": false
+          },
+          {
+            "text": "ноом",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: ном",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй байна. Аудио файлыг оруулж, зөв хариулттай тааруулна уу. Мөн feedback текстийг илүү дэлгэрэнгүй болгох хэрэгтэй.",
+        "reviewed_at": "2026-05-04T03:59:58.198Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-001-v2",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "нум",
+      "options": {
+        "choices": [
+          {
+            "text": "нум",
+            "is_correct": true
+          },
+          {
+            "text": "ум",
+            "is_correct": false
+          },
+          {
+            "text": "нуум",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: нум",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй байна. 'нум' гэсэн үгийг дуудсан аудио файл нэмэх шаардлагатай. Мөн feedback текстийг илүү дэлгэрэнгүй болгох хэрэгтэй. Жишээ нь: 'Нум гэдэг нь харвах зэвсэг юм. 'Ум' эсвэл 'нуум' гэж бичих нь буруу.' гэх мэт.",
+        "reviewed_at": "2026-05-04T04:00:01.312Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
+    },
+    {
+      "id": "G12-001-v3",
+      "task_type": "TT1_CHOICE",
+      "title": "Сонсоод зөв үгийг олоорой",
+      "prompt_text": "Аудио сонсоод зөв үгийг сонгоорой.",
+      "correct_answer": "мод",
+      "options": {
+        "choices": [
+          {
+            "text": "мод",
+            "is_correct": true
+          },
+          {
+            "text": "од",
+            "is_correct": false
+          },
+          {
+            "text": "моод",
+            "is_correct": false
+          }
+        ],
+        "audio_trigger": true
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S1",
+      "secondary_skill": null,
+      "level_target": "M0",
+      "error_targets": [
+        "B1",
+        "C2"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 1,
+      "estimated_time_seconds": 30,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "WARM_UP",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": false,
+        "issues": [
+          "audio-mismatch",
+          "vague-feedback"
+        ],
+        "severity": "blocker",
+        "fix_suggestion": "Аудио файл байхгүй тул 'мод' гэсэн үгийг дуудсан аудиог нэмэх шаардлагатай. Мөн feedback текстийг илүү дэлгэрэнгүй болгох хэрэгтэй.",
+        "reviewed_at": "2026-05-04T04:00:04.921Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "total": 3,
+  "success": 3,
+  "failed": 0,
+  "skipped": 0,
+  "estimated_cost_usd": 0.0098,
+  "model": "gemini-3.1-flash-tts-preview",
+  "language": "mn-MN",
+  "voice": "Kore",
+  "files": [
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v1.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v2.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v3.wav",
+      "status": "success"
+    }
+  ]
+}

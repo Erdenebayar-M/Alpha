@@ -1,0 +1,256 @@
+{
+  "total": 49,
+  "success": 4,
+  "failed": 18,
+  "estimated_cost_usd": 0.1597,
+  "model": "gemini-3.1-flash-tts-preview",
+  "voice": "Kore",
+  "language": "mn-MN",
+  "files": [
+    {
+      "task_id": "G12-008",
+      "filename": "dict_G12-008-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-008",
+      "filename": "prompt_G12-008-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-009",
+      "filename": "prompt_G12-009-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-012",
+      "filename": "prompt_G12-012-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-012",
+      "filename": "prompt_G12-012-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-012",
+      "filename": "prompt_G12-012-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-015",
+      "filename": "prompt_G12-015-v1.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-015",
+      "filename": "prompt_G12-015-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-015",
+      "filename": "prompt_G12-015-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-TT3C-001",
+      "filename": "prompt_G12-TT3C-001-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G12-TT3C-001",
+      "filename": "prompt_G12-TT3C-001-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-010",
+      "filename": "prompt_G24-010-v1.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-010",
+      "filename": "prompt_G24-010-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-010",
+      "filename": "prompt_G24-010-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "prompt_G24-011-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "prompt_G24-011-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "prompt_G24-011-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-013",
+      "filename": "prompt_G24-013-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-013",
+      "filename": "prompt_G24-013-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-013",
+      "filename": "prompt_G24-013-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "dict_G24-014-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "prompt_G24-014-v1.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "dict_G24-014-v2.wav",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "prompt_G24-014-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "dict_G24-014-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-014",
+      "filename": "prompt_G24-014-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "prompt_G24-017-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "prompt_G24-017-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "prompt_G24-017-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-018",
+      "filename": "prompt_G24-018-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-018",
+      "filename": "prompt_G24-018-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-018",
+      "filename": "prompt_G24-018-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "dict_G24-019-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "prompt_G24-019-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "dict_G24-019-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "prompt_G24-019-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "dict_G24-019-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-019",
+      "filename": "prompt_G24-019-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-020",
+      "filename": "prompt_G24-020-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-020",
+      "filename": "prompt_G24-020-v2.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-020",
+      "filename": "prompt_G24-020-v3.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-022",
+      "filename": "prompt_G24-022-v1.wav",
+      "status": "failed"
+    },
+    {
+      "task_id": "G24-022",
+      "filename": "prompt_G24-022-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-022",
+      "filename": "prompt_G24-022-v3.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-024",
+      "filename": "prompt_G24-024-v1.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-024",
+      "filename": "prompt_G24-024-v2.wav",
+      "status": "skipped"
+    },
+    {
+      "task_id": "G24-024",
+      "filename": "prompt_G24-024-v3.wav",
+      "status": "skipped"
+    }
+  ]
+}

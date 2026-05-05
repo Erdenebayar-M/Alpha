@@ -1,80 +1,131 @@
-[
-  {
-    "id": "G12-008-v1",
-    "task_type": "TT4_DICTATION",
-    "title": "Сонсоод бичээрэй",
-    "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "гутал;алим;дэвтэр",
-    "audio_url": null,
-    "image_url": null,
-    "primary_skill": "S7",
-    "secondary_skill": null,
-    "level_target": "M1",
-    "error_targets": [
-      "H1",
-      "B1"
-    ],
-    "grade_band": [
-      "G1",
-      "G2"
-    ],
-    "difficulty": 2,
-    "estimated_time_seconds": 45,
-    "review_after_days": [
-      1,
-      3,
-      7
-    ],
-    "lesson_slot_fit": "END",
-    "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
-    "options": {
-      "audio_text": "гутал, алим, дэвтэр",
-      "word_count": 3,
-      "expected_answers": [
-        "гутал",
-        "алим",
-        "дэвтэр"
+{
+  "task_id": "G12-008",
+  "variants": [
+    {
+      "id": "G12-008-v1",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "гутал;алим;дэвтэр",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
       ],
-      "allow_partial": true
-    }
-  },
-  {
-    "id": "G12-008-v2",
-    "task_type": "TT4_DICTATION",
-    "title": "Сонсоод бичээрэй",
-    "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
-    "correct_answer": "цас;цонх;өндөг",
-    "audio_url": null,
-    "image_url": null,
-    "primary_skill": "S7",
-    "secondary_skill": null,
-    "level_target": "M1",
-    "error_targets": [
-      "H1",
-      "B1"
-    ],
-    "grade_band": [
-      "G1",
-      "G2"
-    ],
-    "difficulty": 2,
-    "estimated_time_seconds": 45,
-    "review_after_days": [
-      1,
-      3,
-      7
-    ],
-    "lesson_slot_fit": "END",
-    "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
-    "options": {
-      "audio_text": "цас, цонх, өндөг",
-      "word_count": 3,
-      "expected_answers": [
-        "цас",
-        "цонх",
-        "өндөг"
+      "grade_band": [
+        "G1",
+        "G2"
       ],
-      "allow_partial": true
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "гутал, алим, дэвтэр",
+        "word_count": 3,
+        "expected_answers": [
+          "гутал",
+          "алим",
+          "дэвтэр"
+        ],
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "G12-008-v2",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "цас;цонх;өндөг",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "цас, цонх, өндөг",
+        "word_count": 3,
+        "expected_answers": [
+          "цас",
+          "цонх",
+          "өндөг"
+        ],
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "G12-008-v2",
+      "task_type": "TT4_DICTATION",
+      "title": "Сонсоод бичээрэй",
+      "prompt_text": "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
+      "correct_answer": "алим;гутал;дэвтэр",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S7",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "H1",
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 45,
+      "review_after_days": [
+        1,
+        3,
+        7
+      ],
+      "lesson_slot_fit": "END",
+      "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
+      "options": {
+        "audio_text": "алим, гутал, дэвтэр",
+        "word_count": 3,
+        "expected_answers": [
+          "алим",
+          "гутал",
+          "дэвтэр"
+        ],
+        "allow_partial": true
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:13.175Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      }
     }
-  }
-]
+  ]
+}

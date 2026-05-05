@@ -15,10 +15,11 @@ const FLAGGED_DIR = path.join(PIPELINE_ROOT, 'flagged');
 const REJECTED_DIR = path.join(PIPELINE_ROOT, 'rejected');
 const REVIEW_LOG_PATH = path.join(PIPELINE_ROOT, 'review-log.json');
 
-const MODEL = 'anthropic/claude-haiku-4-5';
+const MODEL = 'google/gemini-2.5-flash';
 const COST_CAP_USD = 5.0;
-const INPUT_COST_PER_TOKEN = 0.0000008;
-const OUTPUT_COST_PER_TOKEN = 0.000001;
+// Rates per token for google/gemini-2.5-flash (verify at https://openrouter.ai/google/gemini-2.5-flash)
+const INPUT_COST_PER_TOKEN = 0.00000015;
+const OUTPUT_COST_PER_TOKEN = 0.0000006;
 const SLEEP_MS = 1000;
 
 const systemPrompt = fs.readFileSync(
@@ -70,7 +71,7 @@ function ensureDir(dir: string) {
   }
 }
 
-function readOutputFile(filePath: string): { task_id: string; variants: unknown[] } | null {
+function readOutputFile(filePath: string): unknown | null {
   if (!fs.existsSync(filePath)) return null;
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
@@ -87,7 +88,22 @@ function writeOutputFile(filePath: string, data: { task_id: string; variants: un
 function appendVariantToOutput(dir: string, taskId: string, variant: unknown) {
   ensureDir(dir);
   const filePath = path.join(dir, `${taskId}.json`);
-  const existing = readOutputFile(filePath) ?? { task_id: taskId, variants: [] };
+  const raw = readOutputFile(filePath);
+
+  // Normalise to { task_id, variants: [] } regardless of the file's on-disk shape
+  let existing: { task_id: string; variants: unknown[] };
+  if (raw === null) {
+    existing = { task_id: taskId, variants: [] };
+  } else if (Array.isArray(raw)) {
+    existing = { task_id: taskId, variants: raw };
+  } else {
+    const obj = raw as Record<string, unknown>;
+    existing = {
+      task_id: taskId,
+      variants: Array.isArray(obj['variants']) ? obj['variants'] : [],
+    };
+  }
+
   existing.variants.push(variant);
   writeOutputFile(filePath, existing);
 }
@@ -183,7 +199,11 @@ async function processFiles(
     let variants: Record<string, unknown>[];
     try {
       const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      variants = Array.isArray(raw) ? raw : [raw];
+      variants = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.variants)
+          ? raw.variants
+          : [raw];
     } catch {
       console.error(`[SKIP] Failed to parse ${file}`);
       continue;

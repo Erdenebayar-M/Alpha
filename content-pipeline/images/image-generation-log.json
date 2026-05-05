@@ -1,0 +1,135 @@
+{
+  "total": 25,
+  "success": 25,
+  "failed": 0,
+  "skipped": 0,
+  "estimated_cost_usd": 1,
+  "model": "dall-e-3",
+  "files": [
+    {
+      "task_id": "G12-002",
+      "filename": "img_G12-002-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-002",
+      "filename": "img_G12-002-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-002",
+      "filename": "img_G12-002-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-003",
+      "filename": "img_G12-003-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-003",
+      "filename": "img_G12-003-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-004",
+      "filename": "img_G12-004-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-004",
+      "filename": "img_G12-004-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-004",
+      "filename": "img_G12-004-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-005",
+      "filename": "img_G12-005-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-005",
+      "filename": "img_G12-005-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-005",
+      "filename": "img_G12-005-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-006",
+      "filename": "img_G12-006-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-006",
+      "filename": "img_G12-006-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-006",
+      "filename": "img_G12-006-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-014",
+      "filename": "img_G12-014-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-014",
+      "filename": "img_G12-014-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-014",
+      "filename": "img_G12-014-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G12-015",
+      "filename": "img_G12-015-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-010",
+      "filename": "img_G24-010-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "img_G24-011-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "img_G24-011-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-011",
+      "filename": "img_G24-011-v3.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "img_G24-017-v1.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "img_G24-017-v2.png",
+      "status": "success"
+    },
+    {
+      "task_id": "G24-017",
+      "filename": "img_G24-017-v3.png",
+      "status": "success"
+    }
+  ]
+}
