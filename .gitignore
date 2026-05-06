@@ -10,3 +10,11 @@ node_modules
 /frontend/.next
 /frontend/out
 /coverage
+
+# Generated binary assets — stored in R2, not in repo
+/frontend/public/images/
+/frontend/public/audio/
+content-pipeline/audio/*.wav
+content-pipeline/audio/tts/*.wav
+content-pipeline/audio/temp/
+content-pipeline/images/generated/*.png
