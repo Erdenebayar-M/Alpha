@@ -138,6 +138,14 @@ enum AttemptContext {
   CHECKPOINT
 }
 
+enum DraftStage {
+  STAGE1
+  STAGE2
+  FLAGGED
+  NEEDS_REVISION
+  REJECTED
+}
+
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
 model Parent {
@@ -220,6 +228,72 @@ model LearnerSkillState {
   learner Learner @relation(fields: [learner_id], references: [id], onDelete: Cascade)
 
   @@map("learner_skill_states")
+}
+
+/// Draft tasks in the content pipeline. Separate from live Task table.
+model TaskDraft {
+  id                     String     @id
+  task_id                String
+  stage                  DraftStage
+  task_type              TaskType
+  title                  String
+  prompt_text            String
+  correct_answer         String
+  options                Json
+  audio_url              String?
+  image_url              String?
+  primary_skill          SkillCode
+  secondary_skill        SkillCode?
+  level_target           String
+  error_targets          String[]
+  grade_band             String[]
+  difficulty             Int
+  estimated_time_seconds Int
+  review_after_days      Int[]
+  lesson_slot_fit        LessonSlot
+  feedback_text          String
+  is_diagnostic          Boolean    @default(false)
+
+  ai_review_severity     String?
+  ai_review_issues       String[]   @default([])
+  ai_fix_suggestion      String?
+  ai_reviewed_at         DateTime?  @db.Timestamptz(6)
+
+  reviewer_notes         String?
+  flag_reason            String?
+  revision_reason        String?
+  rejection_reason       String?
+
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime   @updatedAt      @db.Timestamptz(6)
+
+  audit_logs             TaskDraftAuditLog[]
+
+  @@index([task_id])
+  @@index([stage])
+  @@index([stage, primary_skill])
+  @@index([grade_band], type: Gin)
+  @@map("task_drafts")
+}
+
+/// Audit trail for all pipeline actions (approve/reject/flag/revise/edit).
+model TaskDraftAuditLog {
+  id           String      @id @default(uuid())
+  draft_id     String?
+  task_id      String
+  action       String
+  from_stage   DraftStage
+  to_stage     DraftStage?
+  reason       String?
+  notes        String?
+  snapshot     Json
+  performed_at DateTime    @default(now()) @db.Timestamptz(6)
+
+  draft        TaskDraft?  @relation(fields: [draft_id], references: [id], onDelete: SetNull)
+
+  @@index([draft_id])
+  @@index([task_id])
+  @@map("task_draft_audit_logs")
 }
 
 /// Seed-content word bank. Standalone — not linked to Learner.

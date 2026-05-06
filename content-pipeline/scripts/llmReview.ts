@@ -2,18 +2,37 @@ import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient, DraftStage, TaskType, SkillCode, LessonSlot } from '../../backend/generated/prisma';
 
 dotenv.config({ path: path.resolve(__dirname, '../../backend/.env') });
 
 const isDryRun = process.argv.includes('--dry-run');
 
-const PIPELINE_ROOT = path.resolve(__dirname, '..');
-const STAGE1_DIR = path.join(PIPELINE_ROOT, 'stage1');
-const STAGE2_DIR = path.join(PIPELINE_ROOT, 'stage2');
-const VALIDATED_DIR = path.join(PIPELINE_ROOT, 'validated');
-const FLAGGED_DIR = path.join(PIPELINE_ROOT, 'flagged');
-const REJECTED_DIR = path.join(PIPELINE_ROOT, 'rejected');
+const PIPELINE_ROOT   = path.resolve(__dirname, '..');
+const STAGE1_DIR      = path.join(PIPELINE_ROOT, 'stage1');
 const REVIEW_LOG_PATH = path.join(PIPELINE_ROOT, 'review-log.json');
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma  = new PrismaClient({ adapter });
+
+const VALID_TASK_TYPES = new Set(Object.values(TaskType));
+const VALID_SKILLS     = new Set(Object.values(SkillCode));
+const VALID_SLOTS      = new Set(Object.values(LessonSlot));
+
+function toTaskType(raw: string): TaskType {
+  if (!VALID_TASK_TYPES.has(raw as TaskType)) throw new Error(`Unknown task_type: ${raw}`);
+  return raw as TaskType;
+}
+function toSkill(raw: string | null | undefined): SkillCode | null {
+  if (!raw) return null;
+  if (!VALID_SKILLS.has(raw as SkillCode)) throw new Error(`Unknown skill: ${raw}`);
+  return raw as SkillCode;
+}
+function toSlot(raw: string): LessonSlot {
+  if (!VALID_SLOTS.has(raw as LessonSlot)) throw new Error(`Unknown lesson_slot_fit: ${raw}`);
+  return raw as LessonSlot;
+}
 
 const MODEL = 'google/gemini-2.5-flash';
 const COST_CAP_USD = 5.0;
@@ -65,48 +84,6 @@ function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function ensureDir(dir: string) {
-  if (!isDryRun && !fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
-function readOutputFile(filePath: string): unknown | null {
-  if (!fs.existsSync(filePath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
-    return null;
-  }
-}
-
-function writeOutputFile(filePath: string, data: { task_id: string; variants: unknown[] }) {
-  if (isDryRun) return;
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-function appendVariantToOutput(dir: string, taskId: string, variant: unknown) {
-  ensureDir(dir);
-  const filePath = path.join(dir, `${taskId}.json`);
-  const raw = readOutputFile(filePath);
-
-  // Normalise to { task_id, variants: [] } regardless of the file's on-disk shape
-  let existing: { task_id: string; variants: unknown[] };
-  if (raw === null) {
-    existing = { task_id: taskId, variants: [] };
-  } else if (Array.isArray(raw)) {
-    existing = { task_id: taskId, variants: raw };
-  } else {
-    const obj = raw as Record<string, unknown>;
-    existing = {
-      task_id: taskId,
-      variants: Array.isArray(obj['variants']) ? obj['variants'] : [],
-    };
-  }
-
-  existing.variants.push(variant);
-  writeOutputFile(filePath, existing);
-}
 
 function stripFences(text: string): string {
   return text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -192,6 +169,10 @@ async function processFiles(
 ): Promise<void> {
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
 
+  const existingIds = new Set(
+    (await prisma.taskDraft.findMany({ select: { id: true } })).map(r => r.id)
+  );
+
   for (const file of files) {
     const filePath = path.join(dir, file);
     const taskId = path.basename(file, '.json');
@@ -211,6 +192,11 @@ async function processFiles(
 
     for (const variant of variants) {
       const variantId = (variant.id as string) ?? taskId;
+
+      if (existingIds.has(variantId)) {
+        console.log(`  [SKIP] ${variantId} already in DB`);
+        continue;
+      }
       const estimatedCost =
         log.total_input_tokens * INPUT_COST_PER_TOKEN +
         log.total_output_tokens * OUTPUT_COST_PER_TOKEN;
@@ -241,29 +227,70 @@ async function processFiles(
         log.by_issue[issue] = (log.by_issue[issue] ?? 0) + 1;
       }
 
-      const annotated = { ...variant, review: {
-        ...review,
-        reviewed_at: new Date().toISOString(),
-        model: MODEL,
-        provider: 'openrouter',
-      }};
+      const reviewedAt = new Date().toISOString();
 
       let dest: string;
+      let targetStage: DraftStage;
       if (review.severity === 'ok') {
-        dest = 'validated';
+        dest = 'stage2';
+        targetStage = DraftStage.STAGE2;
         log.validated++;
         log.by_stage[stage].validated++;
-        if (!isDryRun) appendVariantToOutput(VALIDATED_DIR, taskId, annotated);
       } else if (review.severity === 'minor') {
         dest = 'flagged';
+        targetStage = DraftStage.FLAGGED;
         log.flagged++;
         log.by_stage[stage].flagged++;
-        if (!isDryRun) appendVariantToOutput(FLAGGED_DIR, taskId, annotated);
       } else {
         dest = 'rejected';
+        targetStage = DraftStage.REJECTED;
         log.rejected++;
         log.by_stage[stage].rejected++;
-        if (!isDryRun) appendVariantToOutput(REJECTED_DIR, taskId, annotated);
+      }
+
+      if (!isDryRun) {
+        try {
+          const variantId = (variant.id as string) ?? taskId;
+          await prisma.taskDraft.upsert({
+            where: { id: variantId },
+            create: {
+              id:                     variantId,
+              task_id:                variantId.replace(/-v\d+$/, ''),
+              stage:                  targetStage,
+              task_type:              toTaskType(variant.task_type as string),
+              title:                  variant.title as string,
+              prompt_text:            variant.prompt_text as string,
+              correct_answer:         variant.correct_answer as string,
+              options:                variant.options as object,
+              audio_url:              (variant.audio_url as string) ?? null,
+              image_url:              (variant.image_url as string) ?? null,
+              primary_skill:          toSkill(variant.primary_skill as string)!,
+              secondary_skill:        toSkill(variant.secondary_skill as string | undefined),
+              level_target:           variant.level_target as string,
+              error_targets:          (variant.error_targets as string[]) ?? [],
+              grade_band:             (variant.grade_band as string[]) ?? [],
+              difficulty:             variant.difficulty as number,
+              estimated_time_seconds: variant.estimated_time_seconds as number,
+              review_after_days:      (variant.review_after_days as number[]) ?? [],
+              lesson_slot_fit:        toSlot(variant.lesson_slot_fit as string),
+              feedback_text:          variant.feedback_text as string,
+              is_diagnostic:          (variant.is_diagnostic as boolean) ?? false,
+              ai_review_severity:     review.severity,
+              ai_review_issues:       review.issues ?? [],
+              ai_fix_suggestion:      review.fix_suggestion ?? null,
+              ai_reviewed_at:         new Date(reviewedAt),
+            },
+            update: {
+              stage:                  targetStage,
+              ai_review_severity:     review.severity,
+              ai_review_issues:       review.issues ?? [],
+              ai_fix_suggestion:      review.fix_suggestion ?? null,
+              ai_reviewed_at:         new Date(reviewedAt),
+            },
+          });
+        } catch (upsertErr) {
+          console.error(`  [DB ERROR] Failed to upsert ${variant.id}: ${(upsertErr as Error).message}`);
+        }
       }
 
       console.log(`  → ${dest.toUpperCase()} | severity=${review.severity} | issues=${review.issues.join(',') || 'none'}`);
@@ -303,7 +330,6 @@ async function main() {
   };
 
   await processFiles(STAGE1_DIR, 'stage1', log);
-  await processFiles(STAGE2_DIR, 'stage2', log);
 
   log.estimated_cost_usd =
     log.total_input_tokens * INPUT_COST_PER_TOKEN +
@@ -326,7 +352,6 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+main()
+  .catch(err => { console.error('Fatal error:', err); process.exit(1); })
+  .finally(() => prisma.$disconnect());
