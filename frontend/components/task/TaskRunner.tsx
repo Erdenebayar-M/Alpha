@@ -561,17 +561,17 @@ export function TaskRunner({ task, progress, onSubmit, onNext }: TaskRunnerProps
 
   const canSubmit = !!answer && !submitting;
 
-  const TaskContent = () => {
+  function renderTask() {
     switch (task.task_type) {
-      case 'TT1_CHOICE':  return <TT1Choice task={task} onAnswer={handleAnswer} />;
-      case 'TT2_FILL':    return <TT2Fill task={task} onAnswer={handleAnswer} />;
-      case 'TT3_CORRECTION': return <TT3Correction task={task} onAnswer={handleAnswer} />;
-      case 'TT4_DICTATION':  return <TT4Dictation task={task} onAnswer={handleAnswer} />;
-      case 'TT5_MINI_TEXT':  return <TT5MiniText task={task} onAnswer={handleAnswer} />;
-      case 'TT6_SELF_CHECK': return <TT6SelfCheck task={task} onAnswer={handleAnswer} />;
+      case 'TT1_CHOICE':     return <TT1Choice     key={task.id} task={task} onAnswer={handleAnswer} />;
+      case 'TT2_FILL':       return <TT2Fill       key={task.id} task={task} onAnswer={handleAnswer} />;
+      case 'TT3_CORRECTION': return <TT3Correction key={task.id} task={task} onAnswer={handleAnswer} />;
+      case 'TT4_DICTATION':  return <TT4Dictation  key={task.id} task={task} onAnswer={handleAnswer} />;
+      case 'TT5_MINI_TEXT':  return <TT5MiniText   key={task.id} task={task} onAnswer={handleAnswer} />;
+      case 'TT6_SELF_CHECK': return <TT6SelfCheck  key={task.id} task={task} onAnswer={handleAnswer} />;
       default: return <p style={{ fontFamily: P.jakarta, color: P.text }}>Тодорхойгүй даалгавар</p>;
     }
-  };
+  }
 
   return (
     <MobileShell>
@@ -612,7 +612,7 @@ export function TaskRunner({ task, progress, onSubmit, onNext }: TaskRunnerProps
           padding: '20px',
         }}
       >
-        <TaskContent />
+        {renderTask()}
       </div>
 
       {/* Footer */}

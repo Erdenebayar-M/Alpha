@@ -82,7 +82,7 @@ export default function DiagnosticSessionPage() {
     // Phase complete — try to get next phase
     setShowPhaseTransition(true);
     try {
-      const data = await clientFetch<{ tasks?: BackendTask[]; phase?: string; completed?: boolean }>('/api/diagnostic/next-phase', {
+      const data = await clientFetch<{ tasks?: BackendTask[]; phase?: string; completed?: boolean; result?: unknown }>('/api/diagnostic/next-phase', {
         method: 'POST',
         body: JSON.stringify({ session_id: sessionId }),
       });
@@ -90,6 +90,9 @@ export default function DiagnosticSessionPage() {
       setShowPhaseTransition(false);
 
       if (data.completed || !data.tasks) {
+        if (data.result) {
+          sessionStorage.setItem(`diag_result_${sessionId}`, JSON.stringify(data.result));
+        }
         setDone(true);
       } else {
         setPhases((prev) => [...prev, { phase: data.phase ?? 'PHASE_B', tasks: data.tasks! }]);
@@ -98,7 +101,7 @@ export default function DiagnosticSessionPage() {
       }
     } catch {
       setShowPhaseTransition(false);
-      setDone(true);
+      setError('Дараагийн хэсэг ачаалахад алдаа гарлаа. Дахин оролдоно уу.');
     }
   }
 

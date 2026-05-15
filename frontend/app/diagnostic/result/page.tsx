@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { clientFetch } from '@/lib/api/client';
 import { MobileShell } from '@/components/figma/MobileShell';
@@ -50,33 +50,43 @@ export default function DiagnosticResultPage() {
 
   const [result, setResult] = useState<DiagnosticResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     if (!sessionId) { router.replace('/dashboard'); return; }
-    clientFetch<{ result: { general_level: string; skill_scores: Record<string, number>; top_error_codes: string[]; priority_skills: string[] } }>(`/api/diagnostic/result/${sessionId}`)
-      .then(({ result: r }) => {
-        setResult({
-          session_id: sessionId,
-          learner_id: learnerId,
-          general_level: r.general_level,
-          skill_scores: r.skill_scores,
-          top_errors: r.top_error_codes ?? [],
-          weak_skills: r.priority_skills ?? [],
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        // Stub result while API is being connected
-        setResult({
-          session_id: sessionId,
-          learner_id: learnerId,
-          general_level: 'M1',
-          skill_scores: { S1: 0.6, S2: 0.4, S3: 0.7, S4: 0.5, S5: 0.3, S6: 0.8, S7: 0.4, S8: 0.5 },
-          top_errors: ['C1', 'B1', 'E1'],
-          weak_skills: ['S5', 'S2', 'S7'],
-        });
-        setLoading(false);
+
+    type ApiResult = { general_level: string; skill_scores: Record<string, number>; top_error_codes: string[]; priority_skills: string[] };
+
+    function applyResult(r: ApiResult) {
+      setResult({
+        session_id: sessionId,
+        learner_id: learnerId,
+        general_level: r.general_level,
+        skill_scores: r.skill_scores,
+        top_errors: r.top_error_codes ?? [],
+        weak_skills: r.priority_skills ?? [],
       });
+      setLoading(false);
+    }
+
+    // Result may have been stored by the session page to avoid a second round-trip
+    const stored = sessionStorage.getItem(`diag_result_${sessionId}`);
+    if (stored) {
+      try {
+        const r = JSON.parse(stored) as ApiResult;
+        sessionStorage.removeItem(`diag_result_${sessionId}`);
+        applyResult(r);
+        return;
+      } catch {
+        // fall through to API
+      }
+    }
+
+    clientFetch<{ result: ApiResult }>(`/api/diagnostic/result/${sessionId}`)
+      .then(({ result: r }) => applyResult(r))
+      .catch(() => setLoading(false));
   }, [sessionId, learnerId, router]);
 
   const level = result?.general_level ?? 'M0';
@@ -116,7 +126,19 @@ export default function DiagnosticResultPage() {
             <div style={{ fontSize: '40px', marginBottom: '16px' }}>⏳</div>
             <p style={{ fontFamily: P.jakarta, color: '#405E7E' }}>Дүн боловсруулж байна...</p>
           </div>
-        ) : result ? (
+        ) : !result ? (
+          <div style={{ textAlign: 'center', paddingTop: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <div style={{ fontSize: '40px' }}>⚠️</div>
+            <p style={{ fontFamily: P.nunito, fontWeight: 800, fontSize: '17px', color: '#01618F', margin: 0 }}>Дүн ачааллахад алдаа гарлаа</p>
+            <p style={{ fontFamily: P.jakarta, fontSize: '13px', color: '#7A9BB5', margin: 0 }}>Оношилгоо дуусаагүй байж болзошгүй</p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{ padding: '12px 24px', borderRadius: '9999px', border: 'none', background: '#01618F', color: 'white', fontFamily: P.nunito, fontWeight: 800, fontSize: '15px', cursor: 'pointer' }}
+            >
+              Буцах
+            </button>
+          </div>
+        ) : (
           <>
             {/* Level badge */}
             <div
@@ -235,7 +257,7 @@ export default function DiagnosticResultPage() {
               </div>
             )}
           </>
-        ) : null}
+        )}
       </div>
 
       {/* Footer */}

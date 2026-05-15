@@ -74,6 +74,7 @@ diagnostic.post('/start', async (c) => {
       status: 'IN_PROGRESS',
       current_phase: 'PHASE_A',
       weak_skills_detected: [],
+      result: { _counts: { a: tasks.length, b: 0 } },
     },
     select: { id: true },
   });
@@ -169,9 +170,11 @@ diagnostic.post('/submit', async (c) => {
 
   const phaseTotal = PHASE_TOTALS[session.current_phase];
 
+  const sessionMeta = (session.result as Record<string, any> | null) ?? {};
   const phaseOffset =
     session.current_phase === 'PHASE_A' ? 0 :
-    session.current_phase === 'PHASE_B' ? 8 : 16;
+    session.current_phase === 'PHASE_B' ? (sessionMeta._counts?.a ?? 8) :
+    (sessionMeta._counts?.a ?? 8) + (sessionMeta._counts?.b ?? (session.phase_b_completed ? 8 : 0));
 
   return ok(c, {
     score: result.score,
@@ -233,14 +236,17 @@ diagnostic.post('/next-phase', async (c) => {
   // ── PHASE_A → PHASE_B ────────────────────────────────────────────────────
 
   if (session.current_phase === 'PHASE_A') {
-    if (attempts.length < 8) {
+    const meta = (session.result as Record<string, any> | null) ?? {};
+    const phaseAExpected: number = meta._counts?.a ?? 8;
+
+    if (attempts.length < phaseAExpected) {
       return ERRORS.UNPROCESSABLE(
         c,
-        `Phase A is not complete: ${attempts.length} of 8 tasks submitted`,
+        `Phase A is not complete: ${attempts.length} of ${phaseAExpected} tasks submitted`,
       );
     }
 
-    const phaseAAttempts: PhaseAAttempt[] = attempts.slice(0, 8).map((a) => ({
+    const phaseAAttempts: PhaseAAttempt[] = attempts.slice(0, phaseAExpected).map((a) => ({
       task_id: a.task_id,
       primary_skill: a.task.primary_skill,
       score: a.score,
@@ -288,6 +294,7 @@ diagnostic.post('/next-phase', async (c) => {
           phase_b_completed: false,
           current_phase: 'PHASE_C',
           weak_skills_detected: [],
+          result: { ...meta, _counts: { a: phaseAExpected, b: 0, c: tasks.length } },
         },
       });
 
@@ -296,18 +303,19 @@ diagnostic.post('/next-phase', async (c) => {
 
     const { weakSkills, phaseBTaskIds } = await selectPhaseB(phaseAAttempts, prisma);
 
+    const tasks = await prisma.task.findMany({
+      where: { id: { in: phaseBTaskIds } },
+      select: TASK_SELECT,
+    });
+
     await prisma.diagnosticSession.update({
       where: { id: session_id },
       data: {
         phase_a_completed: true,
         current_phase: 'PHASE_B',
         weak_skills_detected: weakSkills,
+        result: { ...meta, _counts: { a: phaseAExpected, b: tasks.length } },
       },
-    });
-
-    const tasks = await prisma.task.findMany({
-      where: { id: { in: phaseBTaskIds } },
-      select: TASK_SELECT,
     });
 
     return ok(c, { phase: 'B', tasks, weak_skills: weakSkills });
@@ -316,14 +324,19 @@ diagnostic.post('/next-phase', async (c) => {
   // ── PHASE_B → PHASE_C ────────────────────────────────────────────────────
 
   if (session.current_phase === 'PHASE_B') {
-    if (attempts.length < 16) {
+    const meta = (session.result as Record<string, any> | null) ?? {};
+    const phaseACount: number = meta._counts?.a ?? 8;
+    const phaseBCount: number = meta._counts?.b ?? 8;
+    const phaseABExpected = phaseACount + phaseBCount;
+
+    if (attempts.length < phaseABExpected) {
       return ERRORS.UNPROCESSABLE(
         c,
-        `Phase B is not complete: ${attempts.length - 8} of 8 tasks submitted`,
+        `Phase B is not complete: ${attempts.length - phaseACount} of ${phaseBCount} tasks submitted`,
       );
     }
 
-    const phaseABAttempts: DiagnosticAttempt[] = attempts.slice(0, 16).map((a) => ({
+    const phaseABAttempts: DiagnosticAttempt[] = attempts.slice(0, phaseABExpected).map((a) => ({
       task_id: a.task_id,
       primary_skill: a.task.primary_skill,
       score: a.score,
@@ -363,7 +376,11 @@ diagnostic.post('/next-phase', async (c) => {
 
     await prisma.diagnosticSession.update({
       where: { id: session_id },
-      data: { phase_b_completed: true, current_phase: 'PHASE_C' },
+      data: {
+        phase_b_completed: true,
+        current_phase: 'PHASE_C',
+        result: { ...meta, _counts: { ...meta._counts, c: tasks.length } },
+      },
     });
 
     return ok(c, { phase: 'C', tasks, estimated_level });
@@ -372,14 +389,21 @@ diagnostic.post('/next-phase', async (c) => {
   // ── PHASE_C → COMPLETED ──────────────────────────────────────────────────
 
   if (session.current_phase === 'PHASE_C') {
-    if (attempts.length < 20) {
+    const meta = (session.result as Record<string, any> | null) ?? {};
+    const phaseACount: number = meta._counts?.a ?? 8;
+    const phaseBCount: number = meta._counts?.b ?? (session.phase_b_completed ? 8 : 0);
+    const phaseCCount: number = meta._counts?.c ?? 4;
+    const phaseOffset = phaseACount + phaseBCount;
+    const expectedTotal = phaseOffset + phaseCCount;
+
+    if (attempts.length < expectedTotal) {
       return ERRORS.UNPROCESSABLE(
         c,
-        `Phase C is not complete: ${attempts.length - 16} of 4 tasks submitted`,
+        `Phase C is not complete: ${attempts.length - phaseOffset} of ${phaseCCount} tasks submitted`,
       );
     }
 
-    const allAttempts: DiagnosticAttempt[] = attempts.map((a) => ({
+    const allAttempts: DiagnosticAttempt[] = attempts.slice(0, expectedTotal).map((a) => ({
       task_id: a.task_id,
       primary_skill: a.task.primary_skill,
       score: a.score,
