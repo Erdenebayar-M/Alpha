@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { clientFetch } from '@/lib/api/client';
 import { MobileShell } from '@/components/figma/MobileShell';
@@ -17,13 +17,15 @@ export default function DiagnosticIntroPage() {
   const learnerId = searchParams.get('learner_id') ?? '';
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+  const inFlight = useRef(false);
 
   useEffect(() => {
     if (!learnerId) router.replace('/dashboard');
   }, [learnerId, router]);
 
   async function handleStart() {
-    if (!learnerId) return;
+    if (!learnerId || inFlight.current) return;
+    inFlight.current = true;
     setStarting(true);
     setError('');
     try {
@@ -38,6 +40,7 @@ export default function DiagnosticIntroPage() {
       const msg = e instanceof Error ? e.message : '';
       setError(msg.includes('already') ? 'Оношилгоо хийгдэж байна' : 'Оношилгоо эхлүүлэхэд алдаа гарлаа');
       setStarting(false);
+      inFlight.current = false;
     }
   }
 

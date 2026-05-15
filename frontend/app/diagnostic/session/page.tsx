@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { clientFetch } from '@/lib/api/client';
 import { TaskRunner, type BackendTask, type SubmitResult } from '@/components/task/TaskRunner';
@@ -28,11 +28,14 @@ export default function DiagnosticSessionPage() {
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [taskIdx, setTaskIdx] = useState(0);
   const [showPhaseTransition, setShowPhaseTransition] = useState(false);
+  const initialized = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     if (!sessionId) { router.replace('/dashboard'); return; }
     // Try to get phase A tasks from sessionStorage (stored by intro page after /start call)
     const stored = sessionStorage.getItem(`diag_tasks_${sessionId}`);
