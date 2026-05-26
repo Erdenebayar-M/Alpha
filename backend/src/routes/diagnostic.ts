@@ -38,7 +38,10 @@ diagnostic.post('/start', async (c) => {
     where: { learner_id, status: 'IN_PROGRESS' },
   });
   if (existing) {
-    return ERRORS.CONFLICT(c, 'A diagnostic session is already in progress');
+    await prisma.diagnosticSession.update({
+      where: { id: existing.id },
+      data: { status: 'ABANDONED' },
+    });
   }
 
   const gradeBands = learner.variant === 'A' ? ['G1', 'G2'] : ['G2', 'G3', 'G4'];
@@ -483,7 +486,9 @@ diagnostic.post('/next-phase', async (c) => {
       }),
     ]) as any;
 
-    await generatePlanLessons(newPlan.id, prisma);
+    await generatePlanLessons(newPlan.id, prisma).catch((err) => {
+      console.error('generatePlanLessons failed (non-fatal):', err);
+    });
 
     return ok(c, { completed: true, result: finalResult, plan_id: newPlan.id });
   }

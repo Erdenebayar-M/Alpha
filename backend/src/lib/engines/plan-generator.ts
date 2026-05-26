@@ -33,21 +33,35 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
 
   const budgetSeconds = plan.daily_minutes * 60;
 
-  // 2. Fetch all eligible tasks in one query (excludes recent + diagnostic tasks)
-  const allTasks = await db.task.findMany({
-    where: {
-      grade_band: { hasSome: gradeBands },
-      level_target: { contains: generalLevel },
-      is_diagnostic: false,
-      id: { notIn: recentTaskIds },
-    },
+  // 2. Fetch eligible tasks. Prefer level-matched, but fall back to any level
+  // for this grade band when the level-matched pool is empty (sparse content bank).
+  const baseWhere = {
+    grade_band: { hasSome: gradeBands },
+    is_diagnostic: false,
+    id: { notIn: recentTaskIds },
+  } as const;
+
+  let allTasks = await db.task.findMany({
+    where: { ...baseWhere, level_target: { contains: generalLevel } },
     orderBy: { difficulty: 'asc' },
   });
+
+  if (allTasks.length === 0) {
+    allTasks = await db.task.findMany({
+      where: baseWhere,
+      orderBy: { difficulty: 'asc' },
+    });
+  }
+
+  // Skills that actually have tasks in the candidate pool. Used as a fallback
+  // when a rotation skill has no available tasks for this learner's level.
+  const skillsWithTasks = new Set(allTasks.map((t) => t.primary_skill as string));
+  const fallbackSkillOrder = SKILL_PRIORITY_ORDER.filter((s) => skillsWithTasks.has(s));
 
   const usedInPlan = new Set<string>();
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
 
   interface LessonSpec {
     day_number: number;
@@ -62,11 +76,27 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
 
   // 3. Build one lesson spec per day
   for (let day = 1; day <= plan.duration_days; day++) {
-    const skill = rotationSkills[(day - 1) % rotationSkills.length];
+    const preferredSkill = rotationSkills[(day - 1) % rotationSkills.length];
 
-    const available = allTasks.filter(
+    // Try the priority skill first; if no tasks, walk fallback skills in canonical order.
+    const skillsToTry = [
+      preferredSkill,
+      ...fallbackSkillOrder.filter((s) => s !== preferredSkill),
+    ];
+    let skill = preferredSkill;
+    let available = allTasks.filter(
       (t) => (t.primary_skill as string) === skill && !usedInPlan.has(t.id),
     );
+    for (const s of skillsToTry) {
+      const pool = allTasks.filter(
+        (t) => (t.primary_skill as string) === s && !usedInPlan.has(t.id),
+      );
+      if (pool.length > 0) {
+        skill = s;
+        available = pool;
+        break;
+      }
+    }
 
     const selectedIds: string[] = [];
     let elapsed = 0;
@@ -79,7 +109,7 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
     }
 
     const scheduledDate = new Date(today);
-    scheduledDate.setDate(today.getDate() + (day - 1));
+    scheduledDate.setUTCDate(today.getUTCDate() + (day - 1));
 
     lessonSpecs.push({
       day_number: day,
@@ -95,7 +125,7 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
   const midpointDay = Math.ceil(plan.duration_days / 2);
 
   const checkpointDate = new Date(today);
-  checkpointDate.setDate(today.getDate() + (midpointDay - 1));
+  checkpointDate.setUTCDate(today.getUTCDate() + (midpointDay - 1));
 
   const coveredSkills = [
     ...new Set(

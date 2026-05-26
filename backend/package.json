@@ -21,6 +21,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@app/shared": "*",
+    "@aws-sdk/client-s3": "^3.1042.0",
     "@google/genai": "^1.50.1",
     "@hono/node-server": "^1.19.14",
     "@prisma/adapter-pg": "^7.7.0",

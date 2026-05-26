@@ -98,7 +98,7 @@ content.get('/tasks', async (c) => {
   }
   const { stage, grade, type, skill, page, per_page } = parsed.data;
 
-  const where: Parameters<typeof prisma.taskDraft.findMany>[0]['where'] = {
+  const where = {
     stage: STAGE_ENUM[stage],
     ...(grade ? { task_id: { startsWith: grade } } : {}),
     ...(type  ? { task_type: toTaskType(type) } : {}),
@@ -106,7 +106,7 @@ content.get('/tasks', async (c) => {
       { primary_skill:   toSkill(skill) as SkillCode },
       { secondary_skill: toSkill(skill) as SkillCode },
     ]} : {}),
-  };
+  } as const;
 
   const [tasks, total] = await Promise.all([
     prisma.taskDraft.findMany({
@@ -189,7 +189,7 @@ content.post('/approve', async (c) => {
         title:                  draft.title,
         prompt_text:            draft.prompt_text,
         correct_answer:         draft.correct_answer,
-        options:                draft.options,
+        options:                draft.options as object,
         audio_url:              draft.audio_url,
         image_url:              draft.image_url,
         primary_skill:          draft.primary_skill,
@@ -209,7 +209,7 @@ content.post('/approve', async (c) => {
         title:                  draft.title,
         prompt_text:            draft.prompt_text,
         correct_answer:         draft.correct_answer,
-        options:                draft.options,
+        options:                draft.options as object,
         audio_url:              draft.audio_url,
         image_url:              draft.image_url,
         primary_skill:          draft.primary_skill,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { MobileShell } from '@/components/figma/MobileShell';
 import { useSpeech } from '@/components/figma/useSpeech';
 
@@ -537,11 +537,13 @@ export function TaskRunner({ task, progress, onSubmit, onNext }: TaskRunnerProps
   const [answer, setAnswer] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const inFlight = useRef(false);
 
   const handleAnswer = useCallback((a: string) => setAnswer(a), []);
 
   async function handleSubmit() {
-    if (!answer || submitting) return;
+    if (!answer || inFlight.current) return;
+    inFlight.current = true;
     setSubmitting(true);
     try {
       const r = await onSubmit(task.id, answer);
@@ -549,11 +551,13 @@ export function TaskRunner({ task, progress, onSubmit, onNext }: TaskRunnerProps
     } catch {
       setResult({ is_correct: false, score: 0, feedback: 'Алдаа гарлаа, дахин оролдоно уу' });
     } finally {
+      inFlight.current = false;
       setSubmitting(false);
     }
   }
 
   function handleNext() {
+    inFlight.current = false;
     setAnswer('');
     setResult(null);
     onNext();

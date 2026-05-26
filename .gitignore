@@ -18,3 +18,10 @@ content-pipeline/audio/*.wav
 content-pipeline/audio/tts/*.wav
 content-pipeline/audio/temp/
 content-pipeline/images/generated/*.png
+
+# Sensitive configuration and build artifacts
+.mcp.json
+.claude/
+.clone/
+bash.exe.stackdump
+/shared/dist

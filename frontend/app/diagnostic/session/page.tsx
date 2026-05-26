@@ -180,6 +180,7 @@ export default function DiagnosticSessionPage() {
 
   return (
     <TaskRunner
+      key={currentTask.id}
       task={currentTask}
       progress={{ current: completedSoFar + 1, total: Math.max(totalTasks, 20) }}
       onSubmit={handleSubmit}

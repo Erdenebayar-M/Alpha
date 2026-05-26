@@ -20,6 +20,12 @@ const envSchema = z.object({
 
   ALLOW_PROD_SEED: z.string().optional(),
   ADMIN_SECRET: z.string().min(32).optional(),
+
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().optional(),
+  R2_PUBLIC_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

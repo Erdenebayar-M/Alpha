@@ -281,6 +281,24 @@ export default function DiagnosticResultPage() {
           Хичээлийг эхлэх →
         </Link>
         <Link
+          href={`/plan?learner_id=${learnerId}`}
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            padding: '14px',
+            borderRadius: '9999px',
+            border: '1px solid #E9F1FF',
+            background: 'white',
+            color: '#01618F',
+            fontFamily: P.nunito,
+            fontWeight: 800,
+            fontSize: '14px',
+            textDecoration: 'none',
+          }}
+        >
+          Төлөвлөгөө харах
+        </Link>
+        <Link
           href={learnerId ? `/learner/${learnerId}` : '/dashboard'}
           style={{
             display: 'block',

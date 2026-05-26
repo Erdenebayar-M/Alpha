@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { HTTPException } from 'hono/http-exception';
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { env } from './config/env';
 import { fail } from './lib/response';
 import { requestLogger } from './lib/logger';
@@ -35,6 +36,10 @@ app.onError((err, c) => {
   console.error('[unhandled]', err);
   return fail(c, 'INTERNAL_ERROR', 'Дотоод алдаа гарлаа', undefined, 500);
 });
+
+// Serve generated assets from the content pipeline
+app.use('/content/images/*', serveStatic({ root: '../content-pipeline/images' }));
+app.use('/content/audio/*', serveStatic({ root: '../content-pipeline/audio' }));
 
 app.route('/api/auth', auth);
 app.route('/api/learner', learner);

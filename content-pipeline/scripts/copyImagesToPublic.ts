@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as dotenv from "dotenv";
 import { runValidation } from "./validateImages";
+
+dotenv.config({ path: path.resolve(__dirname, "../../backend/.env") });
 
 const GENERATED_DIR = path.resolve(__dirname, "../images/generated");
 const CSV_PATH = path.resolve(__dirname, "../images/image-queue.csv");
@@ -95,19 +98,25 @@ async function main() {
 
   console.log(`\nStep 3: Updating Task.image_url in database...`);
 
+  if (isDryRun) {
+    for (const row of rows) {
+      const variantId = toVariantId(row.task_id, row.variant);
+      const imageUrl = `/images/${row.filename}`;
+      console.log(`  [DRY] task ${variantId} → image_url = "${imageUrl}"`);
+    }
+    return;
+  }
+
   const { PrismaClient } = await import("../../backend/generated/prisma");
-  const prisma = new PrismaClient();
+  const { PrismaPg } = await import("@prisma/adapter-pg");
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const prisma = new PrismaClient({ adapter });
 
   try {
     let updated = 0;
     for (const row of rows) {
       const variantId = toVariantId(row.task_id, row.variant);
       const imageUrl = `/images/${row.filename}`;
-
-      if (isDryRun) {
-        console.log(`  [DRY] task ${variantId} → image_url = "${imageUrl}"`);
-        continue;
-      }
 
       try {
         await prisma.task.update({

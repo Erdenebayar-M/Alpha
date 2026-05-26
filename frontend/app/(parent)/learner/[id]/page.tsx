@@ -201,25 +201,66 @@ export default function LearnerDetailPage() {
         </div>
       )}
 
-      {/* CTA */}
-      <Link
-        href={`/diagnostic/intro?learner_id=${id}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '14px 28px',
-          borderRadius: '9999px',
-          background: '#01618F',
-          color: 'white',
-          fontFamily: 'var(--font-nunito), "Nunito Sans", sans-serif',
-          fontWeight: 800,
-          fontSize: '15px',
-          textDecoration: 'none',
-        }}
-      >
-        Оношилгоо дахин авах →
-      </Link>
+      {/* CTAs */}
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <Link
+          href={`/lesson/today?learner_id=${id}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '14px 28px',
+            borderRadius: '9999px',
+            background: 'linear-gradient(135deg, #01618F, #31B2FB)',
+            color: 'white',
+            fontFamily: 'var(--font-nunito), "Nunito Sans", sans-serif',
+            fontWeight: 800,
+            fontSize: '15px',
+            textDecoration: 'none',
+            boxShadow: '0 6px 20px rgba(1,97,143,0.28)',
+          }}
+        >
+          Өнөөдрийн хичээл →
+        </Link>
+        <Link
+          href={`/plan?learner_id=${id}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '14px 28px',
+            borderRadius: '9999px',
+            background: 'white',
+            border: '1px solid #E9F1FF',
+            color: '#01618F',
+            fontFamily: 'var(--font-nunito), "Nunito Sans", sans-serif',
+            fontWeight: 800,
+            fontSize: '15px',
+            textDecoration: 'none',
+          }}
+        >
+          Төлөвлөгөө →
+        </Link>
+        <Link
+          href={`/diagnostic/intro?learner_id=${id}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '14px 28px',
+            borderRadius: '9999px',
+            background: 'white',
+            border: '1px solid #E9F1FF',
+            color: '#01618F',
+            fontFamily: 'var(--font-nunito), "Nunito Sans", sans-serif',
+            fontWeight: 800,
+            fontSize: '15px',
+            textDecoration: 'none',
+          }}
+        >
+          Оношилгоо дахин авах →
+        </Link>
+      </div>
     </div>
   );
 }
