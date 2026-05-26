@@ -429,15 +429,45 @@ function dictationDiff(expected: string, actual: string): AnswerDiff {
  * Compares a learner's answer against the expected answer.
  *
  * When `taskType` is provided the appropriate logic is applied:
- *   TT1_CHOICE   — exact match (NFC-normalised, whitespace-collapsed)
- *   TT2_FILL     — case-insensitive single-blank comparison
- *   TT4_DICTATION — word-by-word character diff
- *   TT5_MINI_TEXT — sentence-by-sentence (delegates to checkSentence internals)
- *   TT3/TT6/other — full sentence-aware diff (case errors + punctuation)
+ * Checking logic groups:
+ *   choice  — TT_LISTEN_CHOOSE, TT_IMAGE_WORD_MATCH, TT_CHOOSE_CORRECT, TT_SIMPLE_SUFFIX,
+ *             TT_WORD_FORM_CHOOSE, TT_SUFFIX_CHOOSE, TT_CONSONANT_CONFUSION,
+ *             TT_LONG_VOWEL_IN_SENTENCE, TT_CASE_SUFFIX, TT_MIXED_WORD_SET,
+ *             TT_LONG_VOWEL_CHALLENGE, TT_MIXED_CHECKPOINT, TT_MIXED_REVIEW
+ *             → exact match (NFC-normalised, whitespace-collapsed)
+ *   fill    — TT_LETTER_FILL, TT_FILL_WRITE, TT_MISSING_LETTER, TT_WORD_ENDING,
+ *             TT_SENTENCE_FILL, TT_LONG_VOWEL_FILL, TT_REDUCED_VOWEL,
+ *             TT_REDUCED_VOWEL_IN_SENTENCE, TT_BASIC_COMMA, TT_SUFFIX_WRITE,
+ *             TT_COMPOUND_SUFFIX
+ *             → case-insensitive single-blank comparison
+ *   dictation — TT_WORD_SET_DICTATION, TT_TWO_WORD_DICTATION,
+ *               TT_SHORT_SENTENCE_DICTATION, TT_TWO_SENTENCE_DICTATION
+ *               → word-by-word character diff
+ *   mini_text — TT_MINI_TEXT_DICTATION → sentence-by-sentence
+ *   default   — correction, self-check, copy, boundary types → sentence-aware diff
  *
- * Without `taskType` the original word-level Wagner-Fischer diff is used
- * (backward-compatible with all existing callers).
+ * Without `taskType` the original word-level Wagner-Fischer diff is used.
  */
+
+const CHOICE_TYPES = new Set([
+  'TT_LISTEN_CHOOSE', 'TT_IMAGE_WORD_MATCH', 'TT_CHOOSE_CORRECT', 'TT_SIMPLE_SUFFIX',
+  'TT_WORD_FORM_CHOOSE', 'TT_SUFFIX_CHOOSE', 'TT_CONSONANT_CONFUSION',
+  'TT_LONG_VOWEL_IN_SENTENCE', 'TT_CASE_SUFFIX', 'TT_MIXED_WORD_SET',
+  'TT_LONG_VOWEL_CHALLENGE', 'TT_MIXED_CHECKPOINT', 'TT_MIXED_REVIEW',
+]);
+
+const FILL_TYPES = new Set([
+  'TT_LETTER_FILL', 'TT_FILL_WRITE', 'TT_MISSING_LETTER', 'TT_WORD_ENDING',
+  'TT_SENTENCE_FILL', 'TT_LONG_VOWEL_FILL', 'TT_REDUCED_VOWEL',
+  'TT_REDUCED_VOWEL_IN_SENTENCE', 'TT_BASIC_COMMA', 'TT_SUFFIX_WRITE',
+  'TT_COMPOUND_SUFFIX',
+]);
+
+const DICTATION_TYPES = new Set([
+  'TT_WORD_SET_DICTATION', 'TT_TWO_WORD_DICTATION',
+  'TT_SHORT_SENTENCE_DICTATION', 'TT_TWO_SENTENCE_DICTATION',
+]);
+
 export function checkAnswer(expected: string, actual: string, taskType?: string): AnswerDiff {
   if (taskType !== undefined) {
     const exp = normalizeStr(expected);
@@ -449,27 +479,25 @@ export function checkAnswer(expected: string, actual: string, taskType?: string)
       caseErrors: [], missingPunctuation: [],
     });
 
-    switch (taskType) {
-      case 'TT1_CHOICE':
-        if (exp === act) return emptyCorrect();
-        return { ...wordLevelDiff(exp, act), caseErrors: [], missingPunctuation: [] };
-
-      case 'TT2_FILL': {
-        if (exp.toLowerCase() === act.toLowerCase()) return emptyCorrect();
-        return {
-          isCorrect: false, editDistance: 1, operations: [],
-          missingChars: [], extraChars: [],
-          wrongChars: [{ expected: exp, actual: act, position: 0 }],
-          transpositions: [], caseErrors: [], missingPunctuation: [],
-        };
-      }
-
-      case 'TT4_DICTATION':
-        return dictationDiff(exp, act);
-
-      default: // TT3_CORRECTION, TT6_SELF_CHECK, TT5_MINI_TEXT, unknown
-        return sentenceAwareDiff(exp, act);
+    if (CHOICE_TYPES.has(taskType)) {
+      if (exp === act) return emptyCorrect();
+      return { ...wordLevelDiff(exp, act), caseErrors: [], missingPunctuation: [] };
     }
+
+    if (FILL_TYPES.has(taskType)) {
+      if (exp.toLowerCase() === act.toLowerCase()) return emptyCorrect();
+      return {
+        isCorrect: false, editDistance: 1, operations: [],
+        missingChars: [], extraChars: [],
+        wrongChars: [{ expected: exp, actual: act, position: 0 }],
+        transpositions: [], caseErrors: [], missingPunctuation: [],
+      };
+    }
+
+    if (DICTATION_TYPES.has(taskType)) return dictationDiff(exp, act);
+
+    // TT_MINI_TEXT_DICTATION, correction types, self-check, copy, boundary → sentence-aware
+    return sentenceAwareDiff(exp, act);
   }
 
   // Original word-level behaviour (no taskType)

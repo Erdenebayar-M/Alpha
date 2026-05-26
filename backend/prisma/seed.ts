@@ -111,7 +111,7 @@ interface TaskSeed {
 const readyTasks: TaskSeed[] = [
   {
     id: "G12-001",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_LISTEN_CHOOSE,
     title: "Сонсож сонгох — ном",
     prompt_text: "Сонслоо. Аль үг вэ?",
     correct_answer: "ном",
@@ -124,7 +124,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-001v2",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_LISTEN_CHOOSE,
     title: "Сонсож сонгох — сар",
     prompt_text: "Сонслоо. Аль үг вэ?",
     correct_answer: "сар",
@@ -137,7 +137,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-002",
-    task_type: TaskType.TT2_FILL,
+    task_type: TaskType.TT_LETTER_FILL,
     title: "Үсэг нөхөх — ном",
     prompt_text: "Дутуу үсгийг нөхөж бич.",
     correct_answer: "о",
@@ -150,7 +150,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-003",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_IMAGE_WORD_MATCH,
     title: "Зураг-үг тааруулах — алим",
     prompt_text: "Зурагт тохирох үгийг сонго.",
     correct_answer: "алим",
@@ -163,7 +163,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-003v2",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_IMAGE_WORD_MATCH,
     title: "Зураг-үг тааруулах — гэр",
     prompt_text: "Зурагт тохирох үгийг сонго.",
     correct_answer: "гэр",
@@ -176,7 +176,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-004",
-    task_type: TaskType.TT3_CORRECTION,
+    task_type: TaskType.TT_COPY_WRITE,
     title: "Хуулж бичих — Энэ бол ном.",
     prompt_text: "Доорх өгүүлбэрийг хуулж бич.",
     correct_answer: "Энэ бол ном.",
@@ -189,7 +189,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-005",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_CHOOSE_CORRECT,
     title: "Зөвийг сонгох — тогоо",
     prompt_text: "Аль нь зөв бэ?",
     correct_answer: "тогоо",
@@ -202,7 +202,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-005v2",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_CHOOSE_CORRECT,
     title: "Зөвийг сонгох — сүү",
     prompt_text: "Аль нь зөв бэ?",
     correct_answer: "сүү",
@@ -215,7 +215,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-006",
-    task_type: TaskType.TT2_FILL,
+    task_type: TaskType.TT_FILL_WRITE,
     title: "Нөхөж бичих — бөмбөг",
     prompt_text: "Дутуу үсгийг нөхөж бич.",
     correct_answer: "ө",
@@ -228,7 +228,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-006v2",
-    task_type: TaskType.TT2_FILL,
+    task_type: TaskType.TT_FILL_WRITE,
     title: "Нөхөж бичих — шувуу",
     prompt_text: "Дутуу үсгийг нөхөж бич.",
     correct_answer: "у",
@@ -241,7 +241,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-007",
-    task_type: TaskType.TT2_FILL,
+    task_type: TaskType.TT_MISSING_LETTER,
     title: "Дутуу үсэг — дэвтэр",
     prompt_text: "Аудио сонсоод дутуу үсгийг нөхөж бич.",
     correct_answer: "э",
@@ -254,7 +254,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-008",
-    task_type: TaskType.TT4_DICTATION,
+    task_type: TaskType.TT_WORD_SET_DICTATION,
     title: "Үгийн багц диктант — ном гэр нар",
     prompt_text: "Сонссон дарааллаар бичээрэй.",
     correct_answer: "ном; гэр; нар",
@@ -267,7 +267,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-009",
-    task_type: TaskType.TT3_CORRECTION,
+    task_type: TaskType.TT_CAPITAL_PUNCTUATION,
     title: "Том үсэг, цэг — би явна",
     prompt_text: "Алдааг засаж зөв бич.",
     correct_answer: "Би явна.",
@@ -280,7 +280,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-009v2",
-    task_type: TaskType.TT3_CORRECTION,
+    task_type: TaskType.TT_CAPITAL_PUNCTUATION,
     title: "Том үсэг, цэг — бат ирлээ",
     prompt_text: "Алдааг засаж зөв бич.",
     correct_answer: "Бат ирлээ.",
@@ -293,7 +293,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-010",
-    task_type: TaskType.TT1_CHOICE,
+    task_type: TaskType.TT_SIMPLE_SUFFIX,
     title: "Энгийн залгавар — гэрт",
     prompt_text: "Аль нь зөв бэ?",
     correct_answer: "гэрт",
@@ -306,7 +306,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-011",
-    task_type: TaskType.TT3_CORRECTION,
+    task_type: TaskType.TT_FIND_ERROR,
     title: "Алдаа олох — номм",
     prompt_text: "Алдааг ол, засаж бич.",
     correct_answer: "ном",
@@ -319,7 +319,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-011v2",
-    task_type: TaskType.TT3_CORRECTION,
+    task_type: TaskType.TT_FIND_ERROR,
     title: "Алдаа олох — того",
     prompt_text: "Алдааг ол, засаж бич.",
     correct_answer: "тогоо",
@@ -332,7 +332,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-012",
-    task_type: TaskType.TT6_SELF_CHECK,
+    task_type: TaskType.TT_SELF_CHECK,
     title: "Өөрийгөө шалгах — сүү",
     prompt_text: "Чи бичсэн болон загварыг харьцуул.",
     correct_answer: "сүү",
@@ -345,7 +345,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-013",
-    task_type: TaskType.TT4_DICTATION,
+    task_type: TaskType.TT_TWO_WORD_DICTATION,
     title: "2 үгийн диктант — ном сар",
     prompt_text: "Сонссон дарааллаар бичнэ үү.",
     correct_answer: "ном; сар",
@@ -358,7 +358,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-014",
-    task_type: TaskType.TT2_FILL,
+    task_type: TaskType.TT_WORD_ENDING,
     title: "Үгийн төгсгөл — гэр",
     prompt_text: "Дутуу үсгийг нөхөж бич.",
     correct_answer: "р",
@@ -372,32 +372,32 @@ const readyTasks: TaskSeed[] = [
 ];
 
 const placeholderTasks: TaskSeed[] = [
-  { id: "G12-015", task_type: TaskType.TT2_FILL, title: "Өгүүлбэр нөхөх", prompt_text: "Өгүүлбэрийг бүтэн болгон нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G2"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Нэг өгүүлбэрийг бүтэн болгох." },
-  { id: "G12-016", task_type: TaskType.TT1_CHOICE, title: "Холимог давталт", prompt_text: "Аль нь зөв бэ?", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M1", error_targets: ["B1", "C1"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Үг ба эгшгийг хамт шалгах." },
-  { id: "G24-001", task_type: TaskType.TT1_CHOICE, title: "Үгийн зөв хэлбэр сонгох", prompt_text: "Суурь зөв бичлэгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M1", error_targets: ["B1", "B3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Суурь зөв бичлэг." },
-  { id: "G24-002", task_type: TaskType.TT2_FILL, title: "Урт эгшиг нөхөх", prompt_text: "Урт эгшгийг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M1", error_targets: ["C1"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Урт/богино эгшгийн суурь." },
-  { id: "G24-003", task_type: TaskType.TT2_FILL, title: "Балархай эгшиг", prompt_text: "Балархай эгшгийг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M1", error_targets: ["C4"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Дутуу эгшиг нөхөх." },
-  { id: "G24-004", task_type: TaskType.TT1_CHOICE, title: "Залгавар сонгох", prompt_text: "Зохих залгаврыг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Энгийн залгавар хэрэглэх." },
-  { id: "G24-005", task_type: TaskType.TT3_CORRECTION, title: "Том үсэг, цэг", prompt_text: "Өгүүлбэрийн том үсэг, цэгийг зөв бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G1", "G2"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрийн тэмдэглэгээ." },
-  { id: "G24-006", task_type: TaskType.TT4_DICTATION, title: "Богино өгүүлбэрийн диктант", prompt_text: "Богино өгүүлбэрийг сонсоод бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 60, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Сонсголоор буулгах." },
-  { id: "G24-007", task_type: TaskType.TT3_CORRECTION, title: "Алдаа засах", prompt_text: "Алдаатай үгийг засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өөрөө засах чадвар." },
-  { id: "G24-008", task_type: TaskType.TT1_CHOICE, title: "Гийгүүлэгч андуурал", prompt_text: "Ижил төстэй авиаг ялгаж сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S1, secondary_skill: null, level_target: "M1", error_targets: ["D3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Төстэй авиа ялгах." },
-  { id: "G24-009", task_type: TaskType.TT3_CORRECTION, title: "Үгийн хэлбэр засах", prompt_text: "Үгийн зөв хэлбэрийг засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M2", error_targets: ["F1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Язгуур хэлбэрийг таних." },
-  { id: "G24-010", task_type: TaskType.TT1_CHOICE, title: "Урт эгшиг өгүүлбэрт", prompt_text: "Урт эгшгийг өгүүлбэрт ялга.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M2", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Контекст дотор ялгах." },
-  { id: "G24-011", task_type: TaskType.TT2_FILL, title: "Балархай эгшиг өгүүлбэрт", prompt_text: "Балархай эгшгийг өгүүлбэрт нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M2", error_targets: ["C4", "C5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрт зөв нөхөх." },
-  { id: "G24-012", task_type: TaskType.TT1_CHOICE, title: "Тийн ялгал", prompt_text: "Тийн ялгалын зөв хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрийн үүрэгт тохируулах." },
-  { id: "G24-013", task_type: TaskType.TT3_CORRECTION, title: "Таслалын анхан хэрэглээ", prompt_text: "Таслалыг зөв байрлуулж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Энгийн завсар тэмдэг." },
-  { id: "G24-014", task_type: TaskType.TT4_DICTATION, title: "2 өгүүлбэрийн диктант", prompt_text: "Хоёр өгүүлбэрийг сонсоод бичнэ үү.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "H2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 120, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Хурд ба ой." },
-  { id: "G24-015", task_type: TaskType.TT3_CORRECTION, title: "Үсэг орхигдол олох", prompt_text: "Орхигдсон үсгийг ол, засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["B1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Нийтлэг алдааг засах." },
-  { id: "G24-016", task_type: TaskType.TT1_CHOICE, title: "Холимог үгийн багц", prompt_text: "Зөв үгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M2", error_targets: ["B1", "C1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Үг+эгшгийн бататгал." },
-  { id: "G24-017", task_type: TaskType.TT2_FILL, title: "Залгавар бичлэг", prompt_text: "Залгаврыг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E7"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Сонгосон хэлбэрээ зөв бичих." },
-  { id: "G24-018", task_type: TaskType.TT3_CORRECTION, title: "Өгүүлбэрийн хил зааг", prompt_text: "Өгүүлбэрүүдийг зөв салгаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэр салгах." },
-  { id: "G24-019", task_type: TaskType.TT5_MINI_TEXT, title: "Мини эхийн диктант", prompt_text: "Богино эхийг сонсоод бичнэ үү.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M3", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 120, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.MIXED, feedback_text: "2–3 өгүүлбэртэй эх." },
-  { id: "G24-020", task_type: TaskType.TT6_SELF_CHECK, title: "Өөрийн бичвэр засвар", prompt_text: "Өөрийн бичвэрийг шалгаж засаарай.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 60, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.END, feedback_text: "Дахин шалгалт ба self-correction." },
-  { id: "G24-021", task_type: TaskType.TT1_CHOICE, title: "Урт эгшиг challenge", prompt_text: "Урт эгшгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M3", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ахисан ялгалт." },
-  { id: "G24-022", task_type: TaskType.TT2_FILL, title: "Нийлмэл залгавар", prompt_text: "Нийлмэл залгаврыг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M3", error_targets: ["E2", "E7"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Олон дүрэм давхцах." },
-  { id: "G24-023", task_type: TaskType.TT1_CHOICE, title: "Холимог checkpoint", prompt_text: "Холимог хэлбэрийн даалгаврыг гүйцэтгэ.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S5, level_target: "M2-M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.MIXED, feedback_text: "Долоо хоногийн шалгалт." },
-  { id: "G24-024", task_type: TaskType.TT3_CORRECTION, title: "Тайлбартай засвар", prompt_text: "Алдааны шалтгааныг тайлбарлаж засаарай.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Яагаад буруу гэдгийг хэлэх." },
+  { id: "G12-015", task_type: TaskType.TT_SENTENCE_FILL, title: "Өгүүлбэр нөхөх", prompt_text: "Өгүүлбэрийг бүтэн болгон нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G2"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Нэг өгүүлбэрийг бүтэн болгох." },
+  { id: "G12-016", task_type: TaskType.TT_MIXED_REVIEW, title: "Холимог давталт", prompt_text: "Аль нь зөв бэ?", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M1", error_targets: ["B1", "C1"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Үг ба эгшгийг хамт шалгах." },
+  { id: "G24-001", task_type: TaskType.TT_WORD_FORM_CHOOSE, title: "Үгийн зөв хэлбэр сонгох", prompt_text: "Суурь зөв бичлэгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M1", error_targets: ["B1", "B3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Суурь зөв бичлэг." },
+  { id: "G24-002", task_type: TaskType.TT_LONG_VOWEL_FILL, title: "Урт эгшиг нөхөх", prompt_text: "Урт эгшгийг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M1", error_targets: ["C1"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Урт/богино эгшгийн суурь." },
+  { id: "G24-003", task_type: TaskType.TT_REDUCED_VOWEL, title: "Балархай эгшиг", prompt_text: "Балархай эгшгийг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M1", error_targets: ["C4"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Дутуу эгшиг нөхөх." },
+  { id: "G24-004", task_type: TaskType.TT_SUFFIX_CHOOSE, title: "Залгавар сонгох", prompt_text: "Зохих залгаврыг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Энгийн залгавар хэрэглэх." },
+  { id: "G24-005", task_type: TaskType.TT_CAPITAL_PUNCTUATION, title: "Том үсэг, цэг", prompt_text: "Өгүүлбэрийн том үсэг, цэгийг зөв бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G1", "G2"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрийн тэмдэглэгээ." },
+  { id: "G24-006", task_type: TaskType.TT_SHORT_SENTENCE_DICTATION, title: "Богино өгүүлбэрийн диктант", prompt_text: "Богино өгүүлбэрийг сонсоод бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 60, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Сонсголоор буулгах." },
+  { id: "G24-007", task_type: TaskType.TT_FIX_ERROR, title: "Алдаа засах", prompt_text: "Алдаатай үгийг засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өөрөө засах чадвар." },
+  { id: "G24-008", task_type: TaskType.TT_CONSONANT_CONFUSION, title: "Гийгүүлэгч андуурал", prompt_text: "Ижил төстэй авиаг ялгаж сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S1, secondary_skill: null, level_target: "M1", error_targets: ["D3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Төстэй авиа ялгах." },
+  { id: "G24-009", task_type: TaskType.TT_WORD_FORM_FIX, title: "Үгийн хэлбэр засах", prompt_text: "Үгийн зөв хэлбэрийг засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M2", error_targets: ["F1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Язгуур хэлбэрийг таних." },
+  { id: "G24-010", task_type: TaskType.TT_LONG_VOWEL_IN_SENTENCE, title: "Урт эгшиг өгүүлбэрт", prompt_text: "Урт эгшгийг өгүүлбэрт ялга.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M2", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Контекст дотор ялгах." },
+  { id: "G24-011", task_type: TaskType.TT_REDUCED_VOWEL_IN_SENTENCE, title: "Балархай эгшиг өгүүлбэрт", prompt_text: "Балархай эгшгийг өгүүлбэрт нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M2", error_targets: ["C4", "C5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрт зөв нөхөх." },
+  { id: "G24-012", task_type: TaskType.TT_CASE_SUFFIX, title: "Тийн ялгал", prompt_text: "Тийн ялгалын зөв хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэрийн үүрэгт тохируулах." },
+  { id: "G24-013", task_type: TaskType.TT_BASIC_COMMA, title: "Таслалын анхан хэрэглээ", prompt_text: "Таслалыг зөв байрлуулж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Энгийн завсар тэмдэг." },
+  { id: "G24-014", task_type: TaskType.TT_TWO_SENTENCE_DICTATION, title: "2 өгүүлбэрийн диктант", prompt_text: "Хоёр өгүүлбэрийг сонсоод бичнэ үү.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "H2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 120, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Хурд ба ой." },
+  { id: "G24-015", task_type: TaskType.TT_FIND_OMITTED_LETTER, title: "Үсэг орхигдол олох", prompt_text: "Орхигдсон үсгийг ол, засаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["B1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Нийтлэг алдааг засах." },
+  { id: "G24-016", task_type: TaskType.TT_MIXED_WORD_SET, title: "Холимог үгийн багц", prompt_text: "Зөв үгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M2", error_targets: ["B1", "C1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Үг+эгшгийн бататгал." },
+  { id: "G24-017", task_type: TaskType.TT_SUFFIX_WRITE, title: "Залгавар бичлэг", prompt_text: "Залгаврыг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E7"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Сонгосон хэлбэрээ зөв бичих." },
+  { id: "G24-018", task_type: TaskType.TT_SENTENCE_BOUNDARY, title: "Өгүүлбэрийн хил зааг", prompt_text: "Өгүүлбэрүүдийг зөв салгаж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Өгүүлбэр салгах." },
+  { id: "G24-019", task_type: TaskType.TT_MINI_TEXT_DICTATION, title: "Мини эхийн диктант", prompt_text: "Богино эхийг сонсоод бичнэ үү.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M3", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 120, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.MIXED, feedback_text: "2–3 өгүүлбэртэй эх." },
+  { id: "G24-020", task_type: TaskType.TT_OWN_WRITING_CORRECTION, title: "Өөрийн бичвэр засвар", prompt_text: "Өөрийн бичвэрийг шалгаж засаарай.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 60, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.END, feedback_text: "Дахин шалгалт ба self-correction." },
+  { id: "G24-021", task_type: TaskType.TT_LONG_VOWEL_CHALLENGE, title: "Урт эгшиг challenge", prompt_text: "Урт эгшгийн хэлбэрийг сонго.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M3", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ахисан ялгалт." },
+  { id: "G24-022", task_type: TaskType.TT_COMPOUND_SUFFIX, title: "Нийлмэл залгавар", prompt_text: "Нийлмэл залгаврыг зөв нөхөж бич.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M3", error_targets: ["E2", "E7"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Олон дүрэм давхцах." },
+  { id: "G24-023", task_type: TaskType.TT_MIXED_CHECKPOINT, title: "Холимог checkpoint", prompt_text: "Холимог хэлбэрийн даалгаврыг гүйцэтгэ.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S5, level_target: "M2-M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.MIXED, feedback_text: "Долоо хоногийн шалгалт." },
+  { id: "G24-024", task_type: TaskType.TT_EXPLAINED_CORRECTION, title: "Тайлбартай засвар", prompt_text: "Алдааны шалтгааныг тайлбарлаж засаарай.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, review_after_days: [1, 3, 7], lesson_slot_fit: LessonSlot.CORE, feedback_text: "Яагаад буруу гэдгийг хэлэх." },
 ];
 
 // ─── Load validated task variants from content-pipeline/validated/*.json ──────

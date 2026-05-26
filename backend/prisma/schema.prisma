@@ -63,12 +63,47 @@ enum ErrorCode {
 }
 
 enum TaskType {
-  TT1_CHOICE     // Зөвийг сонгох
-  TT2_FILL       // Нөхөх
-  TT3_CORRECTION // Засвар
-  TT4_DICTATION  // Сонсоод бичих
-  TT5_MINI_TEXT  // Жижиг эх
-  TT6_SELF_CHECK // Өөрийгөө шалгах
+  // G12 — 1–2-р анги
+  TT_LISTEN_CHOOSE          // Сонсож сонгох        (G12-001)
+  TT_LETTER_FILL            // Үсэг нөхөх           (G12-002)
+  TT_IMAGE_WORD_MATCH       // Зураг-үг тааруулах   (G12-003)
+  TT_COPY_WRITE             // Хуулж бичих          (G12-004)
+  TT_CHOOSE_CORRECT         // Зөвийг сонгох        (G12-005)
+  TT_FILL_WRITE             // Нөхөж бичих          (G12-006)
+  TT_MISSING_LETTER         // Дутуу үсэг           (G12-007)
+  TT_WORD_SET_DICTATION     // Үгийн багц диктант   (G12-008)
+  TT_CAPITAL_PUNCTUATION    // Том үсэг, цэг        (G12-009, G24-005)
+  TT_SIMPLE_SUFFIX          // Энгийн залгавар      (G12-010)
+  TT_FIND_ERROR             // Алдаа олох           (G12-011)
+  TT_SELF_CHECK             // Өөрийгөө шалгах      (G12-012)
+  TT_TWO_WORD_DICTATION     // 2 үгийн диктант      (G12-013)
+  TT_WORD_ENDING            // Үгийн төгсгөл        (G12-014)
+  TT_SENTENCE_FILL          // Өгүүлбэр нөхөх       (G12-015)
+  TT_MIXED_REVIEW           // Холимог давталт      (G12-016)
+  // G24 — 2–4-р анги
+  TT_WORD_FORM_CHOOSE       // Үгийн зөв хэлбэр сонгох    (G24-001)
+  TT_LONG_VOWEL_FILL        // Урт эгшиг нөхөх            (G24-002)
+  TT_REDUCED_VOWEL          // Балархай эгшиг             (G24-003)
+  TT_SUFFIX_CHOOSE          // Залгавар сонгох            (G24-004)
+  TT_SHORT_SENTENCE_DICTATION // Богино өгүүлбэрийн диктант (G24-006)
+  TT_FIX_ERROR              // Алдаа засах                (G24-007)
+  TT_CONSONANT_CONFUSION    // Гийгүүлэгч андуурал        (G24-008)
+  TT_WORD_FORM_FIX          // Үгийн хэлбэр засах         (G24-009)
+  TT_LONG_VOWEL_IN_SENTENCE // Урт эгшиг өгүүлбэрт        (G24-010)
+  TT_REDUCED_VOWEL_IN_SENTENCE // Балархай эгшиг өгүүлбэрт (G24-011)
+  TT_CASE_SUFFIX            // Тийн ялгал                 (G24-012)
+  TT_BASIC_COMMA            // Таслалын анхан хэрэглээ    (G24-013)
+  TT_TWO_SENTENCE_DICTATION // 2 өгүүлбэрийн диктант      (G24-014)
+  TT_FIND_OMITTED_LETTER    // Үсэг орхигдол олох         (G24-015)
+  TT_MIXED_WORD_SET         // Холимог үгийн багц         (G24-016)
+  TT_SUFFIX_WRITE           // Залгавар бичлэг            (G24-017)
+  TT_SENTENCE_BOUNDARY      // Өгүүлбэрийн хил зааг       (G24-018)
+  TT_MINI_TEXT_DICTATION    // Мини эхийн диктант         (G24-019)
+  TT_OWN_WRITING_CORRECTION // Өөрийн бичвэр засвар       (G24-020)
+  TT_LONG_VOWEL_CHALLENGE   // Урт эгшиг challenge        (G24-021)
+  TT_COMPOUND_SUFFIX        // Нийлмэл залгавар           (G24-022)
+  TT_MIXED_CHECKPOINT       // Холимог checkpoint         (G24-023)
+  TT_EXPLAINED_CORRECTION   // Тайлбартай засвар          (G24-024)
 }
 
 enum LessonSlot {
