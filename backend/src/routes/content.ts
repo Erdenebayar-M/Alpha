@@ -126,6 +126,84 @@ content.get('/tasks', async (c) => {
   });
 });
 
+// ─── POST /api/admin/content/tasks ───────────────────────────────────────────
+
+const createTaskSchema = z.object({
+  task_type:              z.string().min(1),
+  title:                  z.string().min(1).max(200),
+  prompt_text:            z.string().min(1).max(1000),
+  correct_answer:         z.string(),
+  options:                z.record(z.string(), z.unknown()).default({}),
+  primary_skill:          z.string().min(1),
+  secondary_skill:        z.string().nullable().default(null),
+  level_target:           z.string().min(1),
+  error_targets:          z.array(z.string()).default([]),
+  grade_band:             z.array(z.string()).min(1),
+  difficulty:             z.number().int().min(1).max(5),
+  estimated_time_seconds: z.number().int().positive(),
+  review_after_days:      z.array(z.number().int().positive()).default([1, 3, 7]),
+  lesson_slot_fit:        z.string().min(1),
+  feedback_text:          z.string().default(''),
+  initial_text:           z.string().optional(),
+  audio_url:              z.string().nullable().optional(),
+  image_url:              z.string().nullable().optional(),
+});
+
+content.post('/tasks', async (c) => {
+  const body   = await c.req.json().catch(() => null);
+  const parsed = createTaskSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const d = parsed.data;
+
+  let taskType: TaskType;
+  let primarySkill: SkillCode;
+  let lessonSlot: LessonSlot;
+  try {
+    taskType     = toTaskType(d.task_type);
+    primarySkill = toSkill(d.primary_skill) as SkillCode;
+    lessonSlot   = toSlot(d.lesson_slot_fit);
+  } catch (err) {
+    return ERRORS.VALIDATION_ERROR(c, (err as Error).message);
+  }
+
+  const secondarySkill = d.secondary_skill ? toSkill(d.secondary_skill) : null;
+
+  const options = d.initial_text
+    ? { ...d.options, initial_text: d.initial_text }
+    : d.options;
+
+  const { randomUUID } = await import('crypto');
+  const id = randomUUID();
+
+  const task = await prisma.task.create({
+    data: {
+      id,
+      task_type:              taskType,
+      title:                  d.title,
+      prompt_text:            d.prompt_text,
+      correct_answer:         d.correct_answer,
+      options: options as object,
+      audio_url:              d.audio_url ?? null,
+      image_url:              d.image_url ?? null,
+      primary_skill:          primarySkill,
+      secondary_skill:        secondarySkill,
+      level_target:           d.level_target,
+      error_targets:          d.error_targets,
+      grade_band:             d.grade_band,
+      difficulty:             d.difficulty,
+      estimated_time_seconds: d.estimated_time_seconds,
+      review_after_days:      d.review_after_days,
+      lesson_slot_fit:        lessonSlot,
+      feedback_text:          d.feedback_text,
+    },
+  });
+
+  return ok(c, { task_id: task.id, variant_id: task.id });
+});
+
 // ─── GET /api/admin/content/tasks/:task_id ───────────────────────────────────
 
 content.get('/tasks/:task_id', async (c) => {
