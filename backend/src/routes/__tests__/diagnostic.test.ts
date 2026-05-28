@@ -176,16 +176,20 @@ describe('POST /diagnostic/start', () => {
     );
   });
 
-  it('409 — duplicate start when session already IN_PROGRESS', async () => {
+  it('201 — existing IN_PROGRESS session is abandoned and new one started', async () => {
     mockLearnerFind.mockResolvedValue(fakeLearner());
     mockSessionFindFirst.mockResolvedValue({ id: 'existing-session' });
+    mockSessionUpdate.mockResolvedValue({});
+    ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
+    mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
 
     const res = await postStart({ learner_id: LEARNER_ID });
-    const body = await json(res);
 
-    expect(res.status).toBe(409);
-    expect(body.error.code).toBe('CONFLICT');
-    expect(mockSessionCreate).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
+    expect(mockSessionUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'ABANDONED' }) }),
+    );
+    expect(mockSessionCreate).toHaveBeenCalled();
   });
 
   it('404 — learner belongs to a different parent', async () => {
@@ -590,7 +594,7 @@ describe('POST /diagnostic/next-phase', () => {
     });
 
     it('422 — fewer than 20 total attempts', async () => {
-      setupSession('PHASE_C');
+      setupSession('PHASE_C', { phase_b_completed: true });
       mockAttemptFindMany.mockResolvedValue([...phaseAAttempts(), ...phaseBAttempts()]); // 16 only
 
       const res = await postNextPhase({ session_id: SESSION_ID });

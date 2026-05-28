@@ -11,27 +11,163 @@
   ],
   "allOf": [
     {
-      "if": { "properties": { "task_type": { "const": "TT3_CORRECTION" } } },
-      "then": { "required": ["initial_text"] }
+      "description": "Choice tasks require ChoiceOptions",
+      "if": {
+        "properties": {
+          "task_type": {
+            "enum": [
+              "TT_LISTEN_CHOOSE", "TT_IMAGE_WORD_MATCH", "TT_CHOOSE_CORRECT",
+              "TT_SIMPLE_SUFFIX", "TT_WORD_FORM_CHOOSE", "TT_SUFFIX_CHOOSE",
+              "TT_CONSONANT_CONFUSION", "TT_LONG_VOWEL_CHALLENGE",
+              "TT_CASE_SUFFIX", "TT_MIXED_REVIEW", "TT_MIXED_WORD_SET",
+              "TT_MIXED_CHECKPOINT"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/ChoiceOptions" } }
+      }
+    },
+    {
+      "description": "Word-level fill tasks require FillOptions",
+      "if": {
+        "properties": {
+          "task_type": {
+            "enum": [
+              "TT_LETTER_FILL", "TT_FILL_WRITE", "TT_MISSING_LETTER",
+              "TT_WORD_ENDING", "TT_LONG_VOWEL_FILL", "TT_REDUCED_VOWEL",
+              "TT_SUFFIX_WRITE", "TT_COMPOUND_SUFFIX"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/FillOptions" } }
+      }
+    },
+    {
+      "description": "Sentence-level fill tasks require SentenceFillOptions",
+      "if": {
+        "properties": {
+          "task_type": {
+            "enum": [
+              "TT_SENTENCE_FILL", "TT_LONG_VOWEL_IN_SENTENCE",
+              "TT_REDUCED_VOWEL_IN_SENTENCE"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/SentenceFillOptions" } }
+      }
+    },
+    {
+      "description": "Error correction tasks require CorrectionOptions",
+      "if": {
+        "properties": {
+          "task_type": {
+            "enum": [
+              "TT_COPY_WRITE", "TT_CAPITAL_PUNCTUATION", "TT_FIND_ERROR",
+              "TT_FIX_ERROR", "TT_WORD_FORM_FIX", "TT_FIND_OMITTED_LETTER",
+              "TT_SENTENCE_BOUNDARY", "TT_BASIC_COMMA", "TT_EXPLAINED_CORRECTION"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/CorrectionOptions" } }
+      }
+    },
+    {
+      "description": "Dictation tasks require DictationOptions",
+      "if": {
+        "properties": {
+          "task_type": {
+            "enum": [
+              "TT_WORD_SET_DICTATION", "TT_TWO_WORD_DICTATION",
+              "TT_SHORT_SENTENCE_DICTATION", "TT_TWO_SENTENCE_DICTATION"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/DictationOptions" } }
+      }
+    },
+    {
+      "description": "Mini-text dictation requires MiniTextOptions",
+      "if": {
+        "properties": {
+          "task_type": { "enum": ["TT_MINI_TEXT_DICTATION"] }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/MiniTextOptions" } }
+      }
+    },
+    {
+      "description": "Self-check tasks require SelfCheckOptions",
+      "if": {
+        "properties": {
+          "task_type": { "enum": ["TT_SELF_CHECK", "TT_OWN_WRITING_CORRECTION"] }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/SelfCheckOptions" } }
+      }
     }
   ],
   "properties": {
     "id": {
       "type": "string",
-      "description": "Human-readable ID. Format: G12-NNN (Grades 1–2) or G24-NNN (Grades 2–4)",
-      "examples": ["G12-001", "G24-015"]
+      "description": "Human-readable ID. Format: G12-NNN (Grades 1–2) or G24-NNN (Grades 2–4). Versions: G12-001v2.",
+      "examples": ["G12-001", "G24-015", "G12-001v2"]
     },
     "task_type": {
       "type": "string",
       "enum": [
-        "TT1_CHOICE",
-        "TT2_FILL",
-        "TT3_CORRECTION",
-        "TT4_DICTATION",
-        "TT5_MINI_TEXT",
-        "TT6_SELF_CHECK"
+        "TT_LISTEN_CHOOSE",
+        "TT_LETTER_FILL",
+        "TT_IMAGE_WORD_MATCH",
+        "TT_COPY_WRITE",
+        "TT_CHOOSE_CORRECT",
+        "TT_FILL_WRITE",
+        "TT_MISSING_LETTER",
+        "TT_WORD_SET_DICTATION",
+        "TT_CAPITAL_PUNCTUATION",
+        "TT_SIMPLE_SUFFIX",
+        "TT_FIND_ERROR",
+        "TT_SELF_CHECK",
+        "TT_TWO_WORD_DICTATION",
+        "TT_WORD_ENDING",
+        "TT_SENTENCE_FILL",
+        "TT_MIXED_REVIEW",
+        "TT_WORD_FORM_CHOOSE",
+        "TT_LONG_VOWEL_FILL",
+        "TT_REDUCED_VOWEL",
+        "TT_SUFFIX_CHOOSE",
+        "TT_SHORT_SENTENCE_DICTATION",
+        "TT_FIX_ERROR",
+        "TT_CONSONANT_CONFUSION",
+        "TT_WORD_FORM_FIX",
+        "TT_LONG_VOWEL_IN_SENTENCE",
+        "TT_REDUCED_VOWEL_IN_SENTENCE",
+        "TT_CASE_SUFFIX",
+        "TT_BASIC_COMMA",
+        "TT_TWO_SENTENCE_DICTATION",
+        "TT_FIND_OMITTED_LETTER",
+        "TT_MIXED_WORD_SET",
+        "TT_SUFFIX_WRITE",
+        "TT_SENTENCE_BOUNDARY",
+        "TT_MINI_TEXT_DICTATION",
+        "TT_OWN_WRITING_CORRECTION",
+        "TT_LONG_VOWEL_CHALLENGE",
+        "TT_COMPOUND_SUFFIX",
+        "TT_MIXED_CHECKPOINT",
+        "TT_EXPLAINED_CORRECTION"
       ],
-      "description": "Task type determines the shape of the 'options' JSONB field"
+      "description": "Task type. Determines the required shape of the 'options' field. See $defs for each options shape and the allOf section for which types use which shape."
     },
     "title": {
       "type": "string",
@@ -43,20 +179,21 @@
     },
     "correct_answer": {
       "type": "string",
-      "description": "Canonical correct answer string. Use semicolons for multi-part answers (dictation). 'PLACEHOLDER' for unfinished tasks."
+      "description": "Canonical correct answer string. Semicolons for multi-part answers (dictation). 'PLACEHOLDER' for unfinished tasks."
     },
     "options": {
-      "description": "JSONB payload — shape depends on task_type (see $defs below)",
+      "description": "JSONB payload — shape depends on task_type. See $defs below. Empty object {} is valid for placeholder tasks only.",
       "oneOf": [
-        { "$ref": "#/$defs/TT1Options" },
-        { "$ref": "#/$defs/TT2Options" },
-        { "$ref": "#/$defs/TT3Options" },
-        { "$ref": "#/$defs/TT4Options" },
-        { "$ref": "#/$defs/TT5Options" },
-        { "$ref": "#/$defs/TT6Options" },
+        { "$ref": "#/$defs/ChoiceOptions" },
+        { "$ref": "#/$defs/FillOptions" },
+        { "$ref": "#/$defs/SentenceFillOptions" },
+        { "$ref": "#/$defs/CorrectionOptions" },
+        { "$ref": "#/$defs/DictationOptions" },
+        { "$ref": "#/$defs/MiniTextOptions" },
+        { "$ref": "#/$defs/SelfCheckOptions" },
         {
           "type": "object",
-          "description": "Empty object for placeholder tasks",
+          "description": "Empty object — only for placeholder/unfinished tasks",
           "additionalProperties": false,
           "maxProperties": 0
         }
@@ -64,11 +201,11 @@
     },
     "audio_url": {
       "type": ["string", "null"],
-      "description": "URL to audio asset (null until asset pipeline is ready)"
+      "description": "URL to dictation audio asset (null until asset pipeline produces it)"
     },
     "image_url": {
       "type": ["string", "null"],
-      "description": "URL to image asset (null until asset pipeline is ready)"
+      "description": "URL to image asset for TT_IMAGE_WORD_MATCH and visual tasks (null otherwise)"
     },
     "primary_skill": {
       "$ref": "#/$defs/SkillCode"
@@ -81,13 +218,13 @@
     },
     "level_target": {
       "type": "string",
-      "description": "Mastery level(s) this task targets",
-      "examples": ["M0", "M1", "M1-M2", "M2", "M2-M3", "M3"]
+      "enum": ["M0", "M1", "M1-M2", "M2", "M2-M3", "M3"],
+      "description": "Mastery level(s) this task targets"
     },
     "error_targets": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Error codes this task is designed to surface or remediate",
+      "description": "MVP error codes this task addresses: B1, B3, C1, C2, C4, D3, E1, E2, E7, G1, G2, H4. Use 'Mixed' for checkpoint tasks.",
       "examples": [["C1", "C2"], ["B1"], ["Mixed"]]
     },
     "grade_band": {
@@ -103,15 +240,16 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 5,
-      "description": "Difficulty level 1 (easiest) – 5 (hardest)"
+      "description": "Difficulty 1 (easiest) – 5 (hardest)"
     },
     "estimated_time_seconds": {
       "type": "integer",
+      "minimum": 1,
       "description": "Expected completion time in seconds (e.g. 30, 45, 60, 120, 180)"
     },
     "review_after_days": {
       "type": "array",
-      "items": { "type": "integer" },
+      "items": { "type": "integer", "minimum": 1 },
       "description": "Spaced repetition schedule in days",
       "examples": [[1, 3, 7]]
     },
@@ -124,9 +262,10 @@
       "type": "string",
       "description": "Short corrective feedback shown after an incorrect attempt (Mongolian)"
     },
-    "initial_text": {
-      "type": "string",
-      "description": "For TT3_CORRECTION tasks: the incorrect text shown to the learner first (must match options.incorrect_text). Required for correction tasks."
+    "is_diagnostic": {
+      "type": "boolean",
+      "default": false,
+      "description": "true = this task is part of the diagnostic pool"
     }
   },
 
@@ -137,9 +276,9 @@
       "description": "S1=Үсэг-авиа ялгалт, S2=Үгийн зөв бичлэг, S3=Урт/богино эгшиг, S4=Балархай эгшиг, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ, S7=Сонсголоор буулгах, S8=Алдаа засах"
     },
 
-    "TT1Options": {
-      "title": "TT1_CHOICE options",
-      "description": "Зөвийг сонгох — learner picks the correct word/spelling from multiple choices",
+    "ChoiceOptions": {
+      "title": "ChoiceOptions",
+      "description": "Multiple-choice tasks: learner selects the correct word/spelling from 2–4 options.\nUsed by: TT_LISTEN_CHOOSE, TT_IMAGE_WORD_MATCH, TT_CHOOSE_CORRECT, TT_SIMPLE_SUFFIX, TT_WORD_FORM_CHOOSE, TT_SUFFIX_CHOOSE, TT_CONSONANT_CONFUSION, TT_LONG_VOWEL_CHALLENGE, TT_CASE_SUFFIX, TT_MIXED_REVIEW, TT_MIXED_WORD_SET, TT_MIXED_CHECKPOINT",
       "type": "object",
       "required": ["choices", "audio_trigger"],
       "additionalProperties": false,
@@ -153,28 +292,29 @@
             "required": ["text", "is_correct"],
             "additionalProperties": false,
             "properties": {
-              "text": { "type": "string" },
+              "text": { "type": "string", "description": "Display text for this choice" },
               "is_correct": { "type": "boolean" }
             }
-          }
+          },
+          "description": "Exactly one item must have is_correct: true"
         },
         "audio_trigger": {
           "type": "boolean",
-          "description": "true = play audio automatically; false = image-to-word or spelling task"
+          "description": "true = play audio automatically on load (TT_LISTEN_CHOOSE). false = visual-only choice."
         }
       }
     },
 
-    "TT2Options": {
-      "title": "TT2_FILL options",
-      "description": "Нөхөх — learner types the missing character(s) to complete the word",
+    "FillOptions": {
+      "title": "FillOptions",
+      "description": "Single-blank fill-in-the-word tasks: learner types the missing character(s).\nUsed by: TT_LETTER_FILL, TT_FILL_WRITE, TT_MISSING_LETTER, TT_WORD_ENDING, TT_LONG_VOWEL_FILL, TT_REDUCED_VOWEL, TT_SUFFIX_WRITE, TT_COMPOUND_SUFFIX",
       "type": "object",
       "required": ["display_text", "blank_position", "blank_answer", "context_word"],
       "additionalProperties": false,
       "properties": {
         "display_text": {
           "type": "string",
-          "description": "Word with underscore(s) marking the blank, e.g. 'н_м'"
+          "description": "Word with underscore(s) marking the blank, e.g. 'н_м', 'бөмб_г'"
         },
         "blank_position": {
           "type": "integer",
@@ -183,51 +323,81 @@
         },
         "blank_answer": {
           "type": "string",
-          "description": "The correct character(s) to fill the blank"
+          "description": "The correct character(s) to fill the blank, e.g. 'о', 'ө', 'тэр'"
         },
         "context_word": {
           "type": "string",
-          "description": "Full correct word (used for hints and answer-checking)"
+          "description": "Full correct word without blanks (used for hints and answer-checking), e.g. 'ном'"
         }
       }
     },
 
-    "TT3Options": {
-      "title": "TT3_CORRECTION options",
-      "description": "Засвар — learner identifies and corrects an error in the given text",
+    "SentenceFillOptions": {
+      "title": "SentenceFillOptions",
+      "description": "Sentence-level blank fill tasks: learner types the missing word or vowel within a sentence.\nUsed by: TT_SENTENCE_FILL, TT_LONG_VOWEL_IN_SENTENCE, TT_REDUCED_VOWEL_IN_SENTENCE",
+      "type": "object",
+      "required": ["sentence_template", "blank_answer", "context_sentence"],
+      "additionalProperties": false,
+      "properties": {
+        "sentence_template": {
+          "type": "string",
+          "description": "Sentence with underscores marking the blank(s), e.g. 'Энэ бол _____.' or 'Н_р мандлаа.'"
+        },
+        "blank_answer": {
+          "type": "string",
+          "description": "The correct answer to fill the blank — a word, suffix, or vowel character(s)"
+        },
+        "context_sentence": {
+          "type": "string",
+          "description": "Full correct sentence without blanks (used for answer-checking), e.g. 'Энэ бол ном.' or 'Нар мандлаа.'"
+        },
+        "hint": {
+          "type": "string",
+          "description": "Optional hint shown after a wrong attempt (Mongolian)"
+        }
+      }
+    },
+
+    "CorrectionOptions": {
+      "title": "CorrectionOptions",
+      "description": "Error identification and correction tasks: learner finds and fixes a spelling/punctuation error.\nUsed by: TT_COPY_WRITE, TT_CAPITAL_PUNCTUATION, TT_FIND_ERROR, TT_FIX_ERROR, TT_WORD_FORM_FIX, TT_FIND_OMITTED_LETTER, TT_SENTENCE_BOUNDARY, TT_BASIC_COMMA, TT_EXPLAINED_CORRECTION",
       "type": "object",
       "required": ["incorrect_text", "correct_text", "error_type", "hint"],
       "additionalProperties": false,
       "properties": {
         "incorrect_text": {
           "type": "string",
-          "description": "Text containing the error(s) shown to the learner"
+          "description": "Text containing the error(s) shown to the learner, e.g. 'номм', 'би явна'"
         },
         "correct_text": {
           "type": "string",
-          "description": "The fully corrected target text"
+          "description": "The fully corrected target text, e.g. 'ном', 'Би явна.'"
         },
         "error_type": {
           "type": "string",
-          "description": "Primary error code embedded in this task, e.g. 'G1', 'C1', 'H4'"
+          "description": "Primary MVP error code embedded in this task, e.g. 'G1', 'C1', 'H4'"
         },
         "hint": {
           "type": "string",
-          "description": "Hint shown after a wrong attempt (Mongolian)"
+          "description": "Hint shown after a wrong attempt (Mongolian), e.g. 'Эхний үсэг том, төгсгөлд цэг.'"
+        },
+        "explanation": {
+          "type": "string",
+          "description": "Optional: rule explanation for TT_EXPLAINED_CORRECTION (why the correction is needed)"
         }
       }
     },
 
-    "TT4Options": {
-      "title": "TT4_DICTATION options",
-      "description": "Сонсоод бичих — learner transcribes spoken words or a short sentence",
+    "DictationOptions": {
+      "title": "DictationOptions",
+      "description": "Audio dictation tasks: learner transcribes spoken words or sentences.\nUsed by: TT_WORD_SET_DICTATION, TT_TWO_WORD_DICTATION, TT_SHORT_SENTENCE_DICTATION, TT_TWO_SENTENCE_DICTATION",
       "type": "object",
       "required": ["audio_text", "word_count", "expected_answers", "allow_partial"],
       "additionalProperties": false,
       "properties": {
         "audio_text": {
           "type": "string",
-          "description": "Comma-separated text that will be read aloud, e.g. 'ном, гэр, нар'"
+          "description": "Comma-separated text that will be read aloud, e.g. 'ном, гэр, нар' or 'Нар мандлаа.'"
         },
         "word_count": {
           "type": "integer",
@@ -237,18 +407,19 @@
         "expected_answers": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Ordered list of correct tokens"
+          "minItems": 1,
+          "description": "Ordered list of correct tokens, e.g. ['ном', 'гэр', 'нар']"
         },
         "allow_partial": {
           "type": "boolean",
-          "description": "true = partial credit for correctly transcribed tokens"
+          "description": "true = award partial credit for each correctly transcribed token"
         }
       }
     },
 
-    "TT5Options": {
-      "title": "TT5_MINI_TEXT options",
-      "description": "Жижиг эх — learner transcribes a short multi-sentence passage",
+    "MiniTextOptions": {
+      "title": "MiniTextOptions",
+      "description": "Short passage dictation: learner transcribes a 2–3 sentence passage.\nUsed by: TT_MINI_TEXT_DICTATION",
       "type": "object",
       "required": ["audio_text", "sentence_count", "expected_answers"],
       "additionalProperties": false,
@@ -259,36 +430,38 @@
         },
         "sentence_count": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 2,
+          "maximum": 5,
           "description": "Number of sentences in the passage (typically 2–3)"
         },
         "expected_answers": {
           "type": "array",
           "items": { "type": "string" },
+          "minItems": 2,
           "description": "List of correct sentences in order"
         }
       }
     },
 
-    "TT6Options": {
-      "title": "TT6_SELF_CHECK options",
-      "description": "Өөрийгөө шалгах — learner compares their earlier attempt to the model answer",
+    "SelfCheckOptions": {
+      "title": "SelfCheckOptions",
+      "description": "Self-evaluation tasks: learner compares their earlier attempt to the model answer.\nUsed by: TT_SELF_CHECK, TT_OWN_WRITING_CORRECTION",
       "type": "object",
       "required": ["original_attempt", "model_answer", "comparison_mode"],
       "additionalProperties": false,
       "properties": {
         "original_attempt": {
           "type": "string",
-          "description": "The learner's previous (possibly incorrect) answer"
+          "description": "The learner's previous (possibly incorrect) answer, e.g. 'сү'"
         },
         "model_answer": {
           "type": "string",
-          "description": "The correct model answer shown for comparison"
+          "description": "The correct model answer shown for comparison, e.g. 'сүү'"
         },
         "comparison_mode": {
           "type": "string",
           "enum": ["side_by_side", "highlight_diff"],
-          "description": "How the UI presents the comparison to the learner"
+          "description": "How the UI presents the comparison: side_by_side = two columns; highlight_diff = inline diff highlighting"
         }
       }
     }

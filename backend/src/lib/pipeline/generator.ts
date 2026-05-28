@@ -1,8 +1,12 @@
 /**
- * LLM task generator — callable from the backend API.
- * Extracted from content-pipeline/scripts/llmGenerate.ts without readline/file I/O.
+ * LLM task generator — shape-driven, callable from the backend API.
  *
- * Supports all 39 TT_ task types by mapping them to the original builder functions.
+ * Loads all 39 task type definitions from content-pipeline/schemas/task-types.json
+ * and builds prompts from generic per-shape templates in
+ * content-pipeline/scripts/prompts/shapes/ (7 templates, one per options shape).
+ *
+ * spec.id == spec.task_type (e.g. "TT_LETTER_FILL") — used as the task_id key
+ * throughout the admin pipeline.
  */
 
 import * as fs from 'fs';
@@ -13,76 +17,66 @@ import { TaskType, SkillCode, LessonSlot } from '../../../generated/prisma';
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
-const PROJECT_ROOT  = path.resolve(__dirname, '../../../..');
-const PROMPTS_DIR   = path.join(PROJECT_ROOT, 'content-pipeline/scripts/prompts');
-const SEED_WORDS_PATH = path.join(PROJECT_ROOT, 'content-pipeline/generated/seed-words.json');
+const PROJECT_ROOT     = path.resolve(__dirname, '../../../..');
+const TASK_TYPES_PATH  = path.join(PROJECT_ROOT, 'content-pipeline/schemas/task-types.json');
+const SHAPES_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/scripts/prompts/shapes');
+const VALIDATED_DIR    = path.join(PROJECT_ROOT, 'content-pipeline/validated');
+const STAGE2_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/stage2');
+const STAGE1_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/stage1');
+const SEED_WORDS_PATH  = path.join(PROJECT_ROOT, 'content-pipeline/generated/seed-words.json');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MODEL        = 'google/gemini-2.5-flash';
-const MAX_TOKENS   = 4000;
-const TEMPERATURE  = 0.4;
-const RETRY_LIMIT  = 2;
+const MODEL         = 'google/gemini-2.5-flash';
+const MAX_TOKENS    = 4000;
+const TEMPERATURE   = 0.4;
+const RETRY_LIMIT   = 2;
 const RATE_LIMIT_MS = 1000;
 
 const COST_PER_M_IN  = 0.15;
 const COST_PER_M_OUT = 0.6;
 
-// ─── Builder type mapping (new TT_ names → original builder category) ─────────
+// ─── Shape → template file mapping ───────────────────────────────────────────
 
-const BUILDER_TYPE: Record<string, string> = {
-  // Choice builders
-  TT_LISTEN_CHOOSE:     'TT1_CHOICE',
-  TT_IMAGE_WORD_MATCH:  'TT1_CHOICE',
-  TT_CHOOSE_CORRECT:    'TT1_CHOICE',
-  TT_SIMPLE_SUFFIX:     'TT1_CHOICE',
-  TT_WORD_FORM_CHOOSE:  'TT1_CHOICE',
-  TT_SUFFIX_CHOOSE:     'TT1_CHOICE',
-  TT_CONSONANT_CONFUSION: 'TT1_CHOICE',
-  TT_LONG_VOWEL_CHALLENGE: 'TT1_CHOICE',
-  TT_CASE_SUFFIX:       'TT1_CHOICE',
-  TT_MIXED_REVIEW:      'TT1_CHOICE',
-  TT_MIXED_WORD_SET:    'TT1_CHOICE',
-  TT_MIXED_CHECKPOINT:  'TT1_CHOICE',
-  // Fill builders
-  TT_LETTER_FILL:       'TT2_FILL',
-  TT_FILL_WRITE:        'TT2_FILL',
-  TT_MISSING_LETTER:    'TT2_FILL',
-  TT_WORD_ENDING:       'TT2_FILL',
-  TT_LONG_VOWEL_FILL:   'TT2_FILL',
-  TT_REDUCED_VOWEL:     'TT2_FILL',
-  TT_SUFFIX_WRITE:      'TT2_FILL',
-  TT_COMPOUND_SUFFIX:   'TT2_FILL',
-  // Sentence fill builders (same shape as TT2 but sentence-scoped)
-  TT_SENTENCE_FILL:             'TT2_FILL',
-  TT_LONG_VOWEL_IN_SENTENCE:    'TT2_FILL',
-  TT_REDUCED_VOWEL_IN_SENTENCE: 'TT2_FILL',
-  // Correction builders
-  TT_COPY_WRITE:            'TT3_CORRECTION',
-  TT_CAPITAL_PUNCTUATION:   'TT3_CORRECTION',
-  TT_FIND_ERROR:            'TT3_CORRECTION',
-  TT_FIX_ERROR:             'TT3_CORRECTION',
-  TT_WORD_FORM_FIX:         'TT3_CORRECTION',
-  TT_FIND_OMITTED_LETTER:   'TT3_CORRECTION',
-  TT_SENTENCE_BOUNDARY:     'TT3_CORRECTION',
-  TT_BASIC_COMMA:           'TT3_CORRECTION',
-  TT_EXPLAINED_CORRECTION:  'TT3_CORRECTION',
-  // Dictation builders
-  TT_WORD_SET_DICTATION:        'TT4_DICTATION',
-  TT_TWO_WORD_DICTATION:        'TT4_DICTATION',
-  TT_SHORT_SENTENCE_DICTATION:  'TT4_DICTATION',
-  TT_TWO_SENTENCE_DICTATION:    'TT4_DICTATION',
-  // Mini-text
-  TT_MINI_TEXT_DICTATION: 'TT5_MINI_TEXT',
-  // Self-check
-  TT_SELF_CHECK:           'TT6_SELF_CHECK',
-  TT_OWN_WRITING_CORRECTION: 'TT6_SELF_CHECK',
+const SHAPE_TO_TEMPLATE: Record<string, string> = {
+  ChoiceOptions:      'choice.md',
+  FillOptions:        'fill.md',
+  SentenceFillOptions:'sentence-fill.md',
+  CorrectionOptions:  'correction.md',
+  DictationOptions:   'dictation.md',
+  MiniTextOptions:    'mini-text.md',
+  SelfCheckOptions:   'self-check.md',
 };
 
-// ─── Task spec catalogue ──────────────────────────────────────────────────────
+// ─── Task type catalogue ──────────────────────────────────────────────────────
+
+interface TaskTypeDef {
+  task_type: string;
+  mongolian_name: string;
+  grade_band: string[];
+  options_shape: string;
+  audio_trigger?: boolean;
+  default_primary_skill: string;
+  default_error_targets: string[];
+  default_level: string;
+  default_difficulty: number;
+  estimated_time_seconds: number;
+  lesson_slot_fit: 'WARM_UP' | 'CORE' | 'MIXED' | 'END';
+  self_check?: boolean;
+  self_check_source_shape?: string;
+  generation_hints: string;
+}
+
+function loadCatalogue(): TaskTypeDef[] {
+  if (!fs.existsSync(TASK_TYPES_PATH)) return [];
+  const raw = JSON.parse(fs.readFileSync(TASK_TYPES_PATH, 'utf8'));
+  return (raw.task_types ?? []) as TaskTypeDef[];
+}
+
+// ─── TaskSpec (public API — id == task_type for admin pipeline) ───────────────
 
 export interface TaskSpec {
-  id: string;
+  id: string;               // == task_type, e.g. "TT_LETTER_FILL"
   task_type: string;
   primary_skill: string;
   secondary_skill: string | null;
@@ -93,35 +87,46 @@ export interface TaskSpec {
   estimated_time_seconds: number;
   review_after_days: number[];
   lesson_slot_fit: 'WARM_UP' | 'CORE' | 'MIXED' | 'END';
+  options_shape: string;
+  audio_trigger?: boolean;
   self_check?: boolean;
-  self_check_source?: string;
+  self_check_source_shape?: string;
+  mongolian_name: string;
+  generation_hints: string;
 }
 
-export const TASK_SPECS: TaskSpec[] = [
-  // G12
-  { id: 'G12-008', task_type: 'TT_WORD_SET_DICTATION',  primary_skill: 'S7', secondary_skill: null, level_target: 'M1', error_targets: ['H1','B1'], grade_band: ['G1','G2'], difficulty: 2, estimated_time_seconds: 45, review_after_days: [1,3,7], lesson_slot_fit: 'END' },
-  { id: 'G12-009', task_type: 'TT_CAPITAL_PUNCTUATION', primary_skill: 'S6', secondary_skill: null, level_target: 'M1', error_targets: ['G1','G2'], grade_band: ['G1','G2'], difficulty: 2, estimated_time_seconds: 30, review_after_days: [1,3,7], lesson_slot_fit: 'MIXED' },
-  { id: 'G12-010', task_type: 'TT_SIMPLE_SUFFIX',       primary_skill: 'S5', secondary_skill: null, level_target: 'M1', error_targets: ['E1','E2'], grade_band: ['G1','G2'], difficulty: 2, estimated_time_seconds: 20, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G12-012', task_type: 'TT_SELF_CHECK',          primary_skill: 'S8', secondary_skill: null, level_target: 'M1', error_targets: ['H4'],     grade_band: ['G1','G2'], difficulty: 2, estimated_time_seconds: 40, review_after_days: [1,3,7], lesson_slot_fit: 'END', self_check: true, self_check_source: 'G12-011' },
-  { id: 'G12-015', task_type: 'TT_FILL_WRITE',          primary_skill: 'S2', secondary_skill: null, level_target: 'M1', error_targets: ['B1'],     grade_band: ['G1','G2'], difficulty: 2, estimated_time_seconds: 25, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  // G24
-  { id: 'G24-004', task_type: 'TT_SUFFIX_CHOOSE',              primary_skill: 'S5', secondary_skill: null, level_target: 'M2',   error_targets: ['E2'],      grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 20, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G24-010', task_type: 'TT_LONG_VOWEL_IN_SENTENCE',     primary_skill: 'S3', secondary_skill: null, level_target: 'M2',   error_targets: ['C1','C2'], grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 25, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G24-011', task_type: 'TT_REDUCED_VOWEL',              primary_skill: 'S4', secondary_skill: null, level_target: 'M2',   error_targets: ['C4'],      grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 25, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G24-012', task_type: 'TT_SUFFIX_CHOOSE',              primary_skill: 'S5', secondary_skill: 'S6', level_target: 'M2',   error_targets: ['E2'],      grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 20, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G24-013', task_type: 'TT_CAPITAL_PUNCTUATION',        primary_skill: 'S6', secondary_skill: null, level_target: 'M2',   error_targets: ['G2'],      grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1,3,7], lesson_slot_fit: 'MIXED' },
-  { id: 'G24-014', task_type: 'TT_TWO_SENTENCE_DICTATION',     primary_skill: 'S7', secondary_skill: null, level_target: 'M2',   error_targets: ['H1','C1'], grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 60, review_after_days: [1,3,7], lesson_slot_fit: 'END' },
-  { id: 'G24-017', task_type: 'TT_SUFFIX_WRITE',               primary_skill: 'S5', secondary_skill: null, level_target: 'M2-M3',error_targets: ['E2','E7'], grade_band: ['G3','G4'], difficulty: 3, estimated_time_seconds: 25, review_after_days: [1,3,7], lesson_slot_fit: 'CORE' },
-  { id: 'G24-018', task_type: 'TT_SENTENCE_BOUNDARY',          primary_skill: 'S6', secondary_skill: null, level_target: 'M2',   error_targets: ['G1','G2'], grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 30, review_after_days: [1,3,7], lesson_slot_fit: 'MIXED' },
-  { id: 'G24-019', task_type: 'TT_MINI_TEXT_DICTATION',        primary_skill: 'S7', secondary_skill: null, level_target: 'M3',   error_targets: ['C1','C4','E1'], grade_band: ['G3','G4'], difficulty: 4, estimated_time_seconds: 90, review_after_days: [1,3,7], lesson_slot_fit: 'END' },
-  { id: 'G24-020', task_type: 'TT_OWN_WRITING_CORRECTION',     primary_skill: 'S8', secondary_skill: null, level_target: 'M2',   error_targets: ['H4'],      grade_band: ['G2','G3'], difficulty: 3, estimated_time_seconds: 40, review_after_days: [1,3,7], lesson_slot_fit: 'END', self_check: true, self_check_source: 'G24-022' },
-  { id: 'G24-022', task_type: 'TT_FIX_ERROR',                  primary_skill: 'S5', secondary_skill: null, level_target: 'M3',   error_targets: ['E2','E7'], grade_band: ['G3','G4'], difficulty: 4, estimated_time_seconds: 30, review_after_days: [1,3,7], lesson_slot_fit: 'MIXED' },
-  { id: 'G24-024', task_type: 'TT_EXPLAINED_CORRECTION',       primary_skill: 'S8', secondary_skill: null, level_target: 'M3',   error_targets: ['E1','E2','C1'], grade_band: ['G3','G4'], difficulty: 4, estimated_time_seconds: 45, review_after_days: [1,3,7], lesson_slot_fit: 'MIXED' },
-];
+function bandPrefix(def: TaskTypeDef): 'G12' | 'G24' {
+  return def.grade_band.some((g) => g === 'G3' || g === 'G4') ? 'G24' : 'G12';
+}
 
-/** Task IDs that have a prompt template file */
+function defToSpec(def: TaskTypeDef): TaskSpec {
+  return {
+    id:                      `${bandPrefix(def)}-${def.task_type}`,
+    task_type:               def.task_type,
+    primary_skill:           def.default_primary_skill,
+    secondary_skill:         null,
+    level_target:            def.default_level,
+    error_targets:           def.default_error_targets,
+    grade_band:              def.grade_band,
+    difficulty:              def.default_difficulty,
+    estimated_time_seconds:  def.estimated_time_seconds,
+    review_after_days:       [1, 3, 7],
+    lesson_slot_fit:         def.lesson_slot_fit,
+    options_shape:           def.options_shape,
+    audio_trigger:           def.audio_trigger,
+    self_check:              def.self_check,
+    self_check_source_shape: def.self_check_source_shape,
+    mongolian_name:          def.mongolian_name,
+    generation_hints:        def.generation_hints,
+  };
+}
+
+/** All 39 task type specs derived from task-types.json */
+export const TASK_SPECS: TaskSpec[] = loadCatalogue().map(defToSpec);
+
+/** Task types available for LLM generation (non-self-check, shape template exists) */
 export const AVAILABLE_TASK_IDS: string[] = TASK_SPECS
-  .filter((s) => !s.self_check && fs.existsSync(path.join(PROMPTS_DIR, `${s.id}.md`)))
+  .filter((s) => !s.self_check && fs.existsSync(path.join(SHAPES_DIR, SHAPE_TO_TEMPLATE[s.options_shape] ?? '')))
   .map((s) => s.id);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -134,6 +139,8 @@ export interface GenerateResult {
   cost: number;
 }
 
+// ─── Seed words ───────────────────────────────────────────────────────────────
+
 interface SeedWord {
   id: string;
   word: string;
@@ -143,8 +150,6 @@ interface SeedWord {
   sentence: string;
   distractors: string[];
 }
-
-// ─── Seed words ───────────────────────────────────────────────────────────────
 
 let _cachedSeedWords: SeedWord[] | null = null;
 
@@ -158,13 +163,16 @@ function loadSeedWords(): SeedWord[] {
 
 function sampleSeedWords(allWords: SeedWord[], spec: TaskSpec, count = 12): SeedWord[] {
   const gradePrefixes = spec.grade_band.map((g) => g.replace('G', ''));
-  const filtered = allWords.filter((w) => {
+  let pool = allWords.filter((w) => {
     const wb = w.grade_band.replace(/G/g, '');
     return gradePrefixes.some((p) => wb.includes(p));
   });
-  const pool = filtered.length >= count ? filtered : allWords;
+  const skillFiltered = pool.filter((w) => w.skills.includes(spec.primary_skill));
+  if (skillFiltered.length >= count) pool = skillFiltered;
+  if (pool.length < count) pool = allWords;
+
   const arr = [...pool];
-  let seed = spec.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  let seed = spec.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) || 1;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff;
     return Math.abs(seed) / 0x7fffffff;
@@ -180,7 +188,40 @@ function formatSeedList(words: SeedWord[]): string {
   return words.map((w) => `- ${w.word} [${w.skills.join(',')}] — «${w.sentence}»`).join('\n');
 }
 
-// ─── OpenRouter call ──────────────────────────────────────────────────────────
+// ─── Few-shot from validated/ ─────────────────────────────────────────────────
+
+function loadFewShotExamples(taskType: string, max = 2): TaskRecord[] {
+  const examples: TaskRecord[] = [];
+  for (const dir of [VALIDATED_DIR, STAGE2_DIR]) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (!name.endsWith('.json') || name.startsWith('_')) continue;
+      try {
+        const parsed = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+        const items: TaskRecord[] = Array.isArray(parsed) ? parsed : ((parsed as { variants?: TaskRecord[] }).variants ?? []);
+        for (const item of items) {
+          if (item['task_type'] === taskType) {
+            examples.push(item);
+            if (examples.length >= max) return examples;
+          }
+        }
+      } catch { /* skip malformed */ }
+    }
+    if (examples.length >= max) break;
+  }
+  return examples;
+}
+
+function formatFewShotBlock(examples: TaskRecord[]): string {
+  if (examples.length === 0) return '';
+  const snippets = examples.map((ex, i) => {
+    const opts = ex['options'];
+    return `Жишээ ${i + 1}:\n${JSON.stringify({ ...(opts as object), correct_answer: ex['correct_answer'], feedback_text: ex['feedback_text'] }, null, 2)}`;
+  });
+  return `Validated жишээнүүд (хэв маягийг дагана уу, агуулгыг хуулахгүй):\n${snippets.join('\n\n')}\n`;
+}
+
+// ─── Prompt assembly ──────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT =
   'Чи монгол кирилл үсгээр бичих зөв бичгийн дасгал үүсгэгч.\n\n' +
@@ -195,6 +236,38 @@ const SYSTEM_PROMPT =
   '• Зөвхөн цэвэр JSON буцаа — markdown fence, тайлбар, мэдэгдэл огт бичихгүй.\n' +
   '• Хариуг { эсвэл [ тэмдэгтээр шууд эхлүүлэх.\n' +
   '• Монгол текст бүхэн зөв кирилл үсгээр бичигдсэн байх.';
+
+function gradeLabel(grade_band: string[]): string {
+  return grade_band.some((g) => g === 'G3' || g === 'G4') ? '2-4' : '1-2';
+}
+
+function buildUserPrompt(spec: TaskSpec, seedList: string, fewShotBlock: string, count: number): string {
+  const tmplFile = SHAPE_TO_TEMPLATE[spec.options_shape];
+  if (!tmplFile) throw new Error(`No shape template for ${spec.options_shape}`);
+  const tmplPath = path.join(SHAPES_DIR, tmplFile);
+  if (!fs.existsSync(tmplPath)) throw new Error(`Shape template not found: ${tmplPath}`);
+  const tmpl = fs.readFileSync(tmplPath, 'utf8');
+
+  const subs: Record<string, string> = {
+    '{task_type}':        spec.task_type,
+    '{mongolian_name}':   spec.mongolian_name,
+    '{skill}':            spec.primary_skill,
+    '{level}':            spec.level_target,
+    '{error_targets}':    spec.error_targets.join(', '),
+    '{grade_band}':       spec.grade_band.join(','),
+    '{grade_label}':      gradeLabel(spec.grade_band),
+    '{generation_hints}': spec.generation_hints,
+    '{count}':            String(count),
+    '{seed_list}':        seedList,
+    '{few_shot_block}':   fewShotBlock,
+  };
+
+  let out = tmpl;
+  for (const [k, v] of Object.entries(subs)) out = out.split(k).join(v);
+  return out;
+}
+
+// ─── OpenRouter call ──────────────────────────────────────────────────────────
 
 async function callOpenRouter(
   client: OpenAI,
@@ -213,8 +286,8 @@ async function callOpenRouter(
   });
   const text = response.choices[0]?.message?.content ?? '';
   const usage = response.usage as Record<string, number> | undefined;
-  const tokensIn  = usage?.['prompt_tokens']     ?? usage?.['input_tokens']      ?? 0;
-  const tokensOut = usage?.['completion_tokens']  ?? usage?.['output_tokens']     ?? 0;
+  const tokensIn  = usage?.['prompt_tokens']    ?? usage?.['input_tokens']     ?? 0;
+  const tokensOut = usage?.['completion_tokens'] ?? usage?.['output_tokens']    ?? 0;
   return { content: text, tokensIn, tokensOut };
 }
 
@@ -232,13 +305,7 @@ function extractJson(raw: string): unknown {
 
 // ─── Task builders ────────────────────────────────────────────────────────────
 
-function buildBase(
-  spec: TaskSpec,
-  title: string,
-  promptText: string,
-  feedbackText: string,
-  correctAnswer: string,
-): TaskRecord {
+function buildBase(spec: TaskSpec, title: string, promptText: string, feedbackText: string, correctAnswer: string): TaskRecord {
   return {
     id: randomUUID(),
     task_type: spec.task_type,
@@ -260,18 +327,18 @@ function buildBase(
   };
 }
 
-function buildTT1(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+function buildChoice(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const choices = v['choices'] as Array<{ text: string; is_correct: boolean }>;
   const correctChoice = choices?.find((c) => c.is_correct);
   const correctAnswer = (v['correct_answer'] as string) ?? correctChoice?.text ?? '';
-  const sentenceWithBlank = (v['prompt_text'] as string) ?? (v['sentence_with_blank'] as string) ?? '';
+  const promptText = (v['prompt_text'] as string) ?? (v['sentence_with_blank'] as string) ?? 'Зөв хэлбэрийг сонгоно уу.';
   return {
-    ...buildBase(spec, 'Зөвийг сонгоно уу', sentenceWithBlank || 'Зөв хэлбэрийг сонгоно уу.', (v['feedback_text'] as string) ?? '', correctAnswer),
-    options: { choices, audio_trigger: false },
+    ...buildBase(spec, 'Зөвийг сонгоно уу', promptText, (v['feedback_text'] as string) ?? '', correctAnswer),
+    options: { choices, audio_trigger: spec.audio_trigger ?? false },
   };
 }
 
-function buildTT2(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+function buildFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const displayText  = (v['display_text'] as string) ?? '';
   const blankAnswer  = (v['blank_answer'] as string) ?? '';
   const blankPos     = displayText.indexOf('_');
@@ -284,19 +351,42 @@ function buildTT2(spec: TaskSpec, v: Record<string, unknown>, idx: number): Task
   };
 }
 
-function buildTT3(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+function buildSentenceFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const sentenceTemplate = (v['sentence_template'] as string) ?? (v['display_text'] as string) ?? '';
+  const blankAnswer      = (v['blank_answer'] as string) ?? '';
+  const contextSentence  = (v['context_sentence'] as string) ?? sentenceTemplate.replace('___', blankAnswer);
+  return {
+    ...buildBase(
+      spec,
+      'Өгүүлбэрийг нөхөөрэй',
+      (v['prompt_text'] as string) ?? `Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй:\n${sentenceTemplate}`,
+      (v['feedback_text'] as string) ?? '',
+      blankAnswer,
+    ),
+    options: { sentence_template: sentenceTemplate, blank_answer: blankAnswer, context_sentence: contextSentence, hint: (v['hint'] as string) ?? '' },
+  };
+}
+
+function buildCorrection(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const incorrectText = (v['incorrect_text'] as string) ?? '';
   const correctText   = (v['correct_text'] as string) ?? '';
   const explanation   = (v['explanation'] as string) ?? '';
   const feedbackText  = (v['feedback_text'] as string) ?? (explanation ? `${explanation} Зөв хариу: ${correctText}` : `Зөв хариу: ${correctText}`);
+  const opts: Record<string, unknown> = {
+    incorrect_text: incorrectText,
+    correct_text:   correctText,
+    error_type:     (v['error_type'] as string) ?? spec.error_targets[0] ?? '',
+    hint:           (v['hint'] as string) ?? feedbackText,
+  };
+  if (spec.task_type === 'TT_EXPLAINED_CORRECTION' && explanation) opts['explanation'] = explanation;
   return {
     ...buildBase(spec, 'Алдааг засаарай', (v['prompt_text'] as string) ?? 'Дараах өгүүлбэрт алдаа байна. Зөв засаарай.', feedbackText, correctText),
     initial_text: incorrectText,
-    options: { incorrect_text: incorrectText, correct_text: correctText, error_type: (v['error_type'] as string) ?? spec.error_targets[0] ?? '', hint: (v['hint'] as string) ?? feedbackText },
+    options: opts,
   };
 }
 
-function buildTT4(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+function buildDictation(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const words           = v['words'] as string[] | undefined;
   const sentences       = v['sentences'] as string[] | undefined;
   const expectedAnswers = (v['expected_answers'] as string[] | undefined) ?? words ?? sentences ?? [];
@@ -308,7 +398,7 @@ function buildTT4(spec: TaskSpec, v: Record<string, unknown>, idx: number): Task
   };
 }
 
-function buildTT5(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
+function buildMiniText(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const expectedAnswers = (v['expected_answers'] as string[]) ?? [];
   const audioText       = (v['audio_text'] as string) || expectedAnswers.join(' ');
   const correctAnswer   = (v['correct_answer'] as string) ?? expectedAnswers.join(';');
@@ -318,8 +408,8 @@ function buildTT5(spec: TaskSpec, v: Record<string, unknown>, idx: number): Task
   };
 }
 
-function buildTT6FromSource(spec: TaskSpec, sourceItems: TaskRecord[]): TaskRecord[] {
-  return sourceItems.slice(0, 3).map((item, idx) => {
+function buildSelfCheckFromSource(spec: TaskSpec, sourceItems: TaskRecord[], max: number): TaskRecord[] {
+  return sourceItems.slice(0, max).map((item) => {
     const opts = item['options'] as Record<string, unknown> | undefined;
     const incorrectText = (opts?.['incorrect_text'] as string) ?? '';
     const correctText   = (opts?.['correct_text'] as string) ?? (item['correct_answer'] as string) ?? '';
@@ -330,21 +420,51 @@ function buildTT6FromSource(spec: TaskSpec, sourceItems: TaskRecord[]): TaskReco
   });
 }
 
-function buildVariant(spec: TaskSpec, v: Record<string, unknown>, idx: number): TaskRecord {
-  const builderType = BUILDER_TYPE[spec.task_type] ?? spec.task_type;
-  switch (builderType) {
-    case 'TT1_CHOICE':    return buildTT1(spec, v, idx);
-    case 'TT2_FILL':      return buildTT2(spec, v, idx);
-    case 'TT3_CORRECTION':return buildTT3(spec, v, idx);
-    case 'TT4_DICTATION': return buildTT4(spec, v, idx);
-    case 'TT5_MINI_TEXT': return buildTT5(spec, v, idx);
-    default: throw new Error(`No builder for task_type: ${spec.task_type}`);
+function buildVariant(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  switch (spec.options_shape) {
+    case 'ChoiceOptions':      return buildChoice(spec, v);
+    case 'FillOptions':        return buildFill(spec, v);
+    case 'SentenceFillOptions':return buildSentenceFill(spec, v);
+    case 'CorrectionOptions':  return buildCorrection(spec, v);
+    case 'DictationOptions':   return buildDictation(spec, v);
+    case 'MiniTextOptions':    return buildMiniText(spec, v);
+    default: throw new Error(`No builder for options_shape: ${spec.options_shape}`);
   }
+}
+
+// ─── Self-check source loader ─────────────────────────────────────────────────
+
+const CORRECTION_TYPES = new Set([
+  'TT_COPY_WRITE', 'TT_CAPITAL_PUNCTUATION', 'TT_FIND_ERROR', 'TT_FIX_ERROR',
+  'TT_WORD_FORM_FIX', 'TT_FIND_OMITTED_LETTER', 'TT_SENTENCE_BOUNDARY',
+  'TT_BASIC_COMMA', 'TT_EXPLAINED_CORRECTION',
+]);
+
+function loadSelfCheckSource(sourceShape: string): TaskRecord[] {
+  for (const dir of [VALIDATED_DIR, STAGE2_DIR, STAGE1_DIR]) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (!name.endsWith('.json') || name.startsWith('_')) continue;
+      try {
+        const parsed = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+        const items: TaskRecord[] = Array.isArray(parsed) ? parsed : ((parsed as { variants?: TaskRecord[] }).variants ?? []);
+        const matching = sourceShape === 'CorrectionOptions'
+          ? items.filter((it) => CORRECTION_TYPES.has(it['task_type'] as string))
+          : items;
+        if (matching.length > 0) return matching;
+      } catch { /* skip */ }
+    }
+  }
+  return [];
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-const REQUIRED_FIELDS = ['id', 'task_type', 'title', 'prompt_text', 'correct_answer', 'options', 'primary_skill', 'level_target', 'grade_band', 'difficulty', 'estimated_time_seconds', 'lesson_slot_fit', 'feedback_text'];
+const REQUIRED_FIELDS = [
+  'id', 'task_type', 'title', 'prompt_text', 'correct_answer', 'options',
+  'primary_skill', 'level_target', 'grade_band', 'difficulty',
+  'estimated_time_seconds', 'lesson_slot_fit', 'feedback_text',
+];
 const VALID_TASK_TYPES = new Set(Object.values(TaskType));
 const VALID_SKILLS     = new Set(Object.values(SkillCode));
 const VALID_SLOTS      = new Set(Object.values(LessonSlot));
@@ -381,18 +501,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-// ─── Self-check builder ───────────────────────────────────────────────────────
-
-function buildSelfCheck(spec: TaskSpec, stage1Dir: string): TaskRecord[] | null {
-  const srcId   = spec.self_check_source ?? '';
-  const srcPath = path.join(stage1Dir, `${srcId}.json`);
-  if (!fs.existsSync(srcPath)) return null;
-  const parsed = JSON.parse(fs.readFileSync(srcPath, 'utf8')) as TaskRecord[] | { variants: TaskRecord[] };
-  const items  = Array.isArray(parsed) ? parsed : parsed.variants;
-  if (!items?.length) return null;
-  return buildTT6FromSource(spec, items);
-}
-
 // ─── Main exported function ───────────────────────────────────────────────────
 
 export interface GenerateOptions {
@@ -406,13 +514,13 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
   const { apiKey, maxItems = 3, maxCost = 10 } = opts;
   const runningCost = opts.runningCost ?? { value: 0 };
 
-  // Self-check tasks: build from existing stage1 output
+  // Self-check tasks: build from existing correction tasks, no LLM call
   if (spec.self_check) {
-    const stage1Dir = path.join(PROJECT_ROOT, 'content-pipeline/stage1');
-    const built = buildSelfCheck(spec, stage1Dir);
-    if (!built || built.length === 0) {
-      return { passed: [], rejected: [{ _skip: true, reason: `source "${spec.self_check_source}" not found in stage1/` }], cost: 0 };
+    const sourceItems = loadSelfCheckSource(spec.self_check_source_shape ?? 'CorrectionOptions');
+    if (sourceItems.length === 0) {
+      return { passed: [], rejected: [{ _skip: true, reason: 'no CorrectionOptions source tasks found in stage1/stage2/validated' }], cost: 0 };
     }
+    const built = buildSelfCheckFromSource(spec, sourceItems, maxItems);
     const passed: TaskRecord[] = [];
     const rejected: TaskRecord[] = [];
     for (const task of built) {
@@ -423,12 +531,7 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     return { passed, rejected, cost: 0 };
   }
 
-  // LLM tasks
-  const promptPath = path.join(PROMPTS_DIR, `${spec.id}.md`);
-  if (!fs.existsSync(promptPath)) {
-    throw new Error(`Prompt template not found: ${spec.id}.md`);
-  }
-
+  // LLM tasks: build prompt from shape template
   const client = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey,
@@ -438,13 +541,15 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     },
   });
 
-  const allWords  = loadSeedWords();
-  const seedWords = sampleSeedWords(allWords, spec, 12);
-  const seedList  = formatSeedList(seedWords);
-  const userPrompt = fs.readFileSync(promptPath, 'utf8').replace('{seed_list}', seedList);
+  const allWords    = loadSeedWords();
+  const seedWords   = sampleSeedWords(allWords, spec, 12);
+  const seedList    = formatSeedList(seedWords);
+  const fewShot     = loadFewShotExamples(spec.task_type);
+  const fewShotBlock = formatFewShotBlock(fewShot);
+  const userPrompt  = buildUserPrompt(spec, seedList, fewShotBlock, maxItems);
 
   let parsed: unknown = null;
-  let totalTokensIn = 0;
+  let totalTokensIn  = 0;
   let totalTokensOut = 0;
 
   for (let attempt = 0; attempt <= RETRY_LIMIT; attempt++) {
@@ -467,7 +572,6 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
   }
 
   await sleep(RATE_LIMIT_MS);
-
   if (!parsed) return { passed: [], rejected: [], cost: computeCost(totalTokensIn, totalTokensOut) };
 
   let rawVariants: unknown[] = [];
@@ -486,7 +590,7 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
   for (let i = 0; i < rawVariants.length; i++) {
     let task: TaskRecord;
     try {
-      task = buildVariant(spec, rawVariants[i] as Record<string, unknown>, i);
+      task = buildVariant(spec, rawVariants[i] as Record<string, unknown>);
     } catch (err) {
       rejected.push({ _raw: rawVariants[i], _error: (err as Error).message } as TaskRecord);
       continue;

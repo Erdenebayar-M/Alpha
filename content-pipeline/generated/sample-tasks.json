@@ -1,24 +1,24 @@
-{
+﻿{
   "count": 20,
   "tasks": [
     {
       "id": "G12-001-a",
-      "task_type": "TT1_CHOICE",
-      "title": "Сонсож сонгох",
-      "prompt_text": "Аудио: 'ном'",
-      "correct_answer": "ном",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð¡Ð¾Ð½ÑÐ¾Ð¶ ÑÐ¾Ð½Ð³Ð¾Ñ…",
+      "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: 'Ð½Ð¾Ð¼'",
+      "correct_answer": "Ð½Ð¾Ð¼",
       "options": {
         "choices": [
           {
-            "text": "ном",
+            "text": "Ð½Ð¾Ð¼",
             "is_correct": true
           },
           {
-            "text": "нум",
+            "text": "Ð½ÑƒÐ¼",
             "is_correct": false
           },
           {
-            "text": "мод",
+            "text": "Ð¼Ð¾Ð´",
             "is_correct": false
           }
         ],
@@ -44,26 +44,26 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "'ном' гэдэг үгэнд о авиаг сонслоо."
+      "feedback_text": "'Ð½Ð¾Ð¼' Ð³ÑÐ´ÑÐ³ Ò¯Ð³ÑÐ½Ð´ Ð¾ Ð°Ð²Ð¸Ð°Ð³ ÑÐ¾Ð½ÑÐ»Ð¾Ð¾."
     },
     {
       "id": "G12-001-b",
-      "task_type": "TT1_CHOICE",
-      "title": "Сонсож сонгох",
-      "prompt_text": "Аудио: 'сар'",
-      "correct_answer": "сар",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð¡Ð¾Ð½ÑÐ¾Ð¶ ÑÐ¾Ð½Ð³Ð¾Ñ…",
+      "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: 'ÑÐ°Ñ€'",
+      "correct_answer": "ÑÐ°Ñ€",
       "options": {
         "choices": [
           {
-            "text": "сар",
+            "text": "ÑÐ°Ñ€",
             "is_correct": true
           },
           {
-            "text": "нар",
+            "text": "Ð½Ð°Ñ€",
             "is_correct": false
           },
           {
-            "text": "сав",
+            "text": "ÑÐ°Ð²",
             "is_correct": false
           }
         ],
@@ -89,19 +89,19 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Зөв сонслоо."
+      "feedback_text": "Ð—Ó©Ð² ÑÐ¾Ð½ÑÐ»Ð¾Ð¾."
     },
     {
       "id": "G12-002",
-      "task_type": "TT2_FILL",
-      "title": "Үсэг нөхөх",
-      "prompt_text": "н_м",
-      "correct_answer": "о",
+      "task_type": "TT_FILL_WRITE",
+      "title": "Ò®ÑÑÐ³ Ð½Ó©Ñ…Ó©Ñ…",
+      "prompt_text": "Ð½_Ð¼",
+      "correct_answer": "Ð¾",
       "options": {
-        "display_text": "н_м",
+        "display_text": "Ð½_Ð¼",
         "blank_position": 1,
-        "blank_answer": "о",
-        "context_word": "ном"
+        "blank_answer": "Ð¾",
+        "context_word": "Ð½Ð¾Ð¼"
       },
       "audio_url": null,
       "image_url": null,
@@ -123,26 +123,26 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "'ном' гэж бүтэн уншаад шалга."
+      "feedback_text": "'Ð½Ð¾Ð¼' Ð³ÑÐ¶ Ð±Ò¯Ñ‚ÑÐ½ ÑƒÐ½ÑˆÐ°Ð°Ð´ ÑˆÐ°Ð»Ð³Ð°."
     },
     {
       "id": "G12-003-a",
-      "task_type": "TT1_CHOICE",
-      "title": "Зураг-үг тааруулах",
-      "prompt_text": "Зураг: алим",
-      "correct_answer": "алим",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð—ÑƒÑ€Ð°Ð³-Ò¯Ð³ Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð°Ñ…",
+      "prompt_text": "Ð—ÑƒÑ€Ð°Ð³: Ð°Ð»Ð¸Ð¼",
+      "correct_answer": "Ð°Ð»Ð¸Ð¼",
       "options": {
         "choices": [
           {
-            "text": "алим",
+            "text": "Ð°Ð»Ð¸Ð¼",
             "is_correct": true
           },
           {
-            "text": "гутал",
+            "text": "Ð³ÑƒÑ‚Ð°Ð»",
             "is_correct": false
           },
           {
-            "text": "цас",
+            "text": "Ñ†Ð°Ñ",
             "is_correct": false
           }
         ],
@@ -168,26 +168,26 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Зурагтай үгийг зөв таарууллаа."
+      "feedback_text": "Ð—ÑƒÑ€Ð°Ð³Ñ‚Ð°Ð¹ Ò¯Ð³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð»Ð°Ð°."
     },
     {
       "id": "G12-003-b",
-      "task_type": "TT1_CHOICE",
-      "title": "Зураг-үг тааруулах",
-      "prompt_text": "Зураг: гэр",
-      "correct_answer": "гэр",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð—ÑƒÑ€Ð°Ð³-Ò¯Ð³ Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð°Ñ…",
+      "prompt_text": "Ð—ÑƒÑ€Ð°Ð³: Ð³ÑÑ€",
+      "correct_answer": "Ð³ÑÑ€",
       "options": {
         "choices": [
           {
-            "text": "гэр",
+            "text": "Ð³ÑÑ€",
             "is_correct": true
           },
           {
-            "text": "морь",
+            "text": "Ð¼Ð¾Ñ€ÑŒ",
             "is_correct": false
           },
           {
-            "text": "ном",
+            "text": "Ð½Ð¾Ð¼",
             "is_correct": false
           }
         ],
@@ -213,19 +213,19 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Зураг нь монгол гэр байна."
+      "feedback_text": "Ð—ÑƒÑ€Ð°Ð³ Ð½ÑŒ Ð¼Ð¾Ð½Ð³Ð¾Ð» Ð³ÑÑ€ Ð±Ð°Ð¹Ð½Ð°."
     },
     {
       "id": "G12-004",
-      "task_type": "TT2_FILL",
-      "title": "Хуулж бичих",
-      "prompt_text": "Энэ бол ном.",
-      "correct_answer": "Энэ бол ном.",
+      "task_type": "TT_FILL_WRITE",
+      "title": "Ð¥ÑƒÑƒÐ»Ð¶ Ð±Ð¸Ñ‡Ð¸Ñ…",
+      "prompt_text": "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.",
+      "correct_answer": "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.",
       "options": {
-        "display_text": "Энэ бол ном.",
+        "display_text": "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.",
         "blank_position": 0,
-        "blank_answer": "Энэ бол ном.",
-        "context_word": "Энэ бол ном."
+        "blank_answer": "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.",
+        "context_word": "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼."
       },
       "audio_url": null,
       "image_url": null,
@@ -247,26 +247,26 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Үсгийн дараалал, цэгээ шалга."
+      "feedback_text": "Ò®ÑÐ³Ð¸Ð¹Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð°Ð», Ñ†ÑÐ³ÑÑ ÑˆÐ°Ð»Ð³Ð°."
     },
     {
       "id": "G12-005-a",
-      "task_type": "TT1_CHOICE",
-      "title": "Зөвийг сонгох",
-      "prompt_text": "аль нь зөв бэ?",
-      "correct_answer": "тогоо",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð—Ó©Ð²Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾Ñ…",
+      "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
+      "correct_answer": "Ñ‚Ð¾Ð³Ð¾Ð¾",
       "options": {
         "choices": [
           {
-            "text": "тогоо",
+            "text": "Ñ‚Ð¾Ð³Ð¾Ð¾",
             "is_correct": true
           },
           {
-            "text": "того",
+            "text": "Ñ‚Ð¾Ð³Ð¾",
             "is_correct": false
           },
           {
-            "text": "тогуу",
+            "text": "Ñ‚Ð¾Ð³ÑƒÑƒ",
             "is_correct": false
           }
         ],
@@ -292,26 +292,26 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Урт эгшгийг анзаар."
+      "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð°Ð½Ð·Ð°Ð°Ñ€."
     },
     {
       "id": "G12-005-b",
-      "task_type": "TT1_CHOICE",
-      "title": "Зөвийг сонгох",
-      "prompt_text": "аль нь зөв бэ?",
-      "correct_answer": "сүү",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð—Ó©Ð²Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾Ñ…",
+      "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
+      "correct_answer": "ÑÒ¯Ò¯",
       "options": {
         "choices": [
           {
-            "text": "сүү",
+            "text": "ÑÒ¯Ò¯",
             "is_correct": true
           },
           {
-            "text": "су",
+            "text": "ÑÑƒ",
             "is_correct": false
           },
           {
-            "text": "сү",
+            "text": "ÑÒ¯",
             "is_correct": false
           }
         ],
@@ -337,19 +337,19 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Урт эгшигтэй хэлбэрийг сонго."
+      "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ¸Ð³Ñ‚ÑÐ¹ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾."
     },
     {
       "id": "G12-006-a",
-      "task_type": "TT2_FILL",
-      "title": "Нөхөж бичих",
-      "prompt_text": "бөмб_г",
-      "correct_answer": "ө",
+      "task_type": "TT_FILL_WRITE",
+      "title": "ÐÓ©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡Ð¸Ñ…",
+      "prompt_text": "Ð±Ó©Ð¼Ð±_Ð³",
+      "correct_answer": "Ó©",
       "options": {
-        "display_text": "бөмб_г",
+        "display_text": "Ð±Ó©Ð¼Ð±_Ð³",
         "blank_position": 4,
-        "blank_answer": "ө",
-        "context_word": "бөмбөг"
+        "blank_answer": "Ó©",
+        "context_word": "Ð±Ó©Ð¼Ð±Ó©Ð³"
       },
       "audio_url": null,
       "image_url": null,
@@ -372,19 +372,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Дундах эгшгийг зөв нөх."
+      "feedback_text": "Ð”ÑƒÐ½Ð´Ð°Ñ… ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…."
     },
     {
       "id": "G12-006-b",
-      "task_type": "TT2_FILL",
-      "title": "Нөхөж бичих",
-      "prompt_text": "шув_у",
-      "correct_answer": "у",
+      "task_type": "TT_FILL_WRITE",
+      "title": "ÐÓ©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡Ð¸Ñ…",
+      "prompt_text": "ÑˆÑƒÐ²_Ñƒ",
+      "correct_answer": "Ñƒ",
       "options": {
-        "display_text": "шув_у",
+        "display_text": "ÑˆÑƒÐ²_Ñƒ",
         "blank_position": 3,
-        "blank_answer": "у",
-        "context_word": "шувуу"
+        "blank_answer": "Ñƒ",
+        "context_word": "ÑˆÑƒÐ²ÑƒÑƒ"
       },
       "audio_url": null,
       "image_url": null,
@@ -407,19 +407,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Давхар эгшгийн хэлбэрийг анзаар."
+      "feedback_text": "Ð”Ð°Ð²Ñ…Ð°Ñ€ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð°Ð½Ð·Ð°Ð°Ñ€."
     },
     {
       "id": "G12-007",
-      "task_type": "TT2_FILL",
-      "title": "Дутуу үсэг",
-      "prompt_text": "Аудио+текст: дэвт_р",
-      "correct_answer": "э",
+      "task_type": "TT_FILL_WRITE",
+      "title": "Ð”ÑƒÑ‚ÑƒÑƒ Ò¯ÑÑÐ³",
+      "prompt_text": "ÐÑƒÐ´Ð¸Ð¾+Ñ‚ÐµÐºÑÑ‚: Ð´ÑÐ²Ñ‚_Ñ€",
+      "correct_answer": "Ñ",
       "options": {
-        "display_text": "дэвт_р",
+        "display_text": "Ð´ÑÐ²Ñ‚_Ñ€",
         "blank_position": 4,
-        "blank_answer": "э",
-        "context_word": "дэвтэр"
+        "blank_answer": "Ñ",
+        "context_word": "Ð´ÑÐ²Ñ‚ÑÑ€"
       },
       "audio_url": null,
       "image_url": null,
@@ -441,21 +441,21 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Балархай эгшгийг нөхөж бич."
+      "feedback_text": "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡."
     },
     {
       "id": "G12-008",
-      "task_type": "TT4_DICTATION",
-      "title": "Үгийн багц диктант",
-      "prompt_text": "Аудио: ном, гэр, нар",
-      "correct_answer": "ном; гэр; нар",
+      "task_type": "TT_WORD_SET_DICTATION",
+      "title": "Ò®Ð³Ð¸Ð¹Ð½ Ð±Ð°Ð³Ñ† Ð´Ð¸ÐºÑ‚Ð°Ð½Ñ‚",
+      "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: Ð½Ð¾Ð¼, Ð³ÑÑ€, Ð½Ð°Ñ€",
+      "correct_answer": "Ð½Ð¾Ð¼; Ð³ÑÑ€; Ð½Ð°Ñ€",
       "options": {
-        "audio_text": "ном, гэр, нар",
+        "audio_text": "Ð½Ð¾Ð¼, Ð³ÑÑ€, Ð½Ð°Ñ€",
         "word_count": 3,
         "expected_answers": [
-          "ном",
-          "гэр",
-          "нар"
+          "Ð½Ð¾Ð¼",
+          "Ð³ÑÑ€",
+          "Ð½Ð°Ñ€"
         ],
         "allow_partial": true
       },
@@ -480,19 +480,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Сонссон дарааллаар бичээрэй."
+      "feedback_text": "Ð¡Ð¾Ð½ÑÑÐ¾Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð±Ð¸Ñ‡ÑÑÑ€ÑÐ¹."
     },
     {
       "id": "G12-009-a",
-      "task_type": "TT3_CORRECTION",
-      "title": "Том үсэг, цэг",
-      "prompt_text": "би явна",
-      "correct_answer": "Би явна.",
+      "task_type": "TT_CAPITAL_PUNCTUATION",
+      "title": "Ð¢Ð¾Ð¼ Ò¯ÑÑÐ³, Ñ†ÑÐ³",
+      "prompt_text": "Ð±Ð¸ ÑÐ²Ð½Ð°",
+      "correct_answer": "Ð‘Ð¸ ÑÐ²Ð½Ð°.",
       "options": {
-        "incorrect_text": "би явна",
-        "correct_text": "Би явна.",
+        "incorrect_text": "Ð±Ð¸ ÑÐ²Ð½Ð°",
+        "correct_text": "Ð‘Ð¸ ÑÐ²Ð½Ð°.",
         "error_type": "G1",
-        "hint": "Эхний үсэг том, төгсгөлд цэг."
+        "hint": "Ð­Ñ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼, Ñ‚Ó©Ð³ÑÐ³Ó©Ð»Ð´ Ñ†ÑÐ³."
       },
       "audio_url": null,
       "image_url": null,
@@ -515,19 +515,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Эхний үсэг том, төгсгөлд цэг."
+      "feedback_text": "Ð­Ñ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼, Ñ‚Ó©Ð³ÑÐ³Ó©Ð»Ð´ Ñ†ÑÐ³."
     },
     {
       "id": "G12-009-b",
-      "task_type": "TT3_CORRECTION",
-      "title": "Том үсэг, цэг",
-      "prompt_text": "бат ирлээ",
-      "correct_answer": "Бат ирлээ.",
+      "task_type": "TT_CAPITAL_PUNCTUATION",
+      "title": "Ð¢Ð¾Ð¼ Ò¯ÑÑÐ³, Ñ†ÑÐ³",
+      "prompt_text": "Ð±Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ",
+      "correct_answer": "Ð‘Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ.",
       "options": {
-        "incorrect_text": "бат ирлээ",
-        "correct_text": "Бат ирлээ.",
+        "incorrect_text": "Ð±Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ",
+        "correct_text": "Ð‘Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ.",
         "error_type": "G1",
-        "hint": "Нэрний эхний үсэг том."
+        "hint": "ÐÑÑ€Ð½Ð¸Ð¹ ÑÑ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼."
       },
       "audio_url": null,
       "image_url": null,
@@ -550,26 +550,26 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Нэрний эхний үсэг том."
+      "feedback_text": "ÐÑÑ€Ð½Ð¸Ð¹ ÑÑ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼."
     },
     {
       "id": "G12-010",
-      "task_type": "TT1_CHOICE",
-      "title": "Энгийн залгавар",
-      "prompt_text": "аль нь зөв бэ?",
-      "correct_answer": "гэрт",
+      "task_type": "TT_CHOOSE_CORRECT",
+      "title": "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð»Ð³Ð°Ð²Ð°Ñ€",
+      "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
+      "correct_answer": "Ð³ÑÑ€Ñ‚",
       "options": {
         "choices": [
           {
-            "text": "гэрт",
+            "text": "Ð³ÑÑ€Ñ‚",
             "is_correct": true
           },
           {
-            "text": "гэрд",
+            "text": "Ð³ÑÑ€Ð´",
             "is_correct": false
           },
           {
-            "text": "гэр",
+            "text": "Ð³ÑÑ€",
             "is_correct": false
           }
         ],
@@ -596,19 +596,19 @@
         7
       ],
       "lesson_slot_fit": "WARM_UP",
-      "feedback_text": "Түгээмэл залгаврын хэлбэрийг тань."
+      "feedback_text": "Ð¢Ò¯Ð³ÑÑÐ¼ÑÐ» Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ñ‚Ð°Ð½ÑŒ."
     },
     {
       "id": "G12-011-a",
-      "task_type": "TT3_CORRECTION",
-      "title": "Алдаа олох",
-      "prompt_text": "номм",
-      "correct_answer": "ном",
+      "task_type": "TT_CAPITAL_PUNCTUATION",
+      "title": "ÐÐ»Ð´Ð°Ð° Ð¾Ð»Ð¾Ñ…",
+      "prompt_text": "Ð½Ð¾Ð¼Ð¼",
+      "correct_answer": "Ð½Ð¾Ð¼",
       "options": {
-        "incorrect_text": "номм",
-        "correct_text": "ном",
+        "incorrect_text": "Ð½Ð¾Ð¼Ð¼",
+        "correct_text": "Ð½Ð¾Ð¼",
         "error_type": "H4",
-        "hint": "Илүү үсгийг хас."
+        "hint": "Ð˜Ð»Ò¯Ò¯ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ñ."
       },
       "audio_url": null,
       "image_url": null,
@@ -630,19 +630,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Илүү үсгийг хас."
+      "feedback_text": "Ð˜Ð»Ò¯Ò¯ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ñ."
     },
     {
       "id": "G12-011-b",
-      "task_type": "TT3_CORRECTION",
-      "title": "Алдаа олох",
-      "prompt_text": "того",
-      "correct_answer": "тогоо",
+      "task_type": "TT_CAPITAL_PUNCTUATION",
+      "title": "ÐÐ»Ð´Ð°Ð° Ð¾Ð»Ð¾Ñ…",
+      "prompt_text": "Ñ‚Ð¾Ð³Ð¾",
+      "correct_answer": "Ñ‚Ð¾Ð³Ð¾Ð¾",
       "options": {
-        "incorrect_text": "того",
-        "correct_text": "тогоо",
+        "incorrect_text": "Ñ‚Ð¾Ð³Ð¾",
+        "correct_text": "Ñ‚Ð¾Ð³Ð¾Ð¾",
         "error_type": "H4",
-        "hint": "Урт эгшгийг дутуу бичсэн байна."
+        "hint": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð´ÑƒÑ‚ÑƒÑƒ Ð±Ð¸Ñ‡ÑÑÐ½ Ð±Ð°Ð¹Ð½Ð°."
       },
       "audio_url": null,
       "image_url": null,
@@ -664,17 +664,17 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Урт эгшгийг дутуу бичсэн байна."
+      "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð´ÑƒÑ‚ÑƒÑƒ Ð±Ð¸Ñ‡ÑÑÐ½ Ð±Ð°Ð¹Ð½Ð°."
     },
     {
       "id": "G12-012",
-      "task_type": "TT6_SELF_CHECK",
-      "title": "Өөрийгөө шалгах",
-      "prompt_text": "Чи бичсэн: сү / Загвар: сүү",
-      "correct_answer": "сүү",
+      "task_type": "TT_SELF_CHECK",
+      "title": "Ó¨Ó©Ñ€Ð¸Ð¹Ð³Ó©Ó© ÑˆÐ°Ð»Ð³Ð°Ñ…",
+      "prompt_text": "Ð§Ð¸ Ð±Ð¸Ñ‡ÑÑÐ½: ÑÒ¯ / Ð—Ð°Ð³Ð²Ð°Ñ€: ÑÒ¯Ò¯",
+      "correct_answer": "ÑÒ¯Ò¯",
       "options": {
-        "original_attempt": "сү",
-        "model_answer": "сүү",
+        "original_attempt": "ÑÒ¯",
+        "model_answer": "ÑÒ¯Ò¯",
         "comparison_mode": "side_by_side"
       },
       "audio_url": null,
@@ -697,20 +697,20 @@
         7
       ],
       "lesson_slot_fit": "END",
-      "feedback_text": "Хоёр үсгийн ялгааг өөрөө ол."
+      "feedback_text": "Ð¥Ð¾Ñ‘Ñ€ Ò¯ÑÐ³Ð¸Ð¹Ð½ ÑÐ»Ð³Ð°Ð°Ð³ Ó©Ó©Ñ€Ó©Ó© Ð¾Ð»."
     },
     {
       "id": "G12-013",
-      "task_type": "TT4_DICTATION",
-      "title": "2 үгийн диктант",
-      "prompt_text": "Аудио: ном, сар",
-      "correct_answer": "ном; сар",
+      "task_type": "TT_WORD_SET_DICTATION",
+      "title": "2 Ò¯Ð³Ð¸Ð¹Ð½ Ð´Ð¸ÐºÑ‚Ð°Ð½Ñ‚",
+      "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: Ð½Ð¾Ð¼, ÑÐ°Ñ€",
+      "correct_answer": "Ð½Ð¾Ð¼; ÑÐ°Ñ€",
       "options": {
-        "audio_text": "ном, сар",
+        "audio_text": "Ð½Ð¾Ð¼, ÑÐ°Ñ€",
         "word_count": 2,
         "expected_answers": [
-          "ном",
-          "сар"
+          "Ð½Ð¾Ð¼",
+          "ÑÐ°Ñ€"
         ],
         "allow_partial": false
       },
@@ -734,19 +734,19 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Хоёр үгийг дарааллаар нь бич."
+      "feedback_text": "Ð¥Ð¾Ñ‘Ñ€ Ò¯Ð³Ð¸Ð¹Ð³ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð½ÑŒ Ð±Ð¸Ñ‡."
     },
     {
       "id": "G12-014",
-      "task_type": "TT2_FILL",
-      "title": "Үгийн төгсгөл",
-      "prompt_text": "гэ_",
-      "correct_answer": "р",
+      "task_type": "TT_FILL_WRITE",
+      "title": "Ò®Ð³Ð¸Ð¹Ð½ Ñ‚Ó©Ð³ÑÐ³Ó©Ð»",
+      "prompt_text": "Ð³Ñ_",
+      "correct_answer": "Ñ€",
       "options": {
-        "display_text": "гэ_",
+        "display_text": "Ð³Ñ_",
         "blank_position": 2,
-        "blank_answer": "р",
-        "context_word": "гэр"
+        "blank_answer": "Ñ€",
+        "context_word": "Ð³ÑÑ€"
       },
       "audio_url": null,
       "image_url": null,
@@ -768,7 +768,7 @@
         7
       ],
       "lesson_slot_fit": "CORE",
-      "feedback_text": "Төгсгөлийн үсгийг зөв бич."
+      "feedback_text": "Ð¢Ó©Ð³ÑÐ³Ó©Ð»Ð¸Ð¹Ð½ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð±Ð¸Ñ‡."
     }
   ]
 }

@@ -1,15 +1,26 @@
 /**
- * LLM task generator — calls Claude via OpenRouter to produce TT1–TT6 task
- * variants, validates them, and writes to stage2/ (pass) or rejected/stage2/ (fail).
+ * LLM task generator — shape-driven generation for any of the 39 blueprint task types.
+ *
+ * The generator iterates over entries in `content-pipeline/schemas/task-types.json`
+ * and builds prompts from generic per-shape templates in `scripts/prompts/shapes/`
+ * (7 templates, one per options shape) parameterized with skill/error/level/grade/count
+ * and few-shot examples drawn from already-`validated/` tasks of the same type.
  *
  * Run:
- *   npx tsx content-pipeline/scripts/llmGenerate.ts [flags]
+ *   npx tsx content-pipeline/scripts/llmGenerate.ts --task-type TT_LETTER_FILL --count 5
+ *   npx tsx content-pipeline/scripts/llmGenerate.ts --all --count 2
  *
  * Flags:
- *   --dry-run            Print plan and exit — no API calls
- *   --only <task_id>     Process only one task ID
- *   --max-items <n>      Keep only first N variants per task (default: 3)
- *   --max-cost <usd>     Hard cost cap in USD (default: 10)
+ *   --task-type <TT_...>   Generate one task batch for this task type
+ *   --all                  Iterate every entry in task-types.json
+ *   --count <n>            Variants per task type (default: 3)
+ *   --skill <S1..S8>       Override default_primary_skill
+ *   --error <CODE>         Override default_error_targets (comma-separated, e.g. "C1,C2")
+ *   --level <M0..M5>       Override default_level
+ *   --grade <G1..G4>       Override default grade_band (comma-separated)
+ *   --difficulty <1..5>    Override default_difficulty
+ *   --dry-run              Print plan and exit — no API calls
+ *   --max-cost <usd>       Hard cost cap in USD (default: 10)
  */
 
 import * as fs from "fs";
@@ -28,18 +39,30 @@ dotenv.config({ path: path.resolve(__dirname, "../../backend/.env") });
 // ─── CLI flags ────────────────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2);
-const IS_DRY_RUN = argv.includes("--dry-run");
-const ONLY_ID: string | null = (() => {
-  const i = argv.indexOf("--only");
+const flag = (name: string): string | null => {
+  const i = argv.indexOf(name);
   return i !== -1 ? (argv[i + 1] ?? null) : null;
+};
+const has = (name: string) => argv.includes(name);
+
+const IS_DRY_RUN = has("--dry-run");
+const IS_ALL = has("--all");
+const TASK_TYPE_ARG = flag("--task-type");
+const COUNT = (() => {
+  const v = flag("--count");
+  return v ? Math.max(1, parseInt(v, 10)) : 3;
 })();
-const MAX_ITEMS: number = (() => {
-  const i = argv.indexOf("--max-items");
-  return i !== -1 ? parseInt(argv[i + 1] ?? "3", 10) : 3;
+const SKILL_OVERRIDE = flag("--skill");
+const ERROR_OVERRIDE = flag("--error");
+const LEVEL_OVERRIDE = flag("--level");
+const GRADE_OVERRIDE = flag("--grade");
+const DIFFICULTY_OVERRIDE = (() => {
+  const v = flag("--difficulty");
+  return v ? parseInt(v, 10) : null;
 })();
-const MAX_COST_ARG: number = (() => {
-  const i = argv.indexOf("--max-cost");
-  return i !== -1 ? parseFloat(argv[i + 1] ?? "10") : 10;
+const MAX_COST_ARG = (() => {
+  const v = flag("--max-cost");
+  return v ? parseFloat(v) : 10;
 })();
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -50,25 +73,71 @@ const TEMPERATURE = 0.4;
 const RETRY_LIMIT = 2;
 const RATE_LIMIT_MS = 1000;
 
-// OpenRouter pricing for google/gemini-2.5-flash (per million tokens)
-// Verify current rates at https://openrouter.ai/google/gemini-2.5-flash
 const COST_PER_M_IN = 0.15;
 const COST_PER_M_OUT = 0.6;
 
 const BASE = path.resolve(__dirname, "../..");
-const PROMPTS_DIR = path.join(BASE, "content-pipeline/scripts/prompts");
+const TASK_TYPES_PATH = path.join(
+  BASE,
+  "content-pipeline/schemas/task-types.json",
+);
+const SHAPES_DIR = path.join(
+  BASE,
+  "content-pipeline/scripts/prompts/shapes",
+);
 const STAGE1_DIR = path.join(BASE, "content-pipeline/stage1");
+const STAGE2_DIR = path.join(BASE, "content-pipeline/stage2");
+const VALIDATED_DIR = path.join(BASE, "content-pipeline/validated");
 const REJECTED_DIR = path.join(BASE, "content-pipeline/rejected/stage1");
 const SEED_WORDS_PATH = path.join(
   BASE,
   "content-pipeline/generated/seed-words.json",
 );
-const USAGE_PATH = path.join(BASE, "content-pipeline/stage1/_usage.json");
+const USAGE_PATH = path.join(STAGE1_DIR, "_usage.json");
 
-// ─── Task catalogue ───────────────────────────────────────────────────────────
+// ─── Task type catalogue ──────────────────────────────────────────────────────
+
+interface TaskTypeDef {
+  task_type: string;
+  mongolian_name: string;
+  grade_band: string[];
+  options_shape: string;
+  audio_trigger?: boolean;
+  default_primary_skill: string;
+  default_error_targets: string[];
+  default_level: string;
+  default_difficulty: number;
+  estimated_time_seconds: number;
+  lesson_slot_fit: "WARM_UP" | "CORE" | "MIXED" | "END";
+  self_check?: boolean;
+  self_check_source_shape?: string;
+  generation_hints: string;
+}
+
+interface TaskTypeCatalogue {
+  version: number;
+  description: string;
+  task_types: TaskTypeDef[];
+}
+
+function loadCatalogue(): TaskTypeCatalogue {
+  return JSON.parse(fs.readFileSync(TASK_TYPES_PATH, "utf8"));
+}
+
+const SHAPE_TO_TEMPLATE: Record<string, string> = {
+  ChoiceOptions: "choice.md",
+  FillOptions: "fill.md",
+  SentenceFillOptions: "sentence-fill.md",
+  CorrectionOptions: "correction.md",
+  DictationOptions: "dictation.md",
+  MiniTextOptions: "mini-text.md",
+  SelfCheckOptions: "self-check.md",
+};
+
+// ─── Generation spec (resolved at runtime per task type) ──────────────────────
 
 interface TaskSpec {
-  id: string;
+  id: string; // auto-assigned, e.g. G12-018
   task_type: string;
   primary_skill: string;
   secondary_skill: string | null;
@@ -79,241 +148,83 @@ interface TaskSpec {
   estimated_time_seconds: number;
   review_after_days: number[];
   lesson_slot_fit: "WARM_UP" | "CORE" | "MIXED" | "END";
+  options_shape: string;
   self_check?: boolean;
-  self_check_source?: string;
+  self_check_source_shape?: string;
+  mongolian_name: string;
+  generation_hints: string;
+  audio_trigger?: boolean;
 }
 
-const TASK_SPECS: TaskSpec[] = [
-  // G12 tasks
-  {
-    id: "G12-008",
-    task_type: "TT_WORD_SET_DICTATION",
-    primary_skill: "S7",
+function resolveSpec(def: TaskTypeDef, autoId: string): TaskSpec {
+  const errorTargets = ERROR_OVERRIDE
+    ? ERROR_OVERRIDE.split(",").map((s) => s.trim())
+    : def.default_error_targets;
+  const gradeBand = GRADE_OVERRIDE
+    ? GRADE_OVERRIDE.split(",").map((s) => s.trim())
+    : def.grade_band;
+  return {
+    id: autoId,
+    task_type: def.task_type,
+    primary_skill: SKILL_OVERRIDE ?? def.default_primary_skill,
     secondary_skill: null,
-    level_target: "M1",
-    error_targets: ["H1", "B1"],
-    grade_band: ["G1", "G2"],
-    difficulty: 2,
-    estimated_time_seconds: 45,
+    level_target: LEVEL_OVERRIDE ?? def.default_level,
+    error_targets: errorTargets,
+    grade_band: gradeBand,
+    difficulty: DIFFICULTY_OVERRIDE ?? def.default_difficulty,
+    estimated_time_seconds: def.estimated_time_seconds,
     review_after_days: [1, 3, 7],
-    lesson_slot_fit: "END",
-  },
-  {
-    id: "G12-009",
-    task_type: "TT_CAPITAL_PUNCTUATION",
-    primary_skill: "S6",
-    secondary_skill: null,
-    level_target: "M1",
-    error_targets: ["G1", "G2"],
-    grade_band: ["G1", "G2"],
-    difficulty: 2,
-    estimated_time_seconds: 30,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "MIXED",
-  },
-  {
-    id: "G12-010",
-    task_type: "TT_SIMPLE_SUFFIX",
-    primary_skill: "S5",
-    secondary_skill: null,
-    level_target: "M1",
-    error_targets: ["E1", "E2"],
-    grade_band: ["G1", "G2"],
-    difficulty: 2,
-    estimated_time_seconds: 20,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G12-012",
-    task_type: "TT_SELF_CHECK",
-    primary_skill: "S8",
-    secondary_skill: null,
-    level_target: "M1",
-    error_targets: ["H4"],
-    grade_band: ["G1", "G2"],
-    difficulty: 2,
-    estimated_time_seconds: 40,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "END",
-    self_check: true,
-    self_check_source: "G12-011",
-  },
-  {
-    id: "G12-015",
-    task_type: "TT_SENTENCE_FILL",
-    primary_skill: "S2",
-    secondary_skill: null,
-    level_target: "M1",
-    error_targets: ["B1"],
-    grade_band: ["G1", "G2"],
-    difficulty: 2,
-    estimated_time_seconds: 25,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  // G24 tasks
-  {
-    id: "G24-004",
-    task_type: "TT_SUFFIX_CHOOSE",
-    primary_skill: "S5",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["E2"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 20,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G24-010",
-    task_type: "TT_LONG_VOWEL_IN_SENTENCE",
-    primary_skill: "S3",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["C1", "C2"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 25,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G24-011",
-    task_type: "TT_REDUCED_VOWEL_IN_SENTENCE",
-    primary_skill: "S4",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["C4"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 25,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G24-012",
-    task_type: "TT_CASE_SUFFIX",
-    primary_skill: "S5",
-    secondary_skill: "S6",
-    level_target: "M2",
-    error_targets: ["E2"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 20,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G24-013",
-    task_type: "TT_BASIC_COMMA",
-    primary_skill: "S6",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["G2"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 30,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "MIXED",
-  },
-  {
-    id: "G24-014",
-    task_type: "TT_TWO_SENTENCE_DICTATION",
-    primary_skill: "S7",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["H1", "C1"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 60,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "END",
-  },
-  {
-    id: "G24-017",
-    task_type: "TT_SUFFIX_WRITE",
-    primary_skill: "S5",
-    secondary_skill: null,
-    level_target: "M2-M3",
-    error_targets: ["E2", "E7"],
-    grade_band: ["G3", "G4"],
-    difficulty: 3,
-    estimated_time_seconds: 25,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "CORE",
-  },
-  {
-    id: "G24-018",
-    task_type: "TT_SENTENCE_BOUNDARY",
-    primary_skill: "S6",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["G1", "G2"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 30,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "MIXED",
-  },
-  {
-    id: "G24-019",
-    task_type: "TT_MINI_TEXT_DICTATION",
-    primary_skill: "S7",
-    secondary_skill: null,
-    level_target: "M3",
-    error_targets: ["C1", "C4", "E1"],
-    grade_band: ["G3", "G4"],
-    difficulty: 4,
-    estimated_time_seconds: 90,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "END",
-  },
-  {
-    id: "G24-020",
-    task_type: "TT_OWN_WRITING_CORRECTION",
-    primary_skill: "S8",
-    secondary_skill: null,
-    level_target: "M2",
-    error_targets: ["H4"],
-    grade_band: ["G2", "G3"],
-    difficulty: 3,
-    estimated_time_seconds: 40,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "END",
-    self_check: true,
-    self_check_source: "G24-022",
-  },
-  {
-    id: "G24-022",
-    task_type: "TT_COMPOUND_SUFFIX",
-    primary_skill: "S5",
-    secondary_skill: null,
-    level_target: "M3",
-    error_targets: ["E2", "E7"],
-    grade_band: ["G3", "G4"],
-    difficulty: 4,
-    estimated_time_seconds: 30,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "MIXED",
-  },
-  {
-    id: "G24-024",
-    task_type: "TT_EXPLAINED_CORRECTION",
-    primary_skill: "S8",
-    secondary_skill: null,
-    level_target: "M3",
-    error_targets: ["E1", "E2", "C1"],
-    grade_band: ["G3", "G4"],
-    difficulty: 4,
-    estimated_time_seconds: 45,
-    review_after_days: [1, 3, 7],
-    lesson_slot_fit: "MIXED",
-  },
-];
+    lesson_slot_fit: def.lesson_slot_fit,
+    options_shape: def.options_shape,
+    self_check: def.self_check,
+    self_check_source_shape: def.self_check_source_shape,
+    mongolian_name: def.mongolian_name,
+    generation_hints: def.generation_hints,
+    audio_trigger: def.audio_trigger,
+  };
+}
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Auto-ID assignment ───────────────────────────────────────────────────────
+
+function scanExistingIds(): Set<string> {
+  const ids = new Set<string>();
+  const dirs = [STAGE1_DIR, STAGE2_DIR, VALIDATED_DIR, REJECTED_DIR];
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      const m = name.match(/^(G(?:12|24)-\d{3})(?:[-_].*)?\.json$/);
+      if (m && m[1]) ids.add(m[1]);
+    }
+  }
+  return ids;
+}
+
+function nextIdsForBand(
+  band: "12" | "24",
+  count: number,
+  taken: Set<string>,
+): string[] {
+  const out: string[] = [];
+  let seq = 1;
+  while (out.length < count) {
+    const id = `G${band}-${String(seq).padStart(3, "0")}`;
+    if (!taken.has(id)) {
+      out.push(id);
+      taken.add(id);
+    }
+    seq++;
+    if (seq > 9999)
+      throw new Error(`No free IDs left in G${band}- range below 9999`);
+  }
+  return out;
+}
+
+function pickBandForDef(def: TaskTypeDef): "12" | "24" {
+  // If grade_band contains G3 or G4 → G24 band; else G12.
+  return def.grade_band.some((g) => g === "G3" || g === "G4") ? "24" : "12";
+}
+
+// ─── Seed words ───────────────────────────────────────────────────────────────
 
 interface SeedWord {
   id: string;
@@ -326,21 +237,6 @@ interface SeedWord {
   correct_spelling: string;
 }
 
-interface UsageRecord {
-  task_id: string;
-  calls: number;
-  variants_generated: number;
-  passed: number;
-  rejected: number;
-  tokens_in: number;
-  tokens_out: number;
-  cost_usd: number;
-}
-
-type TaskRecord = Record<string, unknown>;
-
-// ─── Seed word loader ─────────────────────────────────────────────────────────
-
 function loadSeedWords(): SeedWord[] {
   const raw = JSON.parse(fs.readFileSync(SEED_WORDS_PATH, "utf8"));
   return raw.words as SeedWord[];
@@ -352,14 +248,19 @@ function sampleSeedWords(
   count = 12,
 ): SeedWord[] {
   const gradePrefixes = spec.grade_band.map((g) => g.replace("G", ""));
-  const filtered = allWords.filter((w) => {
+  let pool = allWords.filter((w) => {
     const wb = w.grade_band.replace(/G/g, "");
     return gradePrefixes.some((p) => wb.includes(p));
   });
-  const pool = filtered.length >= count ? filtered : allWords;
+
+  // Prefer words whose skills overlap the spec's primary skill (relax if too few)
+  const skillFiltered = pool.filter((w) => w.skills.includes(spec.primary_skill));
+  if (skillFiltered.length >= count) pool = skillFiltered;
+  if (pool.length < count) pool = allWords;
 
   const arr = [...pool];
-  let seed = spec.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  // Deterministic shuffle seeded by spec.id so reruns produce the same sample
+  let seed = spec.id.split("").reduce((a, c) => a + c.charCodeAt(0), 0) || 1;
   const rand = () => {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff;
     return Math.abs(seed) / 0x7fffffff;
@@ -377,7 +278,44 @@ function formatSeedList(words: SeedWord[]): string {
     .join("\n");
 }
 
-// ─── Prompt loader ────────────────────────────────────────────────────────────
+// ─── Few-shot from validated/ ─────────────────────────────────────────────────
+
+function loadFewShotExamples(taskType: string, max = 2): TaskRecord[] {
+  if (!fs.existsSync(VALIDATED_DIR)) return [];
+  const examples: TaskRecord[] = [];
+  for (const name of fs.readdirSync(VALIDATED_DIR)) {
+    if (!name.endsWith(".json")) continue;
+    if (name.startsWith("_")) continue;
+    try {
+      const parsed = JSON.parse(
+        fs.readFileSync(path.join(VALIDATED_DIR, name), "utf8"),
+      );
+      const items: TaskRecord[] = Array.isArray(parsed)
+        ? parsed
+        : ((parsed as { variants?: TaskRecord[] }).variants ?? []);
+      for (const item of items) {
+        if (item["task_type"] === taskType) {
+          examples.push(item);
+          if (examples.length >= max) return examples;
+        }
+      }
+    } catch {
+      /* skip malformed */
+    }
+  }
+  return examples;
+}
+
+function formatFewShotBlock(examples: TaskRecord[]): string {
+  if (examples.length === 0) return "";
+  const snippets = examples.map((ex, i) => {
+    const opts = ex["options"];
+    return `Жишээ ${i + 1}:\n${JSON.stringify({ ...(opts as object), correct_answer: ex["correct_answer"], feedback_text: ex["feedback_text"] }, null, 2)}`;
+  });
+  return `Validated жишээнүүд (хэв маягийг дагана уу, агуулгыг хуулахгүй):\n${snippets.join("\n\n")}\n`;
+}
+
+// ─── Prompt assembly ──────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT =
   "Чи монгол кирилл үсгээр бичих зөв бичгийн дасгал үүсгэгч.\n" +
@@ -395,13 +333,44 @@ const SYSTEM_PROMPT =
   "• Хариуг { эсвэл [ тэмдэгтээр шууд эхлүүлэх.\n" +
   "• Монгол текст бүхэн зөв кирилл үсгээр бичигдсэн байх (Traditional Mongolian script бүү ашигла).";
 
-function loadUserPrompt(taskId: string, seedList: string): string {
-  const p = path.join(PROMPTS_DIR, `${taskId}.md`);
-  if (!fs.existsSync(p)) throw new Error(`Prompt template not found: ${p}`);
-  return fs.readFileSync(p, "utf8").replace("{seed_list}", seedList);
+function gradeLabel(grade_band: string[]): string {
+  return grade_band.some((g) => g === "G3" || g === "G4") ? "2-4" : "1-2";
 }
 
-// ─── OpenRouter API call ──────────────────────────────────────────────────────
+function buildUserPrompt(
+  spec: TaskSpec,
+  seedList: string,
+  fewShotBlock: string,
+  count: number,
+): string {
+  const tmplFile = SHAPE_TO_TEMPLATE[spec.options_shape];
+  if (!tmplFile)
+    throw new Error(`No shape template for ${spec.options_shape}`);
+  const tmplPath = path.join(SHAPES_DIR, tmplFile);
+  if (!fs.existsSync(tmplPath))
+    throw new Error(`Shape template not found: ${tmplPath}`);
+  const tmpl = fs.readFileSync(tmplPath, "utf8");
+
+  const subs: Record<string, string> = {
+    "{task_type}": spec.task_type,
+    "{mongolian_name}": spec.mongolian_name,
+    "{skill}": spec.primary_skill,
+    "{level}": spec.level_target,
+    "{error_targets}": spec.error_targets.join(", "),
+    "{grade_band}": spec.grade_band.join(","),
+    "{grade_label}": gradeLabel(spec.grade_band),
+    "{generation_hints}": spec.generation_hints,
+    "{count}": String(count),
+    "{seed_list}": seedList,
+    "{few_shot_block}": fewShotBlock,
+  };
+
+  let out = tmpl;
+  for (const [k, v] of Object.entries(subs)) out = out.split(k).join(v);
+  return out;
+}
+
+// ─── OpenRouter call ──────────────────────────────────────────────────────────
 
 async function callOpenRouter(
   client: OpenAI,
@@ -425,15 +394,12 @@ async function callOpenRouter(
 
   const text = response.choices[0]?.message?.content ?? "";
   const usage = response.usage as Record<string, number> | undefined;
-  // OpenRouter may use prompt_tokens/completion_tokens or input_tokens/output_tokens
   const tokensIn = usage?.["prompt_tokens"] ?? usage?.["input_tokens"] ?? 0;
   const tokensOut =
     usage?.["completion_tokens"] ?? usage?.["output_tokens"] ?? 0;
 
   return { content: text, tokensIn, tokensOut };
 }
-
-// ─── JSON extractor ───────────────────────────────────────────────────────────
 
 function extractJson(raw: string): unknown {
   const stripped = raw
@@ -450,7 +416,9 @@ function extractJson(raw: string): unknown {
   return JSON.parse(stripped.slice(start));
 }
 
-// ─── Task builders ────────────────────────────────────────────────────────────
+// ─── Builders (unchanged JSON output shape) ───────────────────────────────────
+
+type TaskRecord = Record<string, unknown>;
 
 function buildBase(
   spec: TaskSpec,
@@ -480,42 +448,33 @@ function buildBase(
   };
 }
 
-function buildTT1(
-  spec: TaskSpec,
-  v: Record<string, unknown>,
-  idx: number,
-): TaskRecord {
+function buildChoice(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const choices = v["choices"] as Array<{ text: string; is_correct: boolean }>;
   const correctChoice = choices?.find((c) => c.is_correct);
   const correctAnswer =
     (v["correct_answer"] as string) ?? correctChoice?.text ?? "";
-  // LLM returns prompt_text containing the sentence with blank
-  const sentenceWithBlank =
-    (v["prompt_text"] as string) ?? (v["sentence_with_blank"] as string) ?? "";
+  const promptText =
+    (v["prompt_text"] as string) ??
+    (v["sentence_with_blank"] as string) ??
+    "Зөв хэлбэрийг сонгоно уу.";
 
   return {
     ...buildBase(
       spec,
       "Зөвийг сонгоно уу",
-      sentenceWithBlank || "Зөв хэлбэрийг сонгоно уу.",
+      promptText,
       (v["feedback_text"] as string) ?? "",
       correctAnswer,
     ),
-    options: { choices, audio_trigger: false },
+    options: { choices, audio_trigger: spec.audio_trigger ?? false },
   };
 }
 
-function buildTT2(
-  spec: TaskSpec,
-  v: Record<string, unknown>,
-  idx: number,
-): TaskRecord {
+function buildFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const displayText = (v["display_text"] as string) ?? "";
   const blankAnswer = (v["blank_answer"] as string) ?? "";
-  // Derive blank_position from the first '_' in display_text
   const blankPos = displayText.indexOf("_");
   const blankPosition = blankPos >= 0 ? blankPos : 0;
-  // context_word: LLM may return context_sentence or context_word
   const contextWord =
     (v["context_word"] as string) ??
     (v["context_sentence"] as string) ??
@@ -541,10 +500,39 @@ function buildTT2(
   };
 }
 
-function buildTT3(
+function buildSentenceFill(
   spec: TaskSpec,
   v: Record<string, unknown>,
-  idx: number,
+): TaskRecord {
+  const sentenceTemplate =
+    (v["sentence_template"] as string) ?? (v["display_text"] as string) ?? "";
+  const blankAnswer = (v["blank_answer"] as string) ?? "";
+  const contextSentence =
+    (v["context_sentence"] as string) ??
+    sentenceTemplate.replace("___", blankAnswer);
+  const hint = (v["hint"] as string) ?? "";
+
+  return {
+    ...buildBase(
+      spec,
+      "Өгүүлбэрийг нөхөөрэй",
+      (v["prompt_text"] as string) ??
+        `Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй:\n${sentenceTemplate}`,
+      (v["feedback_text"] as string) ?? "",
+      blankAnswer,
+    ),
+    options: {
+      sentence_template: sentenceTemplate,
+      blank_answer: blankAnswer,
+      context_sentence: contextSentence,
+      hint,
+    },
+  };
+}
+
+function buildCorrection(
+  spec: TaskSpec,
+  v: Record<string, unknown>,
 ): TaskRecord {
   const incorrectText = (v["incorrect_text"] as string) ?? "";
   const correctText = (v["correct_text"] as string) ?? "";
@@ -554,6 +542,15 @@ function buildTT3(
     (explanation
       ? `${explanation} Зөв хариу: ${correctText}`
       : `Зөв хариу: ${correctText}`);
+
+  const opts: Record<string, unknown> = {
+    incorrect_text: incorrectText,
+    correct_text: correctText,
+    error_type: (v["error_type"] as string) ?? spec.error_targets[0] ?? "",
+    hint: (v["hint"] as string) ?? feedbackText,
+  };
+  if (spec.task_type === "TT_EXPLAINED_CORRECTION" && explanation)
+    opts["explanation"] = explanation;
 
   return {
     ...buildBase(
@@ -565,19 +562,13 @@ function buildTT3(
       correctText,
     ),
     initial_text: incorrectText,
-    options: {
-      incorrect_text: incorrectText,
-      correct_text: correctText,
-      error_type: (v["error_type"] as string) ?? spec.error_targets[0] ?? "",
-      hint: (v["hint"] as string) ?? feedbackText,
-    },
+    options: opts,
   };
 }
 
-function buildTT4(
+function buildDictation(
   spec: TaskSpec,
   v: Record<string, unknown>,
-  idx: number,
 ): TaskRecord {
   const words = v["words"] as string[] | undefined;
   const sentences = v["sentences"] as string[] | undefined;
@@ -601,17 +592,21 @@ function buildTT4(
     ),
     options: {
       audio_text: audioText,
-      word_count: expectedAnswers.length,
+      word_count:
+        (v["word_count"] as number) ??
+        expectedAnswers.reduce(
+          (n, s) => n + (typeof s === "string" ? s.trim().split(/\s+/).length : 0),
+          0,
+        ),
       expected_answers: expectedAnswers,
       allow_partial: true,
     },
   };
 }
 
-function buildTT5(
+function buildMiniText(
   spec: TaskSpec,
   v: Record<string, unknown>,
-  idx: number,
 ): TaskRecord {
   const expectedAnswers = (v["expected_answers"] as string[]) ?? [];
   const audioText = (v["audio_text"] as string) || expectedAnswers.join(" ");
@@ -635,11 +630,12 @@ function buildTT5(
   };
 }
 
-function buildTT6FromSource(
+function buildSelfCheckFromSource(
   spec: TaskSpec,
   sourceItems: TaskRecord[],
+  max: number,
 ): TaskRecord[] {
-  return sourceItems.slice(0, 3).map((item, idx) => {
+  return sourceItems.slice(0, max).map((item) => {
     const opts = item["options"] as Record<string, unknown> | undefined;
     const incorrectText = (opts?.["incorrect_text"] as string) ?? "";
     const correctText =
@@ -664,92 +660,67 @@ function buildTT6FromSource(
   });
 }
 
-const BUILDER_TYPE: Record<string, string> = {
-  // Choice builders
-  TT_LISTEN_CHOOSE:     "TT1_CHOICE",
-  TT_IMAGE_WORD_MATCH:  "TT1_CHOICE",
-  TT_CHOOSE_CORRECT:    "TT1_CHOICE",
-  TT_SIMPLE_SUFFIX:     "TT1_CHOICE",
-  TT_WORD_FORM_CHOOSE:  "TT1_CHOICE",
-  TT_SUFFIX_CHOOSE:     "TT1_CHOICE",
-  TT_CONSONANT_CONFUSION: "TT1_CHOICE",
-  TT_LONG_VOWEL_CHALLENGE: "TT1_CHOICE",
-  TT_CASE_SUFFIX:       "TT1_CHOICE",
-  TT_MIXED_REVIEW:      "TT1_CHOICE",
-  TT_MIXED_WORD_SET:    "TT1_CHOICE",
-  TT_MIXED_CHECKPOINT:  "TT1_CHOICE",
-  // Fill builders
-  TT_LETTER_FILL:       "TT2_FILL",
-  TT_FILL_WRITE:        "TT2_FILL",
-  TT_MISSING_LETTER:    "TT2_FILL",
-  TT_WORD_ENDING:       "TT2_FILL",
-  TT_LONG_VOWEL_FILL:   "TT2_FILL",
-  TT_REDUCED_VOWEL:     "TT2_FILL",
-  TT_SUFFIX_WRITE:      "TT2_FILL",
-  TT_COMPOUND_SUFFIX:   "TT2_FILL",
-  TT_SENTENCE_FILL:             "TT2_FILL",
-  TT_LONG_VOWEL_IN_SENTENCE:    "TT2_FILL",
-  TT_REDUCED_VOWEL_IN_SENTENCE: "TT2_FILL",
-  // Correction builders
-  TT_COPY_WRITE:            "TT3_CORRECTION",
-  TT_CAPITAL_PUNCTUATION:   "TT3_CORRECTION",
-  TT_FIND_ERROR:            "TT3_CORRECTION",
-  TT_FIX_ERROR:             "TT3_CORRECTION",
-  TT_WORD_FORM_FIX:         "TT3_CORRECTION",
-  TT_FIND_OMITTED_LETTER:   "TT3_CORRECTION",
-  TT_SENTENCE_BOUNDARY:     "TT3_CORRECTION",
-  TT_BASIC_COMMA:           "TT3_CORRECTION",
-  TT_EXPLAINED_CORRECTION:  "TT3_CORRECTION",
-  // Dictation builders
-  TT_WORD_SET_DICTATION:        "TT4_DICTATION",
-  TT_TWO_WORD_DICTATION:        "TT4_DICTATION",
-  TT_SHORT_SENTENCE_DICTATION:  "TT4_DICTATION",
-  TT_TWO_SENTENCE_DICTATION:    "TT4_DICTATION",
-  // Mini-text
-  TT_MINI_TEXT_DICTATION: "TT5_MINI_TEXT",
-  // Self-check
-  TT_SELF_CHECK:             "TT6_SELF_CHECK",
-  TT_OWN_WRITING_CORRECTION: "TT6_SELF_CHECK",
-};
-
-function buildVariant(
-  spec: TaskSpec,
-  v: Record<string, unknown>,
-  idx: number,
-): TaskRecord {
-  const builderType = BUILDER_TYPE[spec.task_type] ?? spec.task_type;
-  switch (builderType) {
-    case "TT1_CHOICE":
-      return buildTT1(spec, v, idx);
-    case "TT2_FILL":
-      return buildTT2(spec, v, idx);
-    case "TT3_CORRECTION":
-      return buildTT3(spec, v, idx);
-    case "TT4_DICTATION":
-      return buildTT4(spec, v, idx);
-    case "TT5_MINI_TEXT":
-      return buildTT5(spec, v, idx);
+function buildVariant(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  switch (spec.options_shape) {
+    case "ChoiceOptions":
+      return buildChoice(spec, v);
+    case "FillOptions":
+      return buildFill(spec, v);
+    case "SentenceFillOptions":
+      return buildSentenceFill(spec, v);
+    case "CorrectionOptions":
+      return buildCorrection(spec, v);
+    case "DictationOptions":
+      return buildDictation(spec, v);
+    case "MiniTextOptions":
+      return buildMiniText(spec, v);
     default:
-      throw new Error(`No builder for task_type: ${spec.task_type}`);
+      throw new Error(`No builder for options_shape: ${spec.options_shape}`);
   }
 }
 
-// ─── Self-check builder ───────────────────────────────────────────────────────
+// ─── Self-check source loader ─────────────────────────────────────────────────
 
-function buildSelfCheck(spec: TaskSpec): TaskRecord[] | null {
-  const srcId = spec.self_check_source ?? "";
-  const srcPath = path.join(STAGE1_DIR, `${srcId}.json`);
+function loadSelfCheckSource(sourceShape: string): TaskRecord[] {
+  // Prefer validated/, fall back to stage2/, then stage1/
+  const dirs = [VALIDATED_DIR, STAGE2_DIR, STAGE1_DIR];
+  const correctionTypes = new Set([
+    "TT_COPY_WRITE",
+    "TT_CAPITAL_PUNCTUATION",
+    "TT_FIND_ERROR",
+    "TT_FIX_ERROR",
+    "TT_WORD_FORM_FIX",
+    "TT_FIND_OMITTED_LETTER",
+    "TT_SENTENCE_BOUNDARY",
+    "TT_BASIC_COMMA",
+    "TT_EXPLAINED_CORRECTION",
+  ]);
+  const isCorrection = (t: unknown) =>
+    typeof t === "string" && correctionTypes.has(t);
 
-  let items: TaskRecord[] | null = null;
-  if (fs.existsSync(srcPath)) {
-    const parsed = JSON.parse(fs.readFileSync(srcPath, "utf8")) as
-      | TaskRecord[]
-      | { variants: TaskRecord[] };
-    items = Array.isArray(parsed) ? parsed : parsed.variants;
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (!name.endsWith(".json")) continue;
+      if (name.startsWith("_")) continue;
+      try {
+        const parsed = JSON.parse(
+          fs.readFileSync(path.join(dir, name), "utf8"),
+        );
+        const items: TaskRecord[] = Array.isArray(parsed)
+          ? parsed
+          : ((parsed as { variants?: TaskRecord[] }).variants ?? []);
+        const matching =
+          sourceShape === "CorrectionOptions"
+            ? items.filter((it) => isCorrection(it["task_type"]))
+            : items;
+        if (matching.length > 0) return matching;
+      } catch {
+        /* skip */
+      }
+    }
   }
-
-  if (!items || items.length === 0) return null;
-  return buildTT6FromSource(spec, items);
+  return [];
 }
 
 // ─── Validators ───────────────────────────────────────────────────────────────
@@ -759,14 +730,14 @@ interface ValidationResult {
   reasons: string[];
 }
 
-function runValidators(task: TaskRecord): ValidationResult {
+function runValidators(task: TaskRecord, shape: string): ValidationResult {
   const reasons: string[] = [];
 
   const schemaResult = validateTask(task);
   if (!schemaResult.ok)
     reasons.push(...schemaResult.errors.map((e) => `schema: ${e}`));
 
-  if (BUILDER_TYPE[task["task_type"] as string] === "TT1_CHOICE") {
+  if (shape === "ChoiceOptions") {
     const distResult = validateDistractors(
       task as unknown as Parameters<typeof validateDistractors>[0],
     );
@@ -790,8 +761,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-// ─── User confirmation ────────────────────────────────────────────────────────
-
 function confirm(question: string): Promise<boolean> {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -806,6 +775,18 @@ function confirm(question: string): Promise<boolean> {
 }
 
 // ─── Reporting ────────────────────────────────────────────────────────────────
+
+interface UsageRecord {
+  task_id: string;
+  task_type: string;
+  calls: number;
+  variants_generated: number;
+  passed: number;
+  rejected: number;
+  tokens_in: number;
+  tokens_out: number;
+  cost_usd: number;
+}
 
 function saveUsage(
   records: UsageRecord[],
@@ -825,6 +806,7 @@ function saveUsage(
     failed_task_ids: failedIds,
     skipped_task_ids: skippedIds,
     generated_at: new Date().toISOString(),
+    records,
   };
   fs.mkdirSync(STAGE1_DIR, { recursive: true });
   fs.writeFileSync(USAGE_PATH, JSON.stringify(usage, null, 2));
@@ -832,11 +814,11 @@ function saveUsage(
 }
 
 function printReport(rows: UsageRecord[]) {
-  const W = 90;
+  const W = 96;
   console.log("\n" + "─".repeat(W));
   console.log(
-    "task_id".padEnd(14) +
-      "type".padEnd(8) +
+    "task_id".padEnd(12) +
+      "task_type".padEnd(28) +
       "calls".padStart(6) +
       "variants".padStart(10) +
       "passed".padStart(8) +
@@ -852,10 +834,9 @@ function printReport(rows: UsageRecord[]) {
     tIn = 0,
     tOut = 0;
   for (const r of rows) {
-    const specRow = TASK_SPECS.find((s) => s.id === r.task_id);
     console.log(
-      r.task_id.padEnd(14) +
-        (specRow?.task_type.replace("TT", "TT").slice(0, 7) ?? "").padEnd(8) +
+      r.task_id.padEnd(12) +
+        r.task_type.slice(0, 27).padEnd(28) +
         String(r.calls).padStart(6) +
         String(r.variants_generated).padStart(10) +
         String(r.passed).padStart(8) +
@@ -872,8 +853,8 @@ function printReport(rows: UsageRecord[]) {
 
   console.log("─".repeat(W));
   console.log(
-    "TOTAL".padEnd(14) +
-      "".padEnd(8) +
+    "TOTAL".padEnd(12) +
+      "".padEnd(28) +
       String(tCalls).padStart(6) +
       String(tVariants).padStart(10) +
       String(tPassed).padStart(8) +
@@ -882,47 +863,95 @@ function printReport(rows: UsageRecord[]) {
   );
   console.log("─".repeat(W));
   console.log(`\nEstimated cost: $${computeCost(tIn, tOut).toFixed(4)}`);
-  const fullPass = rows.filter((r) => r.passed >= 3).length;
-  console.log(`Task IDs with ≥3 passing variants: ${fullPass}/${rows.length}`);
+  const fullPass = rows.filter((r) => r.passed >= 1).length;
+  console.log(`Task types with ≥1 passing variant: ${fullPass}/${rows.length}`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Filter to only-id if specified
-  let specs = ONLY_ID
-    ? TASK_SPECS.filter((s) => s.id === ONLY_ID)
-    : [...TASK_SPECS];
+  const catalogue = loadCatalogue();
 
-  if (specs.length === 0) {
-    console.error(`ERROR: No task found with id "${ONLY_ID}"`);
+  // ── Resolve target task type defs ─────────────────────────────────────────
+  let defs: TaskTypeDef[];
+  if (IS_ALL) {
+    defs = catalogue.task_types;
+  } else if (TASK_TYPE_ARG) {
+    const found = catalogue.task_types.find(
+      (d) => d.task_type === TASK_TYPE_ARG,
+    );
+    if (!found) {
+      console.error(
+        `ERROR: --task-type "${TASK_TYPE_ARG}" not in task-types.json`,
+      );
+      console.error(
+        `Available: ${catalogue.task_types.map((d) => d.task_type).join(", ")}`,
+      );
+      process.exit(1);
+    }
+    defs = [found];
+  } else {
+    console.error("ERROR: pass --task-type <TT_...> or --all");
+    console.error("Example: --task-type TT_LETTER_FILL --count 5");
     process.exit(1);
   }
+
+  // ── Auto-assign IDs ───────────────────────────────────────────────────────
+  const taken = scanExistingIds();
+  const specs: TaskSpec[] = defs.map((def) => {
+    const band = pickBandForDef(def);
+    const [id] = nextIdsForBand(band, 1, taken);
+    return resolveSpec(def, id);
+  });
 
   const selfCheckSpecs = specs.filter((s) => s.self_check);
   const llmSpecs = specs.filter((s) => !s.self_check);
 
-  // Cost estimate (rough: 1500 input + 800 output tokens per call)
+  // Rough cost estimate: 1500 input + 800 output per call
   const estimatedCalls = llmSpecs.length;
   const estIn = estimatedCalls * 1500;
   const estOut = estimatedCalls * 800;
   const estCost = computeCost(estIn, estOut);
-  const hardCap = MAX_COST_ARG;
 
-  // ── Print generation plan ─────────────────────────────────────────────────
+  // ── Print plan ────────────────────────────────────────────────────────────
   console.log("\n=== GENERATION PLAN ===");
-  console.log(`Tasks:             ${specs.map((s) => s.id).join(", ")}`);
+  console.log(`Catalogue entries: ${catalogue.task_types.length}`);
+  console.log(`Selected:          ${defs.length} task type(s)`);
+  console.log(`Auto-assigned IDs: ${specs.map((s) => `${s.id}(${s.task_type})`).join(", ")}`);
   if (selfCheckSpecs.length > 0)
     console.log(
-      `Self-check (no API): ${selfCheckSpecs.map((s) => s.id).join(", ")}`,
+      `Self-check (no API): ${selfCheckSpecs.map((s) => s.task_type).join(", ")}`,
     );
-  console.log(
-    `API tasks:         ${llmSpecs.length} task ID(s) × ${MAX_ITEMS} variant(s) = ~${llmSpecs.length} call(s)`,
-  );
+  console.log(`Variants per type: ${COUNT}`);
+  console.log(`API calls (est):   ${llmSpecs.length}`);
   console.log(`Model:             ${MODEL} via OpenRouter`);
   console.log(`Estimated cost:    $${estCost.toFixed(4)}`);
-  console.log(`Hard cap:          $${hardCap.toFixed(2)}`);
+  console.log(`Hard cap:          $${MAX_COST_ARG.toFixed(2)}`);
+  if (SKILL_OVERRIDE || ERROR_OVERRIDE || LEVEL_OVERRIDE || GRADE_OVERRIDE)
+    console.log(
+      `Overrides:         ` +
+        [
+          SKILL_OVERRIDE && `skill=${SKILL_OVERRIDE}`,
+          ERROR_OVERRIDE && `error=${ERROR_OVERRIDE}`,
+          LEVEL_OVERRIDE && `level=${LEVEL_OVERRIDE}`,
+          GRADE_OVERRIDE && `grade=${GRADE_OVERRIDE}`,
+        ]
+          .filter(Boolean)
+          .join(", "),
+    );
+
   if (IS_DRY_RUN) {
+    // Print one fully-resolved prompt so the operator can sanity-check
+    const sample = llmSpecs[0] ?? specs[0];
+    if (sample) {
+      const allWords = loadSeedWords();
+      const seedWords = sampleSeedWords(allWords, sample, 12);
+      const fewShot = loadFewShotExamples(sample.task_type);
+      const seedList = formatSeedList(seedWords);
+      const fewShotBlock = formatFewShotBlock(fewShot);
+      console.log("\n=== SAMPLE PROMPT (" + sample.task_type + ") ===");
+      console.log(buildUserPrompt(sample, seedList, fewShotBlock, COUNT));
+    }
     console.log("\n[--dry-run] No API calls will be made. Exiting.");
     process.exit(0);
   }
@@ -937,7 +966,6 @@ async function main() {
   const apiKey = process.env["OPENROUTER_API_KEY"];
   if (!apiKey) {
     console.error("\nERROR: OPENROUTER_API_KEY not set in .env");
-    console.error("Please add: OPENROUTER_API_KEY=sk-or-... to your .env file");
     process.exit(1);
   }
 
@@ -962,16 +990,19 @@ async function main() {
   // ── Self-check tasks (no API call) ────────────────────────────────────────
   for (const spec of selfCheckSpecs) {
     console.log(
-      `\n[${spec.id}] Building ${spec.task_type} from ${spec.self_check_source}...`,
+      `\n[${spec.id}] Building ${spec.task_type} from existing ${spec.self_check_source_shape ?? "CorrectionOptions"} tasks...`,
     );
-    const built = buildSelfCheck(spec);
-    if (!built || built.length === 0) {
+    const sourceItems = loadSelfCheckSource(
+      spec.self_check_source_shape ?? "CorrectionOptions",
+    );
+    if (sourceItems.length === 0) {
       console.warn(
-        `  SKIP — source file "${spec.self_check_source}" not found in stage1/ or stage2/`,
+        `  SKIP — no source tasks of shape ${spec.self_check_source_shape ?? "CorrectionOptions"} in stage1/stage2/validated`,
       );
       skippedIds.push(spec.id);
       report.push({
         task_id: spec.id,
+        task_type: spec.task_type,
         calls: 0,
         variants_generated: 0,
         passed: 0,
@@ -983,13 +1014,13 @@ async function main() {
       continue;
     }
 
+    const built = buildSelfCheckFromSource(spec, sourceItems, COUNT);
     const passed: TaskRecord[] = [];
     const rejected: TaskRecord[] = [];
     for (const task of built) {
-      const result = runValidators(task);
-      if (result.ok) {
-        passed.push(task);
-      } else {
+      const result = runValidators(task, spec.options_shape);
+      if (result.ok) passed.push(task);
+      else {
         console.warn(`  REJECT ${task["id"]}: ${result.reasons.join("; ")}`);
         rejected.push({ ...task, _rejection_reasons: result.reasons });
       }
@@ -1000,7 +1031,7 @@ async function main() {
         path.join(STAGE1_DIR, `${spec.id}.json`),
         JSON.stringify(passed, null, 2),
       );
-      console.log(`  PASS ${passed.length}/3 → stage2/${spec.id}.json`);
+      console.log(`  PASS ${passed.length}/${built.length} → stage1/${spec.id}.json`);
     }
     if (rejected.length > 0) {
       fs.writeFileSync(
@@ -1011,6 +1042,7 @@ async function main() {
 
     report.push({
       task_id: spec.id,
+      task_type: spec.task_type,
       calls: 0,
       variants_generated: built.length,
       passed: passed.length,
@@ -1023,10 +1055,14 @@ async function main() {
 
   // ── LLM tasks ─────────────────────────────────────────────────────────────
   for (const spec of llmSpecs) {
-    console.log(`\n[${spec.id}] ${spec.task_type} — generating...`);
+    console.log(`\n[${spec.id}] ${spec.task_type} — generating ${COUNT} variant(s)...`);
 
     const seedWords = sampleSeedWords(allWords, spec, 12);
     const seedList = formatSeedList(seedWords);
+    const fewShot = loadFewShotExamples(spec.task_type);
+    if (fewShot.length > 0)
+      console.log(`  Using ${fewShot.length} few-shot example(s) from validated/`);
+    const fewShotBlock = formatFewShotBlock(fewShot);
 
     let parsed: unknown = null;
     let tokensIn = 0;
@@ -1040,7 +1076,7 @@ async function main() {
       }
 
       try {
-        const userPrompt = loadUserPrompt(spec.id, seedList);
+        const userPrompt = buildUserPrompt(spec, seedList, fewShotBlock, COUNT);
         const result = await callOpenRouter(client, userPrompt, attempt);
         tokensIn += result.tokensIn;
         tokensOut += result.tokensOut;
@@ -1049,9 +1085,9 @@ async function main() {
         const callCost = computeCost(result.tokensIn, result.tokensOut);
         runningCost += callCost;
 
-        if (runningCost >= hardCap) {
+        if (runningCost >= MAX_COST_ARG) {
           console.error(
-            `\n⚠ COST CAP: $${runningCost.toFixed(4)} ≥ $${hardCap}. Stopping.`,
+            `\n⚠ COST CAP: $${runningCost.toFixed(4)} ≥ $${MAX_COST_ARG}. Stopping.`,
           );
           saveUsage(report, failedIds, skippedIds);
           printReport(report);
@@ -1076,6 +1112,7 @@ async function main() {
     if (!parsed) {
       report.push({
         task_id: spec.id,
+        task_type: spec.task_type,
         calls,
         variants_generated: 0,
         passed: 0,
@@ -1087,7 +1124,6 @@ async function main() {
       continue;
     }
 
-    // Extract variants array from parsed response
     let rawVariants: unknown[] = [];
     if (Array.isArray(parsed)) {
       rawVariants = parsed;
@@ -1097,9 +1133,7 @@ async function main() {
       if (key) rawVariants = p[key] as unknown[];
     }
 
-    // Respect --max-items
-    if (rawVariants.length > MAX_ITEMS)
-      rawVariants = rawVariants.slice(0, MAX_ITEMS);
+    if (rawVariants.length > COUNT) rawVariants = rawVariants.slice(0, COUNT);
 
     console.log(`  Received ${rawVariants.length} raw variant(s)`);
 
@@ -1109,7 +1143,7 @@ async function main() {
     for (let i = 0; i < rawVariants.length; i++) {
       let task: TaskRecord;
       try {
-        task = buildVariant(spec, rawVariants[i] as Record<string, unknown>, i);
+        task = buildVariant(spec, rawVariants[i] as Record<string, unknown>);
       } catch (err) {
         console.warn(`  v${i + 1} build error: ${(err as Error).message}`);
         rejected.push({
@@ -1119,7 +1153,7 @@ async function main() {
         continue;
       }
 
-      const vResult = runValidators(task);
+      const vResult = runValidators(task, spec.options_shape);
       if (vResult.ok) {
         passed.push(task);
         console.log(`  v${i + 1} PASS`);
@@ -1142,7 +1176,7 @@ async function main() {
         JSON.stringify(passed, null, 2),
       );
       console.log(
-        `  ${passed.length}/${rawVariants.length} passed → stage2/${spec.id}.json`,
+        `  ${passed.length}/${rawVariants.length} passed → stage1/${spec.id}.json`,
       );
     }
     if (rejected.length > 0) {
@@ -1154,6 +1188,7 @@ async function main() {
 
     report.push({
       task_id: spec.id,
+      task_type: spec.task_type,
       calls,
       variants_generated: rawVariants.length,
       passed: passed.length,

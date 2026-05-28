@@ -17,6 +17,8 @@ import {
   SkillCode,
   LessonSlot,
 } from '../../generated/prisma';
+import { generateForSpec, TASK_SPECS, AVAILABLE_TASK_IDS } from '../lib/pipeline/generator';
+import { reviewTaskDraft } from '../lib/pipeline/aiReviewer';
 
 const content = new Hono();
 content.use('/*', withAdmin);
@@ -211,6 +213,15 @@ content.get('/tasks/:task_id', async (c) => {
   const stageKey = c.req.query('stage') ?? 'stage2';
   const stage    = STAGE_ENUM[stageKey];
   if (!stage) return ERRORS.VALIDATION_ERROR(c, 'Invalid stage');
+
+  // UUID: look up specific draft by primary key, stage filter not applied
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task_id);
+  if (isUUID) {
+    const draft = await prisma.taskDraft.findUnique({ where: { id: task_id } });
+    if (!draft) return ERRORS.NOT_FOUND(c, `Variant ${task_id} not found`);
+    const actualStage = Object.entries(STAGE_ENUM).find(([, v]) => v === draft.stage)?.[0] ?? stageKey;
+    return ok(c, { task_id: draft.task_id, stage: actualStage, variant_count: 1, variants: [draft] });
+  }
 
   const variants = await prisma.taskDraft.findMany({
     where: { task_id, stage },
@@ -725,6 +736,137 @@ content.post('/accept-audio', async (c) => {
   }
 
   return ok(c, { action: 'audio_accepted', task_id, variant_id, slot, [field]: audioUrl });
+});
+
+// ─── GET /api/admin/content/generate/specs ───────────────────────────────────
+
+content.get('/generate/specs', (c) => {
+  const specs = TASK_SPECS
+    .filter((s) => !s.self_check && AVAILABLE_TASK_IDS.includes(s.id))
+    .map(({ id, task_type, mongolian_name, grade_band, primary_skill, difficulty, estimated_time_seconds, lesson_slot_fit }) => ({
+      id, task_type, mongolian_name, grade_band, primary_skill, difficulty, estimated_time_seconds, lesson_slot_fit,
+    }));
+  return ok(c, { task_ids: AVAILABLE_TASK_IDS, specs });
+});
+
+// ─── POST /api/admin/content/generate ────────────────────────────────────────
+
+const generateSchema = z.object({
+  task_ids:  z.array(z.string().min(1)).min(1),
+  max_items: z.number().int().min(1).max(10).default(3),
+  max_cost:  z.number().positive().max(50).default(5),
+});
+
+content.post('/generate', async (c) => {
+  const apiKey = env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return c.json({ success: false, error: 'OPENROUTER_API_KEY not configured on server' }, 503 as const);
+  }
+
+  const body   = await c.req.json().catch(() => null);
+  const parsed = generateSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const { task_ids, max_items, max_cost } = parsed.data;
+
+  // Reject unknown or unavailable task IDs upfront
+  const unknown = task_ids.filter((id) => !AVAILABLE_TASK_IDS.includes(id));
+  if (unknown.length) {
+    return ERRORS.VALIDATION_ERROR(c, `Unknown or unavailable task IDs: ${unknown.join(', ')}. Available: ${AVAILABLE_TASK_IDS.join(', ')}`);
+  }
+
+  const runningCost = { value: 0 };
+  const results: Array<{
+    task_id: string;
+    passed: number;
+    rejected: number;
+    drafts_created: number;
+    ai_blocked: number;
+    cost_usd: number;
+  }> = [];
+
+  for (const task_id of task_ids) {
+    const spec = TASK_SPECS.find((s) => s.id === task_id);
+    if (!spec) continue;
+
+    const costBefore = runningCost.value;
+    const result = await generateForSpec(spec, { apiKey, maxItems: max_items, maxCost: max_cost, runningCost });
+    const cost_usd = runningCost.value - costBefore;
+
+    let drafts_created = 0;
+    let ai_blocked = 0;
+
+    for (const variant of result.passed) {
+      const variantId = variant['id'] as string;
+      const draftData = {
+        task_type:              toTaskType(variant['task_type'] as string),
+        title:                  (variant['title'] as string) ?? '',
+        prompt_text:            (variant['prompt_text'] as string) ?? '',
+        correct_answer:         (variant['correct_answer'] as string) ?? '',
+        options:                (variant['options'] as object) ?? {},
+        audio_url:              (variant['audio_url'] as string | null) ?? null,
+        image_url:              (variant['image_url'] as string | null) ?? null,
+        primary_skill:          toSkill(variant['primary_skill'] as string) as SkillCode,
+        secondary_skill:        toSkill(variant['secondary_skill'] as string | null),
+        level_target:           (variant['level_target'] as string) ?? '',
+        error_targets:          (variant['error_targets'] as string[]) ?? [],
+        grade_band:             (variant['grade_band'] as string[]) ?? [],
+        difficulty:             (variant['difficulty'] as number) ?? 1,
+        estimated_time_seconds: (variant['estimated_time_seconds'] as number) ?? 30,
+        review_after_days:      (variant['review_after_days'] as number[]) ?? [1, 3, 7],
+        lesson_slot_fit:        toSlot(variant['lesson_slot_fit'] as string),
+        feedback_text:          (variant['feedback_text'] as string) ?? '',
+      };
+
+      // Run AI review before deciding final stage
+      const review = await reviewTaskDraft(
+        {
+          task_type:      draftData.task_type,
+          grade_band:     draftData.grade_band,
+          difficulty:     draftData.difficulty,
+          error_targets:  draftData.error_targets,
+          prompt_text:    draftData.prompt_text,
+          correct_answer: draftData.correct_answer,
+          options:        draftData.options,
+          feedback_text:  draftData.feedback_text,
+        },
+        apiKey,
+      );
+
+      // Blockers go to STAGE1 (hidden from review queue until manually promoted)
+      const stage = review.severity === 'blocker' ? DraftStage.STAGE1 : DraftStage.STAGE2;
+      if (review.severity === 'blocker') ai_blocked++;
+
+      await prisma.taskDraft.upsert({
+        where:  { id: variantId },
+        create: {
+          id: variantId,
+          task_id,
+          stage,
+          ...draftData,
+          ai_review_severity: review.severity,
+          ai_review_issues:   review.issues,
+          ai_fix_suggestion:  review.fix_suggestion,
+          ai_reviewed_at:     new Date(),
+        },
+        update: {
+          stage,
+          ...draftData,
+          ai_review_severity: review.severity,
+          ai_review_issues:   review.issues,
+          ai_fix_suggestion:  review.fix_suggestion,
+          ai_reviewed_at:     new Date(),
+        },
+      });
+      drafts_created++;
+    }
+
+    results.push({ task_id, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });
+  }
+
+  return ok(c, { results, total_cost_usd: runningCost.value });
 });
 
 export default content;

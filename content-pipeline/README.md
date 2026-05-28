@@ -95,17 +95,66 @@ content-pipeline/
 
 ### `schemas/task.schema.json`
 
-JSON Schema covering all six task types (`TT1_CHOICE` through `TT6_SELF_CHECK`).
-The `options` field is a discriminated union — each task type has its own shape:
+JSON Schema covering all 39 task types (`TT_` prefix). There are 16 G12 types (Grades 1–2) and 23 G24 types (Grades 2–4). The `options` field shape depends on the task type — 7 distinct shapes are defined:
 
-| Task type | Description | Key `options` fields |
+| Options shape | Key fields | Task types |
 |---|---|---|
-| `TT1_CHOICE` | Pick the correct word/spelling | `choices[]`, `audio_trigger` |
-| `TT2_FILL` | Fill in the missing character(s) | `display_text`, `blank_position`, `blank_answer`, `context_word` |
-| `TT3_CORRECTION` | Find and fix the error | `incorrect_text`, `correct_text`, `error_type`, `hint` |
-| `TT4_DICTATION` | Listen and transcribe words | `audio_text`, `word_count`, `expected_answers`, `allow_partial` |
-| `TT5_MINI_TEXT` | Listen and transcribe a short passage | `audio_text`, `sentence_count`, `expected_answers` |
-| `TT6_SELF_CHECK` | Compare own answer to model answer | `original_attempt`, `model_answer`, `comparison_mode` |
+| `ChoiceOptions` | `choices[]`, `audio_trigger` | TT_LISTEN_CHOOSE, TT_IMAGE_WORD_MATCH, TT_CHOOSE_CORRECT, TT_SIMPLE_SUFFIX, TT_WORD_FORM_CHOOSE, TT_SUFFIX_CHOOSE, TT_CONSONANT_CONFUSION, TT_LONG_VOWEL_CHALLENGE, TT_CASE_SUFFIX, TT_MIXED_REVIEW, TT_MIXED_WORD_SET, TT_MIXED_CHECKPOINT |
+| `FillOptions` | `display_text`, `blank_position`, `blank_answer`, `context_word` | TT_LETTER_FILL, TT_FILL_WRITE, TT_MISSING_LETTER, TT_WORD_ENDING, TT_LONG_VOWEL_FILL, TT_REDUCED_VOWEL, TT_SUFFIX_WRITE, TT_COMPOUND_SUFFIX |
+| `SentenceFillOptions` | `sentence_template`, `blank_answer`, `context_sentence`, `hint?` | TT_SENTENCE_FILL, TT_LONG_VOWEL_IN_SENTENCE, TT_REDUCED_VOWEL_IN_SENTENCE |
+| `CorrectionOptions` | `incorrect_text`, `correct_text`, `error_type`, `hint`, `explanation?` | TT_COPY_WRITE, TT_CAPITAL_PUNCTUATION, TT_FIND_ERROR, TT_FIX_ERROR, TT_WORD_FORM_FIX, TT_FIND_OMITTED_LETTER, TT_SENTENCE_BOUNDARY, TT_BASIC_COMMA, TT_EXPLAINED_CORRECTION |
+| `DictationOptions` | `audio_text`, `word_count`, `expected_answers`, `allow_partial` | TT_WORD_SET_DICTATION, TT_TWO_WORD_DICTATION, TT_SHORT_SENTENCE_DICTATION, TT_TWO_SENTENCE_DICTATION |
+| `MiniTextOptions` | `audio_text`, `sentence_count`, `expected_answers` | TT_MINI_TEXT_DICTATION |
+| `SelfCheckOptions` | `original_attempt`, `model_answer`, `comparison_mode` | TT_SELF_CHECK, TT_OWN_WRITING_CORRECTION |
+
+#### G12 task types (Grades 1–2)
+
+| Task type | Mongolian name | Options shape |
+|---|---|---|
+| `TT_LISTEN_CHOOSE` | Сонсож сонгох | ChoiceOptions (`audio_trigger: true`) |
+| `TT_LETTER_FILL` | Үсэг нөхөх | FillOptions |
+| `TT_IMAGE_WORD_MATCH` | Зураг-үг тааруулах | ChoiceOptions (`audio_trigger: false`) |
+| `TT_COPY_WRITE` | Хуулж бичих | CorrectionOptions |
+| `TT_CHOOSE_CORRECT` | Зөвийг сонгох | ChoiceOptions |
+| `TT_FILL_WRITE` | Нөхөж бичих | FillOptions |
+| `TT_MISSING_LETTER` | Дутуу үсэг | FillOptions |
+| `TT_WORD_SET_DICTATION` | Үгийн багц диктант | DictationOptions |
+| `TT_CAPITAL_PUNCTUATION` | Том үсэг, цэг | CorrectionOptions |
+| `TT_SIMPLE_SUFFIX` | Энгийн залгавар | ChoiceOptions |
+| `TT_FIND_ERROR` | Алдаа олох | CorrectionOptions |
+| `TT_SELF_CHECK` | Өөрийгөө шалгах | SelfCheckOptions |
+| `TT_TWO_WORD_DICTATION` | 2 үгийн диктант | DictationOptions |
+| `TT_WORD_ENDING` | Үгийн төгсгөл | FillOptions |
+| `TT_SENTENCE_FILL` | Өгүүлбэр нөхөх | SentenceFillOptions |
+| `TT_MIXED_REVIEW` | Холимог давталт | ChoiceOptions |
+
+#### G24 task types (Grades 2–4)
+
+| Task type | Mongolian name | Options shape |
+|---|---|---|
+| `TT_WORD_FORM_CHOOSE` | Үгийн зөв хэлбэр сонгох | ChoiceOptions |
+| `TT_LONG_VOWEL_FILL` | Урт эгшиг нөхөх | FillOptions |
+| `TT_REDUCED_VOWEL` | Балархай эгшиг | FillOptions |
+| `TT_SUFFIX_CHOOSE` | Залгавар сонгох | ChoiceOptions |
+| `TT_SHORT_SENTENCE_DICTATION` | Богино өгүүлбэрийн диктант | DictationOptions |
+| `TT_FIX_ERROR` | Алдаа засах | CorrectionOptions |
+| `TT_CONSONANT_CONFUSION` | Гийгүүлэгч андуурал | ChoiceOptions |
+| `TT_WORD_FORM_FIX` | Үгийн хэлбэр засах | CorrectionOptions |
+| `TT_LONG_VOWEL_IN_SENTENCE` | Урт эгшиг өгүүлбэрт | SentenceFillOptions |
+| `TT_REDUCED_VOWEL_IN_SENTENCE` | Балархай эгшиг өгүүлбэрт | SentenceFillOptions |
+| `TT_CASE_SUFFIX` | Тийн ялгал | ChoiceOptions |
+| `TT_BASIC_COMMA` | Таслалын анхан хэрэглээ | CorrectionOptions |
+| `TT_TWO_SENTENCE_DICTATION` | 2 өгүүлбэрийн диктант | DictationOptions |
+| `TT_FIND_OMITTED_LETTER` | Үсэг орхигдол олох | CorrectionOptions |
+| `TT_MIXED_WORD_SET` | Холимог үгийн багц | ChoiceOptions |
+| `TT_SUFFIX_WRITE` | Залгавар бичлэг | FillOptions |
+| `TT_SENTENCE_BOUNDARY` | Өгүүлбэрийн хил зааг | CorrectionOptions |
+| `TT_MINI_TEXT_DICTATION` | Мини эхийн диктант | MiniTextOptions |
+| `TT_OWN_WRITING_CORRECTION` | Өөрийн бичвэр засвар | SelfCheckOptions |
+| `TT_LONG_VOWEL_CHALLENGE` | Урт эгшиг challenge | ChoiceOptions |
+| `TT_COMPOUND_SUFFIX` | Нийлмэл залгавар | FillOptions |
+| `TT_MIXED_CHECKPOINT` | Холимог checkpoint | ChoiceOptions |
+| `TT_EXPLAINED_CORRECTION` | Тайлбартай засвар | CorrectionOptions (+ `explanation`) |
 
 ### `schemas/error-codes.md`
 
