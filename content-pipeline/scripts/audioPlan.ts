@@ -79,8 +79,9 @@ function buildQueue(tasks: TaskFile[]): QueueRow[] {
     for (const v of task.variants) {
       const vSuffix = variantSuffix(v.id);
 
-      // Dictation slot: TT4, TT5, TT1 with audio_trigger=true
-      if (v.task_type === "TT4_DICTATION") {
+      // Dictation slot: dictation types, mini-text, and listen-choose
+      const DICTATION_TYPES = new Set(["TT_WORD_SET_DICTATION","TT_TWO_WORD_DICTATION","TT_SHORT_SENTENCE_DICTATION","TT_TWO_SENTENCE_DICTATION"]);
+      if (DICTATION_TYPES.has(v.task_type)) {
         const opts = v.options as { audio_text: string };
         rows.push({
           task_id: task.task_id,
@@ -92,7 +93,7 @@ function buildQueue(tasks: TaskFile[]): QueueRow[] {
           filename: `dict_${task.task_id}-${vSuffix}.wav`,
           type: v.task_type,
         });
-      } else if (v.task_type === "TT5_MINI_TEXT") {
+      } else if (v.task_type === "TT_MINI_TEXT_DICTATION") {
         const opts = v.options as { audio_text: string };
         rows.push({
           task_id: task.task_id,
@@ -104,7 +105,7 @@ function buildQueue(tasks: TaskFile[]): QueueRow[] {
           filename: `dict_${task.task_id}-${vSuffix}.wav`,
           type: v.task_type,
         });
-      } else if (v.task_type === "TT1_CHOICE") {
+      } else if (v.task_type === "TT_LISTEN_CHOOSE") {
         const opts = v.options as { audio_trigger: boolean };
         if (opts.audio_trigger) {
           rows.push({

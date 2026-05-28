@@ -6,6 +6,7 @@
 
 import * as fs   from 'fs';
 import * as path from 'path';
+import { randomUUID } from 'crypto';
 
 import { validateTask }        from './validators/schemaValidator';
 import { validateDistractors } from './validators/distractor';
@@ -131,8 +132,8 @@ function runValidators(task: TaskRecord): string[] {
     }
   }
 
-  // 3. Distractor (TT1_CHOICE only)
-  if (task.task_type === 'TT1_CHOICE') {
+  // 3. Distractor (choice tasks only)
+  if ((task.options as Record<string, unknown>)?.choices) {
     const dv = validateDistractors(task as any);
     if (!dv.ok) reasons.push(...dv.reasons.map(r => `distractor: ${r}`));
   }
@@ -142,7 +143,7 @@ function runValidators(task: TaskRecord): string[] {
 
 // ─── Candidate generators (one per task-ID template) ─────────────────────
 
-// G12-001: TT1_CHOICE, S1 skill, audio_trigger=true, 2 programmatic distractors
+// G12-001: TT_LISTEN_CHOOSE, S1 skill, audio_trigger=true, 2 programmatic distractors
 function genG12001(): TaskRecord[] {
   return words
     .filter(w => w.skills.includes('S1'))
@@ -150,7 +151,7 @@ function genG12001(): TaskRecord[] {
       const { texts, codes } = makeDistractors(w.correct_spelling);
       if (texts.length < 2) return [];
       return [base(
-        '', 'TT1_CHOICE',
+        '', 'TT_LISTEN_CHOOSE',
         'Сонсоод зөв үгийг олоорой',
         'Аудио сонсоод зөв үгийг сонгоорой.',
         w.correct_spelling,
@@ -167,7 +168,7 @@ function genG12001(): TaskRecord[] {
     });
 }
 
-// G12-002: TT2_FILL, S1 skill, blank from blank_template
+// G12-002: TT_LETTER_FILL, S1 skill, blank from blank_template
 function genG12002(): TaskRecord[] {
   return words
     .filter(w => w.skills.includes('S1') && w.blank_template.includes('_'))
@@ -175,7 +176,7 @@ function genG12002(): TaskRecord[] {
       const idx = w.blank_template.indexOf('_');
       if (idx < 0 || idx >= w.correct_spelling.length) return [];
       return [base(
-        '', 'TT2_FILL',
+        '', 'TT_LETTER_FILL',
         'Дутуу үсгийг нөхөөрэй',
         'Дутуу үсгийг нөхөж бичээрэй.',
         w.correct_spelling,
@@ -191,7 +192,7 @@ function genG12002(): TaskRecord[] {
     });
 }
 
-// G12-003: TT1_CHOICE, S2 primary, image_ok=true, audio_trigger=false
+// G12-003: TT_IMAGE_WORD_MATCH, S2 primary, image_ok=true, audio_trigger=false
 function genG12003(): TaskRecord[] {
   return words
     .filter(w => w.image_ok && w.skills[0] === 'S2')
@@ -199,7 +200,7 @@ function genG12003(): TaskRecord[] {
       const { texts, codes } = makeDistractors(w.correct_spelling);
       if (texts.length < 2) return [];
       return [base(
-        '', 'TT1_CHOICE',
+        '', 'TT_IMAGE_WORD_MATCH',
         'Зурагт тохирох үгийг сонгоорой',
         'Зургийг харж тохирох үгийг сонгоорой.',
         w.correct_spelling,
@@ -216,7 +217,7 @@ function genG12003(): TaskRecord[] {
     });
 }
 
-// G12-004: TT2_FILL, S2 primary, sentence shown in prompt (copy-write)
+// G12-004: TT_COPY_WRITE, S2 primary, sentence shown in prompt (copy-write)
 function genG12004(): TaskRecord[] {
   return words
     .filter(w => w.skills[0] === 'S2' && w.sentence && w.blank_template.includes('_'))
@@ -224,7 +225,7 @@ function genG12004(): TaskRecord[] {
       const idx = w.blank_template.indexOf('_');
       if (idx < 0 || idx >= w.correct_spelling.length) return [];
       return [base(
-        '', 'TT2_FILL',
+        '', 'TT_COPY_WRITE',
         'Үгийг хуулж бичээрэй',
         `"${w.sentence}" — дутуу үсгийг нөхөж бичээрэй.`,
         w.correct_spelling,
@@ -240,7 +241,7 @@ function genG12004(): TaskRecord[] {
     });
 }
 
-// G12-005: TT1_CHOICE, S3 skill, choices = [correct, C1-derived, C2-derived]
+// G12-005: TT_CHOOSE_CORRECT, S3 skill, choices = [correct, C1-derived, C2-derived]
 // Only words where BOTH C1 and C2 return non-null and distinct values.
 function genG12005(): TaskRecord[] {
   return words
@@ -252,7 +253,7 @@ function genG12005(): TaskRecord[] {
       if (c1 === w.correct_spelling || c2 === w.correct_spelling) return [];
       if (c1 === c2) return [];
       return [base(
-        '', 'TT1_CHOICE',
+        '', 'TT_CHOOSE_CORRECT',
         'Зөв үгийг сонгоорой',
         'Урт болон богино эгшгийг анхаарч зөв хэлбэрийг сонгоорой.',
         w.correct_spelling,
@@ -270,7 +271,7 @@ function genG12005(): TaskRecord[] {
     });
 }
 
-// G12-006: TT2_FILL, S3 skill, blank placed at first long-vowel character
+// G12-006: TT_FILL_WRITE, S3 skill, blank placed at first long-vowel character
 function genG12006(): TaskRecord[] {
   return words
     .filter(w => w.skills.includes('S3'))
@@ -280,7 +281,7 @@ function genG12006(): TaskRecord[] {
       const display = w.correct_spelling.slice(0, idx) + '_'
                     + w.correct_spelling.slice(idx + 1);
       return [base(
-        '', 'TT2_FILL',
+        '', 'TT_FILL_WRITE',
         'Урт эгшгийг нөхөөрэй',
         'Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.',
         w.correct_spelling,
@@ -296,7 +297,7 @@ function genG12006(): TaskRecord[] {
     });
 }
 
-// G12-007: TT2_FILL, S4 skill, from confusing-words M0+M1, missing-vowel hint
+// G12-007: TT_MISSING_LETTER, S4 skill, from confusing-words M0+M1, missing-vowel hint
 function genG12007(): TaskRecord[] {
   const entries: ConfusingEntry[] = [
     ...(confusing['M0'] ?? []),
@@ -308,7 +309,7 @@ function genG12007(): TaskRecord[] {
     const answer  = e.correct[pos];
     const display = e.correct.slice(0, pos) + '_' + e.correct.slice(pos + 1);
     return [base(
-      '', 'TT2_FILL',
+      '', 'TT_MISSING_LETTER',
       'Балархай эгшгийг нөхөөрэй',
       'Дутуу балархай эгшгийг нөхөж бичээрэй.',
       e.correct,
@@ -324,7 +325,7 @@ function genG12007(): TaskRecord[] {
   });
 }
 
-// G12-011: TT3_CORRECTION, S8 skill, incorrect = applyErrorRule(word, first MVP code)
+// G12-011: TT_FIND_ERROR, S8 skill, incorrect = applyErrorRule(word, first MVP code)
 function genG12011(): TaskRecord[] {
   const mvpSet = new Set<string>(MVP_CODES);
   return words.flatMap(w => {
@@ -333,7 +334,7 @@ function genG12011(): TaskRecord[] {
     const incorrect = applyErrorRule(w.correct_spelling, code);
     if (!incorrect || incorrect === w.correct_spelling) return [];
     return [base(
-      '', 'TT3_CORRECTION',
+      '', 'TT_FIND_ERROR',
       'Алдааг засаарай',
       'Дараах үгэнд алдаа байна. Зөв засаарай.',
       w.correct_spelling,
@@ -349,7 +350,7 @@ function genG12011(): TaskRecord[] {
   });
 }
 
-// G12-013: TT4_DICTATION, pair 2 seeds sharing the same primary skill
+// G12-013: TT_TWO_WORD_DICTATION, pair 2 seeds sharing the same primary skill
 function genG12013(): TaskRecord[] {
   const bySkill = new Map<string, SeedWord[]>();
   for (const w of words) {
@@ -362,7 +363,7 @@ function genG12013(): TaskRecord[] {
     for (let i = 0; i + 1 < group.length; i += 2) {
       const w1 = group[i], w2 = group[i + 1];
       results.push(base(
-        '', 'TT4_DICTATION',
+        '', 'TT_TWO_WORD_DICTATION',
         '2 үгийн диктант',
         'Аудио сонсоод хоёр үгийг нэг нэгээр нь бичээрэй.',
         `${w1.correct_spelling};${w2.correct_spelling}`,
@@ -380,7 +381,7 @@ function genG12013(): TaskRecord[] {
   return results;
 }
 
-// G12-014: TT2_FILL, blank at FINAL character of word
+// G12-014: TT_WORD_ENDING, blank at FINAL character of word
 function genG12014(): TaskRecord[] {
   return words
     .filter(w => {
@@ -392,7 +393,7 @@ function genG12014(): TaskRecord[] {
     .flatMap(w => {
       const idx = w.blank_template.indexOf('_');
       return [base(
-        '', 'TT2_FILL',
+        '', 'TT_WORD_ENDING',
         'Сүүлийн үсгийг нөхөөрэй',
         'Үгийн сүүлийн үсгийг нөхөж бичээрэй.',
         w.correct_spelling,
@@ -443,14 +444,14 @@ for (const taskId of TASK_IDS) {
 
     if (reasons.length === 0 && passCount < TARGET) {
       passCount++;
-      const versioned = { ...cand, id: `${taskId}-v${passCount}` };
+      const versioned = { ...cand, id: randomUUID() };
       passingVariants.push(versioned);
       allPassing.push(versioned);
     } else {
       rejCount++;
       const versionedRej = {
         ...cand,
-        id: `${taskId}-rejected-${rejCount}`,
+        id: randomUUID(),
         rejection_reasons: reasons.length ? reasons : ['excess variant — already have 3 passing'],
       };
       fs.writeFileSync(

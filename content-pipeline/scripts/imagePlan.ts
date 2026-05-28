@@ -130,20 +130,22 @@ function main() {
   fs.mkdirSync(IMAGES_DIR, { recursive: true });
   fs.mkdirSync(path.join(IMAGES_DIR, "generated"), { recursive: true });
 
+  const CHOICE_TYPES = new Set(["TT_LISTEN_CHOOSE","TT_IMAGE_WORD_MATCH","TT_CHOOSE_CORRECT","TT_SIMPLE_SUFFIX","TT_WORD_FORM_CHOOSE","TT_SUFFIX_CHOOSE","TT_CONSONANT_CONFUSION","TT_LONG_VOWEL_CHALLENGE","TT_CASE_SUFFIX","TT_MIXED_REVIEW","TT_MIXED_WORD_SET","TT_MIXED_CHECKPOINT"]);
+  const FILL_TYPES   = new Set(["TT_LETTER_FILL","TT_FILL_WRITE","TT_MISSING_LETTER","TT_WORD_ENDING","TT_LONG_VOWEL_FILL","TT_REDUCED_VOWEL","TT_SUFFIX_WRITE","TT_COMPOUND_SUFFIX","TT_SENTENCE_FILL","TT_LONG_VOWEL_IN_SENTENCE","TT_REDUCED_VOWEL_IN_SENTENCE"]);
   const seedWords = loadSeedWords();
   const tasks = loadTasks(sourceDir);
   const rows: QueueRow[] = [];
 
   for (const task of tasks) {
     for (const v of task.variants) {
-      if (v.task_type !== "TT1_CHOICE" && v.task_type !== "TT2_FILL") continue;
+      if (!CHOICE_TYPES.has(v.task_type) && !FILL_TYPES.has(v.task_type)) continue;
 
       const vSuffix = variantSuffix(v.id);
       let word = "";
 
-      if (v.task_type === "TT1_CHOICE") {
+      if (CHOICE_TYPES.has(v.task_type)) {
         word = v.correct_answer;
-      } else if (v.task_type === "TT2_FILL") {
+      } else if (FILL_TYPES.has(v.task_type)) {
         // context_word is often an inflected/verb form (e.g. "бэлчинэ", "ажилдаа").
         // Only generate an image when the word has an explicit seed entry with image_ok=true.
         // Fallback (auto-prompt) is skipped for TT2_FILL — abstract words produce bad images.
@@ -157,7 +159,7 @@ function main() {
 
       // Skip TT2_FILL words that only have a fallback prompt — they are typically
       // verbs, adjectives, or inflected forms that cannot be meaningfully illustrated.
-      if (v.task_type === "TT2_FILL" && resolved.source === "fallback") continue;
+      if (FILL_TYPES.has(v.task_type) && resolved.source === "fallback") continue;
 
       rows.push({
         task_id: task.task_id,
@@ -177,8 +179,8 @@ function main() {
   const csvPath = path.join(IMAGES_DIR, "image-queue.csv");
   fs.writeFileSync(csvPath, csv, "utf8");
 
-  const tt1 = rows.filter((r) => r.type === "TT1_CHOICE").length;
-  const tt2 = rows.filter((r) => r.type === "TT2_FILL").length;
+  const tt1 = rows.filter((r) => CHOICE_TYPES.has(r.type)).length;
+  const tt2 = rows.filter((r) => FILL_TYPES.has(r.type)).length;
   const fromSeed = rows.filter((r) => r.prompt_source === "seed").length;
   const fromFallback = rows.filter((r) => r.prompt_source === "fallback").length;
 
@@ -186,8 +188,8 @@ function main() {
   console.log(`================`);
   console.log(`Source:          ${sourceDir}`);
   console.log(`Total images:    ${rows.length}`);
-  console.log(`  TT1_CHOICE:    ${tt1}`);
-  console.log(`  TT2_FILL:      ${tt2}`);
+  console.log(`  Choice types:  ${tt1}`);
+  console.log(`  Fill types:    ${tt2}`);
   console.log(`Prompt source:   ${fromSeed} from seed-words, ${fromFallback} fallback`);
   console.log(`Model:           dall-e-3 (OpenAI) — $0.04/image`);
   console.log(`\nOutput: ${csvPath}`);

@@ -20,7 +20,7 @@ const SkillCode = z.enum(SkillCodeEnum);
 
 const TaskBaseSchema = z.object({
   id:                      z.string().min(1),
-  task_type:               z.enum(['TT1_CHOICE','TT2_FILL','TT3_CORRECTION','TT4_DICTATION','TT5_MINI_TEXT','TT6_SELF_CHECK']),
+  task_type:               z.enum(['TT_LISTEN_CHOOSE','TT_IMAGE_WORD_MATCH','TT_CHOOSE_CORRECT','TT_SIMPLE_SUFFIX','TT_WORD_FORM_CHOOSE','TT_SUFFIX_CHOOSE','TT_CONSONANT_CONFUSION','TT_LONG_VOWEL_CHALLENGE','TT_CASE_SUFFIX','TT_MIXED_REVIEW','TT_MIXED_WORD_SET','TT_MIXED_CHECKPOINT','TT_LETTER_FILL','TT_COPY_WRITE','TT_FILL_WRITE','TT_MISSING_LETTER','TT_WORD_ENDING','TT_LONG_VOWEL_FILL','TT_REDUCED_VOWEL','TT_SUFFIX_WRITE','TT_SENTENCE_FILL','TT_LONG_VOWEL_IN_SENTENCE','TT_REDUCED_VOWEL_IN_SENTENCE','TT_CAPITAL_PUNCTUATION','TT_FIND_ERROR','TT_FIX_ERROR','TT_WORD_FORM_FIX','TT_FIND_OMITTED_LETTER','TT_SENTENCE_BOUNDARY','TT_BASIC_COMMA','TT_EXPLAINED_CORRECTION','TT_WORD_SET_DICTATION','TT_TWO_WORD_DICTATION','TT_SHORT_SENTENCE_DICTATION','TT_TWO_SENTENCE_DICTATION','TT_MINI_TEXT_DICTATION','TT_SELF_CHECK','TT_OWN_WRITING_CORRECTION','TT_COMPOUND_SUFFIX']),
   title:                   z.string().min(1),
   prompt_text:             z.string().min(1),
   correct_answer:          z.string().min(1),
@@ -35,39 +35,66 @@ const TaskBaseSchema = z.object({
   feedback_text:           z.string().min(1),
 });
 
+const CHOICE_OPTS = z.object({
+  choices:       z.array(z.object({ text: z.string(), is_correct: z.boolean() })).min(2).max(4),
+  audio_trigger: z.boolean(),
+});
+const FILL_OPTS = z.object({
+  display_text:   z.string(),
+  blank_position: z.number().min(0),
+  blank_answer:   z.string(),
+  context_word:   z.string(),
+});
+const CORRECTION_OPTS = z.object({
+  incorrect_text: z.string(),
+  correct_text:   z.string(),
+  error_type:     z.string(),
+  hint:           z.string(),
+});
+const DICTATION_OPTS = z.object({
+  audio_text:       z.string(),
+  word_count:       z.number().min(1),
+  expected_answers: z.array(z.string()),
+  allow_partial:    z.boolean(),
+});
+const MINI_TEXT_OPTS = z.object({
+  audio_text:       z.string(),
+  sentence_count:   z.number().min(1),
+  expected_answers: z.array(z.string()),
+});
+const SELF_CHECK_OPTS = z.object({
+  original_attempt: z.string(),
+  model_answer:     z.string(),
+  comparison_mode:  z.enum(['side_by_side','highlight_diff']),
+});
+
 const OptionsSchemas: Record<string, z.ZodType> = {
-  TT1_CHOICE: z.object({
-    choices:       z.array(z.object({ text: z.string(), is_correct: z.boolean() })).min(2).max(4),
-    audio_trigger: z.boolean(),
-  }),
-  TT2_FILL: z.object({
-    display_text:   z.string(),
-    blank_position: z.number().min(0),
-    blank_answer:   z.string(),
-    context_word:   z.string(),
-  }),
-  TT3_CORRECTION: z.object({
-    incorrect_text: z.string(),
-    correct_text:   z.string(),
-    error_type:     z.string(),
-    hint:           z.string(),
-  }),
-  TT4_DICTATION: z.object({
-    audio_text:       z.string(),
-    word_count:       z.number().min(1),
-    expected_answers: z.array(z.string()),
-    allow_partial:    z.boolean(),
-  }),
-  TT5_MINI_TEXT: z.object({
-    audio_text:       z.string(),
-    sentence_count:   z.number().min(1),
-    expected_answers: z.array(z.string()),
-  }),
-  TT6_SELF_CHECK: z.object({
-    original_attempt: z.string(),
-    model_answer:     z.string(),
-    comparison_mode:  z.enum(['side_by_side','highlight_diff']),
-  }),
+  // Choice tasks
+  TT_LISTEN_CHOOSE: CHOICE_OPTS, TT_IMAGE_WORD_MATCH: CHOICE_OPTS,
+  TT_CHOOSE_CORRECT: CHOICE_OPTS, TT_SIMPLE_SUFFIX: CHOICE_OPTS,
+  TT_WORD_FORM_CHOOSE: CHOICE_OPTS, TT_SUFFIX_CHOOSE: CHOICE_OPTS,
+  TT_CONSONANT_CONFUSION: CHOICE_OPTS, TT_LONG_VOWEL_CHALLENGE: CHOICE_OPTS,
+  TT_CASE_SUFFIX: CHOICE_OPTS, TT_MIXED_REVIEW: CHOICE_OPTS,
+  TT_MIXED_WORD_SET: CHOICE_OPTS, TT_MIXED_CHECKPOINT: CHOICE_OPTS,
+  // Fill tasks
+  TT_LETTER_FILL: FILL_OPTS, TT_COPY_WRITE: FILL_OPTS,
+  TT_FILL_WRITE: FILL_OPTS, TT_MISSING_LETTER: FILL_OPTS,
+  TT_WORD_ENDING: FILL_OPTS, TT_LONG_VOWEL_FILL: FILL_OPTS,
+  TT_REDUCED_VOWEL: FILL_OPTS, TT_SUFFIX_WRITE: FILL_OPTS,
+  TT_COMPOUND_SUFFIX: FILL_OPTS, TT_SENTENCE_FILL: FILL_OPTS,
+  TT_LONG_VOWEL_IN_SENTENCE: FILL_OPTS, TT_REDUCED_VOWEL_IN_SENTENCE: FILL_OPTS,
+  // Correction tasks
+  TT_CAPITAL_PUNCTUATION: CORRECTION_OPTS, TT_FIND_ERROR: CORRECTION_OPTS,
+  TT_FIX_ERROR: CORRECTION_OPTS, TT_WORD_FORM_FIX: CORRECTION_OPTS,
+  TT_FIND_OMITTED_LETTER: CORRECTION_OPTS, TT_SENTENCE_BOUNDARY: CORRECTION_OPTS,
+  TT_BASIC_COMMA: CORRECTION_OPTS, TT_EXPLAINED_CORRECTION: CORRECTION_OPTS,
+  // Dictation tasks
+  TT_WORD_SET_DICTATION: DICTATION_OPTS, TT_TWO_WORD_DICTATION: DICTATION_OPTS,
+  TT_SHORT_SENTENCE_DICTATION: DICTATION_OPTS, TT_TWO_SENTENCE_DICTATION: DICTATION_OPTS,
+  // Mini-text
+  TT_MINI_TEXT_DICTATION: MINI_TEXT_OPTS,
+  // Self-check
+  TT_SELF_CHECK: SELF_CHECK_OPTS, TT_OWN_WRITING_CORRECTION: SELF_CHECK_OPTS,
 };
 
 function validateTask(task: unknown): { ok: boolean; errors: string[] } {
@@ -177,47 +204,75 @@ function ingestSpecsFull(wb: XLSX.WorkBook) {
 // ── 3. Sample tasks ─────────────────────────────────────────────────────────
 
 const MN_TYPE_MAP: Record<string, string> = {
-  'Сонсож сонгох':      'TT1_CHOICE',
-  'Зураг-үг тааруулах': 'TT1_CHOICE',
-  'Зөвийг сонгох':      'TT1_CHOICE',
-  'Энгийн залгавар':    'TT1_CHOICE',
-  'Үсэг нөхөх':         'TT2_FILL',
-  'Нөхөж бичих':        'TT2_FILL',
-  'Дутуу үсэг':         'TT2_FILL',
-  'Хуулж бичих':        'TT2_FILL',
-  'Үгийн төгсгөл':      'TT2_FILL',
-  'Алдаа олох':         'TT3_CORRECTION',
-  'Том үсэг, цэг':      'TT3_CORRECTION',
-  'Үгийн багц диктант': 'TT4_DICTATION',
-  '2 үгийн диктант':    'TT4_DICTATION',
-  'Өөрийгөө шалгах':    'TT6_SELF_CHECK',
+  'Сонсож сонгох':      'TT_LISTEN_CHOOSE',
+  'Зураг-үг тааруулах': 'TT_IMAGE_WORD_MATCH',
+  'Зөвийг сонгох':      'TT_CHOOSE_CORRECT',
+  'Энгийн залгавар':    'TT_SIMPLE_SUFFIX',
+  'Үсэг нөхөх':         'TT_LETTER_FILL',
+  'Нөхөж бичих':        'TT_FILL_WRITE',
+  'Дутуу үсэг':         'TT_MISSING_LETTER',
+  'Хуулж бичих':        'TT_COPY_WRITE',
+  'Үгийн төгсгөл':      'TT_WORD_ENDING',
+  'Алдаа олох':         'TT_FIND_ERROR',
+  'Том үсэг, цэг':      'TT_CAPITAL_PUNCTUATION',
+  'Үгийн багц диктант': 'TT_WORD_SET_DICTATION',
+  '2 үгийн диктант':    'TT_TWO_WORD_DICTATION',
+  'Өөрийгөө шалгах':    'TT_SELF_CHECK',
 };
 
 const TYPE_DEFAULT_SKILL: Record<string, string> = {
-  TT1_CHOICE:     'S1',
-  TT2_FILL:       'S2',
-  TT3_CORRECTION: 'S8',
-  TT4_DICTATION:  'S7',
-  TT5_MINI_TEXT:  'S7',
-  TT6_SELF_CHECK: 'S8',
+  TT_LISTEN_CHOOSE: 'S1', TT_IMAGE_WORD_MATCH: 'S2', TT_CHOOSE_CORRECT: 'S3',
+  TT_SIMPLE_SUFFIX: 'S5', TT_WORD_FORM_CHOOSE: 'S2', TT_SUFFIX_CHOOSE: 'S5',
+  TT_CONSONANT_CONFUSION: 'S3', TT_LONG_VOWEL_CHALLENGE: 'S3', TT_CASE_SUFFIX: 'S5',
+  TT_MIXED_REVIEW: 'S1', TT_MIXED_WORD_SET: 'S1', TT_MIXED_CHECKPOINT: 'S1',
+  TT_LETTER_FILL: 'S1', TT_COPY_WRITE: 'S2', TT_FILL_WRITE: 'S3',
+  TT_MISSING_LETTER: 'S4', TT_WORD_ENDING: 'S2', TT_LONG_VOWEL_FILL: 'S3',
+  TT_REDUCED_VOWEL: 'S4', TT_SUFFIX_WRITE: 'S5', TT_COMPOUND_SUFFIX: 'S5',
+  TT_SENTENCE_FILL: 'S2', TT_LONG_VOWEL_IN_SENTENCE: 'S3', TT_REDUCED_VOWEL_IN_SENTENCE: 'S4',
+  TT_CAPITAL_PUNCTUATION: 'S6', TT_FIND_ERROR: 'S8', TT_FIX_ERROR: 'S8',
+  TT_WORD_FORM_FIX: 'S2', TT_FIND_OMITTED_LETTER: 'S8', TT_SENTENCE_BOUNDARY: 'S6',
+  TT_BASIC_COMMA: 'S6', TT_EXPLAINED_CORRECTION: 'S8',
+  TT_WORD_SET_DICTATION: 'S7', TT_TWO_WORD_DICTATION: 'S7',
+  TT_SHORT_SENTENCE_DICTATION: 'S7', TT_TWO_SENTENCE_DICTATION: 'S7',
+  TT_MINI_TEXT_DICTATION: 'S7',
+  TT_SELF_CHECK: 'S8', TT_OWN_WRITING_CORRECTION: 'S8',
 };
 
 const TYPE_SLOT: Record<string, string> = {
-  TT1_CHOICE:     'WARM_UP',
-  TT2_FILL:       'CORE',
-  TT3_CORRECTION: 'CORE',
-  TT4_DICTATION:  'CORE',
-  TT5_MINI_TEXT:  'END',
-  TT6_SELF_CHECK: 'END',
+  TT_LISTEN_CHOOSE: 'WARM_UP', TT_IMAGE_WORD_MATCH: 'WARM_UP', TT_CHOOSE_CORRECT: 'WARM_UP',
+  TT_SIMPLE_SUFFIX: 'WARM_UP', TT_WORD_FORM_CHOOSE: 'WARM_UP', TT_SUFFIX_CHOOSE: 'WARM_UP',
+  TT_CONSONANT_CONFUSION: 'WARM_UP', TT_LONG_VOWEL_CHALLENGE: 'WARM_UP',
+  TT_CASE_SUFFIX: 'WARM_UP', TT_MIXED_REVIEW: 'WARM_UP',
+  TT_MIXED_WORD_SET: 'WARM_UP', TT_MIXED_CHECKPOINT: 'WARM_UP',
+  TT_LETTER_FILL: 'CORE', TT_COPY_WRITE: 'CORE', TT_FILL_WRITE: 'CORE',
+  TT_MISSING_LETTER: 'CORE', TT_WORD_ENDING: 'CORE', TT_LONG_VOWEL_FILL: 'CORE',
+  TT_REDUCED_VOWEL: 'CORE', TT_SUFFIX_WRITE: 'CORE', TT_COMPOUND_SUFFIX: 'CORE',
+  TT_SENTENCE_FILL: 'CORE', TT_LONG_VOWEL_IN_SENTENCE: 'CORE', TT_REDUCED_VOWEL_IN_SENTENCE: 'CORE',
+  TT_CAPITAL_PUNCTUATION: 'CORE', TT_FIND_ERROR: 'CORE', TT_FIX_ERROR: 'CORE',
+  TT_WORD_FORM_FIX: 'CORE', TT_FIND_OMITTED_LETTER: 'CORE', TT_SENTENCE_BOUNDARY: 'CORE',
+  TT_BASIC_COMMA: 'CORE', TT_EXPLAINED_CORRECTION: 'CORE',
+  TT_WORD_SET_DICTATION: 'CORE', TT_TWO_WORD_DICTATION: 'CORE',
+  TT_SHORT_SENTENCE_DICTATION: 'CORE', TT_TWO_SENTENCE_DICTATION: 'CORE',
+  TT_MINI_TEXT_DICTATION: 'END',
+  TT_SELF_CHECK: 'END', TT_OWN_WRITING_CORRECTION: 'END',
 };
 
 const TYPE_TIME: Record<string, number> = {
-  TT1_CHOICE:     30,
-  TT2_FILL:       45,
-  TT3_CORRECTION: 60,
-  TT4_DICTATION:  90,
-  TT5_MINI_TEXT:  180,
-  TT6_SELF_CHECK: 60,
+  TT_LISTEN_CHOOSE: 30, TT_IMAGE_WORD_MATCH: 30, TT_CHOOSE_CORRECT: 30,
+  TT_SIMPLE_SUFFIX: 30, TT_WORD_FORM_CHOOSE: 30, TT_SUFFIX_CHOOSE: 30,
+  TT_CONSONANT_CONFUSION: 30, TT_LONG_VOWEL_CHALLENGE: 30,
+  TT_CASE_SUFFIX: 30, TT_MIXED_REVIEW: 30, TT_MIXED_WORD_SET: 30, TT_MIXED_CHECKPOINT: 30,
+  TT_LETTER_FILL: 45, TT_COPY_WRITE: 45, TT_FILL_WRITE: 45,
+  TT_MISSING_LETTER: 45, TT_WORD_ENDING: 45, TT_LONG_VOWEL_FILL: 45,
+  TT_REDUCED_VOWEL: 45, TT_SUFFIX_WRITE: 45, TT_COMPOUND_SUFFIX: 45,
+  TT_SENTENCE_FILL: 45, TT_LONG_VOWEL_IN_SENTENCE: 45, TT_REDUCED_VOWEL_IN_SENTENCE: 45,
+  TT_CAPITAL_PUNCTUATION: 60, TT_FIND_ERROR: 60, TT_FIX_ERROR: 60,
+  TT_WORD_FORM_FIX: 60, TT_FIND_OMITTED_LETTER: 60, TT_SENTENCE_BOUNDARY: 60,
+  TT_BASIC_COMMA: 60, TT_EXPLAINED_CORRECTION: 60,
+  TT_WORD_SET_DICTATION: 90, TT_TWO_WORD_DICTATION: 90,
+  TT_SHORT_SENTENCE_DICTATION: 90, TT_TWO_SENTENCE_DICTATION: 90,
+  TT_MINI_TEXT_DICTATION: 180,
+  TT_SELF_CHECK: 60, TT_OWN_WRITING_CORRECTION: 60,
 };
 
 function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefined): unknown {
@@ -227,8 +282,25 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
   const audioYes      = String(r[7] ?? '').toLowerCase() === 'yes';
   const feedbackText  = String(r[8] ?? '').trim();
 
-  switch (taskType) {
-    case 'TT1_CHOICE': {
+  const BUILDER_TYPE: Record<string, string> = {
+    TT_LISTEN_CHOOSE: 'CHOICE', TT_IMAGE_WORD_MATCH: 'CHOICE', TT_CHOOSE_CORRECT: 'CHOICE',
+    TT_SIMPLE_SUFFIX: 'CHOICE', TT_WORD_FORM_CHOOSE: 'CHOICE', TT_SUFFIX_CHOOSE: 'CHOICE',
+    TT_CONSONANT_CONFUSION: 'CHOICE', TT_LONG_VOWEL_CHALLENGE: 'CHOICE',
+    TT_CASE_SUFFIX: 'CHOICE', TT_MIXED_REVIEW: 'CHOICE', TT_MIXED_WORD_SET: 'CHOICE', TT_MIXED_CHECKPOINT: 'CHOICE',
+    TT_LETTER_FILL: 'FILL', TT_COPY_WRITE: 'FILL', TT_FILL_WRITE: 'FILL',
+    TT_MISSING_LETTER: 'FILL', TT_WORD_ENDING: 'FILL', TT_LONG_VOWEL_FILL: 'FILL',
+    TT_REDUCED_VOWEL: 'FILL', TT_SUFFIX_WRITE: 'FILL', TT_COMPOUND_SUFFIX: 'FILL',
+    TT_SENTENCE_FILL: 'FILL', TT_LONG_VOWEL_IN_SENTENCE: 'FILL', TT_REDUCED_VOWEL_IN_SENTENCE: 'FILL',
+    TT_CAPITAL_PUNCTUATION: 'CORRECTION', TT_FIND_ERROR: 'CORRECTION', TT_FIX_ERROR: 'CORRECTION',
+    TT_WORD_FORM_FIX: 'CORRECTION', TT_FIND_OMITTED_LETTER: 'CORRECTION',
+    TT_SENTENCE_BOUNDARY: 'CORRECTION', TT_BASIC_COMMA: 'CORRECTION', TT_EXPLAINED_CORRECTION: 'CORRECTION',
+    TT_WORD_SET_DICTATION: 'DICTATION', TT_TWO_WORD_DICTATION: 'DICTATION',
+    TT_SHORT_SENTENCE_DICTATION: 'DICTATION', TT_TWO_SENTENCE_DICTATION: 'DICTATION',
+    TT_MINI_TEXT_DICTATION: 'MINI_TEXT',
+    TT_SELF_CHECK: 'SELF_CHECK', TT_OWN_WRITING_CORRECTION: 'SELF_CHECK',
+  };
+  switch (BUILDER_TYPE[taskType] ?? taskType) {
+    case 'CHOICE': {
       const parts = optionsRaw.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean);
       const choices = parts.map(text => ({ text, is_correct: text === correctAnswer }));
       if (!choices.some(c => c.is_correct) && choices.length > 0) {
@@ -237,7 +309,7 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
       return { choices, audio_trigger: audioYes };
     }
 
-    case 'TT2_FILL': {
+    case 'FILL': {
       const display = prompt.replace(/^(Аудио\+текст|Аудио)\s*:\s*/i, '').trim();
       const blankIdx = display.indexOf('_');
       return {
@@ -248,7 +320,7 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
       };
     }
 
-    case 'TT3_CORRECTION': {
+    case 'CORRECTION': {
       const errorType = spec?.error?.split('/')[0]?.trim() ?? 'G1';
       return {
         incorrect_text: prompt,
@@ -258,7 +330,7 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
       };
     }
 
-    case 'TT4_DICTATION': {
+    case 'DICTATION': {
       const audioText      = prompt.replace(/^Аудио\s*:\s*/i, '').trim();
       const expectedAnswers = correctAnswer.split(';').map(s => s.trim()).filter(Boolean);
       return {
@@ -269,7 +341,7 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
       };
     }
 
-    case 'TT6_SELF_CHECK': {
+    case 'SELF_CHECK': {
       const mOrig  = prompt.match(/Чи бичсэн:\s*([^\s/]+)/);
       const mModel = prompt.match(/Загвар:\s*(\S+)/);
       return {
@@ -305,7 +377,7 @@ function ingestTasks(wb: XLSX.WorkBook, specMap: Map<string, SpecLookup>) {
 
     const baseId    = String(r[0]).trim();
     const typeMn    = String(r[1] ?? '').trim();
-    const taskType  = MN_TYPE_MAP[typeMn] ?? 'TT2_FILL';
+    const taskType  = MN_TYPE_MAP[typeMn] ?? 'TT_LETTER_FILL';
 
     // Assign unique ID: single occurrence → keep as-is; duplicates → append -a, -b, …
     const cursor = idCursor.get(baseId) ?? 0;

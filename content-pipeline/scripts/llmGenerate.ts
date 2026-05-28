@@ -15,6 +15,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as readline from "readline";
+import { randomUUID } from "crypto";
 import OpenAI from "openai";
 import * as dotenv from "dotenv";
 
@@ -86,7 +87,7 @@ const TASK_SPECS: TaskSpec[] = [
   // G12 tasks
   {
     id: "G12-008",
-    task_type: "TT4_DICTATION",
+    task_type: "TT_WORD_SET_DICTATION",
     primary_skill: "S7",
     secondary_skill: null,
     level_target: "M1",
@@ -99,7 +100,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G12-009",
-    task_type: "TT3_CORRECTION",
+    task_type: "TT_CAPITAL_PUNCTUATION",
     primary_skill: "S6",
     secondary_skill: null,
     level_target: "M1",
@@ -112,7 +113,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G12-010",
-    task_type: "TT1_CHOICE",
+    task_type: "TT_SIMPLE_SUFFIX",
     primary_skill: "S5",
     secondary_skill: null,
     level_target: "M1",
@@ -125,7 +126,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G12-012",
-    task_type: "TT6_SELF_CHECK",
+    task_type: "TT_SELF_CHECK",
     primary_skill: "S8",
     secondary_skill: null,
     level_target: "M1",
@@ -140,7 +141,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G12-015",
-    task_type: "TT2_FILL",
+    task_type: "TT_SENTENCE_FILL",
     primary_skill: "S2",
     secondary_skill: null,
     level_target: "M1",
@@ -154,7 +155,7 @@ const TASK_SPECS: TaskSpec[] = [
   // G24 tasks
   {
     id: "G24-004",
-    task_type: "TT1_CHOICE",
+    task_type: "TT_SUFFIX_CHOOSE",
     primary_skill: "S5",
     secondary_skill: null,
     level_target: "M2",
@@ -167,7 +168,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-010",
-    task_type: "TT2_FILL",
+    task_type: "TT_LONG_VOWEL_IN_SENTENCE",
     primary_skill: "S3",
     secondary_skill: null,
     level_target: "M2",
@@ -180,7 +181,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-011",
-    task_type: "TT2_FILL",
+    task_type: "TT_REDUCED_VOWEL_IN_SENTENCE",
     primary_skill: "S4",
     secondary_skill: null,
     level_target: "M2",
@@ -193,7 +194,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-012",
-    task_type: "TT1_CHOICE",
+    task_type: "TT_CASE_SUFFIX",
     primary_skill: "S5",
     secondary_skill: "S6",
     level_target: "M2",
@@ -206,7 +207,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-013",
-    task_type: "TT3_CORRECTION",
+    task_type: "TT_BASIC_COMMA",
     primary_skill: "S6",
     secondary_skill: null,
     level_target: "M2",
@@ -219,7 +220,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-014",
-    task_type: "TT4_DICTATION",
+    task_type: "TT_TWO_SENTENCE_DICTATION",
     primary_skill: "S7",
     secondary_skill: null,
     level_target: "M2",
@@ -232,7 +233,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-017",
-    task_type: "TT2_FILL",
+    task_type: "TT_SUFFIX_WRITE",
     primary_skill: "S5",
     secondary_skill: null,
     level_target: "M2-M3",
@@ -245,7 +246,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-018",
-    task_type: "TT3_CORRECTION",
+    task_type: "TT_SENTENCE_BOUNDARY",
     primary_skill: "S6",
     secondary_skill: null,
     level_target: "M2",
@@ -258,7 +259,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-019",
-    task_type: "TT5_MINI_TEXT",
+    task_type: "TT_MINI_TEXT_DICTATION",
     primary_skill: "S7",
     secondary_skill: null,
     level_target: "M3",
@@ -271,7 +272,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-020",
-    task_type: "TT6_SELF_CHECK",
+    task_type: "TT_OWN_WRITING_CORRECTION",
     primary_skill: "S8",
     secondary_skill: null,
     level_target: "M2",
@@ -286,7 +287,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-022",
-    task_type: "TT3_CORRECTION",
+    task_type: "TT_COMPOUND_SUFFIX",
     primary_skill: "S5",
     secondary_skill: null,
     level_target: "M3",
@@ -299,7 +300,7 @@ const TASK_SPECS: TaskSpec[] = [
   },
   {
     id: "G24-024",
-    task_type: "TT3_CORRECTION",
+    task_type: "TT_EXPLAINED_CORRECTION",
     primary_skill: "S8",
     secondary_skill: null,
     level_target: "M3",
@@ -453,14 +454,13 @@ function extractJson(raw: string): unknown {
 
 function buildBase(
   spec: TaskSpec,
-  versionSuffix: string,
   title: string,
   promptText: string,
   feedbackText: string,
   correctAnswer: string,
 ): TaskRecord {
   return {
-    id: `${spec.id}-${versionSuffix}`,
+    id: randomUUID(),
     task_type: spec.task_type,
     title,
     prompt_text: promptText,
@@ -496,7 +496,6 @@ function buildTT1(
   return {
     ...buildBase(
       spec,
-      `v${idx + 1}`,
       "Зөвийг сонгоно уу",
       sentenceWithBlank || "Зөв хэлбэрийг сонгоно уу.",
       (v["feedback_text"] as string) ?? "",
@@ -528,7 +527,6 @@ function buildTT2(
   return {
     ...buildBase(
       spec,
-      `v${idx + 1}`,
       "Дутуу хэсгийг нөхөөрэй",
       promptText,
       (v["feedback_text"] as string) ?? "",
@@ -560,7 +558,6 @@ function buildTT3(
   return {
     ...buildBase(
       spec,
-      `v${idx + 1}`,
       "Алдааг засаарай",
       (v["prompt_text"] as string) ??
         "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
@@ -597,7 +594,6 @@ function buildTT4(
   return {
     ...buildBase(
       spec,
-      `v${idx + 1}`,
       "Сонсоод бичээрэй",
       (v["prompt_text"] as string) ?? "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
       (v["feedback_text"] as string) ?? "",
@@ -625,7 +621,6 @@ function buildTT5(
   return {
     ...buildBase(
       spec,
-      `v${idx + 1}`,
       "Жижиг эх сонсоод бичээрэй",
       (v["prompt_text"] as string) ??
         "Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.",
@@ -655,7 +650,6 @@ function buildTT6FromSource(
     return {
       ...buildBase(
         spec,
-        `v${idx + 1}`,
         "Өөрийгөө шалгаарай",
         "Өмнөх даалгаврын хариугаа загвартай харьцуул.",
         (item["feedback_text"] as string) ?? `Зөв хариу: ${correctText}`,
@@ -670,12 +664,61 @@ function buildTT6FromSource(
   });
 }
 
+const BUILDER_TYPE: Record<string, string> = {
+  // Choice builders
+  TT_LISTEN_CHOOSE:     "TT1_CHOICE",
+  TT_IMAGE_WORD_MATCH:  "TT1_CHOICE",
+  TT_CHOOSE_CORRECT:    "TT1_CHOICE",
+  TT_SIMPLE_SUFFIX:     "TT1_CHOICE",
+  TT_WORD_FORM_CHOOSE:  "TT1_CHOICE",
+  TT_SUFFIX_CHOOSE:     "TT1_CHOICE",
+  TT_CONSONANT_CONFUSION: "TT1_CHOICE",
+  TT_LONG_VOWEL_CHALLENGE: "TT1_CHOICE",
+  TT_CASE_SUFFIX:       "TT1_CHOICE",
+  TT_MIXED_REVIEW:      "TT1_CHOICE",
+  TT_MIXED_WORD_SET:    "TT1_CHOICE",
+  TT_MIXED_CHECKPOINT:  "TT1_CHOICE",
+  // Fill builders
+  TT_LETTER_FILL:       "TT2_FILL",
+  TT_FILL_WRITE:        "TT2_FILL",
+  TT_MISSING_LETTER:    "TT2_FILL",
+  TT_WORD_ENDING:       "TT2_FILL",
+  TT_LONG_VOWEL_FILL:   "TT2_FILL",
+  TT_REDUCED_VOWEL:     "TT2_FILL",
+  TT_SUFFIX_WRITE:      "TT2_FILL",
+  TT_COMPOUND_SUFFIX:   "TT2_FILL",
+  TT_SENTENCE_FILL:             "TT2_FILL",
+  TT_LONG_VOWEL_IN_SENTENCE:    "TT2_FILL",
+  TT_REDUCED_VOWEL_IN_SENTENCE: "TT2_FILL",
+  // Correction builders
+  TT_COPY_WRITE:            "TT3_CORRECTION",
+  TT_CAPITAL_PUNCTUATION:   "TT3_CORRECTION",
+  TT_FIND_ERROR:            "TT3_CORRECTION",
+  TT_FIX_ERROR:             "TT3_CORRECTION",
+  TT_WORD_FORM_FIX:         "TT3_CORRECTION",
+  TT_FIND_OMITTED_LETTER:   "TT3_CORRECTION",
+  TT_SENTENCE_BOUNDARY:     "TT3_CORRECTION",
+  TT_BASIC_COMMA:           "TT3_CORRECTION",
+  TT_EXPLAINED_CORRECTION:  "TT3_CORRECTION",
+  // Dictation builders
+  TT_WORD_SET_DICTATION:        "TT4_DICTATION",
+  TT_TWO_WORD_DICTATION:        "TT4_DICTATION",
+  TT_SHORT_SENTENCE_DICTATION:  "TT4_DICTATION",
+  TT_TWO_SENTENCE_DICTATION:    "TT4_DICTATION",
+  // Mini-text
+  TT_MINI_TEXT_DICTATION: "TT5_MINI_TEXT",
+  // Self-check
+  TT_SELF_CHECK:             "TT6_SELF_CHECK",
+  TT_OWN_WRITING_CORRECTION: "TT6_SELF_CHECK",
+};
+
 function buildVariant(
   spec: TaskSpec,
   v: Record<string, unknown>,
   idx: number,
 ): TaskRecord {
-  switch (spec.task_type) {
+  const builderType = BUILDER_TYPE[spec.task_type] ?? spec.task_type;
+  switch (builderType) {
     case "TT1_CHOICE":
       return buildTT1(spec, v, idx);
     case "TT2_FILL":
@@ -687,7 +730,7 @@ function buildVariant(
     case "TT5_MINI_TEXT":
       return buildTT5(spec, v, idx);
     default:
-      throw new Error(`Unknown task type: ${spec.task_type}`);
+      throw new Error(`No builder for task_type: ${spec.task_type}`);
   }
 }
 
@@ -723,7 +766,7 @@ function runValidators(task: TaskRecord): ValidationResult {
   if (!schemaResult.ok)
     reasons.push(...schemaResult.errors.map((e) => `schema: ${e}`));
 
-  if (task["task_type"] === "TT1_CHOICE") {
+  if (BUILDER_TYPE[task["task_type"] as string] === "TT1_CHOICE") {
     const distResult = validateDistractors(
       task as unknown as Parameters<typeof validateDistractors>[0],
     );
@@ -919,7 +962,7 @@ async function main() {
   // ── Self-check tasks (no API call) ────────────────────────────────────────
   for (const spec of selfCheckSpecs) {
     console.log(
-      `\n[${spec.id}] Building TT6_SELF_CHECK from ${spec.self_check_source}...`,
+      `\n[${spec.id}] Building ${spec.task_type} from ${spec.self_check_source}...`,
     );
     const built = buildSelfCheck(spec);
     if (!built || built.length === 0) {
