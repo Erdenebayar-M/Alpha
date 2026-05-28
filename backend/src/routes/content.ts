@@ -77,8 +77,14 @@ content.get('/stats', async (c) => {
 
   const validated = await prisma.task.count();
 
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const approvedToday = await prisma.taskDraftAuditLog.count({
+    where: { action: 'approved', created_at: { gte: todayStart } },
+  });
+
   return ok(c, {
-    pipeline: { ...tally, validated },
+    pipeline: { ...tally, validated, approved_today: approvedToday },
   });
 });
 
@@ -867,6 +873,133 @@ content.post('/generate', async (c) => {
   }
 
   return ok(c, { results, total_cost_usd: runningCost.value });
+});
+
+// ─── GET /api/admin/content/live-tasks ───────────────────────────────────────
+
+const liveListQuerySchema = z.object({
+  grade:    z.enum(['G12', 'G24']).optional(),
+  type:     z.string().optional(),
+  skill:    z.string().optional(),
+  page:     z.coerce.number().int().min(1).default(1),
+  per_page: z.coerce.number().int().min(1).max(200).default(100),
+});
+
+const GRADE_BANDS: Record<string, string[]> = {
+  G12: ['G1', 'G2'],
+  G24: ['G3', 'G4'],
+};
+
+content.get('/live-tasks', async (c) => {
+  const parsed = liveListQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
+  }
+  const { grade, type, skill, page, per_page } = parsed.data;
+
+  const where = {
+    ...(grade ? { grade_band: { hasSome: GRADE_BANDS[grade] } } : {}),
+    ...(type  ? { task_type: toTaskType(type) } : {}),
+    ...(skill ? { OR: [
+      { primary_skill:   toSkill(skill) as SkillCode },
+      { secondary_skill: toSkill(skill) as SkillCode },
+    ]} : {}),
+  } as const;
+
+  const [tasks, total] = await Promise.all([
+    prisma.task.findMany({
+      where,
+      orderBy: { id: 'asc' },
+      skip:  (page - 1) * per_page,
+      take:  per_page,
+    }),
+    prisma.task.count({ where }),
+  ]);
+
+  return ok(c, {
+    total,
+    tasks,
+    meta: { page, per_page, total, has_next: page * per_page < total },
+  });
+});
+
+// ─── GET /api/admin/content/live-tasks/:id ───────────────────────────────────
+
+content.get('/live-tasks/:id', async (c) => {
+  const id = c.req.param('id');
+  const task = await prisma.task.findUnique({ where: { id } });
+  if (!task) return ERRORS.NOT_FOUND(c, `Task ${id} not found`);
+  return ok(c, { task });
+});
+
+// ─── PATCH /api/admin/content/live-tasks/:id ──────────────────────────────────
+
+const LIVE_IMMUTABLE = new Set(['id', 'task_type', 'grade_band', 'primary_skill', 'is_diagnostic']);
+
+const patchLiveTaskSchema = z.object({
+  updates: z.record(z.string(), z.unknown()).refine(
+    (u) => Object.keys(u).length > 0,
+    'updates must not be empty',
+  ),
+});
+
+content.patch('/live-tasks/:id', async (c) => {
+  const id     = c.req.param('id');
+  const body   = await c.req.json().catch(() => null);
+  const parsed = patchLiveTaskSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const task = await prisma.task.findUnique({ where: { id } });
+  if (!task) return ERRORS.NOT_FOUND(c, `Task ${id} not found`);
+
+  const safeUpdates: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(parsed.data.updates)) {
+    if (!LIVE_IMMUTABLE.has(key)) safeUpdates[key] = value;
+  }
+  if (Object.keys(safeUpdates).length === 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'No editable fields in updates');
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.taskDraftAuditLog.create({
+      data: {
+        draft_id:  id,
+        task_id:   id,
+        action:    'edited_live',
+        from_stage: DraftStage.STAGE2,
+        notes:     `Fields: ${Object.keys(safeUpdates).join(', ')}`,
+        snapshot:  task as object,
+      },
+    });
+    await tx.task.update({ where: { id }, data: safeUpdates });
+  });
+
+  return ok(c, { action: 'updated', id, updated_fields: Object.keys(safeUpdates) });
+});
+
+// ─── DELETE /api/admin/content/live-tasks/:id ─────────────────────────────────
+
+content.delete('/live-tasks/:id', async (c) => {
+  const id = c.req.param('id');
+  const task = await prisma.task.findUnique({ where: { id } });
+  if (!task) return ERRORS.NOT_FOUND(c, `Task ${id} not found`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.taskDraftAuditLog.create({
+      data: {
+        draft_id:  id,
+        task_id:   id,
+        action:    'deleted_live',
+        from_stage: DraftStage.STAGE2,
+        snapshot:  task as object,
+      },
+    });
+    await tx.task.delete({ where: { id } });
+  });
+
+  return ok(c, { action: 'deleted', id });
 });
 
 export default content;
