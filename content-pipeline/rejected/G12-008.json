@@ -22,11 +22,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "END",
       "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
       "options": {
@@ -74,11 +69,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "END",
       "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
       "options": {
@@ -126,11 +116,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "END",
       "feedback_text": "Сонссон үгсийг зөв бичлээ үү?",
       "options": {

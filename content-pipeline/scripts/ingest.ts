@@ -30,7 +30,6 @@ const TaskBaseSchema = z.object({
   grade_band:              z.array(z.enum(['G1','G2','G3','G4'])).min(1),
   difficulty:              z.number().min(1).max(5),
   estimated_time_seconds:  z.number().min(1),
-  review_after_days:       z.array(z.number()),
   lesson_slot_fit:         z.enum(['WARM_UP','CORE','MIXED','END']),
   feedback_text:           z.string().min(1),
 });
@@ -412,7 +411,6 @@ function ingestTasks(wb: XLSX.WorkBook, specMap: Map<string, SpecLookup>) {
       grade_band:             getGradeBand(baseId),
       difficulty:             levelToDifficulty(level),
       estimated_time_seconds: TYPE_TIME[taskType] ?? 45,
-      review_after_days:      [1, 3, 7],
       lesson_slot_fit:        TYPE_SLOT[taskType] ?? 'CORE',
       feedback_text:          String(r[8] ?? '').trim(),
     });

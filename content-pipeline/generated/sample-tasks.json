@@ -38,11 +38,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "'Ð½Ð¾Ð¼' Ð³ÑÐ´ÑÐ³ Ò¯Ð³ÑÐ½Ð´ Ð¾ Ð°Ð²Ð¸Ð°Ð³ ÑÐ¾Ð½ÑÐ»Ð¾Ð¾."
     },
@@ -83,11 +78,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð—Ó©Ð² ÑÐ¾Ð½ÑÐ»Ð¾Ð¾."
     },
@@ -117,11 +107,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "'Ð½Ð¾Ð¼' Ð³ÑÐ¶ Ð±Ò¯Ñ‚ÑÐ½ ÑƒÐ½ÑˆÐ°Ð°Ð´ ÑˆÐ°Ð»Ð³Ð°."
     },
@@ -162,11 +147,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð—ÑƒÑ€Ð°Ð³Ñ‚Ð°Ð¹ Ò¯Ð³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð»Ð°Ð°."
     },
@@ -207,11 +187,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð—ÑƒÑ€Ð°Ð³ Ð½ÑŒ Ð¼Ð¾Ð½Ð³Ð¾Ð» Ð³ÑÑ€ Ð±Ð°Ð¹Ð½Ð°."
     },
@@ -241,11 +216,6 @@
       ],
       "difficulty": 1,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ò®ÑÐ³Ð¸Ð¹Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð°Ð», Ñ†ÑÐ³ÑÑ ÑˆÐ°Ð»Ð³Ð°."
     },
@@ -286,11 +256,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð°Ð½Ð·Ð°Ð°Ñ€."
     },
@@ -331,11 +296,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ¸Ð³Ñ‚ÑÐ¹ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾."
     },
@@ -366,11 +326,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð”ÑƒÐ½Ð´Ð°Ñ… ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…."
     },
@@ -401,11 +356,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð”Ð°Ð²Ñ…Ð°Ñ€ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð°Ð½Ð·Ð°Ð°Ñ€."
     },
@@ -435,11 +385,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡."
     },
@@ -474,11 +419,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 90,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð¡Ð¾Ð½ÑÑÐ¾Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð±Ð¸Ñ‡ÑÑÑ€ÑÐ¹."
     },
@@ -509,11 +449,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 60,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð­Ñ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼, Ñ‚Ó©Ð³ÑÐ³Ó©Ð»Ð´ Ñ†ÑÐ³."
     },
@@ -544,11 +479,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 60,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "ÐÑÑ€Ð½Ð¸Ð¹ ÑÑ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼."
     },
@@ -590,11 +520,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "WARM_UP",
       "feedback_text": "Ð¢Ò¯Ð³ÑÑÐ¼ÑÐ» Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ñ‚Ð°Ð½ÑŒ."
     },
@@ -624,11 +549,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 60,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð˜Ð»Ò¯Ò¯ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ñ."
     },
@@ -658,11 +578,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 60,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð´ÑƒÑ‚ÑƒÑƒ Ð±Ð¸Ñ‡ÑÑÐ½ Ð±Ð°Ð¹Ð½Ð°."
     },
@@ -691,11 +606,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 60,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "END",
       "feedback_text": "Ð¥Ð¾Ñ‘Ñ€ Ò¯ÑÐ³Ð¸Ð¹Ð½ ÑÐ»Ð³Ð°Ð°Ð³ Ó©Ó©Ñ€Ó©Ó© Ð¾Ð»."
     },
@@ -728,11 +638,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 90,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð¥Ð¾Ñ‘Ñ€ Ò¯Ð³Ð¸Ð¹Ð³ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð½ÑŒ Ð±Ð¸Ñ‡."
     },
@@ -762,11 +667,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Ð¢Ó©Ð³ÑÐ³Ó©Ð»Ð¸Ð¹Ð½ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð±Ð¸Ñ‡."
     }

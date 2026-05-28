@@ -102,7 +102,7 @@ function base(
     primary_skill: skill, secondary_skill: null,
     level_target: level, error_targets: errorTargets,
     grade_band: GRADE_BAND, difficulty,
-    estimated_time_seconds: 30, review_after_days: [1, 3, 7],
+    estimated_time_seconds: 30,
     lesson_slot_fit: slot, feedback_text: feedback,
   };
 }

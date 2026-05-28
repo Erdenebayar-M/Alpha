@@ -21,11 +21,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 25,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хэлбэр: гэртээ",
       "options": {

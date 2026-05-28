@@ -284,7 +284,6 @@ model TaskDraft {
   grade_band             String[]
   difficulty             Int
   estimated_time_seconds Int
-  review_after_days      Int[]
   lesson_slot_fit        LessonSlot
   feedback_text          String
   is_diagnostic          Boolean    @default(false)
@@ -373,7 +372,6 @@ model Task {
   grade_band             String[]   // ["G1"], ["G1","G2"], etc.
   difficulty             Int        // 1–5
   estimated_time_seconds Int
-  review_after_days      Int[]      // [1, 3, 7]
   lesson_slot_fit        LessonSlot
   feedback_text          String
   is_diagnostic          Boolean    @default(false)

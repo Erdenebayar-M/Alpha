@@ -36,11 +36,6 @@
   ],
   "difficulty": 1,
   "estimated_time_seconds": 30,
-  "review_after_days": [
-    1,
-    3,
-    7
-  ],
   "lesson_slot_fit": "WARM_UP",
   "feedback_text": "Зөв хариу: морь",
   "rejection_reasons": [

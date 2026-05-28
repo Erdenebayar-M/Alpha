@@ -23,11 +23,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
       "initial_text": "Ээж ирэв.",
@@ -73,11 +68,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
       "initial_text": "Харандаа хурц.",
@@ -123,11 +113,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "Энэ өгүүлбэрт алдаа байхгүй.",
       "initial_text": "Тогоо том.",

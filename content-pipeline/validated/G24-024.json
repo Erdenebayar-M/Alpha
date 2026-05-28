@@ -23,11 +23,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "\"хийв\" гэж бичнэ. Үйл үгийн өнгөрсөн цагийн төгсгөл нь \"в\" үсгээр төгсдөг.",
       "options": {
@@ -68,11 +63,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "\"авчирав\" гэж бичнэ. \"ав-\" үндэс үг нь \"в\" үсгээр бичигдэнэ, \"б\" биш.",
       "options": {
@@ -113,11 +103,6 @@
       ],
       "difficulty": 4,
       "estimated_time_seconds": 45,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MIXED",
       "feedback_text": "\"алдлаа\" гэж бичнэ. Өнгөрсөн цагийн -лаа төгсгөл нь кирилл \"а\" үсгээр бичигдэнэ.",
       "options": {

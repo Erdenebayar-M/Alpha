@@ -85,7 +85,6 @@ export interface TaskSpec {
   grade_band: string[];
   difficulty: number;
   estimated_time_seconds: number;
-  review_after_days: number[];
   lesson_slot_fit: 'WARM_UP' | 'CORE' | 'MIXED' | 'END';
   options_shape: string;
   audio_trigger?: boolean;
@@ -110,7 +109,6 @@ function defToSpec(def: TaskTypeDef): TaskSpec {
     grade_band:              def.grade_band,
     difficulty:              def.default_difficulty,
     estimated_time_seconds:  def.estimated_time_seconds,
-    review_after_days:       [1, 3, 7],
     lesson_slot_fit:         def.lesson_slot_fit,
     options_shape:           def.options_shape,
     audio_trigger:           def.audio_trigger,
@@ -321,7 +319,6 @@ function buildBase(spec: TaskSpec, title: string, promptText: string, feedbackTe
     grade_band: spec.grade_band,
     difficulty: spec.difficulty,
     estimated_time_seconds: spec.estimated_time_seconds,
-    review_after_days: spec.review_after_days,
     lesson_slot_fit: spec.lesson_slot_fit,
     feedback_text: feedbackText,
   };

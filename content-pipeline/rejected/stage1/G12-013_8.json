@@ -27,11 +27,6 @@
   ],
   "difficulty": 2,
   "estimated_time_seconds": 30,
-  "review_after_days": [
-    1,
-    3,
-    7
-  ],
   "lesson_slot_fit": "CORE",
   "feedback_text": "Зөв хариу: тогоо, шувуу",
   "rejection_reasons": [

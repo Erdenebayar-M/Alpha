@@ -28,11 +28,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 40,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MID",
       "feedback_text": "Зөв! \"байдаг\" гэж зөв бичлээ.",
       "review": {
@@ -72,11 +67,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 40,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "MID",
       "feedback_text": "Зөв! \"байна\" үгийг бүтнээр бичлээ.",
       "review": {

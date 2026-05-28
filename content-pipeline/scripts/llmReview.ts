@@ -271,7 +271,6 @@ async function processFiles(
               grade_band:             (variant.grade_band as string[]) ?? [],
               difficulty:             variant.difficulty as number,
               estimated_time_seconds: variant.estimated_time_seconds as number,
-              review_after_days:      (variant.review_after_days as number[]) ?? [],
               lesson_slot_fit:        toSlot(variant.lesson_slot_fit as string),
               feedback_text:          variant.feedback_text as string,
               is_diagnostic:          (variant.is_diagnostic as boolean) ?? false,

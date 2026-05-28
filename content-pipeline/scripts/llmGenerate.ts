@@ -146,7 +146,6 @@ interface TaskSpec {
   grade_band: string[];
   difficulty: number;
   estimated_time_seconds: number;
-  review_after_days: number[];
   lesson_slot_fit: "WARM_UP" | "CORE" | "MIXED" | "END";
   options_shape: string;
   self_check?: boolean;
@@ -173,7 +172,6 @@ function resolveSpec(def: TaskTypeDef, autoId: string): TaskSpec {
     grade_band: gradeBand,
     difficulty: DIFFICULTY_OVERRIDE ?? def.default_difficulty,
     estimated_time_seconds: def.estimated_time_seconds,
-    review_after_days: [1, 3, 7],
     lesson_slot_fit: def.lesson_slot_fit,
     options_shape: def.options_shape,
     self_check: def.self_check,
@@ -442,7 +440,6 @@ function buildBase(
     grade_band: spec.grade_band,
     difficulty: spec.difficulty,
     estimated_time_seconds: spec.estimated_time_seconds,
-    review_after_days: spec.review_after_days,
     lesson_slot_fit: spec.lesson_slot_fit,
     feedback_text: feedbackText,
   };

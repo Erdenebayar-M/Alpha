@@ -21,11 +21,6 @@
     ],
     "difficulty": 4,
     "estimated_time_seconds": 90,
-    "review_after_days": [
-      1,
-      3,
-      7
-    ],
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
     "options": {
@@ -60,11 +55,6 @@
     ],
     "difficulty": 4,
     "estimated_time_seconds": 90,
-    "review_after_days": [
-      1,
-      3,
-      7
-    ],
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
     "options": {
@@ -99,11 +89,6 @@
     ],
     "difficulty": 4,
     "estimated_time_seconds": 90,
-    "review_after_days": [
-      1,
-      3,
-      7
-    ],
     "lesson_slot_fit": "END",
     "feedback_text": "Урт эгшиг болон балархай эгшигт анхаараарай.",
     "options": {

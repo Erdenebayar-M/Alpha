@@ -21,11 +21,6 @@
       ],
       "difficulty": 3,
       "estimated_time_seconds": 25,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "\"цонх\" — балархай эгшигтэй үг.",
       "options": {

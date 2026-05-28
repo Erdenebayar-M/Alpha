@@ -30,11 +30,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: ном, нум",
       "review": {
@@ -76,11 +71,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: мод, нар",
       "review": {
@@ -122,11 +112,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: сар, ус",
       "review": {
@@ -168,11 +153,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: ном, нум",
       "review": {
@@ -214,11 +194,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: мод, нар",
       "review": {
@@ -260,11 +235,6 @@
       ],
       "difficulty": 2,
       "estimated_time_seconds": 30,
-      "review_after_days": [
-        1,
-        3,
-        7
-      ],
       "lesson_slot_fit": "CORE",
       "feedback_text": "Зөв хариу: сар, ус",
       "review": {
