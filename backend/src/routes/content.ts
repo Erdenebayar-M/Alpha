@@ -524,7 +524,32 @@ function pcmToWav(pcmBuffer: Buffer, sampleRate = 24000, channels = 1, bitDepth 
 
 const generateImageSchema = z.object({
   prompt: z.string().min(1),
+  grade_band: z.array(z.string()).optional(),
 });
+
+function buildMongolianImagePrompt(subject: string, gradeBand?: string[]): string {
+  const isGrade1_2 = !gradeBand || gradeBand.includes('G12');
+
+  const mongolianElements = {
+    nature: 'Mongolian landscape with blue sky, mountains, steppe grass',
+    culture: 'wearing traditional Mongolian deel, ger tent, or Mongolian patterns',
+    colors: 'warm earthy tones with bright accent colors',
+    style: 'soft, friendly, illustrated style suitable for young children',
+  };
+
+  const complexity = isGrade1_2
+    ? 'simple shapes, bold outlines, cheerful mood'
+    : 'more detailed, scenic background, educational focus';
+
+  return (
+    `Illustrate the following for a Mongolian children's book (grades 1-4): ${subject}. ` +
+    `Style: ${mongolianElements.style}, ${complexity}. ` +
+    `Include Mongolian cultural elements (${mongolianElements.culture}). ` +
+    `Colors: ${mongolianElements.colors}. ` +
+    `Setting: ${mongolianElements.nature}. ` +
+    `No text or labels. Bright, educational, culturally authentic.`
+  );
+}
 
 content.post('/generate-image', async (c) => {
   const body   = await c.req.json().catch(() => null);
@@ -533,39 +558,36 @@ content.post('/generate-image', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  // Image generation via OpenRouter chat completions (FLUX.2 Klein — fast, cheap, child-friendly style)
   const orClient = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey:  env.OPENROUTER_API_KEY,
   });
 
   try {
-    // Translate the subject (before the style suffix) to English so FLUX understands it
-    const dotIdx = parsed.data.prompt.indexOf('.');
-    const rawSubject = dotIdx > 0 ? parsed.data.prompt.slice(0, dotIdx).trim() : parsed.data.prompt.trim();
-    const styleSuffix = dotIdx > 0 ? parsed.data.prompt.slice(dotIdx) : '';
+    const { prompt, grade_band } = parsed.data;
 
+    // Translate the subject to English so FLUX understands it
     const translationChat = await orClient.chat.completions.create({
       model:    'google/gemini-2.0-flash-001',
-      messages: [{ role: 'user', content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${rawSubject}"` }],
+      messages: [{ role: 'user', content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${prompt}"` }],
     });
-    const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? rawSubject;
-    const finalPrompt = englishSubject + styleSuffix;
+    const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? prompt;
+
+    // Build the full prompt with Mongolian cultural template
+    const fullPrompt = buildMongolianImagePrompt(englishSubject, grade_band);
 
     const chat = await orClient.chat.completions.create({
       model:    'black-forest-labs/flux.2-klein-4b',
-      messages: [{ role: 'user', content: finalPrompt }],
+      messages: [{ role: 'user', content: fullPrompt }],
     });
 
     const choice = chat.choices[0];
     const images = (choice?.message as { images?: { image_url?: { url?: string } }[] })?.images;
     const dataUri = images?.[0]?.image_url?.url ?? '';
-    // Data URI format: "data:image/png;base64,<b64>"
     const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : '';
     if (!b64) throw new Error(`No image data found. Response: ${JSON.stringify(chat).slice(0, 400)}`);
 
     const imgBuf = Buffer.from(b64, 'base64');
-
     const tempId = crypto.randomUUID();
 
     if (r2Enabled()) {

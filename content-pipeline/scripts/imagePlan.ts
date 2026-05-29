@@ -17,6 +17,7 @@ interface Variant {
   correct_answer: string;
   options: Record<string, unknown>;
   image_url: string | null;
+  grade_band?: string[];
 }
 
 interface TaskFile {
@@ -33,6 +34,7 @@ interface QueueRow {
   prompt_source: string;
   prompt: string;
   filename: string;
+  grade_band: string;
 }
 
 function variantSuffix(variantId: string): string {
@@ -170,11 +172,12 @@ function main() {
         prompt_source: resolved.source,
         prompt: resolved.prompt,
         filename: `img_${task.task_id}-${vSuffix}.png`,
+        grade_band: JSON.stringify(v.grade_band ?? []),
       });
     }
   }
 
-  const headers = ["task_id", "variant", "type", "word", "base_word", "prompt_source", "prompt", "filename"];
+  const headers = ["task_id", "variant", "type", "word", "base_word", "prompt_source", "prompt", "filename", "grade_band"];
   const csv = toCsv(headers, rows as unknown as Record<string, string>[]);
   const csvPath = path.join(IMAGES_DIR, "image-queue.csv");
   fs.writeFileSync(csvPath, csv, "utf8");
@@ -191,7 +194,7 @@ function main() {
   console.log(`  Choice types:  ${tt1}`);
   console.log(`  Fill types:    ${tt2}`);
   console.log(`Prompt source:   ${fromSeed} from seed-words, ${fromFallback} fallback`);
-  console.log(`Model:           dall-e-3 (OpenAI) — $0.04/image`);
+  console.log(`Model:           flux.2-klein-4b (OpenRouter) — ~$0.003/image`);
   console.log(`\nOutput: ${csvPath}`);
 }
 

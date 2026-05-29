@@ -256,6 +256,14 @@
       "type": "string",
       "description": "Short corrective feedback shown after an incorrect attempt (Mongolian)"
     },
+    "feedback_correct": {
+      "type": "string",
+      "description": "Positive feedback shown after a correct attempt (Mongolian)"
+    },
+    "feedback_wrong": {
+      "type": "string",
+      "description": "Additional feedback shown after a wrong attempt (Mongolian)"
+    },
     "is_diagnostic": {
       "type": "boolean",
       "default": false,

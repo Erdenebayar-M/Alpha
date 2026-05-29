@@ -11,9 +11,9 @@ const CSV_PATH = path.join(IMAGES_DIR, "image-queue.csv");
 const LOG_PATH = path.join(IMAGES_DIR, "image-generation-log.json");
 const ERRORS_PATH = path.join(IMAGES_DIR, "image-errors.json");
 
-const MODEL = "dall-e-3";
-const RATE_LIMIT_MS = 1000; // DALL-E 3: 5 images/min on standard tier
-const COST_PER_IMAGE = 0.04; // $0.040 per 1024×1024 standard
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+const MODEL = "black-forest-labs/flux.2-klein-4b";
+const COST_PER_IMAGE = 0.003;
 const COST_CAP_USD = 5;
 
 interface CsvRow {
@@ -25,6 +25,7 @@ interface CsvRow {
   prompt_source: string;
   prompt: string;
   filename: string;
+  grade_band: string;
 }
 
 interface LogEntry {
@@ -75,12 +76,27 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Wrap Mongolian prompt in English instructions DALL-E understands
-function buildDallePrompt(word: string, mongoPrompt: string): string {
+function buildMongolianImagePrompt(subject: string, gradeBand?: string[]): string {
+  const isGrade1_2 = !gradeBand || gradeBand.length === 0 || gradeBand.includes("G12") || gradeBand.includes("G1") || gradeBand.includes("G2");
+
+  const mongolianElements = {
+    nature: "Mongolian landscape with blue sky, mountains, steppe grass",
+    culture: "wearing traditional Mongolian deel, ger tent, or Mongolian patterns",
+    colors: "warm earthy tones with bright accent colors",
+    style: "soft, friendly, illustrated style suitable for young children",
+  };
+
+  const complexity = isGrade1_2
+    ? "simple shapes, bold outlines, cheerful mood"
+    : "more detailed, scenic background, educational focus";
+
   return (
-    `Simple, flat-style children's educational illustration for a Mongolian spelling app. ` +
-    `Clean white background, no text, friendly and colorful. ` +
-    `Subject: ${word} — ${mongoPrompt}`
+    `Illustrate the following for a Mongolian children's book (grades 1-4): ${subject}. ` +
+    `Style: ${mongolianElements.style}, ${complexity}. ` +
+    `Include Mongolian cultural elements (${mongolianElements.culture}). ` +
+    `Colors: ${mongolianElements.colors}. ` +
+    `Setting: ${mongolianElements.nature}. ` +
+    `No text or labels. Bright, educational, culturally authentic.`
   );
 }
 
@@ -90,32 +106,43 @@ async function generateOne(
   errors: unknown[]
 ): Promise<"success" | "failed"> {
   const outputPath = path.join(GENERATED_DIR, row.filename);
-  const dallePrompt = buildDallePrompt(row.word, row.prompt);
+
+  let gradeBand: string[] = [];
+  try { gradeBand = JSON.parse(row.grade_band || "[]"); } catch { /* leave empty */ }
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const response = await client.images.generate({
+      // Translate the Mongolian word to English for FLUX
+      const translationChat = await client.chat.completions.create({
+        model: "google/gemini-2.0-flash-001",
+        messages: [{ role: "user", content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${row.word}"` }],
+      });
+      const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? row.word;
+
+      const fullPrompt = buildMongolianImagePrompt(englishSubject, gradeBand);
+
+      const chat = await client.chat.completions.create({
         model: MODEL,
-        prompt: dallePrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        response_format: "b64_json",
+        messages: [{ role: "user", content: fullPrompt }],
       });
 
-      const b64 = response.data[0]?.b64_json;
+      const choice = chat.choices[0];
+      const images = (choice?.message as { images?: { image_url?: { url?: string } }[] })?.images;
+      const dataUri = images?.[0]?.image_url?.url ?? "";
+      const b64 = dataUri.includes(",") ? dataUri.split(",")[1] : "";
+
       if (b64) {
         fs.writeFileSync(outputPath, Buffer.from(b64, "base64"));
         return "success";
       } else {
-        throw new Error("No image data in response");
+        throw new Error(`No image data found. Response: ${JSON.stringify(chat).slice(0, 400)}`);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       const isRateLimit = msg.includes("429") || msg.includes("rate_limit");
 
       if (attempt < 3 && isRateLimit) {
-        const wait = 12000 * attempt; // 12s, 24s
+        const wait = 5000 * attempt;
         console.log(`  rate limit (attempt ${attempt}) — waiting ${wait / 1000}s...`);
         await sleep(wait);
         continue;
@@ -161,24 +188,27 @@ async function main() {
     console.log("\n[DRY RUN] No files will be written.");
     for (const row of todo) {
       if (showPrompts) {
-        const dallePrompt = buildDallePrompt(row.word, row.prompt);
+        let gradeBand: string[] = [];
+        try { gradeBand = JSON.parse(row.grade_band || "[]"); } catch { /* leave empty */ }
+        const examplePrompt = buildMongolianImagePrompt(`[translated: ${row.word}]`, gradeBand);
         console.log(`\n  ${row.filename}`);
-        console.log(`    word:    ${row.word} (base: ${row.base_word}, source: ${row.prompt_source})`);
-        console.log(`    prompt:  ${dallePrompt}`);
+        console.log(`    word:       ${row.word} (base: ${row.base_word}, source: ${row.prompt_source})`);
+        console.log(`    grade_band: ${row.grade_band}`);
+        console.log(`    prompt:     ${examplePrompt}`);
       } else {
-        console.log(`  ${row.filename}  word="${row.word}"  source=${row.prompt_source}`);
+        console.log(`  ${row.filename}  word="${row.word}"  grade_band=${row.grade_band}  source=${row.prompt_source}`);
       }
     }
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    console.error("OPENAI_API_KEY not set in backend/.env");
+    console.error("OPENROUTER_API_KEY not set in backend/.env");
     process.exit(1);
   }
 
-  const client = new OpenAI({ apiKey });
+  const client = new OpenAI({ baseURL: OPENROUTER_BASE_URL, apiKey });
   fs.mkdirSync(GENERATED_DIR, { recursive: true });
 
   const errors: unknown[] = [];
@@ -203,8 +233,6 @@ async function main() {
       failedCount++;
       console.log(`  ✗ failed`);
     }
-
-    if (i < todo.length - 1) await sleep(RATE_LIMIT_MS);
   }
 
   const log: GenerationLog = {
@@ -222,7 +250,7 @@ async function main() {
   }
 
   console.log(`\nDone: ${successCount} generated, ${failedCount} failed, ${skippedCount} skipped`);
-  console.log(`Actual cost: $${(successCount * COST_PER_IMAGE).toFixed(2)}`);
+  console.log(`Actual cost: ~$${(successCount * COST_PER_IMAGE).toFixed(3)}`);
 }
 
 main().catch((err) => {
