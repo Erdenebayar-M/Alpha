@@ -88,6 +88,19 @@ content.get('/stats', async (c) => {
   });
 });
 
+// ─── Serialization helper ────────────────────────────────────────────────────
+
+function serializeVariant(draft: { options: unknown; [key: string]: unknown }) {
+  const opts = (draft.options ?? {}) as Record<string, unknown>;
+  if (Array.isArray(opts.choices)) {
+    const distractors = (opts.choices as Array<{ text: string; is_correct: boolean }>)
+      .filter((c) => !c.is_correct)
+      .map((c) => c.text);
+    return { ...draft, options: { ...opts, distractors } };
+  }
+  return draft;
+}
+
 // ─── GET /api/admin/content/tasks ────────────────────────────────────────────
 
 const listQuerySchema = z.object({
@@ -129,7 +142,7 @@ content.get('/tasks', async (c) => {
   return ok(c, {
     stage,
     total,
-    tasks,
+    tasks: tasks.map(serializeVariant),
     meta: { page, per_page, total, has_next: page * per_page < total },
   });
 });
@@ -228,7 +241,7 @@ content.get('/tasks/:task_id', async (c) => {
     const draft = await prisma.taskDraft.findUnique({ where: { id: task_id } });
     if (!draft) return ERRORS.NOT_FOUND(c, `Variant ${task_id} not found`);
     const actualStage = Object.entries(STAGE_ENUM).find(([, v]) => v === draft.stage)?.[0] ?? stageKey;
-    return ok(c, { task_id: draft.task_id, stage: actualStage, variant_count: 1, variants: [draft] });
+    return ok(c, { task_id: draft.task_id, stage: actualStage, variant_count: 1, variants: [serializeVariant(draft)] });
   }
 
   const variants = await prisma.taskDraft.findMany({
@@ -240,7 +253,7 @@ content.get('/tasks/:task_id', async (c) => {
     return ERRORS.NOT_FOUND(c, `Task ${task_id} not found in ${stageKey}`);
   }
 
-  return ok(c, { task_id, stage: stageKey, variant_count: variants.length, variants });
+  return ok(c, { task_id, stage: stageKey, variant_count: variants.length, variants: variants.map(serializeVariant) });
 });
 
 // ─── Shared action schema ─────────────────────────────────────────────────────
@@ -1033,7 +1046,7 @@ content.get('/live-tasks/:id', async (c) => {
   const id = c.req.param('id');
   const task = await prisma.task.findUnique({ where: { id } });
   if (!task) return ERRORS.NOT_FOUND(c, `Task ${id} not found`);
-  return ok(c, { task });
+  return ok(c, { task: serializeVariant(task) });
 });
 
 // ─── PATCH /api/admin/content/live-tasks/:id ──────────────────────────────────

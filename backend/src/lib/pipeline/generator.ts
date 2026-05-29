@@ -98,6 +98,10 @@ function bandPrefix(def: TaskTypeDef): 'G12' | 'G24' {
   return def.grade_band.some((g) => g === 'G3' || g === 'G4') ? 'G24' : 'G12';
 }
 
+function toGradeBandKey(grades: string[]): ['G12' | 'G24'] {
+  return [grades.some((g) => g === 'G3' || g === 'G4') ? 'G24' : 'G12'];
+}
+
 function defToSpec(def: TaskTypeDef): TaskSpec {
   return {
     id:                      `${bandPrefix(def)}-${def.task_type}`,
@@ -316,7 +320,7 @@ function buildBase(spec: TaskSpec, title: string, promptText: string, feedbackTe
     secondary_skill: spec.secondary_skill ?? null,
     level_target: spec.level_target,
     error_targets: spec.error_targets,
-    grade_band: spec.grade_band,
+    grade_band: toGradeBandKey(spec.grade_band),
     difficulty: spec.difficulty,
     estimated_time_seconds: spec.estimated_time_seconds,
     lesson_slot_fit: spec.lesson_slot_fit,
@@ -341,9 +345,8 @@ function buildFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const blankPos     = displayText.indexOf('_');
   const blankPosition = blankPos >= 0 ? blankPos : 0;
   const contextWord  = (v['context_word'] as string) ?? (v['context_sentence'] as string) ?? blankAnswer;
-  const promptText   = (v['prompt_text'] as string) ?? `Хоосон зайг нөхөөрэй:\n${displayText}`;
   return {
-    ...buildBase(spec, 'Дутуу хэсгийг нөхөөрэй', promptText, (v['feedback_text'] as string) ?? '', blankAnswer),
+    ...buildBase(spec, 'Хоосон зайг нөхөөрэй', displayText, (v['feedback_text'] as string) ?? '', blankAnswer),
     options: { display_text: displayText, blank_position: blankPosition, blank_answer: blankAnswer, context_word: contextWord },
   };
 }
@@ -355,8 +358,8 @@ function buildSentenceFill(spec: TaskSpec, v: Record<string, unknown>): TaskReco
   return {
     ...buildBase(
       spec,
-      'Өгүүлбэрийг нөхөөрэй',
-      (v['prompt_text'] as string) ?? `Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй:\n${sentenceTemplate}`,
+      'Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй',
+      sentenceTemplate,
       (v['feedback_text'] as string) ?? '',
       blankAnswer,
     ),
