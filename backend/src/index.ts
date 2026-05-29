@@ -51,8 +51,8 @@ app.route('/api/dashboard', dashboard);
 app.route('/api/admin/content', content);
 
 if (require.main === module) {
-  serve({ fetch: app.fetch, port: env.PORT }, () => {
-    console.log(`Server running on http://localhost:${env.PORT}`);
+  serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, () => {
+    console.log(`Server running on http://0.0.0.0:${env.PORT}`);
   });
 }
 

@@ -276,6 +276,7 @@ model TaskDraft {
   correct_answer         String
   options                Json
   audio_url              String?
+  prompt_audio_url       String?
   image_url              String?
   primary_skill          SkillCode
   secondary_skill        SkillCode?
@@ -286,6 +287,8 @@ model TaskDraft {
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
   feedback_text          String
+  feedback_correct       String?
+  feedback_wrong         String?
   is_diagnostic          Boolean    @default(false)
 
   ai_review_severity     String?
@@ -374,7 +377,10 @@ model Task {
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
   feedback_text          String
+  feedback_correct       String?
+  feedback_wrong         String?
   is_diagnostic          Boolean    @default(false)
+  created_at             DateTime   @default(now())
 
   attempts Attempt[]
 

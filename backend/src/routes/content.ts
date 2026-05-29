@@ -80,7 +80,7 @@ content.get('/stats', async (c) => {
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
   const approvedToday = await prisma.taskDraftAuditLog.count({
-    where: { action: 'approved', created_at: { gte: todayStart } },
+    where: { action: 'approved', performed_at: { gte: todayStart } },
   });
 
   return ok(c, {
@@ -151,6 +151,8 @@ const createTaskSchema = z.object({
   estimated_time_seconds: z.number().int().positive(),
   lesson_slot_fit:        z.string().min(1),
   feedback_text:          z.string().default(''),
+  feedback_correct:       z.string().optional(),
+  feedback_wrong:         z.string().optional(),
   initial_text:           z.string().optional(),
   audio_url:              z.string().nullable().optional(),
   image_url:              z.string().nullable().optional(),
@@ -204,6 +206,8 @@ content.post('/tasks', async (c) => {
       estimated_time_seconds: d.estimated_time_seconds,
       lesson_slot_fit:        lessonSlot,
       feedback_text:          d.feedback_text,
+      feedback_correct:       d.feedback_correct ?? null,
+      feedback_wrong:         d.feedback_wrong ?? null,
     },
   });
 
@@ -523,40 +527,52 @@ const generateImageSchema = z.object({
 });
 
 content.post('/generate-image', async (c) => {
-  const apiKey = env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return c.json({ success: false, error: 'OPENAI_API_KEY not configured on server' }, 503 as const);
-  }
-
   const body   = await c.req.json().catch(() => null);
   const parsed = generateImageSchema.safeParse(body);
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const client = new OpenAI({ apiKey });
+  // Image generation via OpenRouter chat completions (FLUX.2 Klein — fast, cheap, child-friendly style)
+  const orClient = new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey:  env.OPENROUTER_API_KEY,
+  });
 
   try {
-    const response = await client.images.generate({
-      model:           'dall-e-3',
-      prompt:          parsed.data.prompt,
-      n:               1,
-      size:            '1024x1024',
-      quality:         'standard',
-      response_format: 'b64_json',
+    // Translate the subject (before the style suffix) to English so FLUX understands it
+    const dotIdx = parsed.data.prompt.indexOf('.');
+    const rawSubject = dotIdx > 0 ? parsed.data.prompt.slice(0, dotIdx).trim() : parsed.data.prompt.trim();
+    const styleSuffix = dotIdx > 0 ? parsed.data.prompt.slice(dotIdx) : '';
+
+    const translationChat = await orClient.chat.completions.create({
+      model:    'google/gemini-2.0-flash-001',
+      messages: [{ role: 'user', content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${rawSubject}"` }],
+    });
+    const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? rawSubject;
+    const finalPrompt = englishSubject + styleSuffix;
+
+    const chat = await orClient.chat.completions.create({
+      model:    'black-forest-labs/flux.2-klein-4b',
+      messages: [{ role: 'user', content: finalPrompt }],
     });
 
-    const b64 = response.data?.[0]?.b64_json;
-    if (!b64) throw new Error('No image data in response');
+    const choice = chat.choices[0];
+    const images = (choice?.message as { images?: { image_url?: { url?: string } }[] })?.images;
+    const dataUri = images?.[0]?.image_url?.url ?? '';
+    // Data URI format: "data:image/png;base64,<b64>"
+    const b64 = dataUri.includes(',') ? dataUri.split(',')[1] : '';
+    if (!b64) throw new Error(`No image data found. Response: ${JSON.stringify(chat).slice(0, 400)}`);
+
+    const imgBuf = Buffer.from(b64, 'base64');
 
     const tempId = crypto.randomUUID();
-    const buf    = Buffer.from(b64, 'base64');
 
     if (r2Enabled()) {
-      await r2Upload(`temp/${tempId}.png`, buf, 'image/png');
+      await r2Upload(`temp/${tempId}.png`, imgBuf, 'image/png');
     } else {
       fs.mkdirSync(IMG_TEMP, { recursive: true });
-      fs.writeFileSync(path.join(IMG_TEMP, `${tempId}.png`), buf);
+      fs.writeFileSync(path.join(IMG_TEMP, `${tempId}.png`), imgBuf);
     }
 
     return ok(c, { temp_id: tempId, base64: b64 });
@@ -601,7 +617,7 @@ content.post('/generate-audio', async (c) => {
 
   try {
     const response = await ai.models.generateContent({
-      model:    'gemini-3.1-flash-tts-preview',
+      model:    'gemini-2.5-flash-preview-tts',
       contents: [{ role: 'user', parts: [{ text: spokenText }] }],
       config: {
         responseModalities: ['AUDIO'],
@@ -738,6 +754,77 @@ content.post('/accept-audio', async (c) => {
   }
 
   return ok(c, { action: 'audio_accepted', task_id, variant_id, slot, [field]: audioUrl });
+});
+
+// ─── POST /api/admin/content/update-image ────────────────────────────────────
+
+const updateImageSchema = z.object({
+  image_url:  z.string().url(),
+  task_id:    z.string().min(1),
+  variant_id: z.string().min(1),
+  stage:      z.enum(ASSET_STAGES).default('stage2'),
+});
+
+content.post('/update-image', async (c) => {
+  const body   = await c.req.json().catch(() => null);
+  const parsed = updateImageSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const { image_url, task_id, variant_id, stage } = parsed.data;
+
+  if (stage === 'validated') {
+    const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { image_url } });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Task ${variant_id} not found in live tasks`);
+    }
+  } else {
+    const updated = await prisma.taskDraft.updateMany({ where: { id: variant_id }, data: { image_url } });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
+    }
+  }
+
+  return ok(c, { action: 'image_updated', task_id, variant_id, image_url });
+});
+
+// ─── POST /api/admin/content/update-audio ────────────────────────────────────
+
+const updateAudioSchema = z.object({
+  audio_url:  z.string().url(),
+  task_id:    z.string().min(1),
+  variant_id: z.string().min(1),
+  slot:       z.enum(['dictation', 'prompt']),
+  stage:      z.enum(ASSET_STAGES).default('stage2'),
+});
+
+content.post('/update-audio', async (c) => {
+  const body   = await c.req.json().catch(() => null);
+  const parsed = updateAudioSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const { audio_url, task_id, variant_id, slot, stage } = parsed.data;
+  const field = slot === 'dictation' ? 'audio_url' : 'prompt_audio_url';
+
+  if (stage === 'validated') {
+    const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { [field]: audio_url } });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Task ${variant_id} not found in live tasks`);
+    }
+  } else {
+    const updated = await prisma.taskDraft.updateMany({
+      where: { id: variant_id },
+      data:  { [field]: audio_url },
+    });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
+    }
+  }
+
+  return ok(c, { action: 'audio_updated', task_id, variant_id, slot, [field]: audio_url });
 });
 
 // ─── GET /api/admin/content/generate/specs ───────────────────────────────────
@@ -904,7 +991,7 @@ content.get('/live-tasks', async (c) => {
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
       where,
-      orderBy: { id: 'asc' },
+      orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
       skip:  (page - 1) * per_page,
       take:  per_page,
     }),
@@ -960,12 +1047,12 @@ content.patch('/live-tasks/:id', async (c) => {
   await prisma.$transaction(async (tx) => {
     await tx.taskDraftAuditLog.create({
       data: {
-        draft_id:  id,
-        task_id:   id,
-        action:    'edited_live',
+        draft_id:   null,
+        task_id:    id,
+        action:     'edited_live',
         from_stage: DraftStage.STAGE2,
-        notes:     `Fields: ${Object.keys(safeUpdates).join(', ')}`,
-        snapshot:  task as object,
+        notes:      `Fields: ${Object.keys(safeUpdates).join(', ')}`,
+        snapshot:   task as object,
       },
     });
     await tx.task.update({ where: { id }, data: safeUpdates });
@@ -984,7 +1071,7 @@ content.delete('/live-tasks/:id', async (c) => {
   await prisma.$transaction(async (tx) => {
     await tx.taskDraftAuditLog.create({
       data: {
-        draft_id:  id,
+        draft_id:  null,
         task_id:   id,
         action:    'deleted_live',
         from_stage: DraftStage.STAGE2,
