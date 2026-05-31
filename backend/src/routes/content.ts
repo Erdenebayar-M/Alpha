@@ -1119,4 +1119,42 @@ content.delete('/live-tasks/:id', async (c) => {
   return ok(c, { action: 'deleted', id });
 });
 
+// ─── POST /api/admin/content/bulk-delete-drafts ───────────────────────────────
+
+const bulkDeleteDraftsSchema = z.object({
+  variant_ids: z.array(z.string().min(1)).min(1),
+});
+
+content.post('/bulk-delete-drafts', async (c) => {
+  const body   = await c.req.json().catch(() => null);
+  const parsed = bulkDeleteDraftsSchema.safeParse(body);
+  if (!parsed.success)
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+
+  const { variant_ids } = parsed.data;
+
+  const drafts = await prisma.taskDraft.findMany({ where: { id: { in: variant_ids } } });
+  const foundIds = new Set(drafts.map((d) => d.id));
+  const notFound = variant_ids.filter((id) => !foundIds.has(id));
+  if (notFound.length > 0)
+    return ERRORS.NOT_FOUND(c, `Drafts not found: ${notFound.join(', ')}`);
+
+  await prisma.$transaction(async (tx) => {
+    for (const draft of drafts) {
+      await tx.taskDraftAuditLog.create({
+        data: {
+          draft_id:   draft.id,
+          task_id:    draft.task_id,
+          action:     'rejected',
+          from_stage: draft.stage,
+          snapshot:   draft as object,
+        },
+      });
+    }
+    await tx.taskDraft.deleteMany({ where: { id: { in: variant_ids } } });
+  });
+
+  return ok(c, { action: 'bulk_deleted', deleted_count: drafts.length, variant_ids });
+});
+
 export default content;
