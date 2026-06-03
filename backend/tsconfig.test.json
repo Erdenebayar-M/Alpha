@@ -1,7 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "paths": {
+      "@/*": ["./*"],
+      "@app/shared": ["../shared/src"],
+      "@app/shared/*": ["../shared/src/*"]
+    }
   },
   "include": ["prisma/**/*", "src/**/*", "../content-pipeline/**/*", "../shared/src/**/*"]
 }

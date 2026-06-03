@@ -102,6 +102,14 @@ import { createLearnerSchema } from '@app/shared';
 ```
 TS path aliases are wired in both `backend/tsconfig.json` and `frontend/tsconfig.json`. **Don't duplicate schemas** — change them once in `shared/`.
 
+**Task schema (`shared/src/validators/task.ts`)** is the **single source of truth for all task-creation paths**:
+- `POST /api/admin/content/tasks` (create by hand) uses `createTaskSchema`
+- `POST /api/admin/content/generate` (AI pipeline) validates variants via `taskContentSchema`
+- `content-pipeline/scripts/ingest.ts` calls `validateTaskContent` from `@app/shared`
+- `content-pipeline/scripts/validators/schemaValidator.ts` delegates to `validateTaskContent`
+
+The `TaskSource` Prisma enum (`HUMAN` | `AI`) is set automatically: hand-created tasks and pipeline imports get `HUMAN`; only the LLM generator writes `AI`. The `source` column exists on both `Task` and `TaskDraft` tables and is propagated through `/approve`.
+
 ### TypeScript Config
 
 - Backend: strict, CommonJS, target ES2022, `ts-node` for runtime

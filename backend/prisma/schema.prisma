@@ -187,6 +187,11 @@ enum PlanSource {
   MANUAL
 }
 
+enum TaskSource {
+  HUMAN // authored by hand, seed data, or content-pipeline scripts
+  AI    // produced by the LLM generation pipeline
+}
+
 enum LessonStatus {
   PENDING
   IN_PROGRESS
@@ -329,6 +334,7 @@ model TaskDraft {
   feedback_correct       String?
   feedback_wrong         String?
   is_diagnostic          Boolean    @default(false)
+  source                 TaskSource @default(HUMAN)
 
   ai_review_severity     String?
   ai_review_issues       String[]   @default([])
@@ -420,6 +426,7 @@ model Task {
   feedback_correct       String?
   feedback_wrong         String?
   is_diagnostic          Boolean    @default(false)
+  source                 TaskSource @default(HUMAN)
   created_at             DateTime   @default(now())
 
   attempts Attempt[]

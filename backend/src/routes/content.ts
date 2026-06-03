@@ -16,7 +16,13 @@ import {
   TaskType,
   SkillCode,
   LessonSlot,
+  InteractionForm,
+  TaskSource,
 } from '../../generated/prisma';
+import {
+  createTaskSchema as sharedCreateTaskSchema,
+  type CreateTaskInput,
+} from '@app/shared';
 import { generateForSpec, TASK_SPECS, AVAILABLE_TASK_IDS } from '../lib/pipeline/generator';
 import { reviewTaskDraft } from '../lib/pipeline/aiReviewer';
 
@@ -41,9 +47,10 @@ const STAGE_ENUM: Record<string, DraftStage> = {
   rejected:       DraftStage.REJECTED,
 };
 
-const VALID_TASK_TYPES = new Set(Object.values(TaskType));
-const VALID_SKILLS     = new Set(Object.values(SkillCode));
-const VALID_SLOTS      = new Set(Object.values(LessonSlot));
+const VALID_TASK_TYPES   = new Set(Object.values(TaskType));
+const VALID_SKILLS       = new Set(Object.values(SkillCode));
+const VALID_SLOTS        = new Set(Object.values(LessonSlot));
+const VALID_INT_FORMS    = new Set(Object.values(InteractionForm));
 
 function toTaskType(raw: string): TaskType {
   if (!VALID_TASK_TYPES.has(raw as TaskType)) throw new Error(`Unknown task_type: ${raw}`);
@@ -57,6 +64,11 @@ function toSkill(raw: string | null | undefined): SkillCode | null {
 function toSlot(raw: string): LessonSlot {
   if (!VALID_SLOTS.has(raw as LessonSlot)) throw new Error(`Unknown lesson_slot_fit: ${raw}`);
   return raw as LessonSlot;
+}
+function toInteractionForm(raw: string | null | undefined): InteractionForm | null {
+  if (!raw) return null;
+  if (!VALID_INT_FORMS.has(raw as InteractionForm)) throw new Error(`Unknown interaction_form: ${raw}`);
+  return raw as InteractionForm;
 }
 
 // ─── GET /api/admin/content/stats ────────────────────────────────────────────
@@ -149,27 +161,8 @@ content.get('/tasks', async (c) => {
 
 // ─── POST /api/admin/content/tasks ───────────────────────────────────────────
 
-const createTaskSchema = z.object({
-  task_type:              z.string().min(1),
-  title:                  z.string().min(1).max(200),
-  prompt_text:            z.string().min(1).max(1000),
-  correct_answer:         z.string(),
-  options:                z.record(z.string(), z.unknown()).default({}),
-  primary_skill:          z.string().min(1),
-  secondary_skill:        z.string().nullable().default(null),
-  level_target:           z.string().min(1),
-  error_targets:          z.array(z.string()).default([]),
-  grade_band:             z.array(z.string()).min(1),
-  difficulty:             z.number().int().min(1).max(5),
-  estimated_time_seconds: z.number().int().positive(),
-  lesson_slot_fit:        z.string().min(1),
-  feedback_text:          z.string().default(''),
-  feedback_correct:       z.string().optional(),
-  feedback_wrong:         z.string().optional(),
-  initial_text:           z.string().optional(),
-  audio_url:              z.string().nullable().optional(),
-  image_url:              z.string().nullable().optional(),
-});
+// Use the shared canonical schema; alias keeps local type inference clean.
+const createTaskSchema = sharedCreateTaskSchema;
 
 content.post('/tasks', async (c) => {
   const body   = await c.req.json().catch(() => null);
@@ -183,10 +176,12 @@ content.post('/tasks', async (c) => {
   let taskType: TaskType;
   let primarySkill: SkillCode;
   let lessonSlot: LessonSlot;
+  let interactionForm: InteractionForm | null;
   try {
-    taskType     = toTaskType(d.task_type);
-    primarySkill = toSkill(d.primary_skill) as SkillCode;
-    lessonSlot   = toSlot(d.lesson_slot_fit);
+    taskType        = toTaskType(d.task_type);
+    primarySkill    = toSkill(d.primary_skill) as SkillCode;
+    lessonSlot      = toSlot(d.lesson_slot_fit);
+    interactionForm = toInteractionForm(d.interaction_form ?? null);
   } catch (err) {
     return ERRORS.VALIDATION_ERROR(c, (err as Error).message);
   }
@@ -218,9 +213,12 @@ content.post('/tasks', async (c) => {
       difficulty:             d.difficulty,
       estimated_time_seconds: d.estimated_time_seconds,
       lesson_slot_fit:        lessonSlot,
+      interaction_form:       interactionForm,
       feedback_text:          d.feedback_text,
       feedback_correct:       d.feedback_correct ?? null,
       feedback_wrong:         d.feedback_wrong ?? null,
+      is_diagnostic:          d.is_diagnostic,
+      source:                 TaskSource.HUMAN,
     },
   });
 
@@ -310,8 +308,12 @@ content.post('/approve', async (c) => {
         difficulty:             draft.difficulty,
         estimated_time_seconds: draft.estimated_time_seconds,
         lesson_slot_fit:        draft.lesson_slot_fit,
+        interaction_form:       draft.interaction_form,
         feedback_text:          draft.feedback_text,
+        feedback_correct:       draft.feedback_correct,
+        feedback_wrong:         draft.feedback_wrong,
         is_diagnostic:          draft.is_diagnostic,
+        source:                 draft.source,
       },
       update: {
         task_type:              draft.task_type,
@@ -329,8 +331,12 @@ content.post('/approve', async (c) => {
         difficulty:             draft.difficulty,
         estimated_time_seconds: draft.estimated_time_seconds,
         lesson_slot_fit:        draft.lesson_slot_fit,
+        interaction_form:       draft.interaction_form,
         feedback_text:          draft.feedback_text,
+        feedback_correct:       draft.feedback_correct,
+        feedback_wrong:         draft.feedback_wrong,
         is_diagnostic:          draft.is_diagnostic,
+        source:                 draft.source,
       },
     });
 
@@ -968,6 +974,7 @@ content.post('/generate', async (c) => {
           id: variantId,
           task_id,
           stage,
+          source: TaskSource.AI,
           ...draftData,
           ai_review_severity: review.severity,
           ai_review_issues:   review.issues,
@@ -976,6 +983,7 @@ content.post('/generate', async (c) => {
         },
         update: {
           stage,
+          source: TaskSource.AI,
           ...draftData,
           ai_review_severity: review.severity,
           ai_review_issues:   review.issues,

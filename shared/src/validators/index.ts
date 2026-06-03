@@ -4,3 +4,4 @@ export * from './common';
 export * from './diagnostic';
 export * from './learner';
 export * from './lesson';
+export * from './task';

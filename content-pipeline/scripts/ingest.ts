@@ -6,111 +6,17 @@
 import * as XLSX from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
-import { z } from 'zod';
+import { validateTaskContent, SKILL_CODES } from '@app/shared';
 
 const DOCS_DIR = path.join(__dirname, '../../docs');
 const OUT_DIR  = path.join(__dirname, '../generated');
 const MAIN_XL  = path.join(DOCS_DIR, '0. Агуулгын бүтэц, тохиргоо.xlsx');
 const CONF_XL  = path.join(DOCS_DIR, 'M0-M1 түвшний эргэлзээтэй үгсийн жагсаалт.xlsx');
 
-// ── Zod validation schemas ──────────────────────────────────────────────────
-
-const SkillCodeEnum = ['S1','S2','S3','S4','S5','S6','S7','S8'] as const;
-const SkillCode = z.enum(SkillCodeEnum);
-
-const TaskBaseSchema = z.object({
-  id:                      z.string().min(1),
-  task_type:               z.enum(['TT_LISTEN_CHOOSE','TT_IMAGE_WORD_MATCH','TT_CHOOSE_CORRECT','TT_SIMPLE_SUFFIX','TT_WORD_FORM_CHOOSE','TT_SUFFIX_CHOOSE','TT_CONSONANT_CONFUSION','TT_LONG_VOWEL_CHALLENGE','TT_CASE_SUFFIX','TT_MIXED_REVIEW','TT_MIXED_WORD_SET','TT_MIXED_CHECKPOINT','TT_LETTER_FILL','TT_COPY_WRITE','TT_FILL_WRITE','TT_MISSING_LETTER','TT_WORD_ENDING','TT_LONG_VOWEL_FILL','TT_REDUCED_VOWEL','TT_SUFFIX_WRITE','TT_SENTENCE_FILL','TT_LONG_VOWEL_IN_SENTENCE','TT_REDUCED_VOWEL_IN_SENTENCE','TT_CAPITAL_PUNCTUATION','TT_FIND_ERROR','TT_FIX_ERROR','TT_WORD_FORM_FIX','TT_FIND_OMITTED_LETTER','TT_SENTENCE_BOUNDARY','TT_BASIC_COMMA','TT_EXPLAINED_CORRECTION','TT_WORD_SET_DICTATION','TT_TWO_WORD_DICTATION','TT_SHORT_SENTENCE_DICTATION','TT_TWO_SENTENCE_DICTATION','TT_MINI_TEXT_DICTATION','TT_SELF_CHECK','TT_OWN_WRITING_CORRECTION','TT_COMPOUND_SUFFIX']),
-  title:                   z.string().min(1),
-  prompt_text:             z.string().min(1),
-  correct_answer:          z.string().min(1),
-  primary_skill:           SkillCode,
-  level_target:            z.string().min(1),
-  error_targets:           z.array(z.string()),
-  grade_band:              z.array(z.enum(['G1','G2','G3','G4'])).min(1),
-  difficulty:              z.number().min(1).max(5),
-  estimated_time_seconds:  z.number().min(1),
-  lesson_slot_fit:         z.enum(['WARM_UP','CORE','MIXED','END']),
-  feedback_text:           z.string().min(1),
-});
-
-const CHOICE_OPTS = z.object({
-  choices:       z.array(z.object({ text: z.string(), is_correct: z.boolean() })).min(2).max(4),
-  audio_trigger: z.boolean(),
-});
-const FILL_OPTS = z.object({
-  display_text:   z.string(),
-  blank_position: z.number().min(0),
-  blank_answer:   z.string(),
-  context_word:   z.string(),
-});
-const CORRECTION_OPTS = z.object({
-  incorrect_text: z.string(),
-  correct_text:   z.string(),
-  error_type:     z.string(),
-  hint:           z.string(),
-});
-const DICTATION_OPTS = z.object({
-  audio_text:       z.string(),
-  word_count:       z.number().min(1),
-  expected_answers: z.array(z.string()),
-  allow_partial:    z.boolean(),
-});
-const MINI_TEXT_OPTS = z.object({
-  audio_text:       z.string(),
-  sentence_count:   z.number().min(1),
-  expected_answers: z.array(z.string()),
-});
-const SELF_CHECK_OPTS = z.object({
-  original_attempt: z.string(),
-  model_answer:     z.string(),
-  comparison_mode:  z.enum(['side_by_side','highlight_diff']),
-});
-
-const OptionsSchemas: Record<string, z.ZodType> = {
-  // Choice tasks
-  TT_LISTEN_CHOOSE: CHOICE_OPTS, TT_IMAGE_WORD_MATCH: CHOICE_OPTS,
-  TT_CHOOSE_CORRECT: CHOICE_OPTS, TT_SIMPLE_SUFFIX: CHOICE_OPTS,
-  TT_WORD_FORM_CHOOSE: CHOICE_OPTS, TT_SUFFIX_CHOOSE: CHOICE_OPTS,
-  TT_CONSONANT_CONFUSION: CHOICE_OPTS, TT_LONG_VOWEL_CHALLENGE: CHOICE_OPTS,
-  TT_CASE_SUFFIX: CHOICE_OPTS, TT_MIXED_REVIEW: CHOICE_OPTS,
-  TT_MIXED_WORD_SET: CHOICE_OPTS, TT_MIXED_CHECKPOINT: CHOICE_OPTS,
-  // Fill tasks
-  TT_LETTER_FILL: FILL_OPTS, TT_COPY_WRITE: FILL_OPTS,
-  TT_FILL_WRITE: FILL_OPTS, TT_MISSING_LETTER: FILL_OPTS,
-  TT_WORD_ENDING: FILL_OPTS, TT_LONG_VOWEL_FILL: FILL_OPTS,
-  TT_REDUCED_VOWEL: FILL_OPTS, TT_SUFFIX_WRITE: FILL_OPTS,
-  TT_COMPOUND_SUFFIX: FILL_OPTS, TT_SENTENCE_FILL: FILL_OPTS,
-  TT_LONG_VOWEL_IN_SENTENCE: FILL_OPTS, TT_REDUCED_VOWEL_IN_SENTENCE: FILL_OPTS,
-  // Correction tasks
-  TT_CAPITAL_PUNCTUATION: CORRECTION_OPTS, TT_FIND_ERROR: CORRECTION_OPTS,
-  TT_FIX_ERROR: CORRECTION_OPTS, TT_WORD_FORM_FIX: CORRECTION_OPTS,
-  TT_FIND_OMITTED_LETTER: CORRECTION_OPTS, TT_SENTENCE_BOUNDARY: CORRECTION_OPTS,
-  TT_BASIC_COMMA: CORRECTION_OPTS, TT_EXPLAINED_CORRECTION: CORRECTION_OPTS,
-  // Dictation tasks
-  TT_WORD_SET_DICTATION: DICTATION_OPTS, TT_TWO_WORD_DICTATION: DICTATION_OPTS,
-  TT_SHORT_SENTENCE_DICTATION: DICTATION_OPTS, TT_TWO_SENTENCE_DICTATION: DICTATION_OPTS,
-  // Mini-text
-  TT_MINI_TEXT_DICTATION: MINI_TEXT_OPTS,
-  // Self-check
-  TT_SELF_CHECK: SELF_CHECK_OPTS, TT_OWN_WRITING_CORRECTION: SELF_CHECK_OPTS,
-};
+const SkillCodeEnum = SKILL_CODES;
 
 function validateTask(task: unknown): { ok: boolean; errors: string[] } {
-  const errs: string[] = [];
-  const base = TaskBaseSchema.safeParse(task);
-  if (!base.success) {
-    errs.push(...base.error.issues.map(i => `${i.path.join('.') || 'root'}: ${i.message}`));
-  }
-  const t = task as Record<string, unknown>;
-  const optSchema = OptionsSchemas[String(t.task_type ?? '')];
-  if (optSchema) {
-    const opt = optSchema.safeParse(t.options);
-    if (!opt.success) {
-      errs.push(...opt.error.issues.map(i => `options.${i.path.join('.') || 'root'}: ${i.message}`));
-    }
-  }
-  return { ok: errs.length === 0, errors: errs };
+  return validateTaskContent(task);
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -286,10 +192,13 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
     TT_SIMPLE_SUFFIX: 'CHOICE', TT_WORD_FORM_CHOOSE: 'CHOICE', TT_SUFFIX_CHOOSE: 'CHOICE',
     TT_CONSONANT_CONFUSION: 'CHOICE', TT_LONG_VOWEL_CHALLENGE: 'CHOICE',
     TT_CASE_SUFFIX: 'CHOICE', TT_MIXED_REVIEW: 'CHOICE', TT_MIXED_WORD_SET: 'CHOICE', TT_MIXED_CHECKPOINT: 'CHOICE',
-    TT_LETTER_FILL: 'FILL', TT_COPY_WRITE: 'FILL', TT_FILL_WRITE: 'FILL',
+    TT_LETTER_FILL: 'FILL', TT_COPY_WRITE: 'CORRECTION', TT_FILL_WRITE: 'FILL',
     TT_MISSING_LETTER: 'FILL', TT_WORD_ENDING: 'FILL', TT_LONG_VOWEL_FILL: 'FILL',
     TT_REDUCED_VOWEL: 'FILL', TT_SUFFIX_WRITE: 'FILL', TT_COMPOUND_SUFFIX: 'FILL',
-    TT_SENTENCE_FILL: 'FILL', TT_LONG_VOWEL_IN_SENTENCE: 'FILL', TT_REDUCED_VOWEL_IN_SENTENCE: 'FILL',
+    // Sentence-level fill → sentenceFillOptions shape (not word-level fillOptions)
+    TT_SENTENCE_FILL: 'SENTENCE_FILL',
+    TT_LONG_VOWEL_IN_SENTENCE: 'SENTENCE_FILL',
+    TT_REDUCED_VOWEL_IN_SENTENCE: 'SENTENCE_FILL',
     TT_CAPITAL_PUNCTUATION: 'CORRECTION', TT_FIND_ERROR: 'CORRECTION', TT_FIX_ERROR: 'CORRECTION',
     TT_WORD_FORM_FIX: 'CORRECTION', TT_FIND_OMITTED_LETTER: 'CORRECTION',
     TT_SENTENCE_BOUNDARY: 'CORRECTION', TT_BASIC_COMMA: 'CORRECTION', TT_EXPLAINED_CORRECTION: 'CORRECTION',
@@ -316,6 +225,17 @@ function buildOptions(taskType: string, r: unknown[], spec: SpecLookup | undefin
         blank_position: blankIdx >= 0 ? blankIdx : 0,
         blank_answer:   correctAnswer,
         context_word:   blankIdx >= 0 ? display.replace('_', correctAnswer) : correctAnswer,
+      };
+    }
+
+    case 'SENTENCE_FILL': {
+      // Produces sentenceFillOptions shape: sentence_template + blank_answer + context_sentence
+      const template = prompt.replace(/^(Аудио\+текст|Аудио)\s*:\s*/i, '').trim();
+      const context  = template.replace('_', correctAnswer);
+      return {
+        sentence_template: template,
+        blank_answer:      correctAnswer,
+        context_sentence:  context,
       };
     }
 
