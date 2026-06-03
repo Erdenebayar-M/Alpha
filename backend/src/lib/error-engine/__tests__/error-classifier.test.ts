@@ -410,7 +410,7 @@ describe('G1/G2 — Тэмдэглэгээний алдаа', () => {
 
 describe('H4 — Өөрийгөө шалгаагүй', () => {
   const baseMeta: TaskMeta = {
-    taskType: 'TT6',
+    taskType: 'TT_SELF_CHECK',
     correctAnswer: 'сүү',
   };
 
@@ -462,7 +462,7 @@ describe('H4 — Өөрийгөө шалгаагүй', () => {
   it('того→тогоо revision → no H4', () => {
     const diff = checkSentence('тогоо', 'тогоо');
     const errors = classifySentenceErrors(diff, {
-      taskType: 'TT6',
+      taskType: 'TT_SELF_CHECK',
       correctAnswer: 'тогоо',
       originalAttempt: 'того',
       revision: 'тогоо',
@@ -470,8 +470,8 @@ describe('H4 — Өөрийгөө шалгаагүй', () => {
     expect(codes(errors)).not.toContain('H4');
   });
 
-  // H4 only applies to TT6
-  it('non-TT6 task → no H4 even with matching conditions', () => {
+  // H4 only applies to self-check tasks
+  it('non-self-check task → no H4 even with matching conditions', () => {
     const diff = checkSentence('сүү', 'сү');
     const errors = classifySentenceErrors(diff, {
       taskType: 'TT4',

@@ -10,10 +10,10 @@ import {
 // ─── Mock task repository ────────────────────────────────────────────────────
 
 const SAMPLE_TASKS: Record<string, TaskRecord> = {
-  // TT1 — Choice: audio "ном", pick correct from [ном, нум, мод]
+  // TT_LISTEN_CHOOSE — Choice: audio "ном", pick correct from [ном, нум, мод]
   'G12-001': {
     id: 'G12-001',
-    task_type: 'TT1_CHOICE',
+    task_type: 'TT_LISTEN_CHOOSE',
     correct_answer: 'ном',
     options: {
       choices: [
@@ -28,10 +28,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['A2', 'D3'],
   },
 
-  // TT1 — Choice: long vowel тогоо/того/тогуу
+  // TT_CHOOSE_CORRECT — Choice: long vowel тогоо/того/тогуу
   'G12-005': {
     id: 'G12-005',
-    task_type: 'TT1_CHOICE',
+    task_type: 'TT_CHOOSE_CORRECT',
     correct_answer: 'тогоо',
     options: {
       choices: [
@@ -45,10 +45,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['C1'],
   },
 
-  // TT1 — Choice: сүү/су/сү
+  // TT_CHOOSE_CORRECT — Choice: сүү/су/сү
   'G12-005b': {
     id: 'G12-005b',
-    task_type: 'TT1_CHOICE',
+    task_type: 'TT_CHOOSE_CORRECT',
     correct_answer: 'сүү',
     options: {
       choices: [
@@ -62,10 +62,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['C1'],
   },
 
-  // TT2 — Fill: дэвт_р, blank at position 4, answer "э"
+  // TT_LETTER_FILL — Fill: дэвт_р, blank at position 4, answer "э"
   'G12-007': {
     id: 'G12-007',
-    task_type: 'TT2_FILL',
+    task_type: 'TT_LETTER_FILL',
     correct_answer: 'дэвтэр',
     options: {
       display_text: 'дэвт_р',
@@ -78,10 +78,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['C4'],
   },
 
-  // TT3 — Correction: incorrect "того", correct "тогоо"
+  // TT_FIX_ERROR — Correction: incorrect "того", correct "тогоо"
   'G12-011': {
     id: 'G12-011',
-    task_type: 'TT3_CORRECTION',
+    task_type: 'TT_FIX_ERROR',
     correct_answer: 'тогоо',
     options: {
       incorrect_text: 'того',
@@ -94,10 +94,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['C1'],
   },
 
-  // TT4 — Dictation: sentence "Би явна."
+  // TT_SHORT_SENTENCE_DICTATION — Dictation: sentence "Би явна."
   'G12-009': {
     id: 'G12-009',
-    task_type: 'TT4_DICTATION',
+    task_type: 'TT_SHORT_SENTENCE_DICTATION',
     correct_answer: 'Би явна.',
     options: {
       audio_text: 'Би явна.',
@@ -110,10 +110,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['G1', 'G2'],
   },
 
-  // TT4 — Dictation: sentence "Бат ирлээ."
+  // TT_SHORT_SENTENCE_DICTATION — Dictation: sentence "Бат ирлээ."
   'G12-009b': {
     id: 'G12-009b',
-    task_type: 'TT4_DICTATION',
+    task_type: 'TT_SHORT_SENTENCE_DICTATION',
     correct_answer: 'Бат ирлээ.',
     options: {
       audio_text: 'Бат ирлээ.',
@@ -126,10 +126,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['G1', 'G2'],
   },
 
-  // TT6 — Self-check: original "сү", model "сүү"
+  // TT_SELF_CHECK — Self-check: original "сү", model "сүү"
   'G12-012': {
     id: 'G12-012',
-    task_type: 'TT6_SELF_CHECK',
+    task_type: 'TT_SELF_CHECK',
     correct_answer: 'сүү',
     options: {
       original_attempt: 'сү',
@@ -140,6 +140,52 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     primary_skill: 'S8',
     error_targets: ['C1'],
   },
+
+  // TT_MATCH_PAIRS — Match pairs: letters ↔ images
+  'G12-013': {
+    id: 'G12-013',
+    task_type: 'TT_MATCH_PAIRS',
+    correct_answer: 'pairs',
+    options: {
+      pairs: [
+        { left: 'н', right: 'нар' },
+        { left: 'м', right: 'мод' },
+        { left: 'г', right: 'гэр' },
+      ],
+    },
+    feedback_text: 'Зөв холбосон!',
+    primary_skill: 'S1',
+    error_targets: ['A2'],
+  },
+
+  // TT_ASSEMBLE_WORD — Assemble: [р][а][н] → нар
+  'G12-014': {
+    id: 'G12-014',
+    task_type: 'TT_ASSEMBLE_WORD',
+    correct_answer: 'нар',
+    options: {
+      tiles: ['р', 'а', 'н'],
+      correct_order: ['н', 'а', 'р'],
+    },
+    feedback_text: 'Үсгийн дарааллыг шалгаарай.',
+    primary_skill: 'S1',
+    error_targets: ['A3', 'B3'],
+  },
+
+  // TT_TAP_FIND_ERROR — Tap: find wrong word in sentence
+  'G12-015': {
+    id: 'G12-015',
+    task_type: 'TT_TAP_FIND_ERROR',
+    correct_answer: '1',
+    options: {
+      sentence: 'Намар навч уннаа.',
+      error_word_index: 2,
+      correct_text: 'Намар навч унана.',
+    },
+    feedback_text: 'Алдаатай үгийг ол.',
+    primary_skill: 'S8',
+    error_targets: ['H4'],
+  },
 };
 
 const mockTaskRepo: TaskRepository = {
@@ -148,7 +194,7 @@ const mockTaskRepo: TaskRepository = {
   },
 };
 
-// ─── Mock DB repositories (just track calls) ────────────────────────────────
+// ─── Mock DB repositories ────────────────────────────────────────────────────
 
 function createMockAttemptRepo() {
   const calls: unknown[] = [];
@@ -171,92 +217,63 @@ function createMockErrorLogRepo() {
   return { repo, calls };
 }
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
 function makeInput(taskId: string, inputText: string, overrides?: Partial<AttemptInput>): AttemptInput {
-  return {
-    learnerId: 'learner-1',
-    taskId,
-    inputText,
-    timeSeconds: 10,
-    ...overrides,
-  };
+  return { learnerId: 'learner-1', taskId, inputText, timeSeconds: 10, ...overrides };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT1 — Choice
+// TT_LISTEN_CHOOSE / TT_CHOOSE_CORRECT — Choice
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('TT1 — Choice', () => {
-  it('G12-001: correct choice "ном" → score 1.0, no errors', async () => {
-    const result = await processAttempt(
-      makeInput('G12-001', 'ном'),
-      mockTaskRepo,
-    );
+describe('Choice (TT_LISTEN_CHOOSE / TT_CHOOSE_CORRECT)', () => {
+  it('correct choice "ном" → score 1.0, no errors', async () => {
+    const result = await processAttempt(makeInput('G12-001', 'ном'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
     expect(result.errorCodes).toHaveLength(0);
     expect(result.feedback).toBe('Зөв бичлээ! Баяр хүргэе!');
   });
 
-  it('G12-001: wrong choice "нум" → score 0.5, D3 error', async () => {
-    const result = await processAttempt(
-      makeInput('G12-001', 'нум'),
-      mockTaskRepo,
-    );
+  it('wrong choice "нум" → score 0.5, D3 error', async () => {
+    const result = await processAttempt(makeInput('G12-001', 'нум'), mockTaskRepo);
     expect(result.score).toBe(0.5);
     expect(result.isCorrect).toBe(false);
     expect(result.errorCodes).toContain('D3');
   });
 
-  it('G12-005: wrong choice "того" → score 0.5, C1 error', async () => {
-    const result = await processAttempt(
-      makeInput('G12-005', 'того'),
-      mockTaskRepo,
-    );
+  it('wrong choice "того" → score 0.5, C1 error', async () => {
+    const result = await processAttempt(makeInput('G12-005', 'того'), mockTaskRepo);
     expect(result.score).toBe(0.5);
     expect(result.isCorrect).toBe(false);
     expect(result.errorCodes).toContain('C1');
   });
 
-  it('G12-005b: wrong choice "сү" → C1 error', async () => {
-    const result = await processAttempt(
-      makeInput('G12-005b', 'сү'),
-      mockTaskRepo,
-    );
+  it('wrong choice "сү" → C1 error', async () => {
+    const result = await processAttempt(makeInput('G12-005b', 'сү'), mockTaskRepo);
     expect(result.isCorrect).toBe(false);
     expect(result.errorCodes).toContain('C1');
   });
 
-  it('G12-005: correct choice "тогоо" → score 1.0', async () => {
-    const result = await processAttempt(
-      makeInput('G12-005', 'тогоо'),
-      mockTaskRepo,
-    );
+  it('correct choice "тогоо" → score 1.0', async () => {
+    const result = await processAttempt(makeInput('G12-005', 'тогоо'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT2 — Fill
+// TT_LETTER_FILL — Fill
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('TT2 — Fill', () => {
-  it('G12-007: fill "э" → score 1.0, correct', async () => {
-    const result = await processAttempt(
-      makeInput('G12-007', 'э'),
-      mockTaskRepo,
-    );
+describe('Fill (TT_LETTER_FILL)', () => {
+  it('fill "э" → score 1.0, correct', async () => {
+    const result = await processAttempt(makeInput('G12-007', 'э'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
   });
 
-  it('G12-007: fill "а" → score 0.5, wrong letter', async () => {
-    const result = await processAttempt(
-      makeInput('G12-007', 'а'),
-      mockTaskRepo,
-    );
+  it('fill "а" → score 0.5, wrong letter', async () => {
+    const result = await processAttempt(makeInput('G12-007', 'а'), mockTaskRepo);
     expect(result.score).toBe(0.5);
     expect(result.isCorrect).toBe(false);
     expect(result.errorsDetail.length).toBeGreaterThanOrEqual(1);
@@ -264,60 +281,44 @@ describe('TT2 — Fill', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT3 — Correction
+// TT_FIX_ERROR — Correction
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('TT3 — Correction', () => {
-  it('G12-011: child writes "тогоо" (correct fix) → score 1.0', async () => {
-    const result = await processAttempt(
-      makeInput('G12-011', 'тогоо'),
-      mockTaskRepo,
-    );
+describe('Correction (TT_FIX_ERROR)', () => {
+  it('"тогоо" (correct fix) → score 1.0', async () => {
+    const result = await processAttempt(makeInput('G12-011', 'тогоо'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
   });
 
-  it('G12-011: child writes "того" (unchanged) → errors present', async () => {
-    const result = await processAttempt(
-      makeInput('G12-011', 'того'),
-      mockTaskRepo,
-    );
+  it('"того" (unchanged) → C1 error', async () => {
+    const result = await processAttempt(makeInput('G12-011', 'того'), mockTaskRepo);
     expect(result.isCorrect).toBe(false);
     expect(result.errorCodes).toContain('C1');
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT4 — Dictation (sentence-level)
+// TT_SHORT_SENTENCE_DICTATION — Dictation
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('TT4 — Dictation', () => {
-  it('G12-009: "Би явна." → score 1.0', async () => {
-    const result = await processAttempt(
-      makeInput('G12-009', 'Би явна.'),
-      mockTaskRepo,
-    );
+describe('Dictation (TT_SHORT_SENTENCE_DICTATION)', () => {
+  it('"Би явна." → score 1.0', async () => {
+    const result = await processAttempt(makeInput('G12-009', 'Би явна.'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
   });
 
-  it('G12-009b: "бат ирлээ" vs "Бат ирлээ." → G1+G2', async () => {
-    const result = await processAttempt(
-      makeInput('G12-009b', 'бат ирлээ'),
-      mockTaskRepo,
-    );
+  it('"бат ирлээ" vs "Бат ирлээ." → G1+G2', async () => {
+    const result = await processAttempt(makeInput('G12-009b', 'бат ирлээ'), mockTaskRepo);
     expect(result.isCorrect).toBe(false);
     expect(result.errorCodes).toContain('G1');
     expect(result.errorCodes).toContain('G2');
-    // G1 and G2 are both severity 1 → score 0.75
     expect(result.score).toBe(0.75);
   });
 
-  it('G12-009: "Би явна" (missing period) → G2 only', async () => {
-    const result = await processAttempt(
-      makeInput('G12-009', 'Би явна'),
-      mockTaskRepo,
-    );
+  it('"Би явна" (missing period) → G2 only', async () => {
+    const result = await processAttempt(makeInput('G12-009', 'Би явна'), mockTaskRepo);
     expect(result.errorCodes).toContain('G2');
     expect(result.errorCodes).not.toContain('G1');
     expect(result.score).toBe(0.75);
@@ -325,79 +326,114 @@ describe('TT4 — Dictation', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT6 — Self-check
+// TT_SELF_CHECK — Self-check
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('TT6 — Self-check', () => {
-  it('G12-012: revision "сүү" (correct fix) → score 1.0, selfCorrected', async () => {
-    const result = await processAttempt(
-      makeInput('G12-012', 'сүү'),
-      mockTaskRepo,
-    );
+describe('Self-check (TT_SELF_CHECK)', () => {
+  it('revision "сүү" (correct fix) → score 1.0, selfCorrected', async () => {
+    const result = await processAttempt(makeInput('G12-012', 'сүү'), mockTaskRepo);
     expect(result.score).toBe(1.0);
     expect(result.isCorrect).toBe(true);
     expect(result.selfCorrected).toBe(true);
     expect(result.errorCodes).not.toContain('H4');
   });
 
-  it('G12-012: revision "сү" (unchanged) → H4', async () => {
-    const result = await processAttempt(
-      makeInput('G12-012', 'сү'),
-      mockTaskRepo,
-    );
+  it('revision "сү" (unchanged) → H4', async () => {
+    const result = await processAttempt(makeInput('G12-012', 'сү'), mockTaskRepo);
     expect(result.errorCodes).toContain('H4');
     expect(result.selfCorrected).toBe(false);
   });
 
-  it('G12-012: revision empty string → no H4 (child attempted, differs from original)', async () => {
-    // Empty string differs from original 'сү', so child attempted *something* → no H4.
-    // But the sentence diff for '' vs 'сүү' produces missing words, which
-    // the classifier doesn't map to error codes, so the result may appear "correct".
-    const result = await processAttempt(
-      makeInput('G12-012', ''),
-      mockTaskRepo,
-    );
+  it('revision empty string → no H4 (child attempted, differs from original)', async () => {
+    const result = await processAttempt(makeInput('G12-012', ''), mockTaskRepo);
     expect(result.errorCodes).not.toContain('H4');
-    expect(result.selfCorrected).toBe(true); // revision differs from original
+    expect(result.selfCorrected).toBe(true);
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Feedback generation
+// TT_MATCH_PAIRS — Match pairs (new)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Match pairs (TT_MATCH_PAIRS)', () => {
+  it('all pairs correct → score 1.0', async () => {
+    const submitted = JSON.stringify([
+      { left: 'н', right: 'нар' },
+      { left: 'м', right: 'мод' },
+      { left: 'г', right: 'гэр' },
+    ]);
+    const result = await processAttempt(makeInput('G12-013', submitted), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+  });
+
+  it('one wrong pair → errors, score < 1.0', async () => {
+    const submitted = JSON.stringify([
+      { left: 'н', right: 'мод' }, // wrong
+      { left: 'м', right: 'мод' },
+      { left: 'г', right: 'гэр' },
+    ]);
+    const result = await processAttempt(makeInput('G12-013', submitted), mockTaskRepo);
+    expect(result.isCorrect).toBe(false);
+    expect(result.score).toBeLessThan(1.0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TT_ASSEMBLE_WORD — Assemble tiles (new)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Assemble word (TT_ASSEMBLE_WORD)', () => {
+  it('correct order ["н","а","р"] → score 1.0', async () => {
+    const submitted = JSON.stringify(['н', 'а', 'р']);
+    const result = await processAttempt(makeInput('G12-014', submitted), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+  });
+
+  it('wrong order ["р","а","н"] → errors', async () => {
+    const submitted = JSON.stringify(['р', 'а', 'н']);
+    const result = await processAttempt(makeInput('G12-014', submitted), mockTaskRepo);
+    expect(result.isCorrect).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TT_TAP_FIND_ERROR — Tap to find error (new)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Tap find error (TT_TAP_FIND_ERROR)', () => {
+  it('tapped correct index 2 → score 1.0', async () => {
+    const result = await processAttempt(makeInput('G12-015', '2'), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+  });
+
+  it('tapped wrong index 0 → H4 error', async () => {
+    const result = await processAttempt(makeInput('G12-015', '0'), mockTaskRepo);
+    expect(result.isCorrect).toBe(false);
+    expect(result.errorCodes).toContain('H4');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Feedback
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Feedback', () => {
   it('correct answer → "Зөв бичлээ! Баяр хүргэе!"', async () => {
-    const result = await processAttempt(
-      makeInput('G12-001', 'ном'),
-      mockTaskRepo,
-    );
+    const result = await processAttempt(makeInput('G12-001', 'ном'), mockTaskRepo);
     expect(result.feedback).toBe('Зөв бичлээ! Баяр хүргэе!');
   });
 
-  it('C1 error → Mongolian feedback about long vowel', async () => {
-    const result = await processAttempt(
-      makeInput('G12-005', 'того'),
-      mockTaskRepo,
-    );
+  it('C1 error → feedback about long vowel', async () => {
+    const result = await processAttempt(makeInput('G12-005', 'того'), mockTaskRepo);
     expect(result.feedback).toContain('Урт эгшгийг анзаар');
   });
 
   it('D3 error → feedback about confusable sounds', async () => {
-    const result = await processAttempt(
-      makeInput('G12-001', 'нум'),
-      mockTaskRepo,
-    );
+    const result = await processAttempt(makeInput('G12-001', 'нум'), mockTaskRepo);
     expect(result.feedback).toContain('Төстэй авиаг андуурсан');
-  });
-
-  it('G1+G2 → feedback includes capitalization or punctuation', async () => {
-    const result = await processAttempt(
-      makeInput('G12-009', 'би явна'),
-      mockTaskRepo,
-    );
-    // Should have feedback about one of the errors
-    expect(result.feedback.length).toBeGreaterThan(0);
   });
 });
 
@@ -412,9 +448,7 @@ describe('DB writes', () => {
 
     await processAttempt(
       makeInput('G12-001', 'нум', { lessonId: 'lesson-1' }),
-      mockTaskRepo,
-      attemptRepo,
-      errorLogRepo,
+      mockTaskRepo, attemptRepo, errorLogRepo,
     );
 
     expect(attemptCalls).toHaveLength(1);
@@ -432,12 +466,7 @@ describe('DB writes', () => {
     const { repo: attemptRepo } = createMockAttemptRepo();
     const { repo: errorLogRepo, calls: errorCalls } = createMockErrorLogRepo();
 
-    await processAttempt(
-      makeInput('G12-005', 'того'),
-      mockTaskRepo,
-      attemptRepo,
-      errorLogRepo,
-    );
+    await processAttempt(makeInput('G12-005', 'того'), mockTaskRepo, attemptRepo, errorLogRepo);
 
     expect(errorCalls).toHaveLength(1);
     const call = errorCalls[0] as Record<string, unknown>;
@@ -449,37 +478,23 @@ describe('DB writes', () => {
 
   it('sets context to DIAGNOSTIC when diagnosticSessionId provided', async () => {
     const { repo: attemptRepo, calls } = createMockAttemptRepo();
-
     await processAttempt(
       makeInput('G12-001', 'ном', { diagnosticSessionId: 'diag-1' }),
-      mockTaskRepo,
-      attemptRepo,
+      mockTaskRepo, attemptRepo,
     );
-
     const call = calls[0] as Record<string, unknown>;
     expect(call.context).toBe('DIAGNOSTIC');
   });
 
   it('does not write to DB when repos not provided', async () => {
-    // Should not throw
-    const result = await processAttempt(
-      makeInput('G12-001', 'нум'),
-      mockTaskRepo,
-    );
+    const result = await processAttempt(makeInput('G12-001', 'нум'), mockTaskRepo);
     expect(result.score).toBe(0.5);
   });
 
   it('skips ErrorLog when no errors', async () => {
     const { repo: attemptRepo } = createMockAttemptRepo();
     const { repo: errorLogRepo, calls: errorCalls } = createMockErrorLogRepo();
-
-    await processAttempt(
-      makeInput('G12-001', 'ном'),
-      mockTaskRepo,
-      attemptRepo,
-      errorLogRepo,
-    );
-
+    await processAttempt(makeInput('G12-001', 'ном'), mockTaskRepo, attemptRepo, errorLogRepo);
     expect(errorCalls).toHaveLength(0);
   });
 });

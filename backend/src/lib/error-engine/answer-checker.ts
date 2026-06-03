@@ -44,6 +44,26 @@ export interface SentenceDiff {
   extraWords: { word: string; position: number }[];
 }
 
+// ─── New interaction-form option shapes ──────────────────────────────────────
+
+/** TT_MATCH_PAIRS: learner drags/taps to connect left↔right pairs. */
+export interface MatchPairsOptions {
+  pairs: { left: string; right: string }[];
+}
+
+/** TT_ASSEMBLE_WORD: learner orders shuffled letter/syllable tiles. */
+export interface AssembleWordOptions {
+  tiles: string[];
+  correct_order: string[]; // The tiles in the correct sequence
+}
+
+/** TT_TAP_FIND_ERROR: learner taps the word that contains an error. */
+export interface TapFindErrorOptions {
+  sentence: string;         // The full sentence shown
+  error_word_index: number; // 0-based index of the incorrect word
+  correct_text: string;     // The corrected version of the full sentence
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PUNCTUATION = /^[.,!?;:…"""''«»()—–\-\u2014\u2013]$/;
@@ -449,24 +469,140 @@ function dictationDiff(expected: string, actual: string): AnswerDiff {
  * Without `taskType` the original word-level Wagner-Fischer diff is used.
  */
 
-const CHOICE_TYPES = new Set([
+export const CHOICE_TYPES = new Set([
   'TT_LISTEN_CHOOSE', 'TT_IMAGE_WORD_MATCH', 'TT_CHOOSE_CORRECT', 'TT_SIMPLE_SUFFIX',
   'TT_WORD_FORM_CHOOSE', 'TT_SUFFIX_CHOOSE', 'TT_CONSONANT_CONFUSION',
   'TT_LONG_VOWEL_IN_SENTENCE', 'TT_CASE_SUFFIX', 'TT_MIXED_WORD_SET',
   'TT_LONG_VOWEL_CHALLENGE', 'TT_MIXED_CHECKPOINT', 'TT_MIXED_REVIEW',
 ]);
 
-const FILL_TYPES = new Set([
+export const FILL_TYPES = new Set([
   'TT_LETTER_FILL', 'TT_FILL_WRITE', 'TT_MISSING_LETTER', 'TT_WORD_ENDING',
   'TT_SENTENCE_FILL', 'TT_LONG_VOWEL_FILL', 'TT_REDUCED_VOWEL',
   'TT_REDUCED_VOWEL_IN_SENTENCE', 'TT_BASIC_COMMA', 'TT_SUFFIX_WRITE',
   'TT_COMPOUND_SUFFIX',
 ]);
 
-const DICTATION_TYPES = new Set([
+export const DICTATION_TYPES = new Set([
   'TT_WORD_SET_DICTATION', 'TT_TWO_WORD_DICTATION',
   'TT_SHORT_SENTENCE_DICTATION', 'TT_TWO_SENTENCE_DICTATION',
 ]);
+
+export const SELF_CHECK_TYPES = new Set([
+  'TT_SELF_CHECK', 'TT_OWN_WRITING_CORRECTION',
+]);
+
+export const MATCH_TYPES = new Set(['TT_MATCH_PAIRS']);
+export const ASSEMBLE_TYPES = new Set(['TT_ASSEMBLE_WORD']);
+export const TAP_TYPES = new Set(['TT_TAP_FIND_ERROR']);
+
+// ─── New interaction-form diff functions ─────────────────────────────────────
+
+/**
+ * TT_MATCH_PAIRS: learner submits pairs as JSON array of {left,right} objects.
+ * Each mismatched pair is recorded as a wrongChar substitution at position i.
+ */
+export function matchPairsDiff(
+  correctPairs: MatchPairsOptions['pairs'],
+  submittedJson: string,
+): AnswerDiff {
+  const empty = (): AnswerDiff => ({
+    isCorrect: true, editDistance: 0, operations: [],
+    missingChars: [], extraChars: [], wrongChars: [], transpositions: [],
+    caseErrors: [], missingPunctuation: [],
+  });
+
+  let submitted: { left: string; right: string }[];
+  try {
+    submitted = JSON.parse(submittedJson);
+    if (!Array.isArray(submitted)) throw new Error('not array');
+  } catch {
+    // Unparseable → treat whole answer as wrong
+    return {
+      isCorrect: false, editDistance: correctPairs.length, operations: [],
+      missingChars: [], extraChars: [],
+      wrongChars: correctPairs.map((p, i) => ({ expected: p.right, actual: '?', position: i })),
+      transpositions: [], caseErrors: [], missingPunctuation: [],
+    };
+  }
+
+  const wrongChars: AnswerDiff['wrongChars'] = [];
+  const correctMap = new Map(correctPairs.map((p) => [p.left, p.right]));
+
+  for (let i = 0; i < submitted.length; i++) {
+    const { left, right } = submitted[i];
+    const expected = correctMap.get(left);
+    if (expected === undefined) continue;
+    if (normalizeStr(expected) !== normalizeStr(right)) {
+      wrongChars.push({ expected, actual: right, position: i });
+    }
+  }
+
+  if (wrongChars.length === 0) return empty();
+  return {
+    isCorrect: false, editDistance: wrongChars.length, operations: [],
+    missingChars: [], extraChars: [], wrongChars, transpositions: [],
+    caseErrors: [], missingPunctuation: [],
+  };
+}
+
+/**
+ * TT_ASSEMBLE_WORD: learner submits the tile sequence as a JSON array of strings.
+ * Compared against correct_order; position mismatches become transpositions/wrongChars.
+ */
+export function assembleWordDiff(
+  correctOrder: string[],
+  submittedJson: string,
+): AnswerDiff {
+  const empty = (): AnswerDiff => ({
+    isCorrect: true, editDistance: 0, operations: [],
+    missingChars: [], extraChars: [], wrongChars: [], transpositions: [],
+    caseErrors: [], missingPunctuation: [],
+  });
+
+  let submitted: string[];
+  try {
+    submitted = JSON.parse(submittedJson);
+    if (!Array.isArray(submitted)) throw new Error('not array');
+  } catch {
+    return {
+      isCorrect: false, editDistance: correctOrder.length, operations: [],
+      missingChars: correctOrder.map((c, i) => ({ char: c, position: i })),
+      extraChars: [], wrongChars: [], transpositions: [],
+      caseErrors: [], missingPunctuation: [],
+    };
+  }
+
+  // Build the expected and actual strings from tile arrays, then do word-level diff
+  const exp = correctOrder.join('');
+  const act = submitted.join('');
+  if (exp === act) return empty();
+  return { ...wordLevelDiff(exp, act), caseErrors: [], missingPunctuation: [] };
+}
+
+/**
+ * TT_TAP_FIND_ERROR: learner submits the 0-based index of the word they tapped.
+ * Correct if it matches error_word_index; wrong otherwise.
+ */
+export function tapFindErrorDiff(
+  errorWordIndex: number,
+  submittedIndex: string,
+): AnswerDiff {
+  const tapped = parseInt(submittedIndex, 10);
+  if (!isNaN(tapped) && tapped === errorWordIndex) {
+    return {
+      isCorrect: true, editDistance: 0, operations: [],
+      missingChars: [], extraChars: [], wrongChars: [], transpositions: [],
+      caseErrors: [], missingPunctuation: [],
+    };
+  }
+  return {
+    isCorrect: false, editDistance: 1, operations: [],
+    missingChars: [], extraChars: [],
+    wrongChars: [{ expected: String(errorWordIndex), actual: submittedIndex, position: 0 }],
+    transpositions: [], caseErrors: [], missingPunctuation: [],
+  };
+}
 
 export function checkAnswer(expected: string, actual: string, taskType?: string): AnswerDiff {
   if (taskType !== undefined) {

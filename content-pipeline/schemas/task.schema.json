@@ -165,7 +165,10 @@
         "TT_LONG_VOWEL_CHALLENGE",
         "TT_COMPOUND_SUFFIX",
         "TT_MIXED_CHECKPOINT",
-        "TT_EXPLAINED_CORRECTION"
+        "TT_EXPLAINED_CORRECTION",
+        "TT_MATCH_PAIRS",
+        "TT_ASSEMBLE_WORD",
+        "TT_TAP_FIND_ERROR"
       ],
       "description": "Task type. Determines the required shape of the 'options' field. See $defs for each options shape and the allOf section for which types use which shape."
     },
@@ -191,6 +194,9 @@
         { "$ref": "#/$defs/DictationOptions" },
         { "$ref": "#/$defs/MiniTextOptions" },
         { "$ref": "#/$defs/SelfCheckOptions" },
+        { "$ref": "#/$defs/MatchPairsOptions" },
+        { "$ref": "#/$defs/AssembleWordOptions" },
+        { "$ref": "#/$defs/TapFindErrorOptions" },
         {
           "type": "object",
           "description": "Empty object — only for placeholder/unfinished tasks",
@@ -464,6 +470,76 @@
           "type": "string",
           "enum": ["side_by_side", "highlight_diff"],
           "description": "How the UI presents the comparison: side_by_side = two columns; highlight_diff = inline diff highlighting"
+        }
+      }
+    },
+
+    "MatchPairsOptions": {
+      "title": "MatchPairsOptions",
+      "description": "Multi-pair drag/tap matching tasks: learner connects left items to right items.\nUsed by: TT_MATCH_PAIRS",
+      "type": "object",
+      "required": ["pairs"],
+      "additionalProperties": false,
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["left", "right"],
+            "additionalProperties": false,
+            "properties": {
+              "left":  { "type": "string", "description": "Left-column item (letter, sound symbol, word)" },
+              "right": { "type": "string", "description": "Right-column item (image label, word, definition)" }
+            }
+          },
+          "description": "Correct left↔right pairs. Learner submits as JSON array of {left, right} objects."
+        }
+      }
+    },
+
+    "AssembleWordOptions": {
+      "title": "AssembleWordOptions",
+      "description": "Tile-assembly tasks: learner arranges shuffled letter/syllable tiles into the correct word.\nUsed by: TT_ASSEMBLE_WORD",
+      "type": "object",
+      "required": ["tiles", "correct_order"],
+      "additionalProperties": false,
+      "properties": {
+        "tiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "description": "Shuffled tile strings shown to the learner, e.g. ['р', 'а', 'н']"
+        },
+        "correct_order": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "description": "The tiles in the correct sequence, e.g. ['н', 'а', 'р']. Learner submits as JSON array."
+        }
+      }
+    },
+
+    "TapFindErrorOptions": {
+      "title": "TapFindErrorOptions",
+      "description": "Tap-to-find error tasks: learner taps the incorrect word in a sentence.\nUsed by: TT_TAP_FIND_ERROR",
+      "type": "object",
+      "required": ["sentence", "error_word_index", "correct_text"],
+      "additionalProperties": false,
+      "properties": {
+        "sentence": {
+          "type": "string",
+          "description": "The full sentence shown (containing one incorrect word), e.g. 'Намар навч уннаа.'"
+        },
+        "error_word_index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based index of the incorrect word in the sentence (space-split token index)"
+        },
+        "correct_text": {
+          "type": "string",
+          "description": "The fully corrected sentence, e.g. 'Намар навч унана.'"
         }
       }
     }

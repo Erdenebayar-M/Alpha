@@ -2,6 +2,7 @@
 // (PHASE_A → PHASE_B adaptive → PHASE_C boundary).
 
 import type { PrismaClient } from '../../../generated/prisma';
+import { skillsFromErrors } from '../error-engine/error-skill-map';
 
 // Tie-break priority: when skills are equally weak, pick in this order
 const TIEBREAK_PRIORITY = ['S7', 'S2', 'S3', 'S5', 'S4', 'S6', 'S8', 'S1'] as const;
@@ -37,6 +38,7 @@ export interface FinalResult {
   confidence: string;
   skill_levels: Record<string, string>;
   skill_scores: Record<string, number>;
+  skill_confidence: Record<string, 'LOW' | 'MEDIUM' | 'HIGH'>;
   top_error_codes: string[];
   priority_skills: string[];
   recommended_daily_minutes: number;
@@ -46,6 +48,11 @@ export interface FinalResult {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Accumulate per-skill scores from task.primary_skill only.
+ * Score computation stays clean and predictable; error→skill attribution
+ * is used separately to expand priority_skills selection.
+ */
 function avgPerSkill(
   attempts: { primary_skill: string; score: number }[]
 ): Record<string, number> {
@@ -58,6 +65,33 @@ function avgPerSkill(
   const result: Record<string, number> = {};
   for (const [k, v] of Object.entries(acc)) result[k] = v.total / v.count;
   return result;
+}
+
+/**
+ * Collect all error codes from all attempts.
+ */
+function allErrorCodes(attempts: { error_codes: string[] }[]): string[] {
+  return attempts.flatMap((a) => a.error_codes);
+}
+
+/**
+ * Count actual task attempts per skill (for confidence calculation).
+ * Uses task.primary_skill only (not error-inferred).
+ */
+function countPerSkill(
+  attempts: { primary_skill: string }[]
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const a of attempts) {
+    counts[a.primary_skill] = (counts[a.primary_skill] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function itemCountToConfidence(count: number): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (count < 3) return 'LOW';
+  if (count <= 5) return 'MEDIUM';
+  return 'HIGH';
 }
 
 // Thresholds from "Scoring & Levels" sheet:
@@ -178,12 +212,17 @@ export function calculateFinalResult(
   learnerGrade: number
 ): FinalResult {
   const avg = avgPerSkill(allAttempts);
+  const counts = countPerSkill(allAttempts);
 
   const skillScores: Record<string, number> = {};
   for (const s of ALL_SKILLS) skillScores[s] = avg[s] ?? 0;
 
   const skillLevels: Record<string, string> = {};
   for (const s of ALL_SKILLS) skillLevels[s] = scoreToLevel(skillScores[s]);
+
+  // Per-skill confidence based on actual item counts (v3 spec)
+  const skill_confidence: Record<string, 'LOW' | 'MEDIUM' | 'HIGH'> = {};
+  for (const s of ALL_SKILLS) skill_confidence[s] = itemCountToConfidence(counts[s] ?? 0);
 
   // General level: floor of mean skill-level index, then apply core-skill cap
   const sumIdx = ALL_SKILLS.reduce(
@@ -198,8 +237,7 @@ export function calculateFinalResult(
   const cappedIdx = Math.min(rawIdx, coreMinIdx + 1);
   const general_level = LEVEL_ORDER[Math.max(0, Math.min(cappedIdx, 5))];
 
-  // Overall confidence based on total item count
-  // (<3 = LOW, 3–5 = MEDIUM, 6+ = HIGH)
+  // Overall confidence: derived from total item count (kept for backward compat)
   const total = allAttempts.length;
   const confidence = total < 3 ? 'LOW' : total <= 5 ? 'MEDIUM' : 'HIGH';
 
@@ -215,8 +253,9 @@ export function calculateFinalResult(
     .slice(0, 3)
     .map(([code]) => code);
 
-  // Priority skills: 2 weakest by score; tiebreak by TIEBREAK_PRIORITY
-  const priority_skills = [...ALL_SKILLS]
+  // Priority skills: 2 weakest by score; tiebreak by TIEBREAK_PRIORITY.
+  // Also incorporate skills implied by error codes (error→skill map).
+  const scoreSorted = [...ALL_SKILLS]
     .sort((a, b) => {
       const diff = skillScores[a] - skillScores[b];
       if (Math.abs(diff) > 0.001) return diff;
@@ -224,8 +263,20 @@ export function calculateFinalResult(
         TIEBREAK_PRIORITY.indexOf(a as SkillKey) -
         TIEBREAK_PRIORITY.indexOf(b as SkillKey)
       );
-    })
-    .slice(0, 2);
+    });
+
+  const errorCodes = allErrorCodes(allAttempts);
+  const errorImpliedSkills: string[] = skillsFromErrors(errorCodes);
+
+  // Merge: take the 2 weakest by score, then add error-implied skills if not already included
+  const priority_set: string[] = [];
+  for (const s of scoreSorted) {
+    if (priority_set.length < 2) priority_set.push(s);
+  }
+  for (const s of errorImpliedSkills) {
+    if (!priority_set.includes(s) && priority_set.length < 3) priority_set.push(s);
+  }
+  const priority_skills = priority_set.slice(0, 2);
 
   const recommended_daily_minutes = learnerGrade <= 2 ? 10 : 15;
 
@@ -234,6 +285,7 @@ export function calculateFinalResult(
     confidence,
     skill_levels: skillLevels,
     skill_scores: skillScores,
+    skill_confidence,
     top_error_codes,
     priority_skills,
     recommended_daily_minutes,

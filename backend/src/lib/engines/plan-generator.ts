@@ -1,4 +1,5 @@
 import type { PrismaClient } from '../../../generated/prisma';
+import { skillsFromErrors } from '../error-engine/error-skill-map';
 
 // Canonical skill priority: S7 → S2 → S3 → S5 → S4 → S6 → S8 → S1
 const SKILL_PRIORITY_ORDER = ['S7', 'S2', 'S3', 'S5', 'S4', 'S6', 'S8', 'S1'] as const;
@@ -26,8 +27,10 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
   // Variant A (grades 1–2) → G1/G2 tasks; Variant B (grades 2–4) → G2/G3/G4 tasks
   const gradeBands = learner.variant === 'A' ? ['G1', 'G2'] : ['G2', 'G3', 'G4'];
 
-  // Skill rotation: plan.priority_skills sorted by canonical priority order
-  const planSkillSet = new Set(plan.priority_skills);
+  // Skill rotation: priority_skills + skills implied by target_errors, sorted by canonical order
+  const errorImpliedSkills = skillsFromErrors(plan.target_errors ?? []);
+  const allPrioritySkills = [...new Set([...plan.priority_skills, ...errorImpliedSkills])];
+  const planSkillSet = new Set(allPrioritySkills);
   const filteredByPriority = SKILL_PRIORITY_ORDER.filter((s) => planSkillSet.has(s));
   const rotationSkills = filteredByPriority.length > 0 ? filteredByPriority : [...SKILL_PRIORITY_ORDER];
 

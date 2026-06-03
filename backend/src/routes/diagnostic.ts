@@ -415,12 +415,12 @@ diagnostic.post('/next-phase', async (c) => {
 
     const finalResult = calculateFinalResult(allAttempts, session.learner.grade);
 
-    const confidence = finalResult.confidence as any;
     const avgScore =
       Object.values(finalResult.skill_scores).reduce((a, b) => a + b, 0) / 8;
     const template =
       avgScore < 0.4 ? 'INTENSIVE' : avgScore < 0.7 ? 'BALANCED' : 'STABILIZATION';
 
+    const sc = finalResult.skill_confidence;
     const skillStateData = {
       general_level: finalResult.general_level as any,
       s1_score: finalResult.skill_scores['S1'],
@@ -439,14 +439,14 @@ diagnostic.post('/next-phase', async (c) => {
       s6_level: finalResult.skill_levels['S6'] as any,
       s7_level: finalResult.skill_levels['S7'] as any,
       s8_level: finalResult.skill_levels['S8'] as any,
-      s1_confidence: confidence,
-      s2_confidence: confidence,
-      s3_confidence: confidence,
-      s4_confidence: confidence,
-      s5_confidence: confidence,
-      s6_confidence: confidence,
-      s7_confidence: confidence,
-      s8_confidence: confidence,
+      s1_confidence: (sc['S1'] ?? 'LOW') as any,
+      s2_confidence: (sc['S2'] ?? 'LOW') as any,
+      s3_confidence: (sc['S3'] ?? 'LOW') as any,
+      s4_confidence: (sc['S4'] ?? 'LOW') as any,
+      s5_confidence: (sc['S5'] ?? 'LOW') as any,
+      s6_confidence: (sc['S6'] ?? 'LOW') as any,
+      s7_confidence: (sc['S7'] ?? 'LOW') as any,
+      s8_confidence: (sc['S8'] ?? 'LOW') as any,
       top_error_codes: finalResult.top_error_codes,
       weak_skills: finalResult.priority_skills,
       preferred_session_length: finalResult.recommended_daily_minutes,

@@ -524,6 +524,45 @@
       "estimated_time_seconds": 45,
       "lesson_slot_fit": "MIXED",
       "generation_hints": "Алдааг засаад түүнийг яагаад буруу/зөв болохыг тайлбарлах. explanation талбар заавал шаардлагатай."
+    },
+    {
+      "task_type": "TT_MATCH_PAIRS",
+      "mongolian_name": "Холбож тааруулах",
+      "grade_band": ["G1", "G2", "G3"],
+      "options_shape": "MatchPairsOptions",
+      "default_primary_skill": "S1",
+      "default_error_targets": ["A2"],
+      "default_level": "M0",
+      "default_difficulty": 1,
+      "estimated_time_seconds": 40,
+      "lesson_slot_fit": "WARM_UP",
+      "generation_hints": "Зүүн баганад 3–4 үсэг/дуу, баруун баганад 3–4 зураг/үг. options.pairs нь [{left, right}] массив. Хосуудыг чирж холбоно."
+    },
+    {
+      "task_type": "TT_ASSEMBLE_WORD",
+      "mongolian_name": "Угсрах (үсэг/үе)",
+      "grade_band": ["G1", "G2"],
+      "options_shape": "AssembleWordOptions",
+      "default_primary_skill": "S1",
+      "default_error_targets": ["A3", "B3"],
+      "default_level": "M0",
+      "default_difficulty": 1,
+      "estimated_time_seconds": 35,
+      "lesson_slot_fit": "WARM_UP",
+      "generation_hints": "Холимог дарааллыг зөв болгох. options.tiles нь санамсаргүй дараалалтай массив, options.correct_order нь зөв дараалал. Learner-ийн хариуг JSON массив болгон хадгална."
+    },
+    {
+      "task_type": "TT_TAP_FIND_ERROR",
+      "mongolian_name": "Алдаа олж товших",
+      "grade_band": ["G2", "G3"],
+      "options_shape": "TapFindErrorOptions",
+      "default_primary_skill": "S8",
+      "default_error_targets": ["H4"],
+      "default_level": "M2",
+      "default_difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "generation_hints": "Өгүүлбэрт нэг алдаатай үг байрлуулах. options.error_word_index нь 0-based алдаатай үгийн индекс. Learner-ийн хариу: тэр индексийн тоо (string)."
     }
   ]
 }

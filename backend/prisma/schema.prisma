@@ -38,28 +38,52 @@ enum SkillCode {
 }
 
 enum ErrorCode {
-  A1
-  A2
-  A3
-  B1
-  B2
-  B3
-  B4
-  C1
-  C2
-  C3
-  C4
-  C5
-  C6
-  D3
-  D5
-  E1
-  E2
-  E7
-  G1
-  G2
-  H1
-  H4
+  // A — Үсэг-авиа зөрөөтэй алдаа (Letter-sound errors)
+  A1 // Авиа андуурах (Sound confusion)
+  A2 // Үсэг солих (Letter substitution)
+  A3 // Үеийн бүтэц алдах (Syllable structure error)
+  // B — Үсгийн бүтцийн алдаа (Letter structure errors)
+  B1 // Үсэг орхих (Letter omission — catch-all)
+  B2 // Үсэг илүү бичих (Extra letter)
+  B3 // Үсгийн байрлал солих (Letter transposition)
+  B4 // Үгийн хэсэг орхих (Word-chunk omission)
+  // C — Эгшгийн алдаа (Vowel errors)
+  C1 // Урт эгшиг орхих (Long vowel omission)
+  C2 // Урт эгшиг илүүдэх (Long vowel excess)
+  C3 // Эгшиг андуурах (Vowel confusion)
+  C4 // Балархай эгшиг орхих (Reduced vowel omission)
+  C5 // Балархай эгшиг илүүдэх (Reduced vowel excess)
+  C6 // Эгшгийн зохицлын алдаа (Vowel harmony error)
+  // D — Гийгүүлэгчийн алдаа (Consonant errors)
+  D1 // Гийгүүлэгч орхих (Consonant omission)
+  D2 // Гийгүүлэгч илүүдэх (Extra consonant)
+  D3 // Гийгүүлэгч андуурах (Consonant confusion)
+  D4 // Давхар гийгүүлэгчийн алдаа (Double consonant error)
+  D5 // Үгийн төгсгөлийн гийгүүлэгч (Word-final consonant error)
+  // E — Залгавар/нөхцөлийн алдаа (Suffix errors)
+  E1 // Залгавар орхигдол (Suffix omission)
+  E2 // Буруу залгавар сонголт (Wrong suffix selection)
+  E3 // Эр/эм залгаврын алдаа (Gender-harmony suffix error)
+  E4 // Тийн ялгалын алдаа (Case suffix error)
+  E5 // Олон тоо/харьяаллын алдаа (Plural/possessive error)
+  E6 // Үйл үгийн хувиллын алдаа (Verb conjugation error)
+  E7 // Залгаврын бичлэгийн алдаа (Suffix spelling error)
+  // F — Үгийн хэлбэр/бүтцийн алдаа (Word-form errors)
+  F1 // Язгуур үгийн хэлбэрийн алдаа (Root word form error)
+  F2 // Нийлмэл үгийн алдаа (Compound word error)
+  F3 // Үгийн аймгийн хэлбэрийн алдаа (Part-of-speech form error)
+  F4 // Давталттай буруу хэвшил (Repeated incorrect habit)
+  // G — Өгүүлбэрийн тэмдэглэгээний алдаа (Punctuation/caps errors)
+  G1 // Том үсгийн алдаа (Capitalization error)
+  G2 // Цэг орхигдол (Missing full stop)
+  G3 // Асуулт/анхааруулах тэмдгийн алдаа (Question/exclamation mark error)
+  G4 // Таслалын алдаа (Comma error)
+  G5 // Өгүүлбэрийн хил заагийн алдаа (Sentence boundary error)
+  // H — Сонсгол/анхаарал/тогтвортой байдлын алдаа (Listening/attention errors)
+  H1 // Сонсгол тасарсан алдаа (Listening comprehension error)
+  H2 // Хурдны алдаа (Speed/fluency error — metric-derived)
+  H3 // Анхаарлын хэлбэлзлийн алдаа (Attention variability — metric-derived)
+  H4 // Өөрийгөө шалгаагүй алдаа (Failed self-check)
 }
 
 enum TaskType {
@@ -104,6 +128,20 @@ enum TaskType {
   TT_COMPOUND_SUFFIX        // Нийлмэл залгавар           (G24-022)
   TT_MIXED_CHECKPOINT       // Холимог checkpoint         (G24-023)
   TT_EXPLAINED_CORRECTION   // Тайлбартай засвар          (G24-024)
+  // New v3 interaction forms
+  TT_MATCH_PAIRS            // Холбож тааруулах — multi-pair drag/tap matching
+  TT_ASSEMBLE_WORD          // Угсрах — order letter/syllable tiles
+  TT_TAP_FIND_ERROR         // Товших — tap the incorrect word in a sentence
+}
+
+enum InteractionForm {
+  CHOOSE     // Сонгох — tap/click one option
+  MATCH      // Холбох — drag/tap to pair items
+  FILL       // Нөхөх — type into a blank
+  ASSEMBLE   // Угсрах — arrange tiles in order
+  TRANSCRIBE // Буулгах — dictation / copy-write
+  CORRECT    // Засах — find and fix an error
+  TAP        // Товших — tap a specific word in text
 }
 
 enum LessonSlot {
@@ -286,6 +324,7 @@ model TaskDraft {
   difficulty             Int
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
+  interaction_form       InteractionForm?
   feedback_text          String
   feedback_correct       String?
   feedback_wrong         String?
@@ -376,6 +415,7 @@ model Task {
   difficulty             Int        // 1–5
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
+  interaction_form       InteractionForm?
   feedback_text          String
   feedback_correct       String?
   feedback_wrong         String?

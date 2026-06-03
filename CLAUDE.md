@@ -70,11 +70,13 @@ Same-origin via Next.js rewrites: `/api/:path*` → `http://localhost:3001/api/:
 
 **User tier**: `Parent` → `Learner` → `LearnerSkillState`
 - Learners have a `variant` (A = Grades 1–2, gamified, 5–8 min; B = Grades 2–4, structured, 10–15 min)
-- `LearnerSkillState` tracks mastery (`M0`–`M5`) and confidence (`LOW/MEDIUM/HIGH`) for 8 skills (`S1`–`S8`)
+- `LearnerSkillState` tracks mastery (`M0`–`M5`) and **per-skill** confidence (`LOW/MEDIUM/HIGH`) for 8 skills (`S1`–`S8`)
+  - Confidence is computed from item count per skill: `<3 → LOW`, `3–5 → MEDIUM`, `6+ → HIGH` (v3 spec)
 
 **Content bank**: `Word` + `Task`
 - `Word`: vocabulary with image/audio asset references
-- `Task`: 6 types — `choice`, `fill_in`, `correction`, `dictation`, `mini_text`, `self_check`
+- `Task`: 42 types (39 original `TT_*` + 3 new v3 interaction forms): `TT_MATCH_PAIRS` (Холбож тааруулах), `TT_ASSEMBLE_WORD` (Угсрах), `TT_TAP_FIND_ERROR` (Алдаа олж товших)
+- `Task.interaction_form`: optional `InteractionForm` enum (CHOOSE/MATCH/FILL/ASSEMBLE/TRANSCRIBE/CORRECT/TAP) for admin/UI clarity
 
 **Learning path**: `DiagnosticSession` → `Plan` → `Lesson` → `Checkpoint`
 - Diagnostic: 3-phase adaptive assessment (PHASE_A: 8 tasks, PHASE_B: 8 adaptive, PHASE_C: 4 boundary)
@@ -83,7 +85,10 @@ Same-origin via Next.js rewrites: `/api/:path*` → `http://localhost:3001/api/:
 
 **Execution**: `Attempt` + `ErrorLog`
 - Attempts scored: `0 / 0.25 / 0.5 / 0.75 / 1.0`
-- 21 Mongolian spelling error codes: `A1–A3`, `B1–B4`, `C1–C6`, `D3`, `D5`, `E1–E2`, `E7`, `G1–G2`, `H1`, `H4`
+- Full v3 error taxonomy (38 codes): `A1–A3`, `B1–B4`, `C1–C6`, `D1–D5`, `E1–E7`, `F1–F4`, `G1–G5`, `H1–H4`
+  - Auto-classified from diff: C1, C2, C3, C4, C5, D3, E1, E2, E3, E7, B3, B1, B2, G1–G5, H4
+  - Metric-derived (not from diff): H2 (speed), H3 (attention variability)
+  - Context-assigned via `task.error_targets`: A1–A3, D1, D2, D4, D5, F1–F4, H1
 
 ### Prisma Client
 
@@ -147,15 +152,19 @@ All content authoring, validation, and LLM generation tooling lives here, separa
 
 **Skill codes:** `S1`–`S8`
 - S1=Үсэг-авиа ялгалт, S2=Үгийн зөв бичлэг, S3=Урт/богино эгшиг
-- S4=Балархай эгшиг, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ
+- S4=Гийгүүлэгчийг зөв ялгах, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ
 - S7=Сонсголоор буулгах, S8=Алдаа засах
 
-**MVP error codes (12):** `B1`, `B3`, `C1`, `C2`, `C4`, `D3`, `E1`, `E2`, `E7`, `G1`, `G2`, `H4`
-- Full definitions and examples: `content-pipeline/schemas/error-codes.md`
-- Classification priority order: C1 → C2 → C4 → D3 → E1 → E2 → E7 → B3 → B1 → G1 → G2 → H4
+**Error→skill map:** `backend/src/lib/error-engine/error-skill-map.ts` (`ERROR_SKILL_MAP`, `skillsForError`, `skillsFromErrors`)
 
-**Task types (6):** `TT1_CHOICE`, `TT2_FILL`, `TT3_CORRECTION`, `TT4_DICTATION`, `TT5_MINI_TEXT`, `TT6_SELF_CHECK`
-- Full JSONB shape for each type: `content-pipeline/schemas/task.schema.json`
+**Full error taxonomy (38 codes):** Full definitions in `content-pipeline/schemas/error-codes.md`
+- Auto-classified (word-level): C1 → C2 → C4 → C5 → D3 → C3 → E1 → E2 → E3 → E7 → B3 → B1 → B2
+- Auto-classified (sentence-level): G1 → G2 → G3 → G4 → G5 → H4 (self-check only)
+- Metric-derived: H2 (speed), H3 (attention) via `detectMetricErrors()`
+- Context-assigned (via task.error_targets): A1–A3, D1, D2, D4, D5, F1–F4, H1
+
+**Task types (42):** `TT_*` naming convention. Option shapes in `content-pipeline/schemas/task.schema.json`.
+- New v3 types: `TT_MATCH_PAIRS` (MatchPairsOptions), `TT_ASSEMBLE_WORD` (AssembleWordOptions), `TT_TAP_FIND_ERROR` (TapFindErrorOptions)
 
 ## Frontend conventions
 

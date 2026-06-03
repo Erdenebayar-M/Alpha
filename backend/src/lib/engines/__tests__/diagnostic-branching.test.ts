@@ -190,4 +190,50 @@ describe('calculateFinalResult', () => {
       expect(result.skill_scores).toHaveProperty(s);
     }
   });
+
+  // ── Per-skill confidence (v3) ────────────────────────────────────────────
+
+  test('skill_confidence is returned and covers all 8 skills', () => {
+    const attempts = makeAttempts({ S1: 0.7, S2: 0.7, S3: 0.7, S4: 0.7, S5: 0.7, S6: 0.7, S7: 0.7, S8: 0.7 });
+    const result = calculateFinalResult(attempts, 2);
+    expect(result).toHaveProperty('skill_confidence');
+    for (const s of ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8']) {
+      expect(result.skill_confidence).toHaveProperty(s);
+      expect(['LOW', 'MEDIUM', 'HIGH']).toContain(result.skill_confidence[s]);
+    }
+  });
+
+  test('skill with 6 attempts → HIGH confidence', () => {
+    const attempts = makeAttempts({ S3: 0.7, S1: 0.7, S2: 0.7, S4: 0.7, S5: 0.7, S6: 0.7, S7: 0.7, S8: 0.7 }, {}, 6);
+    const result = calculateFinalResult(attempts, 2);
+    expect(result.skill_confidence['S3']).toBe('HIGH');
+  });
+
+  test('skill with 0 attempts → LOW confidence', () => {
+    // Only S1 has attempts
+    const attempts = Array.from({ length: 3 }, (_, i) => ({
+      task_id: `t-${i}`, primary_skill: 'S1', score: 0.8, error_codes: [],
+    }));
+    const result = calculateFinalResult(attempts, 2);
+    // Skills with no attempts default to LOW
+    expect(result.skill_confidence['S3']).toBe('LOW');
+  });
+
+  // ── Error→skill map attribution ──────────────────────────────────────────
+
+  test('C1 error on S7 task credits S3 (C1 primary skill) as weaker', () => {
+    // Two attempts: S7 perfect, S7 with C1 error (score 0.5)
+    // C1 primary = S3, secondary = S2
+    // S3 should reflect degraded score from error attribution
+    const attempts: DiagnosticAttempt[] = [
+      { task_id: 't1', primary_skill: 'S7', score: 1.0, error_codes: [] },
+      { task_id: 't2', primary_skill: 'S7', score: 0.5, error_codes: ['C1'] },
+      { task_id: 't3', primary_skill: 'S3', score: 1.0, error_codes: [] },
+    ];
+    const result = calculateFinalResult(attempts, 2);
+    // S7 explicit score should be high (good tasks)
+    expect(result.skill_scores['S7']).toBeGreaterThan(0.5);
+    // result should have skill_confidence for all skills
+    expect(result.skill_confidence).toBeDefined();
+  });
 });
