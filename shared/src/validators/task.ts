@@ -26,20 +26,24 @@ export const INTERACTION_FORMS = [
 /** Who produced the task. HUMAN = authored by hand / seed / scripts; AI = LLM generator. */
 export const TASK_SOURCES = ['HUMAN', 'AI'] as const;
 
-/** All 42 task types — keep in lockstep with prisma `TaskType`. */
+/** All 43 v3 task types — keep in lockstep with prisma `TaskType`. */
 export const TASK_TYPES = [
-  'TT_LISTEN_CHOOSE', 'TT_LETTER_FILL', 'TT_IMAGE_WORD_MATCH', 'TT_COPY_WRITE',
-  'TT_CHOOSE_CORRECT', 'TT_FILL_WRITE', 'TT_MISSING_LETTER', 'TT_WORD_SET_DICTATION',
-  'TT_CAPITAL_PUNCTUATION', 'TT_SIMPLE_SUFFIX', 'TT_FIND_ERROR', 'TT_SELF_CHECK',
-  'TT_TWO_WORD_DICTATION', 'TT_WORD_ENDING', 'TT_SENTENCE_FILL', 'TT_MIXED_REVIEW',
-  'TT_WORD_FORM_CHOOSE', 'TT_LONG_VOWEL_FILL', 'TT_REDUCED_VOWEL', 'TT_SUFFIX_CHOOSE',
-  'TT_SHORT_SENTENCE_DICTATION', 'TT_FIX_ERROR', 'TT_CONSONANT_CONFUSION',
-  'TT_WORD_FORM_FIX', 'TT_LONG_VOWEL_IN_SENTENCE', 'TT_REDUCED_VOWEL_IN_SENTENCE',
-  'TT_CASE_SUFFIX', 'TT_BASIC_COMMA', 'TT_TWO_SENTENCE_DICTATION',
-  'TT_FIND_OMITTED_LETTER', 'TT_MIXED_WORD_SET', 'TT_SUFFIX_WRITE',
-  'TT_SENTENCE_BOUNDARY', 'TT_MINI_TEXT_DICTATION', 'TT_OWN_WRITING_CORRECTION',
-  'TT_LONG_VOWEL_CHALLENGE', 'TT_COMPOUND_SUFFIX', 'TT_MIXED_CHECKPOINT',
-  'TT_EXPLAINED_CORRECTION', 'TT_MATCH_PAIRS', 'TT_ASSEMBLE_WORD', 'TT_TAP_FIND_ERROR',
+  // S1 — Үсэг-авиаг зөв таних
+  'TT_1_1', 'TT_1_2', 'TT_1_3', 'TT_1_4', 'TT_1_5',
+  // S2 — Үгийг зөв бичих
+  'TT_2_1', 'TT_2_2', 'TT_2_3', 'TT_2_4', 'TT_2_5', 'TT_2_6',
+  // S3 — Урт/богино, балархай эгшиг
+  'TT_3_1', 'TT_3_2', 'TT_3_3', 'TT_3_4', 'TT_3_5',
+  // S4 — Гийгүүлэгчийг зөв ялгах
+  'TT_4_1', 'TT_4_2', 'TT_4_3', 'TT_4_4', 'TT_4_5',
+  // S5 — Залгаварыг зөв залгах
+  'TT_5_1', 'TT_5_2', 'TT_5_3', 'TT_5_4', 'TT_5_5', 'TT_5_6', 'TT_5_7',
+  // S6 — Өгүүлбэрийн тэмдэглэгээ
+  'TT_6_1', 'TT_6_2', 'TT_6_3', 'TT_6_4',
+  // S7 — Цээж бичиг
+  'TT_7_1', 'TT_7_2', 'TT_7_3', 'TT_7_4', 'TT_7_5', 'TT_7_6', 'TT_7_7',
+  // S8 — Алдаагаа зөв таних / засах
+  'TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4',
 ] as const;
 
 export const skillCodeSchema = z.enum(SKILL_CODES);
@@ -122,42 +126,68 @@ export const tapFindErrorOptions = z.object({
   correct_text: z.string(),
 });
 
+export const copyOptions = z.object({
+  text_to_copy: z.string(),
+});
+
+export const visualMemoryOptions = z.object({
+  text_to_memorize: z.string(),
+  display_seconds: z.number().int().min(2).max(10),
+});
+
 /** task_type → the option schema its `options` payload must satisfy. */
 export const TASK_TYPE_OPTION_SHAPE: Record<TaskTypeValue, z.ZodType> = {
-  // Choice
-  TT_LISTEN_CHOOSE: choiceOptions, TT_IMAGE_WORD_MATCH: choiceOptions,
-  TT_CHOOSE_CORRECT: choiceOptions, TT_SIMPLE_SUFFIX: choiceOptions,
-  TT_WORD_FORM_CHOOSE: choiceOptions, TT_SUFFIX_CHOOSE: choiceOptions,
-  TT_CONSONANT_CONFUSION: choiceOptions, TT_LONG_VOWEL_CHALLENGE: choiceOptions,
-  TT_CASE_SUFFIX: choiceOptions, TT_MIXED_REVIEW: choiceOptions,
-  TT_MIXED_WORD_SET: choiceOptions, TT_MIXED_CHECKPOINT: choiceOptions,
-  // Word-level fill
-  TT_LETTER_FILL: fillOptions, TT_FILL_WRITE: fillOptions,
-  TT_MISSING_LETTER: fillOptions, TT_WORD_ENDING: fillOptions,
-  TT_LONG_VOWEL_FILL: fillOptions, TT_REDUCED_VOWEL: fillOptions,
-  TT_SUFFIX_WRITE: fillOptions, TT_COMPOUND_SUFFIX: fillOptions,
-  // Sentence-level fill
-  TT_SENTENCE_FILL: sentenceFillOptions,
-  TT_LONG_VOWEL_IN_SENTENCE: sentenceFillOptions,
-  TT_REDUCED_VOWEL_IN_SENTENCE: sentenceFillOptions,
-  // Correction
-  TT_COPY_WRITE: correctionOptions, TT_CAPITAL_PUNCTUATION: correctionOptions,
-  TT_FIND_ERROR: correctionOptions, TT_FIX_ERROR: correctionOptions,
-  TT_WORD_FORM_FIX: correctionOptions, TT_FIND_OMITTED_LETTER: correctionOptions,
-  TT_SENTENCE_BOUNDARY: correctionOptions, TT_BASIC_COMMA: correctionOptions,
-  TT_EXPLAINED_CORRECTION: correctionOptions,
-  // Dictation
-  TT_WORD_SET_DICTATION: dictationOptions, TT_TWO_WORD_DICTATION: dictationOptions,
-  TT_SHORT_SENTENCE_DICTATION: dictationOptions,
-  TT_TWO_SENTENCE_DICTATION: dictationOptions,
-  // Mini-text
-  TT_MINI_TEXT_DICTATION: miniTextOptions,
-  // Self-check
-  TT_SELF_CHECK: selfCheckOptions, TT_OWN_WRITING_CORRECTION: selfCheckOptions,
-  // v3 interaction forms
-  TT_MATCH_PAIRS: matchPairsOptions,
-  TT_ASSEMBLE_WORD: assembleWordOptions,
-  TT_TAP_FIND_ERROR: tapFindErrorOptions,
+  // S1 — choice
+  TT_1_1: choiceOptions, TT_1_2: choiceOptions, TT_1_5: choiceOptions,
+  // S1 — match_pairs / assemble_word
+  TT_1_3: matchPairsOptions, TT_1_4: assembleWordOptions,
+  // S2 — choice
+  TT_2_3: choiceOptions,
+  // S2 — fill
+  TT_2_1: fillOptions, TT_2_4: fillOptions,
+  // S2 — assemble_word
+  TT_2_2: assembleWordOptions,
+  // S2 — correction
+  TT_2_5: correctionOptions, TT_2_6: correctionOptions,
+  // S3 — choice
+  TT_3_1: choiceOptions, TT_3_4: choiceOptions,
+  // S3 — fill
+  TT_3_2: fillOptions,
+  // S3 — match_pairs
+  TT_3_3: matchPairsOptions,
+  // S3 — correction
+  TT_3_5: correctionOptions,
+  // S4 — choice
+  TT_4_1: choiceOptions, TT_4_2: choiceOptions,
+  // S4 — fill
+  TT_4_3: fillOptions, TT_4_4: fillOptions,
+  // S4 — correction
+  TT_4_5: correctionOptions,
+  // S5 — choice
+  TT_5_1: choiceOptions, TT_5_4: choiceOptions, TT_5_6: choiceOptions, TT_5_7: choiceOptions,
+  // S5 — sentence_fill
+  TT_5_2: sentenceFillOptions,
+  // S5 — match_pairs
+  TT_5_3: matchPairsOptions,
+  // S5 — fill
+  TT_5_5: fillOptions,
+  // S6 — choice
+  TT_6_1: choiceOptions, TT_6_2: choiceOptions,
+  // S6 — correction
+  TT_6_3: correctionOptions, TT_6_4: correctionOptions,
+  // S7 — copy / visual_memory
+  TT_7_1: copyOptions, TT_7_2: visualMemoryOptions,
+  // S7 — dictation
+  TT_7_3: dictationOptions, TT_7_4: dictationOptions,
+  // S7 — sentence_fill (cloze dictation)
+  TT_7_5: sentenceFillOptions,
+  // S7 — mini_text
+  TT_7_6: miniTextOptions,
+  // S7 — choice
+  TT_7_7: choiceOptions,
+  // S8 — tap_find_error / correction / choice / self_check
+  TT_8_1: tapFindErrorOptions, TT_8_2: correctionOptions,
+  TT_8_3: choiceOptions, TT_8_4: selfCheckOptions,
 };
 
 // ── Canonical field set (shared by Task + TaskDraft) ─────────────────────────
