@@ -3,7 +3,7 @@
   "tasks": [
     {
       "id": "G12-001-a",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð¡Ð¾Ð½ÑÐ¾Ð¶ ÑÐ¾Ð½Ð³Ð¾Ñ…",
       "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: 'Ð½Ð¾Ð¼'",
       "correct_answer": "Ð½Ð¾Ð¼",
@@ -43,7 +43,7 @@
     },
     {
       "id": "G12-001-b",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð¡Ð¾Ð½ÑÐ¾Ð¶ ÑÐ¾Ð½Ð³Ð¾Ñ…",
       "prompt_text": "ÐÑƒÐ´Ð¸Ð¾: 'ÑÐ°Ñ€'",
       "correct_answer": "ÑÐ°Ñ€",
@@ -112,7 +112,7 @@
     },
     {
       "id": "G12-003-a",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð—ÑƒÑ€Ð°Ð³-Ò¯Ð³ Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð°Ñ…",
       "prompt_text": "Ð—ÑƒÑ€Ð°Ð³: Ð°Ð»Ð¸Ð¼",
       "correct_answer": "Ð°Ð»Ð¸Ð¼",
@@ -152,7 +152,7 @@
     },
     {
       "id": "G12-003-b",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð—ÑƒÑ€Ð°Ð³-Ò¯Ð³ Ñ‚Ð°Ð°Ñ€ÑƒÑƒÐ»Ð°Ñ…",
       "prompt_text": "Ð—ÑƒÑ€Ð°Ð³: Ð³ÑÑ€",
       "correct_answer": "Ð³ÑÑ€",
@@ -221,7 +221,7 @@
     },
     {
       "id": "G12-005-a",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð—Ó©Ð²Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾Ñ…",
       "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
       "correct_answer": "Ñ‚Ð¾Ð³Ð¾Ð¾",
@@ -261,7 +261,7 @@
     },
     {
       "id": "G12-005-b",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð—Ó©Ð²Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾Ñ…",
       "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
       "correct_answer": "ÑÒ¯Ò¯",
@@ -484,7 +484,7 @@
     },
     {
       "id": "G12-010",
-      "task_type": "TT_CHOOSE_CORRECT",
+      "task_type": "TT_1_1",
       "title": "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð»Ð³Ð°Ð²Ð°Ñ€",
       "prompt_text": "Ð°Ð»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
       "correct_answer": "Ð³ÑÑ€Ñ‚",
