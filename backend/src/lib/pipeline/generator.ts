@@ -375,10 +375,7 @@ function buildCorrection(spec: TaskSpec, v: Record<string, unknown>): TaskRecord
   const opts: Record<string, unknown> = {
     incorrect_text: incorrectText,
     correct_text:   correctText,
-    error_type:     (v['error_type'] as string) ?? spec.error_targets[0] ?? '',
-    hint:           (v['hint'] as string) ?? feedbackText,
   };
-  if (spec.task_type === 'TT_EXPLAINED_CORRECTION' && explanation) opts['explanation'] = explanation;
   return {
     ...buildBase(spec, 'Алдааг засаарай', (v['prompt_text'] as string) ?? 'Дараах өгүүлбэрт алдаа байна. Зөв засаарай.', feedbackText, correctText),
     initial_text: incorrectText,

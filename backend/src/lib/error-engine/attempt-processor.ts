@@ -91,9 +91,6 @@ interface SentenceFillOptions {
 interface CorrectionOptions {
   incorrect_text: string;
   correct_text: string;
-  error_type: string;
-  hint?: string;
-  explanation?: string;
 }
 
 interface DictationOptions {

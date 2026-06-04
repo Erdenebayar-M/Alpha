@@ -84,9 +84,6 @@ export const sentenceFillOptions = z.object({
 export const correctionOptions = z.object({
   incorrect_text: z.string(),
   correct_text: z.string(),
-  error_type: z.string(),
-  hint: z.string(),
-  explanation: z.string().optional(),
 });
 
 export const dictationOptions = z.object({
@@ -112,7 +109,10 @@ export const matchPairsOptions = z.object({
   pairs: z.array(z.object({
     left: z.string(),
     right: z.string(),
+    left_image_url: z.string().optional(),
+    right_image_url: z.string().optional(),
   })).min(2).max(6),
+  image_side: z.enum(["left", "right", "none"]).default("none"),
 });
 
 export const assembleWordOptions = z.object({

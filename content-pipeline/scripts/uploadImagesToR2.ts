@@ -126,12 +126,29 @@ async function main() {
     return;
   }
 
-  console.log(`\nStep 3: Updating Task.image_url in database...`);
+  console.log(`\nStep 3: Updating Task image URLs in database...`);
+
+  // TT_1_3: letters → images on right side; TT_3_3: images on left side
+  const MATCH_PAIRS_IMAGE_SIDE: Record<string, "left" | "right"> = { TT_1_3: "right", TT_3_3: "left" };
+
+  function parsePairVariant(variant: string): { baseVariant: string; pairIndex: number } | null {
+    const m = variant.match(/^(.+)-p(\d+)$/);
+    if (!m) return null;
+    return { baseVariant: m[1], pairIndex: parseInt(m[2], 10) };
+  }
 
   if (isDryRun) {
     for (const row of rows) {
-      const variantId = toVariantId(row.task_id, row.variant);
-      console.log(`  [DRY] ${variantId} → image_url = "${publicUrl}/images/${row.filename}"`);
+      const imageUrl = `${publicUrl}/images/${row.filename}`;
+      const parsed = parsePairVariant(row.variant);
+      if (parsed) {
+        const taskId = toVariantId(row.task_id, parsed.baseVariant);
+        const side = MATCH_PAIRS_IMAGE_SIDE[row.type] ?? "left";
+        console.log(`  [DRY] task ${taskId} pairs[${parsed.pairIndex}].${side}_image_url = "${imageUrl}"`);
+      } else {
+        const variantId = toVariantId(row.task_id, row.variant);
+        console.log(`  [DRY] ${variantId} → image_url = "${imageUrl}"`);
+      }
     }
     return;
   }
@@ -143,21 +160,61 @@ async function main() {
 
   try {
     let updated = 0;
+
+    const matchPairsGroups = new Map<string, Array<{ pairIndex: number; imageUrl: string; type: string }>>();
+    const regularRows: CsvRow[] = [];
+
     for (const row of rows) {
+      const parsed = parsePairVariant(row.variant);
+      if (parsed) {
+        const taskId = toVariantId(row.task_id, parsed.baseVariant);
+        if (!matchPairsGroups.has(taskId)) matchPairsGroups.set(taskId, []);
+        matchPairsGroups.get(taskId)!.push({
+          pairIndex: parsed.pairIndex,
+          imageUrl: `${publicUrl}/images/${row.filename}`,
+          type: row.type,
+        });
+      } else {
+        regularRows.push(row);
+      }
+    }
+
+    for (const row of regularRows) {
       const variantId = toVariantId(row.task_id, row.variant);
       const imageUrl = `${publicUrl}/images/${row.filename}`;
       try {
-        await prisma.task.update({
-          where: { id: variantId },
-          data: { image_url: imageUrl },
-        });
+        await prisma.task.update({ where: { id: variantId }, data: { image_url: imageUrl } });
         updated++;
         console.log(`  updated ${variantId}`);
       } catch (err) {
         console.warn(`  WARN: could not update ${variantId}: ${err instanceof Error ? err.message : err}`);
       }
     }
-    console.log(`\nDB: ${updated}/${rows.length} tasks updated.`);
+
+    for (const [taskId, patchRows] of matchPairsGroups) {
+      try {
+        const task = await prisma.task.findUnique({ where: { id: taskId } });
+        if (!task) { console.warn(`  WARN: task ${taskId} not found`); continue; }
+
+        const opts = task.options as { pairs?: Array<Record<string, unknown>>; image_side?: string };
+        const pairs = opts.pairs ?? [];
+        const imageSide = MATCH_PAIRS_IMAGE_SIDE[patchRows[0].type] ?? "left";
+        const urlField = `${imageSide}_image_url`;
+
+        for (const { pairIndex, imageUrl } of patchRows) {
+          if (!pairs[pairIndex]) continue;
+          pairs[pairIndex][urlField] = imageUrl;
+        }
+
+        await prisma.task.update({ where: { id: taskId }, data: { options: { ...opts, pairs } } });
+        updated++;
+        console.log(`  updated ${taskId} (${patchRows.length} pair images)`);
+      } catch (err) {
+        console.warn(`  WARN: could not update ${taskId}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    console.log(`\nDB: ${updated} tasks updated.`);
   } finally {
     await prisma.$disconnect();
   }
