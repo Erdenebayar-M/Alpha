@@ -307,11 +307,10 @@ function extractJson(raw: string): unknown {
 
 // ─── Task builders ────────────────────────────────────────────────────────────
 
-function buildBase(spec: TaskSpec, title: string, promptText: string, feedbackText: string, correctAnswer: string): TaskRecord {
+function buildBase(spec: TaskSpec, promptText: string, feedbackText: string, correctAnswer: string): TaskRecord {
   return {
     id: randomUUID(),
     task_type: spec.task_type,
-    title,
     prompt_text: promptText,
     correct_answer: correctAnswer,
     audio_url: null,
@@ -334,7 +333,7 @@ function buildChoice(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const correctAnswer = (v['correct_answer'] as string) ?? correctChoice?.text ?? '';
   const promptText = (v['prompt_text'] as string) ?? (v['sentence_with_blank'] as string) ?? 'Зөв хэлбэрийг сонгоно уу.';
   return {
-    ...buildBase(spec, 'Зөвийг сонгоно уу', promptText, (v['feedback_text'] as string) ?? '', correctAnswer),
+    ...buildBase(spec, promptText, (v['feedback_text'] as string) ?? '', correctAnswer),
     options: { choices, audio_trigger: spec.audio_trigger ?? false },
   };
 }
@@ -346,7 +345,7 @@ function buildFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const blankPosition = blankPos >= 0 ? blankPos : 0;
   const contextWord  = (v['context_word'] as string) ?? (v['context_sentence'] as string) ?? blankAnswer;
   return {
-    ...buildBase(spec, 'Хоосон зайг нөхөөрэй', displayText, (v['feedback_text'] as string) ?? '', blankAnswer),
+    ...buildBase(spec, displayText, (v['feedback_text'] as string) ?? '', blankAnswer),
     options: { display_text: displayText, blank_position: blankPosition, blank_answer: blankAnswer, context_word: contextWord },
   };
 }
@@ -358,7 +357,6 @@ function buildSentenceFill(spec: TaskSpec, v: Record<string, unknown>): TaskReco
   return {
     ...buildBase(
       spec,
-      'Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй',
       sentenceTemplate,
       (v['feedback_text'] as string) ?? '',
       blankAnswer,
@@ -377,7 +375,7 @@ function buildCorrection(spec: TaskSpec, v: Record<string, unknown>): TaskRecord
     correct_text:   correctText,
   };
   return {
-    ...buildBase(spec, 'Алдааг засаарай', (v['prompt_text'] as string) ?? 'Дараах өгүүлбэрт алдаа байна. Зөв засаарай.', feedbackText, correctText),
+    ...buildBase(spec, (v['prompt_text'] as string) ?? 'Дараах өгүүлбэрт алдаа байна. Зөв засаарай.', feedbackText, correctText),
     initial_text: incorrectText,
     options: opts,
   };
@@ -390,7 +388,7 @@ function buildDictation(spec: TaskSpec, v: Record<string, unknown>): TaskRecord 
   const audioText       = (v['audio_text'] as string) || (sentences?.join(' ') ?? '') || (words?.join(', ') ?? '') || expectedAnswers.join('; ');
   const correctAnswer   = (v['correct_answer'] as string) ?? expectedAnswers.join(';');
   return {
-    ...buildBase(spec, 'Сонсоод бичээрэй', (v['prompt_text'] as string) ?? 'Сонссон үгс болон өгүүлбэрийг бичээрэй.', (v['feedback_text'] as string) ?? '', correctAnswer),
+    ...buildBase(spec, (v['prompt_text'] as string) ?? 'Сонссон үгс болон өгүүлбэрийг бичээрэй.', (v['feedback_text'] as string) ?? '', correctAnswer),
     options: { audio_text: audioText, word_count: expectedAnswers.length, expected_answers: expectedAnswers, allow_partial: true },
   };
 }
@@ -400,7 +398,7 @@ function buildMiniText(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   const audioText       = (v['audio_text'] as string) || expectedAnswers.join(' ');
   const correctAnswer   = (v['correct_answer'] as string) ?? expectedAnswers.join(';');
   return {
-    ...buildBase(spec, 'Жижиг эх сонсоод бичээрэй', (v['prompt_text'] as string) ?? 'Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.', (v['feedback_text'] as string) ?? '', correctAnswer),
+    ...buildBase(spec, (v['prompt_text'] as string) ?? 'Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.', (v['feedback_text'] as string) ?? '', correctAnswer),
     options: { audio_text: audioText, sentence_count: (v['sentence_count'] as number) ?? expectedAnswers.length, expected_answers: expectedAnswers },
   };
 }
@@ -411,7 +409,7 @@ function buildSelfCheckFromSource(spec: TaskSpec, sourceItems: TaskRecord[], max
     const incorrectText = (opts?.['incorrect_text'] as string) ?? '';
     const correctText   = (opts?.['correct_text'] as string) ?? (item['correct_answer'] as string) ?? '';
     return {
-      ...buildBase(spec, 'Өөрийгөө шалгаарай', 'Өмнөх даалгаврын хариугаа загвартай харьцуул.', (item['feedback_text'] as string) ?? `Зөв хариу: ${correctText}`, correctText),
+      ...buildBase(spec, 'Өмнөх даалгаврын хариугаа загвартай харьцуул.', (item['feedback_text'] as string) ?? `Зөв хариу: ${correctText}`, correctText),
       options: { original_attempt: incorrectText, model_answer: correctText, comparison_mode: 'side_by_side' },
     };
   });
@@ -458,7 +456,7 @@ function loadSelfCheckSource(sourceShape: string): TaskRecord[] {
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 const REQUIRED_FIELDS = [
-  'id', 'task_type', 'title', 'prompt_text', 'correct_answer', 'options',
+  'id', 'task_type', 'prompt_text', 'correct_answer', 'options',
   'primary_skill', 'level_target', 'grade_band', 'difficulty',
   'estimated_time_seconds', 'lesson_slot_fit', 'feedback_text',
 ];

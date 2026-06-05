@@ -90,13 +90,13 @@ function findMissingPos(correct: string, misspelling: string): number {
 
 /** Build the shared fields for any task record. */
 function base(
-  id: string, taskType: string, title: string, prompt: string,
+  id: string, taskType: string, prompt: string,
   correctAnswer: string, options: Record<string, unknown>,
   skill: string, level: string, errorTargets: string[],
   difficulty: number, slot: string, feedback: string,
 ): TaskRecord {
   return {
-    id, task_type: taskType, title, prompt_text: prompt,
+    id, task_type: taskType, prompt_text: prompt,
     correct_answer: correctAnswer, options,
     audio_url: null, image_url: null,
     primary_skill: skill, secondary_skill: null,
@@ -152,7 +152,6 @@ function genG12001(): TaskRecord[] {
       if (texts.length < 2) return [];
       return [base(
         '', 'TT_LISTEN_CHOOSE',
-        'Сонсоод зөв үгийг олоорой',
         'Аудио сонсоод зөв үгийг сонгоорой.',
         w.correct_spelling,
         {
@@ -177,7 +176,6 @@ function genG12002(): TaskRecord[] {
       if (idx < 0 || idx >= w.correct_spelling.length) return [];
       return [base(
         '', 'TT_LETTER_FILL',
-        'Дутуу үсгийг нөхөөрэй',
         'Дутуу үсгийг нөхөж бичээрэй.',
         w.correct_spelling,
         {
@@ -201,7 +199,6 @@ function genG12003(): TaskRecord[] {
       if (texts.length < 2) return [];
       return [base(
         '', 'TT_IMAGE_WORD_MATCH',
-        'Зурагт тохирох үгийг сонгоорой',
         'Зургийг харж тохирох үгийг сонгоорой.',
         w.correct_spelling,
         {
@@ -226,7 +223,6 @@ function genG12004(): TaskRecord[] {
       if (idx < 0 || idx >= w.correct_spelling.length) return [];
       return [base(
         '', 'TT_COPY_WRITE',
-        'Үгийг хуулж бичээрэй',
         `"${w.sentence}" — дутуу үсгийг нөхөж бичээрэй.`,
         w.correct_spelling,
         {
@@ -254,7 +250,6 @@ function genG12005(): TaskRecord[] {
       if (c1 === c2) return [];
       return [base(
         '', 'TT_CHOOSE_CORRECT',
-        'Зөв үгийг сонгоорой',
         'Урт болон богино эгшгийг анхаарч зөв хэлбэрийг сонгоорой.',
         w.correct_spelling,
         {
@@ -282,7 +277,6 @@ function genG12006(): TaskRecord[] {
                     + w.correct_spelling.slice(idx + 1);
       return [base(
         '', 'TT_FILL_WRITE',
-        'Урт эгшгийг нөхөөрэй',
         'Урт эгшгийн дутуу хэсгийг нөхөж бичээрэй.',
         w.correct_spelling,
         {
@@ -310,7 +304,6 @@ function genG12007(): TaskRecord[] {
     const display = e.correct.slice(0, pos) + '_' + e.correct.slice(pos + 1);
     return [base(
       '', 'TT_MISSING_LETTER',
-      'Балархай эгшгийг нөхөөрэй',
       'Дутуу балархай эгшгийг нөхөж бичээрэй.',
       e.correct,
       {
@@ -335,7 +328,6 @@ function genG12011(): TaskRecord[] {
     if (!incorrect || incorrect === w.correct_spelling) return [];
     return [base(
       '', 'TT_FIND_ERROR',
-      'Алдааг засаарай',
       'Дараах үгэнд алдаа байна. Зөв засаарай.',
       w.correct_spelling,
       {
@@ -364,7 +356,6 @@ function genG12013(): TaskRecord[] {
       const w1 = group[i], w2 = group[i + 1];
       results.push(base(
         '', 'TT_TWO_WORD_DICTATION',
-        '2 үгийн диктант',
         'Аудио сонсоод хоёр үгийг нэг нэгээр нь бичээрэй.',
         `${w1.correct_spelling};${w2.correct_spelling}`,
         {
@@ -394,7 +385,6 @@ function genG12014(): TaskRecord[] {
       const idx = w.blank_template.indexOf('_');
       return [base(
         '', 'TT_WORD_ENDING',
-        'Сүүлийн үсгийг нөхөөрэй',
         'Үгийн сүүлийн үсгийг нөхөж бичээрэй.',
         w.correct_spelling,
         {

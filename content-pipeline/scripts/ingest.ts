@@ -318,7 +318,6 @@ function ingestTasks(wb: XLSX.WorkBook, specMap: Map<string, SpecLookup>) {
     tasks.push({
       id:                     taskId,
       task_type:              taskType,
-      title:                  typeMn,
       prompt_text:            String(r[2] ?? '').trim(),
       correct_answer:         String(r[4] ?? '').trim(),
       options:                buildOptions(taskType, r, spec),

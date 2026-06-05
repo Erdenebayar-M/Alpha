@@ -420,7 +420,6 @@ type TaskRecord = Record<string, unknown>;
 
 function buildBase(
   spec: TaskSpec,
-  title: string,
   promptText: string,
   feedbackText: string,
   correctAnswer: string,
@@ -428,7 +427,6 @@ function buildBase(
   return {
     id: randomUUID(),
     task_type: spec.task_type,
-    title,
     prompt_text: promptText,
     correct_answer: correctAnswer,
     audio_url: null,
@@ -458,7 +456,6 @@ function buildChoice(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   return {
     ...buildBase(
       spec,
-      "Зөвийг сонгоно уу",
       promptText,
       (v["feedback_text"] as string) ?? "",
       correctAnswer,
@@ -483,7 +480,6 @@ function buildFill(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   return {
     ...buildBase(
       spec,
-      "Дутуу хэсгийг нөхөөрэй",
       promptText,
       (v["feedback_text"] as string) ?? "",
       blankAnswer,
@@ -512,7 +508,6 @@ function buildSentenceFill(
   return {
     ...buildBase(
       spec,
-      "Өгүүлбэрийг нөхөөрэй",
       (v["prompt_text"] as string) ??
         `Доорх өгүүлбэрийн дутуу үгийг нөхөөрэй:\n${sentenceTemplate}`,
       (v["feedback_text"] as string) ?? "",
@@ -552,7 +547,6 @@ function buildCorrection(
   return {
     ...buildBase(
       spec,
-      "Алдааг засаарай",
       (v["prompt_text"] as string) ??
         "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
       feedbackText,
@@ -582,7 +576,6 @@ function buildDictation(
   return {
     ...buildBase(
       spec,
-      "Сонсоод бичээрэй",
       (v["prompt_text"] as string) ?? "Сонссон үгс болон өгүүлбэрийг бичээрэй.",
       (v["feedback_text"] as string) ?? "",
       correctAnswer,
@@ -613,7 +606,6 @@ function buildMiniText(
   return {
     ...buildBase(
       spec,
-      "Жижиг эх сонсоод бичээрэй",
       (v["prompt_text"] as string) ??
         "Сонссон өгүүлбэрүүдийг дарааллаар бичээрэй.",
       (v["feedback_text"] as string) ?? "",
@@ -643,7 +635,6 @@ function buildSelfCheckFromSource(
     return {
       ...buildBase(
         spec,
-        "Өөрийгөө шалгаарай",
         "Өмнөх даалгаврын хариугаа загвартай харьцуул.",
         (item["feedback_text"] as string) ?? `Зөв хариу: ${correctText}`,
         correctText,

@@ -320,7 +320,6 @@ model TaskDraft {
   task_id                String
   stage                  DraftStage
   task_type              TaskType
-  title                  String
   prompt_text            String
   correct_answer         String
   options                Json
@@ -412,7 +411,6 @@ model Word {
 model Task {
   id                     String     @id // G12-001, G24-001, etc.
   task_type              TaskType
-  title                  String
   prompt_text            String
   correct_answer         String
   /// JSONB — structure varies by TaskType (see TT1–TT6 in Pre_Coding_Design_Document)

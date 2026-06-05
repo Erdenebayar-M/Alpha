@@ -196,7 +196,6 @@ export const taskFieldsSchema = z.object({
   // `id` is set by the DB / route / assembler — optional & possibly empty here.
   id: z.string().optional(),
   task_type: taskTypeSchema,
-  title: z.string().min(1).max(200),
   prompt_text: z.string().min(1).max(1000),
   correct_answer: z.string(),
   options: z.record(z.string(), z.unknown()).default({}),

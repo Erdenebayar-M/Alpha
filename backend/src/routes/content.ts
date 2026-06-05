@@ -199,7 +199,6 @@ content.post('/tasks', async (c) => {
     data: {
       id,
       task_type:              taskType,
-      title:                  d.title,
       prompt_text:            d.prompt_text,
       correct_answer:         d.correct_answer,
       options: options as object,
@@ -932,7 +931,6 @@ content.post('/generate', async (c) => {
       const variantId = variant['id'] as string;
       const draftData = {
         task_type:              toTaskType(variant['task_type'] as string),
-        title:                  (variant['title'] as string) ?? '',
         prompt_text:            (variant['prompt_text'] as string) ?? '',
         correct_answer:         (variant['correct_answer'] as string) ?? '',
         options:                (variant['options'] as object) ?? {},

@@ -4,7 +4,7 @@
   "description": "A single task in the Mongolian Spelling & Dictation task bank (Task table in DB)",
   "type": "object",
   "required": [
-    "id", "task_type", "title", "prompt_text", "correct_answer", "options",
+    "id", "task_type", "prompt_text", "correct_answer", "options",
     "primary_skill", "level_target", "error_targets", "grade_band",
     "difficulty", "estimated_time_seconds",
     "lesson_slot_fit", "feedback_text"
@@ -171,10 +171,6 @@
         "TT_TAP_FIND_ERROR"
       ],
       "description": "Task type. Determines the required shape of the 'options' field. See $defs for each options shape and the allOf section for which types use which shape."
-    },
-    "title": {
-      "type": "string",
-      "description": "Short display title (Mongolian)"
     },
     "prompt_text": {
       "type": "string",
