@@ -293,7 +293,6 @@ content.post('/approve', async (c) => {
       create: {
         id:                     draft.id,
         task_type:              draft.task_type,
-        title:                  draft.title,
         prompt_text:            draft.prompt_text,
         correct_answer:         draft.correct_answer,
         options:                draft.options as object,
@@ -316,7 +315,6 @@ content.post('/approve', async (c) => {
       },
       update: {
         task_type:              draft.task_type,
-        title:                  draft.title,
         prompt_text:            draft.prompt_text,
         correct_answer:         draft.correct_answer,
         options:                draft.options as object,
