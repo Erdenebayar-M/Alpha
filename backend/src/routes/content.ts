@@ -543,29 +543,18 @@ const generateImageSchema = z.object({
   grade_band: z.array(z.string()).optional(),
 });
 
-function buildMongolianImagePrompt(subject: string, gradeBand?: string[]): string {
-  const isGrade1_2 = !gradeBand || gradeBand.includes('G12');
-
-  const mongolianElements = {
-    nature: 'Mongolian landscape with blue sky, mountains, steppe grass',
-    culture: 'wearing traditional Mongolian deel, ger tent, or Mongolian patterns',
-    colors: 'warm earthy tones with bright accent colors',
-    style: 'soft, friendly, illustrated style suitable for young children',
-  };
-
-  const complexity = isGrade1_2
-    ? 'simple shapes, bold outlines, cheerful mood'
-    : 'more detailed, scenic background, educational focus';
-
-  return (
-    `Illustrate the following for a Mongolian children's book (grades 1-4): ${subject}. ` +
-    `Style: ${mongolianElements.style}, ${complexity}. ` +
-    `Include Mongolian cultural elements (${mongolianElements.culture}). ` +
-    `Colors: ${mongolianElements.colors}. ` +
-    `Setting: ${mongolianElements.nature}. ` +
-    `No text or labels. Bright, educational, culturally authentic.`
-  );
-}
+const IMAGE_STYLE_SYSTEM =
+  `You are an image prompt writer for a Mongolian children\'s educational spelling app (grades 1–4).\n\n` +
+  `Given a subject (in Mongolian or English), write a vivid, specific image generation prompt in English.\n\n` +
+  `ALWAYS include in your output:\n` +
+  `- flat vector illustration style with clean lines\n` +
+  `- soft pastel color palette, warm and cheerful\n` +
+  `- simple uncluttered composition suitable for young children\n` +
+  `- NO text, NO letters, NO labels anywhere in the image\n` +
+  `- Mongolian cultural context where natural (steppe landscape, ger tent, blue sky, mountains)\n\n` +
+  `Be creative and specific: describe a moment, setting, or action — not just the object.\n` +
+  `For example, for "apple" write "a bright red apple resting on a wooden surface with a soft green background" not just "an apple".\n\n` +
+  `Return ONLY the image prompt. No explanation, no quotes, no preamble.`;
 
 content.post('/generate-image', async (c) => {
   const body   = await c.req.json().catch(() => null);
@@ -582,15 +571,19 @@ content.post('/generate-image', async (c) => {
   try {
     const { prompt, grade_band } = parsed.data;
 
-    // Translate the subject to English so FLUX understands it
-    const translationChat = await orClient.chat.completions.create({
-      model:    'google/gemini-2.5-flash',
-      messages: [{ role: 'user', content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${prompt}"` }],
-    });
-    const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? prompt;
+    const isYoung = !grade_band || grade_band.some((g) => g === 'G1' || g === 'G2');
+    const gradeHint = isYoung
+      ? 'Target: grades 1–2. Use a very simple, bold, clear composition with one main subject.'
+      : 'Target: grades 3–4. A slightly more detailed scene is appropriate.';
 
-    // Build the full prompt with Mongolian cultural template
-    const fullPrompt = buildMongolianImagePrompt(englishSubject, grade_band);
+    const promptChat = await orClient.chat.completions.create({
+      model:    'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: IMAGE_STYLE_SYSTEM },
+        { role: 'user',   content: `${gradeHint}\n\nSubject: ${prompt}` },
+      ],
+    });
+    const fullPrompt = promptChat.choices[0]?.message?.content?.trim() ?? prompt;
 
     const chat = await orClient.chat.completions.create({
       model:    'black-forest-labs/flux.2-klein-4b',
@@ -912,6 +905,7 @@ content.post('/generate', async (c) => {
     drafts_created: number;
     ai_blocked: number;
     cost_usd: number;
+    error?: string;
   }> = [];
 
   for (const task_id of task_ids) {
@@ -919,7 +913,14 @@ content.post('/generate', async (c) => {
     if (!spec) continue;
 
     const costBefore = runningCost.value;
-    const result = await generateForSpec(spec, { apiKey, maxItems: max_items, maxCost: max_cost, runningCost });
+    let result: Awaited<ReturnType<typeof generateForSpec>>;
+    try {
+      result = await generateForSpec(spec, { apiKey, maxItems: max_items, maxCost: max_cost, runningCost });
+    } catch (err) {
+      const cost_usd = runningCost.value - costBefore;
+      results.push({ task_id, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
+      continue;
+    }
     const cost_usd = runningCost.value - costBefore;
 
     let drafts_created = 0;
@@ -927,23 +928,45 @@ content.post('/generate', async (c) => {
 
     for (const variant of result.passed) {
       const variantId = variant['id'] as string;
-      const draftData = {
-        task_type:              toTaskType(variant['task_type'] as string),
-        prompt_text:            (variant['prompt_text'] as string) ?? '',
-        correct_answer:         (variant['correct_answer'] as string) ?? '',
-        options:                (variant['options'] as object) ?? {},
-        audio_url:              (variant['audio_url'] as string | null) ?? null,
-        image_url:              (variant['image_url'] as string | null) ?? null,
-        primary_skill:          toSkill(variant['primary_skill'] as string) as SkillCode,
-        secondary_skill:        toSkill(variant['secondary_skill'] as string | null),
-        level_target:           (variant['level_target'] as string) ?? '',
-        error_targets:          (variant['error_targets'] as string[]) ?? [],
-        grade_band:             (variant['grade_band'] as string[]) ?? [],
-        difficulty:             (variant['difficulty'] as number) ?? 1,
-        estimated_time_seconds: (variant['estimated_time_seconds'] as number) ?? 30,
-        lesson_slot_fit:        toSlot(variant['lesson_slot_fit'] as string),
-        feedback_text:          (variant['feedback_text'] as string) ?? '',
+      let draftData: {
+        task_type: TaskType;
+        prompt_text: string;
+        correct_answer: string;
+        options: object;
+        audio_url: string | null;
+        image_url: string | null;
+        primary_skill: SkillCode;
+        secondary_skill: SkillCode | null;
+        level_target: string;
+        error_targets: string[];
+        grade_band: string[];
+        difficulty: number;
+        estimated_time_seconds: number;
+        lesson_slot_fit: LessonSlot;
+        feedback_text: string;
       };
+      try {
+        draftData = {
+          task_type:              toTaskType(variant['task_type'] as string),
+          prompt_text:            (variant['prompt_text'] as string) ?? '',
+          correct_answer:         (variant['correct_answer'] as string) ?? '',
+          options:                (variant['options'] as object) ?? {},
+          audio_url:              (variant['audio_url'] as string | null) ?? null,
+          image_url:              (variant['image_url'] as string | null) ?? null,
+          primary_skill:          toSkill(variant['primary_skill'] as string) as SkillCode,
+          secondary_skill:        toSkill(variant['secondary_skill'] as string | null),
+          level_target:           (variant['level_target'] as string) ?? '',
+          error_targets:          (variant['error_targets'] as string[]) ?? [],
+          grade_band:             (variant['grade_band'] as string[]) ?? [],
+          difficulty:             (variant['difficulty'] as number) ?? 1,
+          estimated_time_seconds: (variant['estimated_time_seconds'] as number) ?? 30,
+          lesson_slot_fit:        toSlot(variant['lesson_slot_fit'] as string),
+          feedback_text:          (variant['feedback_text'] as string) ?? '',
+        };
+      } catch (err) {
+        result.rejected.push({ ...variant, _error: (err as Error).message });
+        continue;
+      }
 
       // Run AI review before deciding final stage
       const review = await reviewTaskDraft(

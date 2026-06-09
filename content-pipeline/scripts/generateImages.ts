@@ -76,29 +76,18 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildMongolianImagePrompt(subject: string, gradeBand?: string[]): string {
-  const isGrade1_2 = !gradeBand || gradeBand.length === 0 || gradeBand.includes("G12") || gradeBand.includes("G1") || gradeBand.includes("G2");
-
-  const mongolianElements = {
-    nature: "Mongolian landscape with blue sky, mountains, steppe grass",
-    culture: "wearing traditional Mongolian deel, ger tent, or Mongolian patterns",
-    colors: "warm earthy tones with bright accent colors",
-    style: "soft, friendly, illustrated style suitable for young children",
-  };
-
-  const complexity = isGrade1_2
-    ? "simple shapes, bold outlines, cheerful mood"
-    : "more detailed, scenic background, educational focus";
-
-  return (
-    `Illustrate the following for a Mongolian children's book (grades 1-4): ${subject}. ` +
-    `Style: ${mongolianElements.style}, ${complexity}. ` +
-    `Include Mongolian cultural elements (${mongolianElements.culture}). ` +
-    `Colors: ${mongolianElements.colors}. ` +
-    `Setting: ${mongolianElements.nature}. ` +
-    `No text or labels. Bright, educational, culturally authentic.`
-  );
-}
+const IMAGE_STYLE_SYSTEM =
+  "You are an image prompt writer for a Mongolian children's educational spelling app (grades 1–4).\n\n" +
+  "Given a subject (in Mongolian or English), write a vivid, specific image generation prompt in English.\n\n" +
+  "ALWAYS include in your output:\n" +
+  "- flat vector illustration style with clean lines\n" +
+  "- soft pastel color palette, warm and cheerful\n" +
+  "- simple uncluttered composition suitable for young children\n" +
+  "- NO text, NO letters, NO labels anywhere in the image\n" +
+  "- Mongolian cultural context where natural (steppe landscape, ger tent, blue sky, mountains)\n\n" +
+  "Be creative and specific: describe a moment, setting, or action — not just the object.\n" +
+  'For example, for "apple" write "a bright red apple resting on a wooden surface with a soft green background" not just "an apple".\n\n' +
+  "Return ONLY the image prompt. No explanation, no quotes, no preamble.";
 
 async function generateOne(
   client: OpenAI,
@@ -112,14 +101,19 @@ async function generateOne(
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      // Translate the Mongolian word to English for FLUX
-      const translationChat = await client.chat.completions.create({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${row.word}"` }],
-      });
-      const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? row.word;
+      const isYoung = gradeBand.length === 0 || gradeBand.some((g) => g === "G1" || g === "G2");
+      const gradeHint = isYoung
+        ? "Target: grades 1–2. Use a very simple, bold, clear composition with one main subject."
+        : "Target: grades 3–4. A slightly more detailed scene is appropriate.";
 
-      const fullPrompt = buildMongolianImagePrompt(englishSubject, gradeBand);
+      const promptChat = await client.chat.completions.create({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: IMAGE_STYLE_SYSTEM },
+          { role: "user",   content: `${gradeHint}\n\nSubject: ${row.word}` },
+        ],
+      });
+      const fullPrompt = promptChat.choices[0]?.message?.content?.trim() ?? row.word;
 
       const chat = await client.chat.completions.create({
         model: MODEL,
