@@ -914,8 +914,8 @@ content.post('/generate', async (c) => {
     error?: string;
   }> = [];
 
-  for (const task_id of task_ids) {
-    const spec = TASK_SPECS.find((s) => s.id === task_id);
+  for (const task_type_spec_id of task_ids) {
+    const spec = TASK_SPECS.find((s) => s.id === task_type_spec_id);
     if (!spec) continue;
 
     const costBefore = runningCost.value;
@@ -924,7 +924,7 @@ content.post('/generate', async (c) => {
       result = await generateForSpec(spec, { apiKey, maxItems: max_items, maxCost: max_cost, runningCost });
     } catch (err) {
       const cost_usd = runningCost.value - costBefore;
-      results.push({ task_id, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
+      results.push({ task_type: task_type_spec_id, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
       continue;
     }
     const cost_usd = runningCost.value - costBefore;
@@ -1004,7 +1004,7 @@ content.post('/generate', async (c) => {
           where:  { id: variantId },
           create: {
             id: variantId,
-            task_id,
+            task_id: variantId,
             stage,
             source: TaskSource.AI,
             ...draftData,
@@ -1030,7 +1030,7 @@ content.post('/generate', async (c) => {
       }
     }
 
-    results.push({ task_id, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });
+    results.push({ task_type: task_type_spec_id, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });
   }
 
   return ok(c, { results, total_cost_usd: runningCost.value });

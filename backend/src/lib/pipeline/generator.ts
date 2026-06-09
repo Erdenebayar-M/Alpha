@@ -5,8 +5,8 @@
  * and builds prompts from generic per-shape templates in
  * content-pipeline/scripts/prompts/shapes/ (7 templates, one per options shape).
  *
- * spec.id == spec.task_type (e.g. "TT_1_1") — used as the task_id key
- * throughout the admin pipeline.
+ * spec.id == spec.task_type (e.g. "TT_LISTEN_CHOOSE") — used to look up specs.
+ * Each generated variant gets its own UUID as task_id (not the type name).
  */
 
 import * as fs from 'fs';
