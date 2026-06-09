@@ -441,7 +441,7 @@
         "expected_answers": {
           "type": "array",
           "items": { "type": "string" },
-          "minItems": 2,
+          "minItems": 1,
           "description": "List of correct sentences in order"
         }
       }

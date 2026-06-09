@@ -96,7 +96,7 @@ export const dictationOptions = z.object({
 export const miniTextOptions = z.object({
   audio_text: z.string(),
   sentence_count: z.number().int().min(2).max(5),
-  expected_answers: z.array(z.string()).min(2),
+  expected_answers: z.array(z.string()).min(1),
 });
 
 export const selfCheckOptions = z.object({
