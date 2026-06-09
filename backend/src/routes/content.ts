@@ -999,17 +999,12 @@ content.post('/generate', async (c) => {
 // ─── GET /api/admin/content/live-tasks ───────────────────────────────────────
 
 const liveListQuerySchema = z.object({
-  grade:    z.enum(['G12', 'G24']).optional(),
+  grade:    z.enum(['G1', 'G2', 'G3', 'G4']).optional(),
   type:     z.string().optional(),
   skill:    z.string().optional(),
   page:     z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(200).default(100),
 });
-
-const GRADE_BANDS: Record<string, string[]> = {
-  G12: ['G1', 'G2'],
-  G24: ['G3', 'G4'],
-};
 
 content.get('/live-tasks', async (c) => {
   const parsed = liveListQuerySchema.safeParse(c.req.query());
@@ -1019,7 +1014,7 @@ content.get('/live-tasks', async (c) => {
   const { grade, type, skill, page, per_page } = parsed.data;
 
   const where = {
-    ...(grade ? { grade_band: { hasSome: GRADE_BANDS[grade] } } : {}),
+    ...(grade ? { grade_band: { has: grade } } : {}),
     ...(type  ? { task_type: toTaskType(type) } : {}),
     ...(skill ? { OR: [
       { primary_skill:   toSkill(skill) as SkillCode },
