@@ -460,41 +460,35 @@ function dictationDiff(expected: string, actual: string): AnswerDiff {
  *             TT_REDUCED_VOWEL_IN_SENTENCE, TT_BASIC_COMMA, TT_SUFFIX_WRITE,
  *             TT_COMPOUND_SUFFIX
  *             → case-insensitive single-blank comparison
- *   dictation — TT_WORD_SET_DICTATION, TT_TWO_WORD_DICTATION,
- *               TT_SHORT_SENTENCE_DICTATION, TT_TWO_SENTENCE_DICTATION
- *               → word-by-word character diff
- *   mini_text — TT_MINI_TEXT_DICTATION → sentence-by-sentence
- *   default   — correction, self-check, copy, boundary types → sentence-aware diff
+ *   dictation — TT_7_3, TT_7_4 → word-by-word character diff
+ *   mini_text — TT_7_6 → sentence-by-sentence
+ *   default   — correction, self-check, copy, visual-memory types → sentence-aware diff
  *
  * Without `taskType` the original word-level Wagner-Fischer diff is used.
  */
 
 export const CHOICE_TYPES = new Set([
-  'TT_LISTEN_CHOOSE', 'TT_IMAGE_WORD_MATCH', 'TT_CHOOSE_CORRECT', 'TT_SIMPLE_SUFFIX',
-  'TT_WORD_FORM_CHOOSE', 'TT_SUFFIX_CHOOSE', 'TT_CONSONANT_CONFUSION',
-  'TT_LONG_VOWEL_IN_SENTENCE', 'TT_CASE_SUFFIX', 'TT_MIXED_WORD_SET',
-  'TT_LONG_VOWEL_CHALLENGE', 'TT_MIXED_CHECKPOINT', 'TT_MIXED_REVIEW',
+  'TT_1_1','TT_1_2','TT_1_5',
+  'TT_2_3',
+  'TT_3_1','TT_3_4',
+  'TT_4_1','TT_4_2',
+  'TT_5_1','TT_5_4','TT_5_6','TT_5_7',
+  'TT_6_1','TT_6_2',
+  'TT_7_7','TT_8_3',
 ]);
 
 export const FILL_TYPES = new Set([
-  'TT_LETTER_FILL', 'TT_FILL_WRITE', 'TT_MISSING_LETTER', 'TT_WORD_ENDING',
-  'TT_SENTENCE_FILL', 'TT_LONG_VOWEL_FILL', 'TT_REDUCED_VOWEL',
-  'TT_REDUCED_VOWEL_IN_SENTENCE', 'TT_BASIC_COMMA', 'TT_SUFFIX_WRITE',
-  'TT_COMPOUND_SUFFIX',
+  'TT_2_1','TT_2_4','TT_3_2','TT_4_3','TT_4_4','TT_5_5',
+  'TT_5_2','TT_7_5', // SentenceFillOptions — same single-blank check logic
 ]);
 
-export const DICTATION_TYPES = new Set([
-  'TT_WORD_SET_DICTATION', 'TT_TWO_WORD_DICTATION',
-  'TT_SHORT_SENTENCE_DICTATION', 'TT_TWO_SENTENCE_DICTATION',
-]);
+export const DICTATION_TYPES = new Set(['TT_7_3','TT_7_4']);
 
-export const SELF_CHECK_TYPES = new Set([
-  'TT_SELF_CHECK', 'TT_OWN_WRITING_CORRECTION',
-]);
+export const SELF_CHECK_TYPES = new Set(['TT_8_4']);
 
-export const MATCH_TYPES = new Set(['TT_MATCH_PAIRS']);
-export const ASSEMBLE_TYPES = new Set(['TT_ASSEMBLE_WORD']);
-export const TAP_TYPES = new Set(['TT_TAP_FIND_ERROR']);
+export const MATCH_TYPES   = new Set(['TT_1_3','TT_3_3','TT_5_3']);
+export const ASSEMBLE_TYPES = new Set(['TT_1_4','TT_2_2']);
+export const TAP_TYPES      = new Set(['TT_8_1']);
 
 // ─── New interaction-form diff functions ─────────────────────────────────────
 
@@ -632,7 +626,7 @@ export function checkAnswer(expected: string, actual: string, taskType?: string)
 
     if (DICTATION_TYPES.has(taskType)) return dictationDiff(exp, act);
 
-    // TT_MINI_TEXT_DICTATION, correction types, self-check, copy, boundary → sentence-aware
+    // TT_7_6 (mini-text), correction types, self-check, copy, visual-memory → sentence-aware
     return sentenceAwareDiff(exp, act);
   }
 

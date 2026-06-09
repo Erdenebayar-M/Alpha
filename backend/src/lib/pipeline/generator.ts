@@ -5,7 +5,7 @@
  * and builds prompts from generic per-shape templates in
  * content-pipeline/scripts/prompts/shapes/ (7 templates, one per options shape).
  *
- * spec.id == spec.task_type (e.g. "TT_LETTER_FILL") — used as the task_id key
+ * spec.id == spec.task_type (e.g. "TT_1_1") — used as the task_id key
  * throughout the admin pipeline.
  */
 
@@ -39,13 +39,18 @@ const COST_PER_M_OUT = 0.6;
 // ─── Shape → template file mapping ───────────────────────────────────────────
 
 const SHAPE_TO_TEMPLATE: Record<string, string> = {
-  ChoiceOptions:      'choice.md',
-  FillOptions:        'fill.md',
-  SentenceFillOptions:'sentence-fill.md',
-  CorrectionOptions:  'correction.md',
-  DictationOptions:   'dictation.md',
-  MiniTextOptions:    'mini-text.md',
-  SelfCheckOptions:   'self-check.md',
+  ChoiceOptions:        'choice.md',
+  FillOptions:          'fill.md',
+  SentenceFillOptions:  'sentence-fill.md',
+  CorrectionOptions:    'correction.md',
+  DictationOptions:     'dictation.md',
+  MiniTextOptions:      'mini-text.md',
+  SelfCheckOptions:     'self-check.md',
+  MatchPairsOptions:    'match-pairs.md',
+  AssembleWordOptions:  'assemble-word.md',
+  TapFindErrorOptions:  'tap-find-error.md',
+  CopyOptions:          'copy.md',
+  VisualMemoryOptions:  'visual-memory.md',
 };
 
 // ─── Task type catalogue ──────────────────────────────────────────────────────
@@ -94,17 +99,9 @@ export interface TaskSpec {
   generation_hints: string;
 }
 
-function bandPrefix(def: TaskTypeDef): 'G12' | 'G24' {
-  return def.grade_band.some((g) => g === 'G3' || g === 'G4') ? 'G24' : 'G12';
-}
-
-function toGradeBandKey(grades: string[]): ['G12' | 'G24'] {
-  return [grades.some((g) => g === 'G3' || g === 'G4') ? 'G24' : 'G12'];
-}
-
 function defToSpec(def: TaskTypeDef): TaskSpec {
   return {
-    id:                      `${bandPrefix(def)}-${def.task_type}`,
+    id:                      def.task_type,
     task_type:               def.task_type,
     primary_skill:           def.default_primary_skill,
     secondary_skill:         null,
@@ -324,7 +321,7 @@ function buildBase(spec: TaskSpec, promptText: string, feedbackText: string, cor
     secondary_skill: spec.secondary_skill ?? null,
     level_target: spec.level_target,
     error_targets: spec.error_targets,
-    grade_band: toGradeBandKey(spec.grade_band),
+    grade_band: spec.grade_band,
     difficulty: spec.difficulty,
     estimated_time_seconds: spec.estimated_time_seconds,
     lesson_slot_fit: spec.lesson_slot_fit,
@@ -420,14 +417,65 @@ function buildSelfCheckFromSource(spec: TaskSpec, sourceItems: TaskRecord[], max
   });
 }
 
+function buildMatchPairs(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const pairs = (v['pairs'] as Array<{ left: string; right: string }>) ?? [];
+  const correctAnswer = (v['correct_answer'] as string) ?? pairs.map((p) => p.left).join(';');
+  return {
+    ...buildBase(spec, (v['prompt_text'] as string) ?? 'Тохирох хосуудыг холбоно уу.', (v['feedback_text'] as string) ?? '', correctAnswer),
+    options: { pairs, image_side: (v['image_side'] as string) ?? 'none' },
+  };
+}
+
+function buildAssembleWord(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const tiles        = (v['tiles'] as string[]) ?? [];
+  const correctOrder = (v['correct_order'] as string[]) ?? tiles;
+  const correctAnswer = (v['correct_answer'] as string) ?? correctOrder.join('');
+  return {
+    ...buildBase(spec, (v['prompt_text'] as string) ?? 'Үсгүүдийг зөв дараалалд угсраарай.', (v['feedback_text'] as string) ?? '', correctAnswer),
+    options: { tiles, correct_order: correctOrder },
+  };
+}
+
+function buildTapFindError(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const sentence       = (v['sentence'] as string) ?? '';
+  const errorWordIndex = (v['error_word_index'] as number) ?? 0;
+  const correctText    = (v['correct_text'] as string) ?? '';
+  return {
+    ...buildBase(spec, sentence, (v['feedback_text'] as string) ?? '', correctText),
+    options: { sentence, error_word_index: errorWordIndex, correct_text: correctText },
+  };
+}
+
+function buildCopy(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const textToCopy = (v['text_to_copy'] as string) ?? '';
+  return {
+    ...buildBase(spec, textToCopy, (v['feedback_text'] as string) ?? '', textToCopy),
+    options: { text_to_copy: textToCopy },
+  };
+}
+
+function buildVisualMemory(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
+  const textToMemorize = (v['text_to_memorize'] as string) ?? '';
+  const displaySeconds = (v['display_seconds'] as number) ?? 4;
+  return {
+    ...buildBase(spec, textToMemorize, (v['feedback_text'] as string) ?? '', textToMemorize),
+    options: { text_to_memorize: textToMemorize, display_seconds: displaySeconds },
+  };
+}
+
 function buildVariant(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
   switch (spec.options_shape) {
-    case 'ChoiceOptions':      return buildChoice(spec, v);
-    case 'FillOptions':        return buildFill(spec, v);
-    case 'SentenceFillOptions':return buildSentenceFill(spec, v);
-    case 'CorrectionOptions':  return buildCorrection(spec, v);
-    case 'DictationOptions':   return buildDictation(spec, v);
-    case 'MiniTextOptions':    return buildMiniText(spec, v);
+    case 'ChoiceOptions':       return buildChoice(spec, v);
+    case 'FillOptions':         return buildFill(spec, v);
+    case 'SentenceFillOptions': return buildSentenceFill(spec, v);
+    case 'CorrectionOptions':   return buildCorrection(spec, v);
+    case 'DictationOptions':    return buildDictation(spec, v);
+    case 'MiniTextOptions':     return buildMiniText(spec, v);
+    case 'MatchPairsOptions':   return buildMatchPairs(spec, v);
+    case 'AssembleWordOptions':  return buildAssembleWord(spec, v);
+    case 'TapFindErrorOptions': return buildTapFindError(spec, v);
+    case 'CopyOptions':         return buildCopy(spec, v);
+    case 'VisualMemoryOptions':  return buildVisualMemory(spec, v);
     default: throw new Error(`No builder for options_shape: ${spec.options_shape}`);
   }
 }
@@ -435,9 +483,7 @@ function buildVariant(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
 // ─── Self-check source loader ─────────────────────────────────────────────────
 
 const CORRECTION_TYPES = new Set([
-  'TT_COPY_WRITE', 'TT_CAPITAL_PUNCTUATION', 'TT_FIND_ERROR', 'TT_FIX_ERROR',
-  'TT_WORD_FORM_FIX', 'TT_FIND_OMITTED_LETTER', 'TT_SENTENCE_BOUNDARY',
-  'TT_BASIC_COMMA', 'TT_EXPLAINED_CORRECTION',
+  'TT_2_5','TT_2_6','TT_3_5','TT_4_5','TT_6_3','TT_6_4','TT_8_2',
 ]);
 
 function loadSelfCheckSource(sourceShape: string): TaskRecord[] {

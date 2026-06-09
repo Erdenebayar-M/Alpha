@@ -24,7 +24,7 @@ import {
   type CreateTaskInput,
 } from '@app/shared';
 import { generateForSpec, TASK_SPECS, AVAILABLE_TASK_IDS } from '../lib/pipeline/generator';
-import { reviewTaskDraft } from '../lib/pipeline/aiReviewer';
+import { reviewTaskDraft, AIReviewResult } from '../lib/pipeline/aiReviewer';
 
 const content = new Hono();
 content.use('/*', withAdmin);
@@ -653,14 +653,20 @@ content.post('/generate-audio', async (c) => {
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
-          voiceConfig:  { prebuiltVoiceConfig: { voiceName: voice } },
-          languageCode: 'mn-MN',
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
         },
       },
     } as Parameters<typeof ai.models.generateContent>[0]);
 
     const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-    if (!audioData?.data) throw new Error('No audio data in response');
+    if (!audioData?.data) {
+      const debug = JSON.stringify({
+        candidateCount: response.candidates?.length,
+        firstParts: response.candidates?.[0]?.content?.parts?.map(p => Object.keys(p)),
+        finishReason: response.candidates?.[0]?.finishReason,
+      });
+      throw new Error(`No audio data in response. Debug: ${debug}`);
+    }
 
     const pcm       = Buffer.from(audioData.data, 'base64');
     const rateMatch = audioData.mimeType?.match(/rate=(\d+)/);
@@ -969,48 +975,59 @@ content.post('/generate', async (c) => {
       }
 
       // Run AI review before deciding final stage
-      const review = await reviewTaskDraft(
-        {
-          task_type:      draftData.task_type,
-          grade_band:     draftData.grade_band,
-          difficulty:     draftData.difficulty,
-          error_targets:  draftData.error_targets,
-          prompt_text:    draftData.prompt_text,
-          correct_answer: draftData.correct_answer,
-          options:        draftData.options,
-          feedback_text:  draftData.feedback_text,
-        },
-        apiKey,
-      );
+      let review: AIReviewResult;
+      try {
+        review = await reviewTaskDraft(
+          {
+            task_type:      draftData.task_type,
+            grade_band:     draftData.grade_band,
+            difficulty:     draftData.difficulty,
+            error_targets:  draftData.error_targets,
+            prompt_text:    draftData.prompt_text,
+            correct_answer: draftData.correct_answer,
+            options:        draftData.options,
+            feedback_text:  draftData.feedback_text,
+          },
+          apiKey,
+        );
+      } catch (err) {
+        result.rejected.push({ ...variant, _error: `AI review failed: ${(err as Error).message}` });
+        continue;
+      }
 
       // Blockers go to STAGE1 (hidden from review queue until manually promoted)
       const stage = review.severity === 'blocker' ? DraftStage.STAGE1 : DraftStage.STAGE2;
       if (review.severity === 'blocker') ai_blocked++;
 
-      await prisma.taskDraft.upsert({
-        where:  { id: variantId },
-        create: {
-          id: variantId,
-          task_id,
-          stage,
-          source: TaskSource.AI,
-          ...draftData,
-          ai_review_severity: review.severity,
-          ai_review_issues:   review.issues,
-          ai_fix_suggestion:  review.fix_suggestion,
-          ai_reviewed_at:     new Date(),
-        },
-        update: {
-          stage,
-          source: TaskSource.AI,
-          ...draftData,
-          ai_review_severity: review.severity,
-          ai_review_issues:   review.issues,
-          ai_fix_suggestion:  review.fix_suggestion,
-          ai_reviewed_at:     new Date(),
-        },
-      });
-      drafts_created++;
+      try {
+        await prisma.taskDraft.upsert({
+          where:  { id: variantId },
+          create: {
+            id: variantId,
+            task_id,
+            stage,
+            source: TaskSource.AI,
+            ...draftData,
+            ai_review_severity: review.severity,
+            ai_review_issues:   review.issues,
+            ai_fix_suggestion:  review.fix_suggestion,
+            ai_reviewed_at:     new Date(),
+          },
+          update: {
+            stage,
+            source: TaskSource.AI,
+            ...draftData,
+            ai_review_severity: review.severity,
+            ai_review_issues:   review.issues,
+            ai_fix_suggestion:  review.fix_suggestion,
+            ai_reviewed_at:     new Date(),
+          },
+        });
+        drafts_created++;
+      } catch (err) {
+        result.rejected.push({ ...variant, _error: `DB save failed: ${(err as Error).message}` });
+        continue;
+      }
     }
 
     results.push({ task_id, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });

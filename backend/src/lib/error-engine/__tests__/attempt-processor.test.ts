@@ -13,7 +13,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_LISTEN_CHOOSE — Choice: audio "ном", pick correct from [ном, нум, мод]
   'G12-001': {
     id: 'G12-001',
-    task_type: 'TT_LISTEN_CHOOSE',
+    task_type: 'TT_1_1',
     correct_answer: 'ном',
     options: {
       choices: [
@@ -31,7 +31,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_CHOOSE_CORRECT — Choice: long vowel тогоо/того/тогуу
   'G12-005': {
     id: 'G12-005',
-    task_type: 'TT_CHOOSE_CORRECT',
+    task_type: 'TT_2_3',
     correct_answer: 'тогоо',
     options: {
       choices: [
@@ -48,7 +48,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_CHOOSE_CORRECT — Choice: сүү/су/сү
   'G12-005b': {
     id: 'G12-005b',
-    task_type: 'TT_CHOOSE_CORRECT',
+    task_type: 'TT_2_3',
     correct_answer: 'сүү',
     options: {
       choices: [
@@ -65,7 +65,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_LETTER_FILL — Fill: дэвт_р, blank at position 4, answer "э"
   'G12-007': {
     id: 'G12-007',
-    task_type: 'TT_LETTER_FILL',
+    task_type: 'TT_2_1',
     correct_answer: 'дэвтэр',
     options: {
       display_text: 'дэвт_р',
@@ -81,7 +81,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_FIX_ERROR — Correction: incorrect "того", correct "тогоо"
   'G12-011': {
     id: 'G12-011',
-    task_type: 'TT_FIX_ERROR',
+    task_type: 'TT_8_2',
     correct_answer: 'тогоо',
     options: {
       incorrect_text: 'того',
@@ -97,7 +97,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_SHORT_SENTENCE_DICTATION — Dictation: sentence "Би явна."
   'G12-009': {
     id: 'G12-009',
-    task_type: 'TT_SHORT_SENTENCE_DICTATION',
+    task_type: 'TT_7_4',
     correct_answer: 'Би явна.',
     options: {
       audio_text: 'Би явна.',
@@ -113,7 +113,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_SHORT_SENTENCE_DICTATION — Dictation: sentence "Бат ирлээ."
   'G12-009b': {
     id: 'G12-009b',
-    task_type: 'TT_SHORT_SENTENCE_DICTATION',
+    task_type: 'TT_7_4',
     correct_answer: 'Бат ирлээ.',
     options: {
       audio_text: 'Бат ирлээ.',
@@ -126,10 +126,10 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: ['G1', 'G2'],
   },
 
-  // TT_SELF_CHECK — Self-check: original "сү", model "сүү"
+  // TT_8_4 — Self-check: original "сү", model "сүү"
   'G12-012': {
     id: 'G12-012',
-    task_type: 'TT_SELF_CHECK',
+    task_type: 'TT_8_4',
     correct_answer: 'сүү',
     options: {
       original_attempt: 'сү',
@@ -144,7 +144,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_MATCH_PAIRS — Match pairs: letters ↔ images
   'G12-013': {
     id: 'G12-013',
-    task_type: 'TT_MATCH_PAIRS',
+    task_type: 'TT_1_3',
     correct_answer: 'pairs',
     options: {
       pairs: [
@@ -161,7 +161,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_ASSEMBLE_WORD — Assemble: [р][а][н] → нар
   'G12-014': {
     id: 'G12-014',
-    task_type: 'TT_ASSEMBLE_WORD',
+    task_type: 'TT_1_4',
     correct_answer: 'нар',
     options: {
       tiles: ['р', 'а', 'н'],
@@ -175,7 +175,7 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
   // TT_TAP_FIND_ERROR — Tap: find wrong word in sentence
   'G12-015': {
     id: 'G12-015',
-    task_type: 'TT_TAP_FIND_ERROR',
+    task_type: 'TT_8_1',
     correct_answer: '1',
     options: {
       sentence: 'Намар навч уннаа.',
@@ -326,10 +326,10 @@ describe('Dictation (TT_SHORT_SENTENCE_DICTATION)', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TT_SELF_CHECK — Self-check
+// TT_8_4 — Self-check
 // ═══════════════════════════════════════════════════════════════════════════════
 
-describe('Self-check (TT_SELF_CHECK)', () => {
+describe('Self-check (TT_8_4)', () => {
   it('revision "сүү" (correct fix) → score 1.0, selfCorrected', async () => {
     const result = await processAttempt(makeInput('G12-012', 'сүү'), mockTaskRepo);
     expect(result.score).toBe(1.0);

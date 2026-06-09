@@ -109,7 +109,7 @@ interface TaskSeed {
 const readyTasks: TaskSeed[] = [
   {
     id: "G12-001",
-    task_type: TaskType.TT_LISTEN_CHOOSE,
+    task_type: TaskType.TT_1_1,
     prompt_text: "Ð¡Ð¾Ð½ÑÐ»Ð¾Ð¾. ÐÐ»ÑŒ Ò¯Ð³ Ð²Ñ?",
     correct_answer: "Ð½Ð¾Ð¼",
     options: { choices: [{ text: "Ð½Ð¾Ð¼", is_correct: true }, { text: "Ð½ÑƒÐ¼", is_correct: false }, { text: "Ð¼Ð¾Ð´", is_correct: false }], audio_trigger: true },
@@ -120,7 +120,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-001v2",
-    task_type: TaskType.TT_LISTEN_CHOOSE,
+    task_type: TaskType.TT_1_1,
     prompt_text: "Ð¡Ð¾Ð½ÑÐ»Ð¾Ð¾. ÐÐ»ÑŒ Ò¯Ð³ Ð²Ñ?",
     correct_answer: "ÑÐ°Ñ€",
     options: { choices: [{ text: "ÑÐ°Ñ€", is_correct: true }, { text: "Ð½Ð°Ñ€", is_correct: false }, { text: "ÑÐ°Ð²", is_correct: false }], audio_trigger: true },
@@ -131,7 +131,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-002",
-    task_type: TaskType.TT_LETTER_FILL,
+    task_type: TaskType.TT_2_1,
     prompt_text: "Ð”ÑƒÑ‚ÑƒÑƒ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ð¾",
     options: { display_text: "Ð½_Ð¼", blank_position: 1, blank_answer: "Ð¾", context_word: "Ð½Ð¾Ð¼" },
@@ -142,7 +142,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-003",
-    task_type: TaskType.TT_IMAGE_WORD_MATCH,
+    task_type: TaskType.TT_1_2,
     prompt_text: "Ð—ÑƒÑ€Ð°Ð³Ñ‚ Ñ‚Ð¾Ñ…Ð¸Ñ€Ð¾Ñ… Ò¯Ð³Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.",
     correct_answer: "Ð°Ð»Ð¸Ð¼",
     options: { choices: [{ text: "Ð°Ð»Ð¸Ð¼", is_correct: true }, { text: "Ð³ÑƒÑ‚Ð°Ð»", is_correct: false }, { text: "Ñ†Ð°Ñ", is_correct: false }], audio_trigger: false },
@@ -153,7 +153,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-003v2",
-    task_type: TaskType.TT_IMAGE_WORD_MATCH,
+    task_type: TaskType.TT_1_2,
     prompt_text: "Ð—ÑƒÑ€Ð°Ð³Ñ‚ Ñ‚Ð¾Ñ…Ð¸Ñ€Ð¾Ñ… Ò¯Ð³Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.",
     correct_answer: "Ð³ÑÑ€",
     options: { choices: [{ text: "Ð³ÑÑ€", is_correct: true }, { text: "Ð¼Ð¾Ñ€ÑŒ", is_correct: false }, { text: "Ð½Ð¾Ð¼", is_correct: false }], audio_trigger: false },
@@ -164,7 +164,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-004",
-    task_type: TaskType.TT_COPY_WRITE,
+    task_type: TaskType.TT_7_1,
     prompt_text: "Ð”Ð¾Ð¾Ñ€Ñ… Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ Ñ…ÑƒÑƒÐ»Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.",
     options: { incorrect_text: "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.", correct_text: "Ð­Ð½Ñ Ð±Ð¾Ð» Ð½Ð¾Ð¼.", error_type: "B3", hint: "Ò®ÑÐ³Ð¸Ð¹Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð°Ð», Ñ†ÑÐ³ÑÑ ÑˆÐ°Ð»Ð³Ð°." },
@@ -175,7 +175,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-005",
-    task_type: TaskType.TT_CHOOSE_CORRECT,
+    task_type: TaskType.TT_2_3,
     prompt_text: "ÐÐ»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
     correct_answer: "Ñ‚Ð¾Ð³Ð¾Ð¾",
     options: { choices: [{ text: "Ñ‚Ð¾Ð³Ð¾Ð¾", is_correct: true }, { text: "Ñ‚Ð¾Ð³Ð¾", is_correct: false }, { text: "Ñ‚Ð¾Ð³ÑƒÑƒ", is_correct: false }], audio_trigger: false },
@@ -186,7 +186,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-005v2",
-    task_type: TaskType.TT_CHOOSE_CORRECT,
+    task_type: TaskType.TT_2_3,
     prompt_text: "ÐÐ»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
     correct_answer: "ÑÒ¯Ò¯",
     options: { choices: [{ text: "ÑÒ¯Ò¯", is_correct: true }, { text: "ÑÑƒ", is_correct: false }, { text: "ÑÒ¯", is_correct: false }], audio_trigger: false },
@@ -197,7 +197,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-006",
-    task_type: TaskType.TT_FILL_WRITE,
+    task_type: TaskType.TT_2_4,
     prompt_text: "Ð”ÑƒÑ‚ÑƒÑƒ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ó©",
     options: { display_text: "Ð±Ó©Ð¼Ð±_Ð³", blank_position: 4, blank_answer: "Ó©", context_word: "Ð±Ó©Ð¼Ð±Ó©Ð³" },
@@ -208,7 +208,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-006v2",
-    task_type: TaskType.TT_FILL_WRITE,
+    task_type: TaskType.TT_2_4,
     prompt_text: "Ð”ÑƒÑ‚ÑƒÑƒ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ñƒ",
     options: { display_text: "ÑˆÑƒÐ²_Ñƒ", blank_position: 3, blank_answer: "Ñƒ", context_word: "ÑˆÑƒÐ²ÑƒÑƒ" },
@@ -219,7 +219,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-007",
-    task_type: TaskType.TT_MISSING_LETTER,
+    task_type: TaskType.TT_4_4,
     prompt_text: "ÐÑƒÐ´Ð¸Ð¾ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð´ÑƒÑ‚ÑƒÑƒ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ñ",
     options: { display_text: "Ð´ÑÐ²Ñ‚_Ñ€", blank_position: 4, blank_answer: "Ñ", context_word: "Ð´ÑÐ²Ñ‚ÑÑ€" },
@@ -230,7 +230,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-008",
-    task_type: TaskType.TT_WORD_SET_DICTATION,
+    task_type: TaskType.TT_7_3,
     prompt_text: "Ð¡Ð¾Ð½ÑÑÐ¾Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð±Ð¸Ñ‡ÑÑÑ€ÑÐ¹.",
     correct_answer: "Ð½Ð¾Ð¼; Ð³ÑÑ€; Ð½Ð°Ñ€",
     options: { audio_text: "Ð½Ð¾Ð¼, Ð³ÑÑ€, Ð½Ð°Ñ€", word_count: 3, expected_answers: ["Ð½Ð¾Ð¼", "Ð³ÑÑ€", "Ð½Ð°Ñ€"], allow_partial: true },
@@ -241,7 +241,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-009",
-    task_type: TaskType.TT_CAPITAL_PUNCTUATION,
+    task_type: TaskType.TT_6_1,
     prompt_text: "ÐÐ»Ð´Ð°Ð°Ð³ Ð·Ð°ÑÐ°Ð¶ Ð·Ó©Ð² Ð±Ð¸Ñ‡.",
     correct_answer: "Ð‘Ð¸ ÑÐ²Ð½Ð°.",
     options: { incorrect_text: "Ð±Ð¸ ÑÐ²Ð½Ð°", correct_text: "Ð‘Ð¸ ÑÐ²Ð½Ð°.", error_type: "G1", hint: "Ð­Ñ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼, Ñ‚Ó©Ð³ÑÐ³Ó©Ð»Ð´ Ñ†ÑÐ³." },
@@ -252,7 +252,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-009v2",
-    task_type: TaskType.TT_CAPITAL_PUNCTUATION,
+    task_type: TaskType.TT_6_1,
     prompt_text: "ÐÐ»Ð´Ð°Ð°Ð³ Ð·Ð°ÑÐ°Ð¶ Ð·Ó©Ð² Ð±Ð¸Ñ‡.",
     correct_answer: "Ð‘Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ.",
     options: { incorrect_text: "Ð±Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ", correct_text: "Ð‘Ð°Ñ‚ Ð¸Ñ€Ð»ÑÑ.", error_type: "G1", hint: "ÐÑÑ€Ð½Ð¸Ð¹ ÑÑ…Ð½Ð¸Ð¹ Ò¯ÑÑÐ³ Ñ‚Ð¾Ð¼." },
@@ -263,7 +263,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-010",
-    task_type: TaskType.TT_SIMPLE_SUFFIX,
+    task_type: TaskType.TT_5_1,
     prompt_text: "ÐÐ»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?",
     correct_answer: "Ð³ÑÑ€Ñ‚",
     options: { choices: [{ text: "Ð³ÑÑ€Ñ‚", is_correct: true }, { text: "Ð³ÑÑ€Ð´", is_correct: false }, { text: "Ð³ÑÑ€", is_correct: false }], audio_trigger: false },
@@ -274,7 +274,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-011",
-    task_type: TaskType.TT_FIND_ERROR,
+    task_type: TaskType.TT_8_2,
     prompt_text: "ÐÐ»Ð´Ð°Ð°Ð³ Ð¾Ð», Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ð½Ð¾Ð¼",
     options: { incorrect_text: "Ð½Ð¾Ð¼Ð¼", correct_text: "Ð½Ð¾Ð¼", error_type: "H4", hint: "Ð˜Ð»Ò¯Ò¯ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ñ." },
@@ -285,7 +285,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-011v2",
-    task_type: TaskType.TT_FIND_ERROR,
+    task_type: TaskType.TT_8_2,
     prompt_text: "ÐÐ»Ð´Ð°Ð°Ð³ Ð¾Ð», Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ñ‚Ð¾Ð³Ð¾Ð¾",
     options: { incorrect_text: "Ñ‚Ð¾Ð³Ð¾", correct_text: "Ñ‚Ð¾Ð³Ð¾Ð¾", error_type: "C1", hint: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð´ÑƒÑ‚ÑƒÑƒ Ð±Ð¸Ñ‡ÑÑÐ½ Ð±Ð°Ð¹Ð½Ð°." },
@@ -296,7 +296,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-012",
-    task_type: TaskType.TT_SELF_CHECK,
+    task_type: TaskType.TT_8_4,
     prompt_text: "Ð§Ð¸ Ð±Ð¸Ñ‡ÑÑÐ½ Ð±Ð¾Ð»Ð¾Ð½ Ð·Ð°Ð³Ð²Ð°Ñ€Ñ‹Ð³ Ñ…Ð°Ñ€ÑŒÑ†ÑƒÑƒÐ».",
     correct_answer: "ÑÒ¯Ò¯",
     options: { original_attempt: "ÑÒ¯", model_answer: "ÑÒ¯Ò¯", comparison_mode: "side_by_side" },
@@ -307,7 +307,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-013",
-    task_type: TaskType.TT_TWO_WORD_DICTATION,
+    task_type: TaskType.TT_7_3,
     prompt_text: "Ð¡Ð¾Ð½ÑÑÐ¾Ð½ Ð´Ð°Ñ€Ð°Ð°Ð»Ð»Ð°Ð°Ñ€ Ð±Ð¸Ñ‡Ð½Ñ Ò¯Ò¯.",
     correct_answer: "Ð½Ð¾Ð¼; ÑÐ°Ñ€",
     options: { audio_text: "Ð½Ð¾Ð¼, ÑÐ°Ñ€", word_count: 2, expected_answers: ["Ð½Ð¾Ð¼", "ÑÐ°Ñ€"], allow_partial: true },
@@ -318,7 +318,7 @@ const readyTasks: TaskSeed[] = [
   },
   {
     id: "G12-014",
-    task_type: TaskType.TT_WORD_ENDING,
+    task_type: TaskType.TT_2_1,
     prompt_text: "Ð”ÑƒÑ‚ÑƒÑƒ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.",
     correct_answer: "Ñ€",
     options: { display_text: "Ð³Ñ_", blank_position: 2, blank_answer: "Ñ€", context_word: "Ð³ÑÑ€" },
@@ -330,32 +330,32 @@ const readyTasks: TaskSeed[] = [
 ];
 
 const placeholderTasks: TaskSeed[] = [
-  { id: "G12-015", task_type: TaskType.TT_SENTENCE_FILL, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð±Ò¯Ñ‚ÑÐ½ Ð±Ð¾Ð»Ð³Ð¾Ð½ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G2"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÑÐ³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð±Ò¯Ñ‚ÑÐ½ Ð±Ð¾Ð»Ð³Ð¾Ñ…." },
-  { id: "G12-016", task_type: TaskType.TT_MIXED_REVIEW, prompt_text: "ÐÐ»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M1", error_targets: ["B1", "C1"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ò®Ð³ Ð±Ð° ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ð¼Ñ‚ ÑˆÐ°Ð»Ð³Ð°Ñ…." },
-  { id: "G24-001", task_type: TaskType.TT_WORD_FORM_CHOOSE, prompt_text: "Ð¡ÑƒÑƒÑ€ÑŒ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð»ÑÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M1", error_targets: ["B1", "B3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ð¡ÑƒÑƒÑ€ÑŒ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð»ÑÐ³." },
-  { id: "G24-002", task_type: TaskType.TT_LONG_VOWEL_FILL, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M1", error_targets: ["C1"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð£Ñ€Ñ‚/Ð±Ð¾Ð³Ð¸Ð½Ð¾ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ ÑÑƒÑƒÑ€ÑŒ." },
-  { id: "G24-003", task_type: TaskType.TT_REDUCED_VOWEL, prompt_text: "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M1", error_targets: ["C4"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð”ÑƒÑ‚ÑƒÑƒ ÑÐ³ÑˆÐ¸Ð³ Ð½Ó©Ñ…Ó©Ñ…." },
-  { id: "G24-004", task_type: TaskType.TT_SUFFIX_CHOOSE, prompt_text: "Ð—Ð¾Ñ…Ð¸Ñ… Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð»Ð³Ð°Ð²Ð°Ñ€ Ñ…ÑÑ€ÑÐ³Ð»ÑÑ…." },
-  { id: "G24-005", task_type: TaskType.TT_CAPITAL_PUNCTUATION, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ñ‚Ð¾Ð¼ Ò¯ÑÑÐ³, Ñ†ÑÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G1", "G2"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ñ‚ÑÐ¼Ð´ÑÐ³Ð»ÑÐ³ÑÑ." },
-  { id: "G24-006", task_type: TaskType.TT_SHORT_SENTENCE_DICTATION, prompt_text: "Ð‘Ð¾Ð³Ð¸Ð½Ð¾ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 60, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¡Ð¾Ð½ÑÐ³Ð¾Ð»Ð¾Ð¾Ñ€ Ð±ÑƒÑƒÐ»Ð³Ð°Ñ…." },
-  { id: "G24-007", task_type: TaskType.TT_FIX_ERROR, prompt_text: "ÐÐ»Ð´Ð°Ð°Ñ‚Ð°Ð¹ Ò¯Ð³Ð¸Ð¹Ð³ Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ó©Ñ€Ó©Ó© Ð·Ð°ÑÐ°Ñ… Ñ‡Ð°Ð´Ð²Ð°Ñ€." },
-  { id: "G24-008", task_type: TaskType.TT_CONSONANT_CONFUSION, prompt_text: "Ð˜Ð¶Ð¸Ð» Ñ‚Ó©ÑÑ‚ÑÐ¹ Ð°Ð²Ð¸Ð°Ð³ ÑÐ»Ð³Ð°Ð¶ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S1, secondary_skill: null, level_target: "M1", error_targets: ["D3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ð¢Ó©ÑÑ‚ÑÐ¹ Ð°Ð²Ð¸Ð° ÑÐ»Ð³Ð°Ñ…." },
-  { id: "G24-009", task_type: TaskType.TT_WORD_FORM_FIX, prompt_text: "Ò®Ð³Ð¸Ð¹Ð½ Ð·Ó©Ð² Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M2", error_targets: ["F1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¯Ð·Ð³ÑƒÑƒÑ€ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ñ‚Ð°Ð½Ð¸Ñ…." },
-  { id: "G24-010", task_type: TaskType.TT_LONG_VOWEL_IN_SENTENCE, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ ÑÐ»Ð³Ð°.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M2", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐšÐ¾Ð½Ñ‚ÐµÐºÑÑ‚ Ð´Ð¾Ñ‚Ð¾Ñ€ ÑÐ»Ð³Ð°Ñ…." },
-  { id: "G24-011", task_type: TaskType.TT_REDUCED_VOWEL_IN_SENTENCE, prompt_text: "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M2", error_targets: ["C4", "C5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ñ…." },
-  { id: "G24-012", task_type: TaskType.TT_CASE_SUFFIX, prompt_text: "Ð¢Ð¸Ð¹Ð½ ÑÐ»Ð³Ð°Ð»Ñ‹Ð½ Ð·Ó©Ð² Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ò¯Ò¯Ñ€ÑÐ³Ñ‚ Ñ‚Ð¾Ñ…Ð¸Ñ€ÑƒÑƒÐ»Ð°Ñ…." },
-  { id: "G24-013", task_type: TaskType.TT_BASIC_COMMA, prompt_text: "Ð¢Ð°ÑÐ»Ð°Ð»Ñ‹Ð³ Ð·Ó©Ð² Ð±Ð°Ð¹Ñ€Ð»ÑƒÑƒÐ»Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð²ÑÐ°Ñ€ Ñ‚ÑÐ¼Ð´ÑÐ³." },
-  { id: "G24-014", task_type: TaskType.TT_TWO_SENTENCE_DICTATION, prompt_text: "Ð¥Ð¾Ñ‘Ñ€ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡Ð½Ñ Ò¯Ò¯.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "H2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 120, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¥ÑƒÑ€Ð´ Ð±Ð° Ð¾Ð¹." },
-  { id: "G24-015", task_type: TaskType.TT_FIND_OMITTED_LETTER, prompt_text: "ÐžÑ€Ñ…Ð¸Ð³Ð´ÑÐ¾Ð½ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð¾Ð», Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["B1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÐ¸Ð¹Ñ‚Ð»ÑÐ³ Ð°Ð»Ð´Ð°Ð°Ð³ Ð·Ð°ÑÐ°Ñ…." },
-  { id: "G24-016", task_type: TaskType.TT_MIXED_WORD_SET, prompt_text: "Ð—Ó©Ð² Ò¯Ð³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M2", error_targets: ["B1", "C1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ò®Ð³+ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ð±Ð°Ñ‚Ð°Ñ‚Ð³Ð°Ð»." },
-  { id: "G24-017", task_type: TaskType.TT_SUFFIX_WRITE, prompt_text: "Ð—Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E7"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¡Ð¾Ð½Ð³Ð¾ÑÐ¾Ð½ Ñ…ÑÐ»Ð±ÑÑ€ÑÑ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð¸Ñ…." },
-  { id: "G24-018", task_type: TaskType.TT_SENTENCE_BOUNDARY, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ò¯Ò¯Ð´Ð¸Ð¹Ð³ Ð·Ó©Ð² ÑÐ°Ð»Ð³Ð°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€ ÑÐ°Ð»Ð³Ð°Ñ…." },
-  { id: "G24-019", task_type: TaskType.TT_MINI_TEXT_DICTATION, prompt_text: "Ð‘Ð¾Ð³Ð¸Ð½Ð¾ ÑÑ…Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡Ð½Ñ Ò¯Ò¯.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M3", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 120, lesson_slot_fit: LessonSlot.MIXED, feedback_text: "2â€“3 Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ÑÐ¹ ÑÑ…." },
-  { id: "G24-020", task_type: TaskType.TT_OWN_WRITING_CORRECTION, prompt_text: "Ó¨Ó©Ñ€Ð¸Ð¹Ð½ Ð±Ð¸Ñ‡Ð²ÑÑ€Ð¸Ð¹Ð³ ÑˆÐ°Ð»Ð³Ð°Ð¶ Ð·Ð°ÑÐ°Ð°Ñ€Ð°Ð¹.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 60, lesson_slot_fit: LessonSlot.END, feedback_text: "Ð”Ð°Ñ…Ð¸Ð½ ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚ Ð±Ð° self-correction." },
-  { id: "G24-021", task_type: TaskType.TT_LONG_VOWEL_CHALLENGE, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M3", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÑ…Ð¸ÑÐ°Ð½ ÑÐ»Ð³Ð°Ð»Ñ‚." },
-  { id: "G24-022", task_type: TaskType.TT_COMPOUND_SUFFIX, prompt_text: "ÐÐ¸Ð¹Ð»Ð¼ÑÐ» Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M3", error_targets: ["E2", "E7"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐžÐ»Ð¾Ð½ Ð´Ò¯Ñ€ÑÐ¼ Ð´Ð°Ð²Ñ…Ñ†Ð°Ñ…." },
-  { id: "G24-023", task_type: TaskType.TT_MIXED_CHECKPOINT, prompt_text: "Ð¥Ð¾Ð»Ð¸Ð¼Ð¾Ð³ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð½ Ð´Ð°Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð³Ò¯Ð¹Ñ†ÑÑ‚Ð³Ñ.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S5, level_target: "M2-M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.MIXED, feedback_text: "Ð”Ð¾Ð»Ð¾Ð¾ Ñ…Ð¾Ð½Ð¾Ð³Ð¸Ð¹Ð½ ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚." },
-  { id: "G24-024", task_type: TaskType.TT_EXPLAINED_CORRECTION, prompt_text: "ÐÐ»Ð´Ð°Ð°Ð½Ñ‹ ÑˆÐ°Ð»Ñ‚Ð³Ð°Ð°Ð½Ñ‹Ð³ Ñ‚Ð°Ð¹Ð»Ð±Ð°Ñ€Ð»Ð°Ð¶ Ð·Ð°ÑÐ°Ð°Ñ€Ð°Ð¹.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¯Ð°Ð³Ð°Ð°Ð´ Ð±ÑƒÑ€ÑƒÑƒ Ð³ÑÐ´Ð³Ð¸Ð¹Ð³ Ñ…ÑÐ»ÑÑ…." },
+  { id: "G12-015", task_type: TaskType.TT_5_2, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð±Ò¯Ñ‚ÑÐ½ Ð±Ð¾Ð»Ð³Ð¾Ð½ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G2"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÑÐ³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð±Ò¯Ñ‚ÑÐ½ Ð±Ð¾Ð»Ð³Ð¾Ñ…." },
+  { id: "G12-016", task_type: TaskType.TT_2_3, prompt_text: "ÐÐ»ÑŒ Ð½ÑŒ Ð·Ó©Ð² Ð±Ñ?", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M1", error_targets: ["B1", "C1"], grade_band: ["G1", "G2"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ò®Ð³ Ð±Ð° ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ñ…Ð°Ð¼Ñ‚ ÑˆÐ°Ð»Ð³Ð°Ñ…." },
+  { id: "G24-001", task_type: TaskType.TT_5_1, prompt_text: "Ð¡ÑƒÑƒÑ€ÑŒ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð»ÑÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M1", error_targets: ["B1", "B3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ð¡ÑƒÑƒÑ€ÑŒ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð»ÑÐ³." },
+  { id: "G24-002", task_type: TaskType.TT_3_2, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M1", error_targets: ["C1"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð£Ñ€Ñ‚/Ð±Ð¾Ð³Ð¸Ð½Ð¾ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ ÑÑƒÑƒÑ€ÑŒ." },
+  { id: "G24-003", task_type: TaskType.TT_3_2, prompt_text: "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M1", error_targets: ["C4"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð”ÑƒÑ‚ÑƒÑƒ ÑÐ³ÑˆÐ¸Ð³ Ð½Ó©Ñ…Ó©Ñ…." },
+  { id: "G24-004", task_type: TaskType.TT_5_1, prompt_text: "Ð—Ð¾Ñ…Ð¸Ñ… Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð»Ð³Ð°Ð²Ð°Ñ€ Ñ…ÑÑ€ÑÐ³Ð»ÑÑ…." },
+  { id: "G24-005", task_type: TaskType.TT_6_1, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ñ‚Ð¾Ð¼ Ò¯ÑÑÐ³, Ñ†ÑÐ³Ð¸Ð¹Ð³ Ð·Ó©Ð² Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M1", error_targets: ["G1", "G2"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ñ‚ÑÐ¼Ð´ÑÐ³Ð»ÑÐ³ÑÑ." },
+  { id: "G24-006", task_type: TaskType.TT_7_4, prompt_text: "Ð‘Ð¾Ð³Ð¸Ð½Ð¾ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 60, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¡Ð¾Ð½ÑÐ³Ð¾Ð»Ð¾Ð¾Ñ€ Ð±ÑƒÑƒÐ»Ð³Ð°Ñ…." },
+  { id: "G24-007", task_type: TaskType.TT_8_2, prompt_text: "ÐÐ»Ð´Ð°Ð°Ñ‚Ð°Ð¹ Ò¯Ð³Ð¸Ð¹Ð³ Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ó©Ñ€Ó©Ó© Ð·Ð°ÑÐ°Ñ… Ñ‡Ð°Ð´Ð²Ð°Ñ€." },
+  { id: "G24-008", task_type: TaskType.TT_4_1, prompt_text: "Ð˜Ð¶Ð¸Ð» Ñ‚Ó©ÑÑ‚ÑÐ¹ Ð°Ð²Ð¸Ð°Ð³ ÑÐ»Ð³Ð°Ð¶ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S1, secondary_skill: null, level_target: "M1", error_targets: ["D3"], grade_band: ["G2", "G3", "G4"], difficulty: 2, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.WARM_UP, feedback_text: "Ð¢Ó©ÑÑ‚ÑÐ¹ Ð°Ð²Ð¸Ð° ÑÐ»Ð³Ð°Ñ…." },
+  { id: "G24-009", task_type: TaskType.TT_2_5, prompt_text: "Ò®Ð³Ð¸Ð¹Ð½ Ð·Ó©Ð² Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: null, level_target: "M2", error_targets: ["F1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¯Ð·Ð³ÑƒÑƒÑ€ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ Ñ‚Ð°Ð½Ð¸Ñ…." },
+  { id: "G24-010", task_type: TaskType.TT_7_5, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ ÑÐ»Ð³Ð°.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M2", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐšÐ¾Ð½Ñ‚ÐµÐºÑÑ‚ Ð´Ð¾Ñ‚Ð¾Ñ€ ÑÐ»Ð³Ð°Ñ…." },
+  { id: "G24-011", task_type: TaskType.TT_7_5, prompt_text: "Ð‘Ð°Ð»Ð°Ñ€Ñ…Ð°Ð¹ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð³ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S4, secondary_skill: null, level_target: "M2", error_targets: ["C4", "C5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ñ…." },
+  { id: "G24-012", task_type: TaskType.TT_5_1, prompt_text: "Ð¢Ð¸Ð¹Ð½ ÑÐ»Ð³Ð°Ð»Ñ‹Ð½ Ð·Ó©Ð² Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð½ Ò¯Ò¯Ñ€ÑÐ³Ñ‚ Ñ‚Ð¾Ñ…Ð¸Ñ€ÑƒÑƒÐ»Ð°Ñ…." },
+  { id: "G24-013", task_type: TaskType.TT_6_4, prompt_text: "Ð¢Ð°ÑÐ»Ð°Ð»Ñ‹Ð³ Ð·Ó©Ð² Ð±Ð°Ð¹Ñ€Ð»ÑƒÑƒÐ»Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G4"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð­Ð½Ð³Ð¸Ð¹Ð½ Ð·Ð°Ð²ÑÐ°Ñ€ Ñ‚ÑÐ¼Ð´ÑÐ³." },
+  { id: "G24-014", task_type: TaskType.TT_7_4, prompt_text: "Ð¥Ð¾Ñ‘Ñ€ Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡Ð½Ñ Ò¯Ò¯.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M2", error_targets: ["H1", "H2"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 120, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¥ÑƒÑ€Ð´ Ð±Ð° Ð¾Ð¹." },
+  { id: "G24-015", task_type: TaskType.TT_8_2, prompt_text: "ÐžÑ€Ñ…Ð¸Ð³Ð´ÑÐ¾Ð½ Ò¯ÑÐ³Ð¸Ð¹Ð³ Ð¾Ð», Ð·Ð°ÑÐ°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M2", error_targets: ["B1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÐ¸Ð¹Ñ‚Ð»ÑÐ³ Ð°Ð»Ð´Ð°Ð°Ð³ Ð·Ð°ÑÐ°Ñ…." },
+  { id: "G24-016", task_type: TaskType.TT_2_3, prompt_text: "Ð—Ó©Ð² Ò¯Ð³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S3, level_target: "M2", error_targets: ["B1", "C1"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ò®Ð³+ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ð±Ð°Ñ‚Ð°Ñ‚Ð³Ð°Ð»." },
+  { id: "G24-017", task_type: TaskType.TT_5_5, prompt_text: "Ð—Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M2", error_targets: ["E7"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¡Ð¾Ð½Ð³Ð¾ÑÐ¾Ð½ Ñ…ÑÐ»Ð±ÑÑ€ÑÑ Ð·Ó©Ð² Ð±Ð¸Ñ‡Ð¸Ñ…." },
+  { id: "G24-018", task_type: TaskType.TT_6_3, prompt_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ò¯Ò¯Ð´Ð¸Ð¹Ð³ Ð·Ó©Ð² ÑÐ°Ð»Ð³Ð°Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S6, secondary_skill: null, level_target: "M2", error_targets: ["G5"], grade_band: ["G2", "G3", "G4"], difficulty: 3, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ó¨Ð³Ò¯Ò¯Ð»Ð±ÑÑ€ ÑÐ°Ð»Ð³Ð°Ñ…." },
+  { id: "G24-019", task_type: TaskType.TT_7_6, prompt_text: "Ð‘Ð¾Ð³Ð¸Ð½Ð¾ ÑÑ…Ð¸Ð¹Ð³ ÑÐ¾Ð½ÑÐ¾Ð¾Ð´ Ð±Ð¸Ñ‡Ð½Ñ Ò¯Ò¯.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S7, secondary_skill: null, level_target: "M3", error_targets: ["H1", "B4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 120, lesson_slot_fit: LessonSlot.MIXED, feedback_text: "2â€“3 Ó©Ð³Ò¯Ò¯Ð»Ð±ÑÑ€Ñ‚ÑÐ¹ ÑÑ…." },
+  { id: "G24-020", task_type: TaskType.TT_8_4, prompt_text: "Ó¨Ó©Ñ€Ð¸Ð¹Ð½ Ð±Ð¸Ñ‡Ð²ÑÑ€Ð¸Ð¹Ð³ ÑˆÐ°Ð»Ð³Ð°Ð¶ Ð·Ð°ÑÐ°Ð°Ñ€Ð°Ð¹.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["H4"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 60, lesson_slot_fit: LessonSlot.END, feedback_text: "Ð”Ð°Ñ…Ð¸Ð½ ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚ Ð±Ð° self-correction." },
+  { id: "G24-021", task_type: TaskType.TT_3_1, prompt_text: "Ð£Ñ€Ñ‚ ÑÐ³ÑˆÐ³Ð¸Ð¹Ð½ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð³ ÑÐ¾Ð½Ð³Ð¾.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S3, secondary_skill: null, level_target: "M3", error_targets: ["C1", "C2"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐÑ…Ð¸ÑÐ°Ð½ ÑÐ»Ð³Ð°Ð»Ñ‚." },
+  { id: "G24-022", task_type: TaskType.TT_5_5, prompt_text: "ÐÐ¸Ð¹Ð»Ð¼ÑÐ» Ð·Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð·Ó©Ð² Ð½Ó©Ñ…Ó©Ð¶ Ð±Ð¸Ñ‡.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S5, secondary_skill: null, level_target: "M3", error_targets: ["E2", "E7"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "ÐžÐ»Ð¾Ð½ Ð´Ò¯Ñ€ÑÐ¼ Ð´Ð°Ð²Ñ…Ñ†Ð°Ñ…." },
+  { id: "G24-023", task_type: TaskType.TT_2_3, prompt_text: "Ð¥Ð¾Ð»Ð¸Ð¼Ð¾Ð³ Ñ…ÑÐ»Ð±ÑÑ€Ð¸Ð¹Ð½ Ð´Ð°Ð°Ð»Ð³Ð°Ð²Ñ€Ñ‹Ð³ Ð³Ò¯Ð¹Ñ†ÑÑ‚Ð³Ñ.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S2, secondary_skill: SkillCode.S5, level_target: "M2-M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 30, lesson_slot_fit: LessonSlot.MIXED, feedback_text: "Ð”Ð¾Ð»Ð¾Ð¾ Ñ…Ð¾Ð½Ð¾Ð³Ð¸Ð¹Ð½ ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚." },
+  { id: "G24-024", task_type: TaskType.TT_8_2, prompt_text: "ÐÐ»Ð´Ð°Ð°Ð½Ñ‹ ÑˆÐ°Ð»Ñ‚Ð³Ð°Ð°Ð½Ñ‹Ð³ Ñ‚Ð°Ð¹Ð»Ð±Ð°Ñ€Ð»Ð°Ð¶ Ð·Ð°ÑÐ°Ð°Ñ€Ð°Ð¹.", correct_answer: "PLACEHOLDER", options: {}, audio_url: null, image_url: null, primary_skill: SkillCode.S8, secondary_skill: null, level_target: "M3", error_targets: ["Mixed"], grade_band: ["G2", "G3", "G4"], difficulty: 4, estimated_time_seconds: 45, lesson_slot_fit: LessonSlot.CORE, feedback_text: "Ð¯Ð°Ð³Ð°Ð°Ð´ Ð±ÑƒÑ€ÑƒÑƒ Ð³ÑÐ´Ð³Ð¸Ð¹Ð³ Ñ…ÑÐ»ÑÑ…." },
 ];
 
 // â”€â”€â”€ Load validated task variants from content-pipeline/validated/*.json â”€â”€â”€â”€â”€â”€

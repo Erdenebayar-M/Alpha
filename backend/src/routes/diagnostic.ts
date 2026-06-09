@@ -265,17 +265,17 @@ diagnostic.post('/next-phase', async (c) => {
 
       const [mixedDictation, sentenceDictation, correction, boundary] = await Promise.all([
         prisma.task.findFirst({
-          where: { task_type: { in: ['TT_WORD_SET_DICTATION', 'TT_TWO_WORD_DICTATION', 'TT_SHORT_SENTENCE_DICTATION', 'TT_TWO_SENTENCE_DICTATION'] as any[] }, id: { notIn: seenIds } },
+          where: { task_type: { in: ['TT_7_1', 'TT_7_3'] as any[] }, id: { notIn: seenIds } },
           orderBy: { difficulty: 'asc' },
           select: TASK_SELECT,
         }),
         prisma.task.findFirst({
-          where: { task_type: 'TT_MINI_TEXT_DICTATION' as any, id: { notIn: seenIds } },
+          where: { task_type: { in: ['TT_7_4', 'TT_7_6'] as any[] }, id: { notIn: seenIds } },
           orderBy: { difficulty: 'asc' },
           select: TASK_SELECT,
         }),
         prisma.task.findFirst({
-          where: { task_type: { in: ['TT_FIND_ERROR', 'TT_FIX_ERROR', 'TT_CAPITAL_PUNCTUATION', 'TT_WORD_FORM_FIX', 'TT_FIND_OMITTED_LETTER', 'TT_EXPLAINED_CORRECTION'] as any[] }, id: { notIn: seenIds } },
+          where: { task_type: { in: ['TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4'] as any[] }, id: { notIn: seenIds } },
           orderBy: { difficulty: 'asc' },
           select: TASK_SELECT,
         }),
@@ -352,17 +352,17 @@ diagnostic.post('/next-phase', async (c) => {
 
     const [mixedDictation, sentenceDictation, correction, boundary] = await Promise.all([
       prisma.task.findFirst({
-        where: { task_type: { in: ['TT_WORD_SET_DICTATION', 'TT_TWO_WORD_DICTATION', 'TT_SHORT_SENTENCE_DICTATION', 'TT_TWO_SENTENCE_DICTATION'] as any[] }, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_7_1', 'TT_7_3'] as any[] }, id: { notIn: seenIds } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),
       prisma.task.findFirst({
-        where: { task_type: 'TT_MINI_TEXT_DICTATION' as any, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_7_4', 'TT_7_6'] as any[] }, id: { notIn: seenIds } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),
       prisma.task.findFirst({
-        where: { task_type: { in: ['TT_FIND_ERROR', 'TT_FIX_ERROR', 'TT_CAPITAL_PUNCTUATION', 'TT_WORD_FORM_FIX', 'TT_FIND_OMITTED_LETTER', 'TT_EXPLAINED_CORRECTION'] as any[] }, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4'] as any[] }, id: { notIn: seenIds } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),

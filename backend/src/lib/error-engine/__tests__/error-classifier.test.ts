@@ -410,7 +410,7 @@ describe('G1/G2 — Тэмдэглэгээний алдаа', () => {
 
 describe('H4 — Өөрийгөө шалгаагүй', () => {
   const baseMeta: TaskMeta = {
-    taskType: 'TT_SELF_CHECK',
+    taskType: 'TT_8_4',
     correctAnswer: 'сүү',
   };
 
@@ -462,7 +462,7 @@ describe('H4 — Өөрийгөө шалгаагүй', () => {
   it('того→тогоо revision → no H4', () => {
     const diff = checkSentence('тогоо', 'тогоо');
     const errors = classifySentenceErrors(diff, {
-      taskType: 'TT_SELF_CHECK',
+      taskType: 'TT_8_4',
       correctAnswer: 'тогоо',
       originalAttempt: 'того',
       revision: 'тогоо',

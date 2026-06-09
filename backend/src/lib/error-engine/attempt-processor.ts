@@ -241,7 +241,7 @@ export async function processAttempt(
       }
     }
 
-  } else if (taskType === 'TT_SENTENCE_FILL' || taskType === 'TT_LONG_VOWEL_IN_SENTENCE' || taskType === 'TT_REDUCED_VOWEL_IN_SENTENCE') {
+  } else if (taskType === 'TT_5_2' || taskType === 'TT_7_5') {
     const opts = options as unknown as SentenceFillOptions;
     const expected = opts.blank_answer ?? task.correct_answer;
     const diff = checkAnswer(expected, input.inputText, taskType);
@@ -258,7 +258,7 @@ export async function processAttempt(
       errors.push(...classifySentenceErrors(sentDiff, { taskType }));
     }
 
-  } else if (taskType === 'TT_MINI_TEXT_DICTATION') {
+  } else if (taskType === 'TT_7_6') {
     const opts = options as unknown as MiniTextOptions;
     const expectedAnswers = opts.expected_answers ?? [task.correct_answer];
     const inputSentences = input.inputText.split(/(?<=[.!?])\s+/);

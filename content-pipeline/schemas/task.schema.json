@@ -16,11 +16,13 @@
         "properties": {
           "task_type": {
             "enum": [
-              "TT_LISTEN_CHOOSE", "TT_IMAGE_WORD_MATCH", "TT_CHOOSE_CORRECT",
-              "TT_SIMPLE_SUFFIX", "TT_WORD_FORM_CHOOSE", "TT_SUFFIX_CHOOSE",
-              "TT_CONSONANT_CONFUSION", "TT_LONG_VOWEL_CHALLENGE",
-              "TT_CASE_SUFFIX", "TT_MIXED_REVIEW", "TT_MIXED_WORD_SET",
-              "TT_MIXED_CHECKPOINT"
+              "TT_1_1","TT_1_2","TT_1_5",
+              "TT_2_3",
+              "TT_3_1","TT_3_4",
+              "TT_4_1","TT_4_2",
+              "TT_5_1","TT_5_4","TT_5_6","TT_5_7",
+              "TT_6_1","TT_6_2",
+              "TT_7_7","TT_8_3"
             ]
           }
         }
@@ -34,11 +36,7 @@
       "if": {
         "properties": {
           "task_type": {
-            "enum": [
-              "TT_LETTER_FILL", "TT_FILL_WRITE", "TT_MISSING_LETTER",
-              "TT_WORD_ENDING", "TT_LONG_VOWEL_FILL", "TT_REDUCED_VOWEL",
-              "TT_SUFFIX_WRITE", "TT_COMPOUND_SUFFIX"
-            ]
+            "enum": ["TT_2_1","TT_2_4","TT_3_2","TT_4_3","TT_4_4","TT_5_5"]
           }
         }
       },
@@ -50,12 +48,7 @@
       "description": "Sentence-level fill tasks require SentenceFillOptions",
       "if": {
         "properties": {
-          "task_type": {
-            "enum": [
-              "TT_SENTENCE_FILL", "TT_LONG_VOWEL_IN_SENTENCE",
-              "TT_REDUCED_VOWEL_IN_SENTENCE"
-            ]
-          }
+          "task_type": { "enum": ["TT_5_2","TT_7_5"] }
         }
       },
       "then": {
@@ -67,11 +60,7 @@
       "if": {
         "properties": {
           "task_type": {
-            "enum": [
-              "TT_COPY_WRITE", "TT_CAPITAL_PUNCTUATION", "TT_FIND_ERROR",
-              "TT_FIX_ERROR", "TT_WORD_FORM_FIX", "TT_FIND_OMITTED_LETTER",
-              "TT_SENTENCE_BOUNDARY", "TT_BASIC_COMMA", "TT_EXPLAINED_CORRECTION"
-            ]
+            "enum": ["TT_2_5","TT_2_6","TT_3_5","TT_4_5","TT_6_3","TT_6_4","TT_8_2"]
           }
         }
       },
@@ -83,12 +72,7 @@
       "description": "Dictation tasks require DictationOptions",
       "if": {
         "properties": {
-          "task_type": {
-            "enum": [
-              "TT_WORD_SET_DICTATION", "TT_TWO_WORD_DICTATION",
-              "TT_SHORT_SENTENCE_DICTATION", "TT_TWO_SENTENCE_DICTATION"
-            ]
-          }
+          "task_type": { "enum": ["TT_7_3","TT_7_4"] }
         }
       },
       "then": {
@@ -99,7 +83,7 @@
       "description": "Mini-text dictation requires MiniTextOptions",
       "if": {
         "properties": {
-          "task_type": { "enum": ["TT_MINI_TEXT_DICTATION"] }
+          "task_type": { "enum": ["TT_7_6"] }
         }
       },
       "then": {
@@ -110,11 +94,44 @@
       "description": "Self-check tasks require SelfCheckOptions",
       "if": {
         "properties": {
-          "task_type": { "enum": ["TT_SELF_CHECK", "TT_OWN_WRITING_CORRECTION"] }
+          "task_type": { "enum": ["TT_8_4"] }
         }
       },
       "then": {
         "properties": { "options": { "$ref": "#/$defs/SelfCheckOptions" } }
+      }
+    },
+    {
+      "description": "Match pairs tasks require MatchPairsOptions",
+      "if": {
+        "properties": {
+          "task_type": { "enum": ["TT_1_3","TT_3_3","TT_5_3"] }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/MatchPairsOptions" } }
+      }
+    },
+    {
+      "description": "Assemble tasks require AssembleWordOptions",
+      "if": {
+        "properties": {
+          "task_type": { "enum": ["TT_1_4","TT_2_2"] }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/AssembleWordOptions" } }
+      }
+    },
+    {
+      "description": "Tap-to-find tasks require TapFindErrorOptions",
+      "if": {
+        "properties": {
+          "task_type": { "enum": ["TT_8_1"] }
+        }
+      },
+      "then": {
+        "properties": { "options": { "$ref": "#/$defs/TapFindErrorOptions" } }
       }
     }
   ],
@@ -127,50 +144,16 @@
     "task_type": {
       "type": "string",
       "enum": [
-        "TT_LISTEN_CHOOSE",
-        "TT_LETTER_FILL",
-        "TT_IMAGE_WORD_MATCH",
-        "TT_COPY_WRITE",
-        "TT_CHOOSE_CORRECT",
-        "TT_FILL_WRITE",
-        "TT_MISSING_LETTER",
-        "TT_WORD_SET_DICTATION",
-        "TT_CAPITAL_PUNCTUATION",
-        "TT_SIMPLE_SUFFIX",
-        "TT_FIND_ERROR",
-        "TT_SELF_CHECK",
-        "TT_TWO_WORD_DICTATION",
-        "TT_WORD_ENDING",
-        "TT_SENTENCE_FILL",
-        "TT_MIXED_REVIEW",
-        "TT_WORD_FORM_CHOOSE",
-        "TT_LONG_VOWEL_FILL",
-        "TT_REDUCED_VOWEL",
-        "TT_SUFFIX_CHOOSE",
-        "TT_SHORT_SENTENCE_DICTATION",
-        "TT_FIX_ERROR",
-        "TT_CONSONANT_CONFUSION",
-        "TT_WORD_FORM_FIX",
-        "TT_LONG_VOWEL_IN_SENTENCE",
-        "TT_REDUCED_VOWEL_IN_SENTENCE",
-        "TT_CASE_SUFFIX",
-        "TT_BASIC_COMMA",
-        "TT_TWO_SENTENCE_DICTATION",
-        "TT_FIND_OMITTED_LETTER",
-        "TT_MIXED_WORD_SET",
-        "TT_SUFFIX_WRITE",
-        "TT_SENTENCE_BOUNDARY",
-        "TT_MINI_TEXT_DICTATION",
-        "TT_OWN_WRITING_CORRECTION",
-        "TT_LONG_VOWEL_CHALLENGE",
-        "TT_COMPOUND_SUFFIX",
-        "TT_MIXED_CHECKPOINT",
-        "TT_EXPLAINED_CORRECTION",
-        "TT_MATCH_PAIRS",
-        "TT_ASSEMBLE_WORD",
-        "TT_TAP_FIND_ERROR"
+        "TT_1_1","TT_1_2","TT_1_3","TT_1_4","TT_1_5",
+        "TT_2_1","TT_2_2","TT_2_3","TT_2_4","TT_2_5","TT_2_6",
+        "TT_3_1","TT_3_2","TT_3_3","TT_3_4","TT_3_5",
+        "TT_4_1","TT_4_2","TT_4_3","TT_4_4","TT_4_5",
+        "TT_5_1","TT_5_2","TT_5_3","TT_5_4","TT_5_5","TT_5_6","TT_5_7",
+        "TT_6_1","TT_6_2","TT_6_3","TT_6_4",
+        "TT_7_1","TT_7_2","TT_7_3","TT_7_4","TT_7_5","TT_7_6","TT_7_7",
+        "TT_8_1","TT_8_2","TT_8_3","TT_8_4"
       ],
-      "description": "Task type. Determines the required shape of the 'options' field. See $defs for each options shape and the allOf section for which types use which shape."
+      "description": "Task type (v3). 37 types from Дасгалын_төрлүүд_каталог_v3.xlsx. Determines the required shape of the 'options' field."
     },
     "prompt_text": {
       "type": "string",

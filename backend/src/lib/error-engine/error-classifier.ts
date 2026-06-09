@@ -452,7 +452,7 @@ export function classifySentenceErrors(
 
   // ── H4 — Өөрийгөө шалгаагүй ────────────────────────────────────────────
   const isSelfCheck = taskMeta?.taskType &&
-    ['TT_SELF_CHECK', 'TT_OWN_WRITING_CORRECTION'].includes(taskMeta.taskType);
+    ['TT_8_4'].includes(taskMeta.taskType);
   if (isSelfCheck) {
     const h4 = classifyH4(taskMeta!);
     if (h4) errors.push(h4);
