@@ -584,7 +584,7 @@ content.post('/generate-image', async (c) => {
 
     // Translate the subject to English so FLUX understands it
     const translationChat = await orClient.chat.completions.create({
-      model:    'google/gemini-2.0-flash-001',
+      model:    'google/gemini-2.5-flash',
       messages: [{ role: 'user', content: `Translate to English for image generation. Return only the English word or short phrase, nothing else: "${prompt}"` }],
     });
     const englishSubject = translationChat.choices[0]?.message?.content?.trim() ?? prompt;
