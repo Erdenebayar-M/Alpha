@@ -87,57 +87,48 @@ enum ErrorCode {
 }
 
 enum TaskType {
-  // S1 — Үсэг-авиаг зөв таних
-  TT_1_1  // Авиа сонсоод үсэг сонгох
-  TT_1_2  // Зурагт юу зурсныг үсгээр таних
-  TT_1_3  // Үсгүүдийг тохирох зургуудтай холбох
-  TT_1_4  // Үг угсрах
-  TT_1_5  // Төсөөтэй үсгүүдийг ялгах
-  // S2 — Үгийг зөв бичих
-  TT_2_1  // Зураг харж дутуу үсэг нөхөх
-  TT_2_2  // Үсэг угсарч үг болгох
-  TT_2_3  // Зөв бичлэгийг сонгох
-  TT_2_4  // Сонсоод үгт дутуу байгаа үсгийг нөхөх
-  TT_2_5  // Нийлмэл үг зөв бичих
-  TT_2_6  // Үгийн хэлбэр/бүтэц засах
-  // S3 — Урт/богино, балархай эгшиг
-  TT_3_1  // Урт/богино эгшиг сонсоод сонгох
-  TT_3_2  // Балархай эгшиг нөхөх
-  TT_3_3  // Зургуудийг тохирох үгтэй нь холбох
-  TT_3_4  // Эгшгийн зохицол шалгах
-  TT_3_5  // Илүү эгшиг олж засах
-  // S4 — Гийгүүлэгчийг зөв ялгах
-  TT_4_1  // Төстэй сонсогддог гийгүүлэгчүүдийг ялгах
-  TT_4_2  // Үгийн төгсгөлийн гийгүүлэгч сонгох
-  TT_4_3  // Дараалж орох гийгүүлэгчийг нөхөх
-  TT_4_4  // Орхигдсон гийгүүлэгч нөхөх
-  TT_4_5  // Илүү гийгүүлэгч олж засах
-  // S5 — Залгаварыг зөв залгах
-  TT_5_1  // Зөв нөхцлийг сонгох
-  TT_5_2  // Чиглэлийн нөхцөл нөхөх
-  TT_5_3  // Үгийн зөв залгаврыг холбох
-  TT_5_4  // Үйл үгийн цаг сонгох
-  TT_5_5  // Тохирох залгаврыг нөхөх
-  TT_5_6  // Олон тоо/харьяалал сонгох
-  TT_5_7  // Залгаврын зөв бичлэг сонгох
-  // S6 — Өгүүлбэрийн тэмдэглэгээ
-  TT_6_1  // Өгүүлбэрийн эхэнд орох зөв хариулт сонгох
-  TT_6_2  // Өгүүлбэрийн төгсгөлийн тэмдэг сонгох
-  TT_6_3  // Өгүүлбэрийн төгсгөлийг олох
-  TT_6_4  // Таслал нэмэх
-  // S7 — Цээж бичиг
-  TT_7_1  // Хуулж бичих
-  TT_7_2  // Харж тогтоон бичих
-  TT_7_3  // Сонсож бичих — үг
-  TT_7_4  // Сонсож бичих — өгүүлбэр
-  TT_7_5  // Нөхөж бичих цээж бичиг
-  TT_7_6  // Сонсож бичих — мини эх
-  TT_7_7  // Сонсоод зөв хувилбар сонгох
-  // S8 — Алдаагаа зөв таних / засах
-  TT_8_1  // Алдаа олж товших (1-р алхам)
-  TT_8_2  // Алдааг засах (2-р алхам)
-  TT_8_3  // Зөв/буруу өгүүлбэр сонгох
-  TT_8_4  // Өөрийн хариуг дахин шалгах
+  TT_LISTEN_CHOOSE
+  TT_LETTER_FILL
+  TT_IMAGE_WORD_MATCH
+  TT_COPY_WRITE
+  TT_CHOOSE_CORRECT
+  TT_FILL_WRITE
+  TT_MISSING_LETTER
+  TT_WORD_SET_DICTATION
+  TT_CAPITAL_PUNCTUATION
+  TT_SIMPLE_SUFFIX
+  TT_FIND_ERROR
+  TT_SELF_CHECK
+  TT_TWO_WORD_DICTATION
+  TT_WORD_ENDING
+  TT_SENTENCE_FILL
+  TT_MIXED_REVIEW
+  TT_WORD_FORM_CHOOSE
+  TT_LONG_VOWEL_FILL
+  TT_REDUCED_VOWEL
+  TT_SUFFIX_CHOOSE
+  TT_SHORT_SENTENCE_DICTATION
+  TT_FIX_ERROR
+  TT_CONSONANT_CONFUSION
+  TT_WORD_FORM_FIX
+  TT_LONG_VOWEL_IN_SENTENCE
+  TT_REDUCED_VOWEL_IN_SENTENCE
+  TT_CASE_SUFFIX
+  TT_BASIC_COMMA
+  TT_TWO_SENTENCE_DICTATION
+  TT_FIND_OMITTED_LETTER
+  TT_MIXED_WORD_SET
+  TT_SUFFIX_WRITE
+  TT_SENTENCE_BOUNDARY
+  TT_MINI_TEXT_DICTATION
+  TT_OWN_WRITING_CORRECTION
+  TT_LONG_VOWEL_CHALLENGE
+  TT_COMPOUND_SUFFIX
+  TT_MIXED_CHECKPOINT
+  TT_EXPLAINED_CORRECTION
+  TT_MATCH_PAIRS
+  TT_ASSEMBLE_WORD
+  TT_TAP_FIND_ERROR
 }
 
 enum InteractionForm {
