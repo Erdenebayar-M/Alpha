@@ -128,7 +128,12 @@ export const TASK_SPECS: TaskSpec[] = loadCatalogue().map(defToSpec);
 
 /** Task types available for LLM generation (non-self-check, shape template exists) */
 export const AVAILABLE_TASK_IDS: string[] = TASK_SPECS
-  .filter((s) => !s.self_check && fs.existsSync(path.join(SHAPES_DIR, SHAPE_TO_TEMPLATE[s.options_shape] ?? '')))
+  .filter((s) => {
+    if (s.self_check) return false;
+    const tmplFile = SHAPE_TO_TEMPLATE[s.options_shape];
+    if (!tmplFile) return false;
+    return fs.existsSync(path.join(SHAPES_DIR, tmplFile));
+  })
   .map((s) => s.id);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
