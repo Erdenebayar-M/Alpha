@@ -26,8 +26,9 @@ export const INTERACTION_FORMS = [
 /** Who produced the task. HUMAN = authored by hand / seed / scripts; AI = LLM generator. */
 export const TASK_SOURCES = ['HUMAN', 'AI'] as const;
 
-/** All 42 task types — keep in lockstep with prisma `TaskType` and task-types.json. */
+/** All task types — 42 AI-pipeline descriptive names + 37 admin/pedagogical numeric codes. */
 export const TASK_TYPES = [
+  // 42 pipeline types (task-types.json)
   'TT_LISTEN_CHOOSE', 'TT_LETTER_FILL', 'TT_IMAGE_WORD_MATCH',
   'TT_COPY_WRITE', 'TT_CHOOSE_CORRECT', 'TT_FILL_WRITE',
   'TT_MISSING_LETTER', 'TT_WORD_SET_DICTATION', 'TT_CAPITAL_PUNCTUATION',
@@ -43,6 +44,15 @@ export const TASK_TYPES = [
   'TT_LONG_VOWEL_CHALLENGE', 'TT_COMPOUND_SUFFIX', 'TT_MIXED_CHECKPOINT',
   'TT_EXPLAINED_CORRECTION', 'TT_MATCH_PAIRS', 'TT_ASSEMBLE_WORD',
   'TT_TAP_FIND_ERROR',
+  // 37 admin/pedagogical types (Дасгалын_төрлүүд_каталог_v3.xlsx)
+  'TT_1_1', 'TT_1_2', 'TT_1_3', 'TT_1_4', 'TT_1_5',
+  'TT_2_1', 'TT_2_2', 'TT_2_3', 'TT_2_4', 'TT_2_5', 'TT_2_6',
+  'TT_3_1', 'TT_3_2', 'TT_3_3', 'TT_3_4', 'TT_3_5',
+  'TT_4_1', 'TT_4_2', 'TT_4_3', 'TT_4_4', 'TT_4_5',
+  'TT_5_1', 'TT_5_2', 'TT_5_3', 'TT_5_4', 'TT_5_5', 'TT_5_6', 'TT_5_7',
+  'TT_6_1', 'TT_6_2', 'TT_6_3', 'TT_6_4',
+  'TT_7_1', 'TT_7_2', 'TT_7_3', 'TT_7_4', 'TT_7_5', 'TT_7_6', 'TT_7_7',
+  'TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4',
 ] as const;
 
 export const skillCodeSchema = z.enum(SKILL_CODES);
@@ -186,6 +196,50 @@ export const TASK_TYPE_OPTION_SHAPE: Record<TaskTypeValue, z.ZodType> = {
   TT_MATCH_PAIRS:           matchPairsOptions,
   TT_ASSEMBLE_WORD:         assembleWordOptions,
   TT_TAP_FIND_ERROR:        tapFindErrorOptions,
+  // 37 admin/pedagogical types
+  TT_1_1: choiceOptions,       // Авиа сонсоод үсэг сонгох
+  TT_1_2: choiceOptions,       // Зурагт юу зурсныг үсгээр таних
+  TT_1_3: matchPairsOptions,   // Үсгүүдийг тохирох зургуудтай холбох
+  TT_1_4: assembleWordOptions, // Үг угсрах
+  TT_1_5: choiceOptions,       // Төсөөтэй үсгүүдийг ялгах
+  TT_2_1: fillOptions,         // Зураг харж дутуу үсэг нөхөх
+  TT_2_2: assembleWordOptions, // Үсэг угсарч үг болгох
+  TT_2_3: choiceOptions,       // Зөв бичлэгийг сонгох
+  TT_2_4: fillOptions,         // Сонсоод үгт дутуу байгаа үсгийг нөхөх
+  TT_2_5: correctionOptions,   // Нийлмэл үг зөв бичих
+  TT_2_6: correctionOptions,   // Үгийн хэлбэр/бүтэц засах
+  TT_3_1: choiceOptions,       // Урт/богино эгшиг сонсоод сонгох
+  TT_3_2: fillOptions,         // Балархай эгшиг нөхөх
+  TT_3_3: matchPairsOptions,   // Зургуудийг тохирох үгтэй нь холбох
+  TT_3_4: choiceOptions,       // Эгшгийн зохицол шалгах
+  TT_3_5: correctionOptions,   // Илүү эгшиг олж засах
+  TT_4_1: choiceOptions,       // Төстэй сонсогддог гийгүүлэгчүүдийг ялгах
+  TT_4_2: choiceOptions,       // Үгийн төгсгөлийн гийгүүлэгч сонгох
+  TT_4_3: fillOptions,         // Дараалж орох гийгүүлэгчийг нөхөх
+  TT_4_4: fillOptions,         // Орхигдсон гийгүүлэгч нөхөх
+  TT_4_5: correctionOptions,   // Илүү гийгүүлэгч олж засах
+  TT_5_1: choiceOptions,       // Зөв нөхцлийг сонгох
+  TT_5_2: sentenceFillOptions, // Чиглэлийн нөхцөл нөхөх
+  TT_5_3: matchPairsOptions,   // Үгийн зөв залгаврыг холбох
+  TT_5_4: choiceOptions,       // Үйл үгийн цаг сонгох
+  TT_5_5: fillOptions,         // Тохирох залгаврыг нөхөх
+  TT_5_6: choiceOptions,       // Олон тоо/харьяалал сонгох
+  TT_5_7: choiceOptions,       // Залгаврын зөв бичлэг сонгох
+  TT_6_1: choiceOptions,       // Өгүүлбэрийн эхэнд орох зөв хариулт сонгох
+  TT_6_2: choiceOptions,       // Өгүүлбэрийн төгсгөлийн тэмдэг сонгох
+  TT_6_3: correctionOptions,   // Өгүүлбэрийн төгсгөлийг олох
+  TT_6_4: correctionOptions,   // Таслал нэмэх
+  TT_7_1: copyOptions,         // Хуулж бичих
+  TT_7_2: visualMemoryOptions, // Харж тогтоон бичих
+  TT_7_3: dictationOptions,    // Сонсож бичих — үг
+  TT_7_4: dictationOptions,    // Сонсож бичих — өгүүлбэр
+  TT_7_5: sentenceFillOptions, // Нөхөж бичих цээж бичиг
+  TT_7_6: miniTextOptions,     // Сонсож бичих — мини эх
+  TT_7_7: choiceOptions,       // Сонсоод зөв хувилбар сонгох
+  TT_8_1: tapFindErrorOptions, // Алдаа олж засах (олох)
+  TT_8_2: correctionOptions,   // Алдаа олж засах (засах)
+  TT_8_3: choiceOptions,       // Зөв/буруу өгүүлбэр сонгох
+  TT_8_4: selfCheckOptions,    // Өөрийн хариуг дахин шалгах
 };
 
 // ── Canonical field set (shared by Task + TaskDraft) ─────────────────────────
