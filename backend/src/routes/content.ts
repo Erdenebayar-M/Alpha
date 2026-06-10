@@ -1,10 +1,10 @@
+import { GoogleGenAI } from '@google/genai';
 import { Hono } from 'hono';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { z } from 'zod';
 import OpenAI from 'openai';
-import { GoogleGenAI } from '@google/genai';
 import { withAdmin } from '../lib/auth/adminMiddleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
@@ -526,16 +526,17 @@ const generateImageSchema = z.object({
 });
 
 const IMAGE_STYLE_SYSTEM =
-  `You are an image prompt writer for a Mongolian children\'s educational spelling app (grades 1–4).\n\n` +
-  `Given a subject (in Mongolian or English), write a vivid, specific image generation prompt in English.\n\n` +
-  `ALWAYS include in your output:\n` +
-  `- flat vector illustration style with clean lines\n` +
-  `- soft pastel color palette, warm and cheerful\n` +
-  `- simple uncluttered composition suitable for young children\n` +
-  `- NO text, NO letters, NO labels anywhere in the image\n` +
-  `- Mongolian cultural context where natural (steppe landscape, ger tent, blue sky, mountains)\n\n` +
-  `Be creative and specific: describe a moment, setting, or action — not just the object.\n` +
-  `For example, for "apple" write "a bright red apple resting on a wooden surface with a soft green background" not just "an apple".\n\n` +
+  `You are an image-prompt writer for a Mongolian children\'s educational spelling app (grades 1–4).\n` +
+  `You receive a subject, usually a single Mongolian word (occasionally English). First understand exactly what real-world thing the word names (e.g. "мод" = a tree), then write ONE English image generation prompt that depicts that thing.\n\n` +
+  `Produce a CONSISTENT flashcard icon. Every image must follow the SAME recipe so a whole set looks uniform:\n` +
+  `- exactly ONE subject, centered, filling most of the frame\n` +
+  `- flat vector illustration, clean bold outlines, smooth flat fills\n` +
+  `- a single plain solid soft-pastel background color — NO scene, NO landscape, NO floor, NO horizon, NO props, NO shadows beyond a simple soft contact shadow\n` +
+  `- soft, warm, cheerful palette\n` +
+  `- NO text, NO letters, NO numbers, NO labels anywhere\n` +
+  `- friendly and simple enough for a 6-year-old to recognize instantly\n\n` +
+  `Mongolian cultural authenticity: ONLY when the subject itself is culturally Mongolian (e.g. ger, deel, airag, morin khuur, khuushuur) depict it accurately in traditional form. Do NOT add Mongolian scenery, steppe, or cultural motifs to ordinary subjects (tree, apple, dog, car).\n\n` +
+  `Describe the object itself — its shape, color, and key recognizable features — NOT a scene or action.\n` +
   `Return ONLY the image prompt. No explanation, no quotes, no preamble.`;
 
 content.post('/generate-image', async (c) => {
@@ -555,8 +556,8 @@ content.post('/generate-image', async (c) => {
 
     const isYoung = !grade_band || grade_band.some((g) => g === 'G1' || g === 'G2');
     const gradeHint = isYoung
-      ? 'Target: grades 1–2. Use a very simple, bold, clear composition with one main subject.'
-      : 'Target: grades 3–4. A slightly more detailed scene is appropriate.';
+      ? 'Keep it extremely simple and bold: one clear subject, minimal detail.'
+      : 'Keep it simple and clean: one clear subject, a little more detail is fine, but still an isolated icon on a plain background.';
 
     const promptChat = await orClient.chat.completions.create({
       model:    'google/gemini-2.5-flash',
@@ -597,18 +598,10 @@ content.post('/generate-image', async (c) => {
 
 // ─── POST /api/admin/content/generate-audio ───────────────────────────────────
 
-const SYSTEM_DICTATION =
-  'Read the following Mongolian words clearly for a children\'s spelling dictation. ' +
-  'Speak each word at natural pace. Mongolian long vowels must be pronounced as clearly doubled.';
-
-const SYSTEM_PROMPT_AUDIO =
-  'Read the following Mongolian instruction clearly for a children\'s spelling app aged 6-10. ' +
-  'Calm, friendly, clear pace.';
 
 const generateAudioSchema = z.object({
-  text:  z.string().min(1),
-  slot:  z.enum(['dictation', 'prompt']),
-  voice: z.string().default('Kore'),
+  text: z.string().min(1),
+  slot: z.enum(['dictation', 'prompt']),
 });
 
 content.post('/generate-audio', async (c) => {
@@ -622,40 +615,31 @@ content.post('/generate-audio', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { text, slot, voice } = parsed.data;
-  const system = slot === 'dictation' ? SYSTEM_DICTATION : SYSTEM_PROMPT_AUDIO;
-  const spokenText = `${system}\n\n${text}`;
-
+  const { text } = parsed.data;
   const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
 
   try {
     const response = await ai.models.generateContent({
       model:    'gemini-2.5-flash-preview-tts',
-      contents: [{ role: 'user', parts: [{ text: spokenText }] }],
+      contents: [{ parts: [{ text }] }],
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
         },
       },
     } as Parameters<typeof ai.models.generateContent>[0]);
 
     const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
     if (!audioData?.data) {
-      const debug = JSON.stringify({
-        candidateCount: response.candidates?.length,
-        firstParts: response.candidates?.[0]?.content?.parts?.map(p => Object.keys(p)),
-        finishReason: response.candidates?.[0]?.finishReason,
-      });
-      throw new Error(`No audio data in response. Debug: ${debug}`);
+      throw new Error(`No audio data in response (finishReason: ${response.candidates?.[0]?.finishReason})`);
     }
 
-    const pcm       = Buffer.from(audioData.data, 'base64');
-    const rateMatch = audioData.mimeType?.match(/rate=(\d+)/);
+    const pcm        = Buffer.from(audioData.data, 'base64');
+    const rateMatch  = audioData.mimeType?.match(/rate=(\d+)/);
     const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
     const wav        = pcmToWav(pcm, sampleRate);
-
-    const tempId = crypto.randomUUID();
+    const tempId     = crypto.randomUUID();
 
     if (r2Enabled()) {
       await r2Upload(`temp/${tempId}.wav`, wav, 'audio/wav');
