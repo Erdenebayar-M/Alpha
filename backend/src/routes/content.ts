@@ -108,9 +108,9 @@ function serializeVariant(draft: { options: unknown; [key: string]: unknown }) {
     const distractors = (opts.choices as Array<{ text: string; is_correct: boolean }>)
       .filter((c) => !c.is_correct)
       .map((c) => c.text);
-    return { ...draft, options: { ...opts, distractors } };
+    return { ...draft, task_id: draft['id'], options: { ...opts, distractors } };
   }
-  return draft;
+  return { ...draft, task_id: draft['id'] };
 }
 
 // ─── GET /api/admin/content/tasks ────────────────────────────────────────────
