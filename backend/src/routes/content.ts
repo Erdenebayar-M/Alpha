@@ -905,7 +905,7 @@ content.post('/generate', async (c) => {
 
   const runningCost = { value: 0 };
   const results: Array<{
-    task_id: string;
+    task_type: string;
     passed: number;
     rejected: number;
     drafts_created: number;
