@@ -133,7 +133,7 @@ content.get('/tasks', async (c) => {
 
   const where = {
     stage: STAGE_ENUM[stage],
-    ...(grade ? { task_id: { startsWith: grade } } : {}),
+    ...(grade ? { grade_band: { has: grade } } : {}),
     ...(type  ? { task_type: toTaskType(type) } : {}),
     ...(skill ? { OR: [
       { primary_skill:   toSkill(skill) as SkillCode },
@@ -226,37 +226,21 @@ content.post('/tasks', async (c) => {
 
 // ─── GET /api/admin/content/tasks/:task_id ───────────────────────────────────
 
-content.get('/tasks/:task_id', async (c) => {
-  const task_id  = c.req.param('task_id');
+content.get('/tasks/:id', async (c) => {
+  const id       = c.req.param('id');
   const stageKey = c.req.query('stage') ?? 'stage2';
   const stage    = STAGE_ENUM[stageKey];
   if (!stage) return ERRORS.VALIDATION_ERROR(c, 'Invalid stage');
 
-  // UUID: look up specific draft by primary key, stage filter not applied
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(task_id);
-  if (isUUID) {
-    const draft = await prisma.taskDraft.findUnique({ where: { id: task_id } });
-    if (!draft) return ERRORS.NOT_FOUND(c, `Variant ${task_id} not found`);
-    const actualStage = Object.entries(STAGE_ENUM).find(([, v]) => v === draft.stage)?.[0] ?? stageKey;
-    return ok(c, { task_id: draft.task_id, stage: actualStage, variant_count: 1, variants: [serializeVariant(draft)] });
-  }
-
-  const variants = await prisma.taskDraft.findMany({
-    where: { task_id, stage },
-    orderBy: { created_at: 'asc' },
-  });
-
-  if (!variants.length) {
-    return ERRORS.NOT_FOUND(c, `Task ${task_id} not found in ${stageKey}`);
-  }
-
-  return ok(c, { task_id, stage: stageKey, variant_count: variants.length, variants: variants.map(serializeVariant) });
+  const draft = await prisma.taskDraft.findUnique({ where: { id } });
+  if (!draft) return ERRORS.NOT_FOUND(c, `Variant ${id} not found`);
+  const actualStage = Object.entries(STAGE_ENUM).find(([, v]) => v === draft.stage)?.[0] ?? stageKey;
+  return ok(c, { task_id: id, stage: actualStage, variant_count: 1, variants: [serializeVariant(draft)] });
 });
 
 // ─── Shared action schema ─────────────────────────────────────────────────────
 
 const actionSchema = z.object({
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   notes:      z.string().optional(),
 });
@@ -269,10 +253,10 @@ content.post('/approve', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
-  const { task_id, variant_id, notes } = parsed.data;
+  const { variant_id, notes } = parsed.data;
 
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
-  if (!draft || draft.task_id !== task_id) {
+  if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
   }
 
@@ -280,7 +264,7 @@ content.post('/approve', async (c) => {
     await tx.taskDraftAuditLog.create({
       data: {
         draft_id:   draft.id,
-        task_id:    draft.task_id,
+        task_id:    draft.id,
         action:     'approved',
         from_stage: draft.stage,
         notes:      notes ?? null,
@@ -340,7 +324,7 @@ content.post('/approve', async (c) => {
     await tx.taskDraft.delete({ where: { id: draft.id } });
   });
 
-  return ok(c, { action: 'approved', task_id, variant_id });
+  return ok(c, { action: 'approved', variant_id });
 });
 
 // ─── POST /api/admin/content/reject ──────────────────────────────────────────
@@ -353,10 +337,10 @@ content.post('/reject', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
-  const { task_id, variant_id, reason } = parsed.data;
+  const { variant_id, reason } = parsed.data;
 
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
-  if (!draft || draft.task_id !== task_id) {
+  if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
   }
 
@@ -364,7 +348,7 @@ content.post('/reject', async (c) => {
     await tx.taskDraftAuditLog.create({
       data: {
         draft_id:   draft.id,
-        task_id:    draft.task_id,
+        task_id:    draft.id,
         action:     'rejected',
         from_stage: draft.stage,
         to_stage:   DraftStage.REJECTED,
@@ -378,7 +362,7 @@ content.post('/reject', async (c) => {
     });
   });
 
-  return ok(c, { action: 'rejected', task_id, variant_id, reason });
+  return ok(c, { action: 'rejected', variant_id, reason });
 });
 
 // ─── POST /api/admin/content/flag ────────────────────────────────────────────
@@ -391,10 +375,10 @@ content.post('/flag', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
-  const { task_id, variant_id, reason } = parsed.data;
+  const { variant_id, reason } = parsed.data;
 
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
-  if (!draft || draft.task_id !== task_id) {
+  if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
   }
 
@@ -402,7 +386,7 @@ content.post('/flag', async (c) => {
     await tx.taskDraftAuditLog.create({
       data: {
         draft_id:   draft.id,
-        task_id:    draft.task_id,
+        task_id:    draft.id,
         action:     'flagged',
         from_stage: draft.stage,
         to_stage:   DraftStage.FLAGGED,
@@ -416,7 +400,7 @@ content.post('/flag', async (c) => {
     });
   });
 
-  return ok(c, { action: 'flagged', task_id, variant_id, reason });
+  return ok(c, { action: 'flagged', variant_id, reason });
 });
 
 // ─── POST /api/admin/content/revise ──────────────────────────────────────────
@@ -429,10 +413,10 @@ content.post('/revise', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
-  const { task_id, variant_id, reason } = parsed.data;
+  const { variant_id, reason } = parsed.data;
 
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
-  if (!draft || draft.task_id !== task_id) {
+  if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
   }
 
@@ -440,7 +424,7 @@ content.post('/revise', async (c) => {
     await tx.taskDraftAuditLog.create({
       data: {
         draft_id:   draft.id,
-        task_id:    draft.task_id,
+        task_id:    draft.id,
         action:     'needs_revision',
         from_stage: draft.stage,
         to_stage:   DraftStage.NEEDS_REVISION,
@@ -454,18 +438,16 @@ content.post('/revise', async (c) => {
     });
   });
 
-  return ok(c, { action: 'needs_revision', task_id, variant_id, reason });
+  return ok(c, { action: 'needs_revision', variant_id, reason });
 });
 
 // ─── POST /api/admin/content/edit ────────────────────────────────────────────
 
 const IMMUTABLE_FIELDS = new Set([
-  'id', 'task_id', 'stage', 'created_at', 'updated_at',
-  'ai_reviewed_at',
+  'id', 'stage', 'created_at', 'updated_at', 'ai_reviewed_at',
 ]);
 
 const editSchema = z.object({
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   stage:      z.enum(['stage1', 'stage2', 'flagged', 'needs_revision', 'rejected']).default('stage2'),
   updates:    z.record(z.string(), z.unknown()).refine(
@@ -480,7 +462,7 @@ content.post('/edit', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
-  const { task_id, variant_id, updates } = parsed.data;
+  const { variant_id, updates } = parsed.data;
 
   const safeUpdates: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(updates)) {
@@ -491,7 +473,7 @@ content.post('/edit', async (c) => {
   }
 
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
-  if (!draft || draft.task_id !== task_id) {
+  if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
   }
 
@@ -499,7 +481,7 @@ content.post('/edit', async (c) => {
     await tx.taskDraftAuditLog.create({
       data: {
         draft_id:   draft.id,
-        task_id:    draft.task_id,
+        task_id:    draft.id,
         action:     'edited',
         from_stage: draft.stage,
         notes:      `Fields: ${Object.keys(safeUpdates).join(', ')}`,
@@ -512,7 +494,7 @@ content.post('/edit', async (c) => {
     });
   });
 
-  return ok(c, { action: 'edited', task_id, variant_id, updated_fields: Object.keys(safeUpdates) });
+  return ok(c, { action: 'edited', variant_id, updated_fields: Object.keys(safeUpdates) });
 });
 
 // ─── Helpers: audio PCM → WAV ─────────────────────────────────────────────────
@@ -695,7 +677,6 @@ const ASSET_STAGES = ['stage1', 'stage2', 'validated', 'flagged', 'needs_revisio
 
 const acceptImageSchema = z.object({
   temp_id:    z.string().uuid(),
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
 });
@@ -707,8 +688,8 @@ content.post('/accept-image', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { temp_id, task_id, variant_id, stage } = parsed.data;
-  const filename = `img_${task_id}-${variant_id}.png`;
+  const { temp_id, variant_id, stage } = parsed.data;
+  const filename = `img_${variant_id}.png`;
   let image_url: string;
 
   if (r2Enabled()) {
@@ -736,14 +717,13 @@ content.post('/accept-image', async (c) => {
     }
   }
 
-  return ok(c, { action: 'image_accepted', task_id, variant_id, image_url });
+  return ok(c, { action: 'image_accepted', variant_id, image_url });
 });
 
 // ─── POST /api/admin/content/accept-audio ─────────────────────────────────────
 
 const acceptAudioSchema = z.object({
   temp_id:    z.string().uuid(),
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   slot:       z.enum(['dictation', 'prompt']),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
@@ -756,9 +736,9 @@ content.post('/accept-audio', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { temp_id, task_id, variant_id, slot, stage } = parsed.data;
+  const { temp_id, variant_id, slot, stage } = parsed.data;
   const prefix   = slot === 'dictation' ? 'dict_' : 'prompt_';
-  const filename = `${prefix}${task_id}-${variant_id}.wav`;
+  const filename = `${prefix}${variant_id}.wav`;
   const field    = slot === 'dictation' ? 'audio_url' : 'prompt_audio_url';
   let audioUrl: string;
 
@@ -790,14 +770,13 @@ content.post('/accept-audio', async (c) => {
     }
   }
 
-  return ok(c, { action: 'audio_accepted', task_id, variant_id, slot, [field]: audioUrl });
+  return ok(c, { action: 'audio_accepted', variant_id, slot, [field]: audioUrl });
 });
 
 // ─── POST /api/admin/content/update-image ────────────────────────────────────
 
 const updateImageSchema = z.object({
   image_url:  z.string().url(),
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
 });
@@ -809,7 +788,7 @@ content.post('/update-image', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { image_url, task_id, variant_id, stage } = parsed.data;
+  const { image_url, variant_id, stage } = parsed.data;
 
   if (stage === 'validated') {
     const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { image_url } });
@@ -823,14 +802,13 @@ content.post('/update-image', async (c) => {
     }
   }
 
-  return ok(c, { action: 'image_updated', task_id, variant_id, image_url });
+  return ok(c, { action: 'image_updated', variant_id, image_url });
 });
 
 // ─── POST /api/admin/content/update-audio ────────────────────────────────────
 
 const updateAudioSchema = z.object({
   audio_url:  z.string().url(),
-  task_id:    z.string().min(1),
   variant_id: z.string().min(1),
   slot:       z.enum(['dictation', 'prompt']),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
@@ -843,7 +821,7 @@ content.post('/update-audio', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { audio_url, task_id, variant_id, slot, stage } = parsed.data;
+  const { audio_url, variant_id, slot, stage } = parsed.data;
   const field = slot === 'dictation' ? 'audio_url' : 'prompt_audio_url';
 
   if (stage === 'validated') {
@@ -861,7 +839,7 @@ content.post('/update-audio', async (c) => {
     }
   }
 
-  return ok(c, { action: 'audio_updated', task_id, variant_id, slot, [field]: audio_url });
+  return ok(c, { action: 'audio_updated', variant_id, slot, [field]: audio_url });
 });
 
 // ─── GET /api/admin/content/generate/specs ───────────────────────────────────
@@ -1004,7 +982,6 @@ content.post('/generate', async (c) => {
           where:  { id: variantId },
           create: {
             id: variantId,
-            task_id: variantId,
             stage,
             source: TaskSource.AI,
             ...draftData,
@@ -1183,7 +1160,7 @@ content.post('/bulk-delete-drafts', async (c) => {
       await tx.taskDraftAuditLog.create({
         data: {
           draft_id:   draft.id,
-          task_id:    draft.task_id,
+          task_id:    draft.id,
           action:     'rejected',
           from_stage: draft.stage,
           snapshot:   draft as object,

@@ -310,7 +310,6 @@ model LearnerSkillState {
 /// Draft tasks in the content pipeline. Separate from live Task table.
 model TaskDraft {
   id                     String     @id
-  task_id                String
   stage                  DraftStage
   task_type              TaskType
   prompt_text            String
@@ -349,7 +348,6 @@ model TaskDraft {
 
   audit_logs             TaskDraftAuditLog[]
 
-  @@index([task_id])
   @@index([stage])
   @@index([stage, primary_skill])
   @@index([grade_band], type: Gin)
