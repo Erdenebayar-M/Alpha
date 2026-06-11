@@ -195,9 +195,10 @@ content.post('/tasks', async (c) => {
   const { randomUUID } = await import('crypto');
   const id = randomUUID();
 
-  const task = await prisma.task.create({
+  const draft = await prisma.taskDraft.create({
     data: {
       id,
+      stage:                  DraftStage.STAGE2,
       task_type:              taskType,
       prompt_text:            d.prompt_text,
       correct_answer:         d.correct_answer,
@@ -218,10 +219,12 @@ content.post('/tasks', async (c) => {
       feedback_wrong:         d.feedback_wrong ?? null,
       is_diagnostic:          d.is_diagnostic,
       source:                 TaskSource.HUMAN,
+      ai_review_severity:     null,
+      ai_review_issues:       [],
     },
   });
 
-  return ok(c, { task_id: task.id, variant_id: task.id });
+  return ok(c, { task_id: draft.id, variant_id: draft.id });
 });
 
 // ─── GET /api/admin/content/tasks/:task_id ───────────────────────────────────
