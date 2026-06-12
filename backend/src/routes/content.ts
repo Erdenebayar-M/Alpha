@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { z } from 'zod';
 import OpenAI from 'openai';
 import { withAdmin } from '../lib/auth/adminMiddleware';
+import { adminGenerateLimiter } from '../lib/auth/rateLimit';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { env } from '../config/env';
@@ -542,7 +543,7 @@ const IMAGE_STYLE_SYSTEM =
   `Describe the object itself — its shape, color, and key recognizable features — NOT a scene or action.\n` +
   `Return ONLY the image prompt. No explanation, no quotes, no preamble.`;
 
-content.post('/generate-image', async (c) => {
+content.post('/generate-image', adminGenerateLimiter, async (c) => {
   const body   = await c.req.json().catch(() => null);
   const parsed = generateImageSchema.safeParse(body);
   if (!parsed.success) {
@@ -607,7 +608,7 @@ const generateAudioSchema = z.object({
   slot: z.enum(['dictation', 'prompt']),
 });
 
-content.post('/generate-audio', async (c) => {
+content.post('/generate-audio', adminGenerateLimiter, async (c) => {
   if (!env.GEMINI_API_KEY) {
     return c.json({ success: false, error: 'GEMINI_API_KEY not configured on server' }, 503 as const);
   }
@@ -760,10 +761,28 @@ content.post('/accept-audio', async (c) => {
   return ok(c, { action: 'audio_accepted', variant_id, slot, [field]: audioUrl });
 });
 
+// ─── Asset URL allowlist ──────────────────────────────────────────────────────
+// Only allow relative /content/ paths (local serve) or the configured R2 CDN origin.
+// This prevents storing arbitrary URLs (including private IPs) in the database.
+const assetUrlSchema = z.string().refine(
+  (url) => {
+    if (url.startsWith('/content/')) return true;
+    if (!env.R2_PUBLIC_URL) return false;
+    try {
+      const allowed = new URL(env.R2_PUBLIC_URL);
+      const given   = new URL(url);
+      return given.origin === allowed.origin;
+    } catch {
+      return false;
+    }
+  },
+  { message: 'URL must be a relative /content/ path or an R2 CDN URL' },
+);
+
 // ─── POST /api/admin/content/update-image ────────────────────────────────────
 
 const updateImageSchema = z.object({
-  image_url:  z.string().url(),
+  image_url:  assetUrlSchema,
   variant_id: z.string().min(1),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
 });
@@ -795,7 +814,7 @@ content.post('/update-image', async (c) => {
 // ─── POST /api/admin/content/update-audio ────────────────────────────────────
 
 const updateAudioSchema = z.object({
-  audio_url:  z.string().url(),
+  audio_url:  assetUrlSchema,
   variant_id: z.string().min(1),
   slot:       z.enum(['dictation', 'prompt']),
   stage:      z.enum(ASSET_STAGES).default('stage2'),
@@ -848,7 +867,7 @@ const generateSchema = z.object({
   max_cost:  z.number().positive().max(50).default(5),
 });
 
-content.post('/generate', async (c) => {
+content.post('/generate', adminGenerateLimiter, async (c) => {
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return c.json({ success: false, error: 'OPENROUTER_API_KEY not configured on server' }, 503 as const);

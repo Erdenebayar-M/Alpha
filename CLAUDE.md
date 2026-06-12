@@ -81,6 +81,76 @@ npm run dev:frontend    # Next.js on :3000 (proxies /api/* to backend)
 ### Auth model
 JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`). Set by `POST /api/auth/login` and `POST /api/auth/register`, cleared by `POST /api/auth/logout`, profile fetched via `GET /api/auth/me`. The `withAuth` middleware reads the cookie first; a `Bearer` header is accepted as a fallback for tests/legacy callers. **Never** expose the token to JS — frontend Zustand store holds only the parent profile.
 
+### Security Architecture
+
+The codebase applies these principles consistently. New routes and features must follow the same patterns.
+
+**1. Defense in Depth** — multiple independent layers; no single point of failure.
+- Cookie (`HttpOnly + SameSite=Strict`) + JWT signature validation
+- `withAuth` middleware + per-route `learner.parent_id === parent_id` ownership check
+- `secureHeaders()` (Hono) + security headers in `frontend/next.config.ts` (HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy)
+
+**2. Least Privilege** — grant only what the caller needs.
+- `GET /auth/me` returns only `{ id, email, name }` — never `password_hash`
+- Prisma queries for ownership checks use `select: { parent_id: true }`, not full row fetches
+- Admin routes require a separate `ADMIN_SECRET`; a valid parent JWT cannot access them
+
+**3. Fail Secure** — deny on any ambiguity; never default to open.
+- `withAuth` returns 401 for missing, expired, or malformed tokens
+- `env.ts` calls `process.exit(1)` on invalid/missing env vars — server won't start misconfigured
+- `assetUrlSchema` (content.ts) rejects by default; only `/content/` paths and the R2 CDN origin pass
+
+**4. Don't Leak Information** — errors reveal as little as possible.
+- Login returns `"Invalid email or password"` regardless of whether the email exists (no enumeration)
+- IDOR failures return `NOT_FOUND`, not `FORBIDDEN` — resource existence is not revealed
+- 500 responses return only a `request_id`; stack traces go to stderr only
+
+**5. Timing-Safe Comparisons** — constant-time for all secret comparisons.
+- `bcrypt.compare()` for passwords
+- SHA-256 digest + `timingSafeEqual` for `ADMIN_SECRET` (`adminMiddleware.ts`)
+
+**6. Input Validation at Every Boundary** — parse and reject before any business logic.
+- Every route with a body or query uses Zod `safeParse`; field errors flatten into `ERRORS.VALIDATION_ERROR`
+- No `$queryRaw` / `$executeRaw` — all DB access through Prisma's type-safe client
+- Asset URLs validated against an allowlist (`assetUrlSchema`) before storage
+
+**7. Rate Limiting** — make brute-force and cost-abuse expensive.
+- `loginLimiter`: 5 attempts / 15 min (`routes/auth.ts`)
+- `registerLimiter`: 10 / hour (`routes/auth.ts`)
+- `adminGenerateLimiter`: 5 / min on paid LLM endpoints (`routes/content.ts`: `/generate`, `/generate-image`, `/generate-audio`)
+- All limiters defined in `backend/src/lib/auth/rateLimit.ts`
+
+**8. Secure Defaults** — the safe option requires no extra configuration.
+- Auth cookie: `HttpOnly: true`, `SameSite: Strict`, `Secure: NODE_ENV !== 'test'`
+- JWT: HS256 algorithm pinned; `iss: 'mongolian-app'`, `aud: 'parent-api'` enforced on verify
+- `CORS_ORIGIN` must be explicitly set — no wildcard fallback
+
+**9. Privilege Separation** — user plane and admin plane are isolated.
+- `withAuth` (JWT cookie) for all parent/learner routes
+- `withAdmin` (static bearer secret, SHA-256 timed comparison) for `/api/admin/*`
+- Different mechanisms, different attack surfaces
+
+**10. Audit Trail** — know when and what went wrong.
+- Structured JSON logs with `request_id` on every unhandled error (`index.ts` `onError`)
+- `TaskDraftAuditLog` table records every approve/reject with timestamp and actor
+
+#### Rules for new routes
+
+- **Always** use `ERRORS.*` from `errors.ts` — never call `c.json()` directly
+- **Always** Zod `safeParse` any body or query params before use
+- **Always** re-verify ownership (`learner.parent_id === parent_id`) in every learner-scoped handler
+- **Never** return a full Prisma model — select only the fields the caller needs
+- **Never** add a fallback default for a required secret — fail fast in `env.ts` instead
+- **Never** store user-supplied URLs without validating them against the `assetUrlSchema` allowlist
+
+#### Known intentional gaps (do not re-investigate)
+
+- **JWT revocation**: tokens remain valid for up to 7 days after logout. Mitigated by short-lived sessions and `SameSite=Strict` cookie. A Redis blacklist is the right fix if multi-device logout becomes a requirement.
+- **Aggregate LLM cost limits**: per-request `max_cost` cap exists in the `/generate` endpoint. Session- or day-level budget tracking is deferred until usage data warrants it.
+- **Secret rotation**: `JWT_SECRET`, `ADMIN_SECRET`, and API keys are rotated manually. No automated rotation mechanism is in place — this is an operational concern.
+
+---
+
 ### Frontend ↔ Backend wiring
 Same-origin via Next.js rewrites: `/api/:path*` → `http://localhost:3001/api/:path*`. Cookies "just work" without CORS contortions. Server Components forward incoming cookies via `lib/api/server.ts` (`cookies()` from `next/headers`); browser fetches use `lib/api/client.ts` with `credentials: 'include'`.
 

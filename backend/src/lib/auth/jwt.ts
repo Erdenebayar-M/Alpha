@@ -11,11 +11,17 @@ export async function signToken(payload: { parent_id: string }): Promise<string>
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
+    .setIssuer('mongolian-app')
+    .setAudience('parent-api')
     .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<{ parent_id: string }> {
-  const { payload } = await jwtVerify(token, getSecret());
+  const { payload } = await jwtVerify(token, getSecret(), {
+    algorithms: ['HS256'],
+    issuer: 'mongolian-app',
+    audience: 'parent-api',
+  });
   if (typeof payload.parent_id !== 'string') {
     throw new Error('Malformed token: missing parent_id');
   }

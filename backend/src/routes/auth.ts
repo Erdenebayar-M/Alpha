@@ -7,7 +7,7 @@ import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { registerSchema, loginSchema } from '@app/shared';
-import { loginLimiter } from '../lib/auth/rateLimit';
+import { loginLimiter, registerLimiter } from '../lib/auth/rateLimit';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -15,7 +15,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 function setAuthCookie(c: Context, token: string) {
   setCookie(c, AUTH_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV !== 'test',
     sameSite: 'Strict',
     maxAge: COOKIE_MAX_AGE,
     path: '/',
@@ -25,7 +25,7 @@ function setAuthCookie(c: Context, token: string) {
 const auth = new Hono<AuthEnv>();
 
 // POST /api/auth/register
-auth.post('/register', async (c) => {
+auth.post('/register', registerLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
