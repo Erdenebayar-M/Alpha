@@ -57,7 +57,6 @@ diagnostic.post('/start', async (c) => {
         select: {
           id: true,
           task_type: true,
-          title: true,
           prompt_text: true,
           options: true,
           audio_url: true,
@@ -196,7 +195,6 @@ diagnostic.post('/submit', async (c) => {
 const TASK_SELECT = {
   id: true,
   task_type: true,
-  title: true,
   prompt_text: true,
   options: true,
   audio_url: true,

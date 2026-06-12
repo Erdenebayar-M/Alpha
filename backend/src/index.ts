@@ -15,6 +15,7 @@ import plan from './routes/plan';
 import checkpoint from './routes/checkpoint';
 import dashboard from './routes/dashboard';
 import content from './routes/content';
+import adminStats from './routes/adminStats';
 
 const app = new Hono();
 
@@ -49,6 +50,7 @@ app.route('/api/plan', plan);
 app.route('/api/checkpoint', checkpoint);
 app.route('/api/dashboard', dashboard);
 app.route('/api/admin/content', content);
+app.route('/api/admin/stats', adminStats);
 
 if (require.main === module) {
   serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, () => {

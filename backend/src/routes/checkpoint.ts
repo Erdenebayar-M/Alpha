@@ -19,7 +19,6 @@ checkpoint.use('/*', withAuth);
 const TASK_SELECT = {
   id: true,
   task_type: true,
-  title: true,
   prompt_text: true,
   options: true,
   audio_url: true,
