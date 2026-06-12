@@ -60,6 +60,24 @@ npm run dev:frontend    # Next.js on :3000 (proxies /api/* to backend)
 
 ## Architecture
 
+### Backend conventions
+
+**Response envelope** — always use the helpers in `backend/src/lib/response.ts`; never call `c.json()` directly:
+- Success: `ok(c, data, meta?)` → `{ success: true, data, meta? }`
+- Error: `fail(c, code, message, details?, status)` → `{ success: false, error: { code, message, details? } }`
+
+**Error factory** — use `ERRORS.*` from `backend/src/lib/errors.ts` for all error responses. Ownership failures return `NOT_FOUND` (not `FORBIDDEN`) to avoid leaking resource existence.
+
+**Request validation** — every route with a body or query string must parse it with a Zod schema from `@app/shared` via `safeParse`, then flatten field errors into `ERRORS.VALIDATION_ERROR`.
+
+**Auth** — `withAuth` (cookie-first, Bearer fallback) sets `parent_id` in context. Every learner-scoped handler must re-verify `learner.parent_id === parent_id`. Admin routes use `withAdmin`, which requires `ADMIN_SECRET` (mandatory env var, 32+ chars, constant-time comparison).
+
+**Middleware order** in `backend/src/index.ts`: `secureHeaders → cors → requestId → requestLogger → timeout(/api/*, 15 s) → routes`, with `app.onError` as the global fallback.
+
+**Observability** — structured JSON logs include `request_id` (set by `hono/request-id`). Unhandled errors log `{ ts, request_id, method, path, error, stack }` to stderr and include `request_id` in the 500 response `details` for traceability.
+
+---
+
 ### Auth model
 JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`). Set by `POST /api/auth/login` and `POST /api/auth/register`, cleared by `POST /api/auth/logout`, profile fetched via `GET /api/auth/me`. The `withAuth` middleware reads the cookie first; a `Bearer` header is accepted as a fallback for tests/legacy callers. **Never** expose the token to JS — frontend Zustand store holds only the parent profile.
 
@@ -159,9 +177,9 @@ All content authoring, validation, and LLM generation tooling lives here, separa
 - Examples: `G12-001`, `G24-015-v2`
 
 **Skill codes:** `S1`–`S8`
-- S1=Үсэг-авиа ялгалт, S2=Үгийн зөв бичлэг, S3=Урт/богино эгшиг
-- S4=Гийгүүлэгчийг зөв ялгах, S5=Залгавар/нөхцөл, S6=Өгүүлбэрийн тэмдэглэгээ
-- S7=Сонсголоор буулгах, S8=Алдаа засах
+- S1=Үсэг авиаг зөв таних, S2=Үгийг зөв бичих, S3=Урт богино Балархай эгшгийг зөв ялгах
+- S4=Гийгүүлэгчийг зөв ялгах, S5=Залгаварыг зөв залгах, S6=Өгүүлбэрийн тэмдэглэгээг зөв хийх
+- S7=Сонсоод зөв буулгах, S8=Алдаагаа зөв таних
 
 **Error→skill map:** `backend/src/lib/error-engine/error-skill-map.ts` (`ERROR_SKILL_MAP`, `skillsForError`, `skillsFromErrors`)
 

@@ -152,12 +152,13 @@ export async function selectPhaseB(
   const seen = phaseAAttempts.map((a) => a.task_id);
   const taskIds: string[] = [];
 
+  const allSkillTasks = await prisma.task.findMany({
+    where: { primary_skill: { in: weakSkills as any[] }, id: { notIn: seen } },
+    select: { id: true, level_target: true, primary_skill: true },
+    orderBy: { difficulty: 'asc' },
+  });
   for (const skill of weakSkills) {
-    const all = await prisma.task.findMany({
-      where: { primary_skill: skill as any, id: { notIn: seen } },
-      select: { id: true, level_target: true },
-      orderBy: { difficulty: 'asc' },
-    });
+    const all = allSkillTasks.filter((t) => t.primary_skill === skill);
     const m2Plus = all.filter((t) => includesM2Plus(t.level_target));
     const pool = m2Plus.length >= 3 ? m2Plus : all;
     taskIds.push(...pool.slice(0, 3).map((t) => t.id));

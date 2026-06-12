@@ -7,6 +7,7 @@ export const requestLogger: MiddlewareHandler = async (c, next) => {
 
   const line = {
     ts: new Date().toISOString(),
+    request_id: (c.get('requestId') as string | undefined) ?? null,
     method: c.req.method,
     path: c.req.path,
     status: c.res.status,

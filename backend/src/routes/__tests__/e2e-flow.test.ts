@@ -399,17 +399,15 @@ describe('6 – next-phase A→B: Phase B targets S3 and S5', () => {
     }));
     m.attemptFindMany.mockResolvedValueOnce(phaseAData);
 
-    // selectPhaseB calls task.findMany: once for S3, once for S5, once for cross-skill
+    // selectPhaseB calls task.findMany: once for all weak skills batched, once for cross-skill
     m.taskFindMany
       .mockResolvedValueOnce([
-        { id: 'pb-s3-1', level_target: 'M1-M2' },
-        { id: 'pb-s3-2', level_target: 'M2' },
-        { id: 'pb-s3-3', level_target: 'M2' },
-      ])
-      .mockResolvedValueOnce([
-        { id: 'pb-s5-1', level_target: 'M1-M2' },
-        { id: 'pb-s5-2', level_target: 'M2' },
-        { id: 'pb-s5-3', level_target: 'M2' },
+        { id: 'pb-s3-1', level_target: 'M1-M2', primary_skill: 'S3' },
+        { id: 'pb-s3-2', level_target: 'M2', primary_skill: 'S3' },
+        { id: 'pb-s3-3', level_target: 'M2', primary_skill: 'S3' },
+        { id: 'pb-s5-1', level_target: 'M1-M2', primary_skill: 'S5' },
+        { id: 'pb-s5-2', level_target: 'M2', primary_skill: 'S5' },
+        { id: 'pb-s5-3', level_target: 'M2', primary_skill: 'S5' },
       ])
       .mockResolvedValueOnce([
         { id: 'pb-cross-1' },

@@ -860,14 +860,12 @@ describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
 
     mockTaskFindMany
       .mockResolvedValueOnce([
-        { id: 'pb-s3-1', level_target: 'M2' },
-        { id: 'pb-s3-2', level_target: 'M2' },
-        { id: 'pb-s3-3', level_target: 'M2' },
-      ])
-      .mockResolvedValueOnce([
-        { id: 'pb-s5-1', level_target: 'M2' },
-        { id: 'pb-s5-2', level_target: 'M2' },
-        { id: 'pb-s5-3', level_target: 'M2' },
+        { id: 'pb-s3-1', level_target: 'M2', primary_skill: 'S3' },
+        { id: 'pb-s3-2', level_target: 'M2', primary_skill: 'S3' },
+        { id: 'pb-s3-3', level_target: 'M2', primary_skill: 'S3' },
+        { id: 'pb-s5-1', level_target: 'M2', primary_skill: 'S5' },
+        { id: 'pb-s5-2', level_target: 'M2', primary_skill: 'S5' },
+        { id: 'pb-s5-3', level_target: 'M2', primary_skill: 'S5' },
       ])
       .mockResolvedValueOnce([
         { id: 'pb-cross-1' },

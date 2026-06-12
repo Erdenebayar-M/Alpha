@@ -19,7 +19,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().startsWith("sk-").optional(),
 
   ALLOW_PROD_SEED: z.string().optional(),
-  ADMIN_SECRET: z.string().min(32).optional(),
+  ADMIN_SECRET: z.string().min(32),
 
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),

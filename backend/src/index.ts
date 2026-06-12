@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
+import { requestId } from 'hono/request-id';
+import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
@@ -22,7 +24,9 @@ const app = new Hono();
 app.use('*', secureHeaders());
 const corsOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
 app.use('*', cors({ origin: corsOrigins, credentials: true }));
+app.use('*', requestId());
 if (env.NODE_ENV !== 'test') app.use('*', requestLogger);
+app.use('/api/*', timeout(15000));
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
@@ -34,8 +38,16 @@ app.onError((err, c) => {
       err.status as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500,
     );
   }
-  console.error('[unhandled]', err);
-  return fail(c, 'INTERNAL_ERROR', 'Дотоод алдаа гарлаа', undefined, 500);
+  const reqId = (c.get('requestId') as string | undefined) ?? null;
+  console.error(JSON.stringify({
+    ts: new Date().toISOString(),
+    request_id: reqId,
+    method: c.req.method,
+    path: c.req.path,
+    error: err instanceof Error ? err.message : String(err),
+    stack: err instanceof Error ? err.stack : undefined,
+  }));
+  return fail(c, 'INTERNAL_ERROR', 'Дотоод алдаа гарлаа', { request_id: reqId }, 500);
 });
 
 // Serve generated assets from the content pipeline
