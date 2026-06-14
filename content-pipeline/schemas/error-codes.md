@@ -26,7 +26,7 @@ Priority order:
 | A2 | Үсэг солих | No |
 | A3 | Үеийн бүтэц алдах | No |
 
-## B — Үсгийн бүтцийн алдаа · Skill 2
+## B — Үсэг орхих, илүү бичих, байрлалын алдаа · Skill 2
 
 | Code | Name | Sev | Auto |
 |------|------|-----|------|
@@ -58,7 +58,7 @@ Priority order:
 
 Confusable pairs (D3): н↔м, г↔к, д↔т, б↔п, з↔с, ж↔ш, о↔у
 
-## E — Залгавар/нөхцөлийн алдаа · Skill 5
+## E — Залгавар, нөхцөлийн алдаа · Skill 5
 
 | Code | Name | Sev | Auto | Notes |
 |------|------|-----|------|-------|
@@ -70,7 +70,7 @@ Confusable pairs (D3): н↔м, г↔к, д↔т, б↔п, з↔с, ж↔ш, о�
 | E6 | Үйл үгийн хувиллын алдаа | 2 | No | Context-assigned |
 | E7 | Залгаврын бичлэгийн алдаа | 2 | Yes | Fallback suffix spelling error |
 
-## F — Үгийн хэлбэр/бүтцийн алдаа · Skill 2
+## F — Үгийн хэлбэр ба бүтцийн алдаа · Skill 2
 
 All F codes are **context-assigned**:
 
@@ -91,7 +91,7 @@ All F codes are **context-assigned**:
 | G4 | Таслалын алдаа | 1 | Yes | Missing comma |
 | G5 | Өгүүлбэрийн хил заагийн алдаа | 2 | Yes | Extra/missing words |
 
-## H — Сонсгол/анхаарал · Skill 7/8
+## H — Сонсголт, анхаарал, тогтвортой байдлын алдаа · Skill 7/8
 
 | Code | Name | Sev | Auto | Notes |
 |------|------|-----|------|-------|

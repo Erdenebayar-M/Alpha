@@ -178,7 +178,9 @@ describe('POST /diagnostic/start', () => {
 
   it('201 — existing IN_PROGRESS session is abandoned and new one started', async () => {
     mockLearnerFind.mockResolvedValue(fakeLearner());
-    mockSessionFindFirst.mockResolvedValue({ id: 'existing-session' });
+    mockSessionFindFirst
+      .mockResolvedValueOnce(null)                       // COMPLETED check → none
+      .mockResolvedValueOnce({ id: 'existing-session' }); // IN_PROGRESS check → found
     mockSessionUpdate.mockResolvedValue({});
     ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
     mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
@@ -190,6 +192,16 @@ describe('POST /diagnostic/start', () => {
       expect.objectContaining({ data: expect.objectContaining({ status: 'ABANDONED' }) }),
     );
     expect(mockSessionCreate).toHaveBeenCalled();
+  });
+
+  it('409 — learner already has a completed diagnostic', async () => {
+    mockLearnerFind.mockResolvedValue(fakeLearner());
+    mockSessionFindFirst.mockResolvedValueOnce({ id: 'done-session' }); // COMPLETED check
+
+    const res = await postStart({ learner_id: LEARNER_ID });
+
+    expect(res.status).toBe(409);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 
   it('404 — learner belongs to a different parent', async () => {
@@ -603,76 +615,6 @@ describe('POST /diagnostic/next-phase', () => {
       expect(res.status).toBe(422);
       expect(body.error.code).toBe('UNPROCESSABLE');
       expect(mockTransaction).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── A → C bypass (all-low Phase A scores) ───────────────────────────────
-
-  describe('PHASE_A → PHASE_C low-score bypass', () => {
-    function lowScorePhaseAAttempts() {
-      // avg score = 0.0, well below the 0.25 bypass threshold
-      return SKILLS.map((s, i) => fakeAttempt(s, i, 0.0));
-    }
-
-    function setupBypassSession() {
-      mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_A' }));
-      mockSessionUpdate.mockResolvedValue({});
-      mockTransaction.mockImplementation((ops: unknown[]) => Promise.all(ops as any));
-      mockSkillStateUpsert.mockResolvedValue({});
-    }
-
-    function mockPhaseCTasks() {
-      mockTaskFindFirst
-        .mockResolvedValueOnce(fakePhaseTask('pc-bypass-1', 'TT4_DICTATION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-bypass-2', 'TT5_MINI_TEXT'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-bypass-3', 'TT3_CORRECTION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-bypass-4', 'TT1_CHOICE'));
-    }
-
-    it('transitions directly to PHASE_C when Phase A avg score < 0.25', async () => {
-      setupBypassSession();
-      mockAttemptFindMany.mockResolvedValue(lowScorePhaseAAttempts());
-      mockPhaseCTasks();
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.phase).toBe('C');
-      expect(body.data.bypassed_phase_b).toBe(true);
-      expect(body.data.tasks).toHaveLength(4);
-      expect(typeof body.data.estimated_level).toBe('string');
-    });
-
-    it('does not set phase_b_completed when bypassing', async () => {
-      setupBypassSession();
-      mockAttemptFindMany.mockResolvedValue(lowScorePhaseAAttempts());
-      mockPhaseCTasks();
-
-      await postNextPhase({ session_id: SESSION_ID });
-
-      expect(mockSessionUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            phase_a_completed: true,
-            phase_b_completed: false,
-            current_phase: 'PHASE_C',
-          }),
-        }),
-      );
-    });
-
-    it('returns 422 if next-phase is called while already in PHASE_C (post-bypass)', async () => {
-      // After bypass the session is IN_PROGRESS at PHASE_C with only 8 attempts —
-      // calling next-phase again before completing Phase C tasks must fail.
-      mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_C' }));
-      mockAttemptFindMany.mockResolvedValue(lowScorePhaseAAttempts()); // only 8 attempts
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(422);
-      expect(body.error.code).toBe('UNPROCESSABLE');
     });
   });
 

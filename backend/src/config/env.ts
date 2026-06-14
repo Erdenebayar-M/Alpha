@@ -20,6 +20,7 @@ const envSchema = z.object({
 
   ALLOW_PROD_SEED: z.string().optional(),
   ADMIN_SECRET: z.string().min(32),
+  RATE_LIMIT_DISABLED: z.string().optional(),
 
   R2_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),

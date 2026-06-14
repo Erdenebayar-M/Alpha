@@ -624,8 +624,8 @@ content.post('/generate-audio', adminGenerateLimiter, async (c) => {
 
   try {
     const response = await ai.models.generateContent({
-      model:    'gemini-2.5-flash-preview-tts',
-      contents: [{ parts: [{ text }] }],
+      model:    'gemini-2.5-pro-preview-tts',
+      contents: [{ parts: [{ text: `Read aloud: ${text}` }] }],
       config: {
         responseModalities: ['AUDIO'],
         speechConfig: {

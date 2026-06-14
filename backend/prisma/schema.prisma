@@ -27,14 +27,14 @@ enum LevelCode {
 }
 
 enum SkillCode {
-  S1 // Үсэг-авиа ялгалт (Letter-sound discrimination)
-  S2 // Үгийн зөв бичлэг (Word spelling)
-  S3 // Урт/богино эгшиг (Long/short vowel)
-  S4 // Балархай эгшиг (Reduced vowel)
-  S5 // Залгавар, нөхцөл (Suffix/agreement)
-  S6 // Өгүүлбэрийн тэмдэглэгээ (Punctuation/caps)
-  S7 // Сонсголоор буулгах (Dictation)
-  S8 // Алдаа засах (Error correction)
+  S1 // Үсэг авиаг зөв таних (Letter-sound recognition)
+  S2 // Үгийг зөв бичих (Word spelling)
+  S3 // Урт богино, Балархай эгшгийг зөв ялгах (Long/short + reduced vowel discrimination)
+  S4 // Гийгүүлэгчийг зөв ялгах (Consonant discrimination)
+  S5 // Залгаварыг зөв залгах (Correct suffix application)
+  S6 // Өгүүлбэрийн тэмдэглэгээг зөв хийх (Punctuation/caps)
+  S7 // Сонсоод зөв буулгах (Dictation)
+  S8 // Алдаагаа зөв таних (Error recognition)
 }
 
 enum ErrorCode {
@@ -42,7 +42,7 @@ enum ErrorCode {
   A1 // Авиа андуурах (Sound confusion)
   A2 // Үсэг солих (Letter substitution)
   A3 // Үеийн бүтэц алдах (Syllable structure error)
-  // B — Үсгийн бүтцийн алдаа (Letter structure errors)
+  // B — Үсэг орхих, илүү бичих, байрлалын алдаа (Letter structure errors)
   B1 // Үсэг орхих (Letter omission — catch-all)
   B2 // Үсэг илүү бичих (Extra letter)
   B3 // Үсгийн байрлал солих (Letter transposition)
@@ -60,7 +60,7 @@ enum ErrorCode {
   D3 // Гийгүүлэгч андуурах (Consonant confusion)
   D4 // Давхар гийгүүлэгчийн алдаа (Double consonant error)
   D5 // Үгийн төгсгөлийн гийгүүлэгч (Word-final consonant error)
-  // E — Залгавар/нөхцөлийн алдаа (Suffix errors)
+  // E — Залгавар, нөхцөлийн алдаа (Suffix errors)
   E1 // Залгавар орхигдол (Suffix omission)
   E2 // Буруу залгавар сонголт (Wrong suffix selection)
   E3 // Эр/эм залгаврын алдаа (Gender-harmony suffix error)
@@ -68,7 +68,7 @@ enum ErrorCode {
   E5 // Олон тоо/харьяаллын алдаа (Plural/possessive error)
   E6 // Үйл үгийн хувиллын алдаа (Verb conjugation error)
   E7 // Залгаврын бичлэгийн алдаа (Suffix spelling error)
-  // F — Үгийн хэлбэр/бүтцийн алдаа (Word-form errors)
+  // F — Үгийн хэлбэр ба бүтцийн алдаа (Word-form errors)
   F1 // Язгуур үгийн хэлбэрийн алдаа (Root word form error)
   F2 // Нийлмэл үгийн алдаа (Compound word error)
   F3 // Үгийн аймгийн хэлбэрийн алдаа (Part-of-speech form error)
@@ -79,7 +79,7 @@ enum ErrorCode {
   G3 // Асуулт/анхааруулах тэмдгийн алдаа (Question/exclamation mark error)
   G4 // Таслалын алдаа (Comma error)
   G5 // Өгүүлбэрийн хил заагийн алдаа (Sentence boundary error)
-  // H — Сонсгол/анхаарал/тогтвортой байдлын алдаа (Listening/attention errors)
+  // H — Сонсголт, анхаарал, тогтвортой байдлын алдаа (Listening/attention errors)
   H1 // Сонсгол тасарсан алдаа (Listening comprehension error)
   H2 // Хурдны алдаа (Speed/fluency error — metric-derived)
   H3 // Анхаарлын хэлбэлзлийн алдаа (Attention variability — metric-derived)
@@ -87,7 +87,7 @@ enum ErrorCode {
 }
 
 enum TaskType {
-  // 37 v3 types (Дасгалын_төрлүүд_каталог_v3.xlsx)
+  // 43 v3 types (Дасгалын_төрлүүд_каталог_v3.xlsx)
   TT_1_1
   TT_1_2
   TT_1_3

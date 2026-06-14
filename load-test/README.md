@@ -4,7 +4,11 @@ Headless bot harness that drives the real backend API to simulate user journeys,
 
 ## Prerequisites
 
-- Backend running: `npm run dev:backend` (Hono on `:3000`)
+- Backend running with rate limiting off (required for >10 bots — all bots share `localhost` as their IP):
+  ```bash
+  RATE_LIMIT_DISABLED=true npm run dev:backend
+  ```
+  `RATE_LIMIT_DISABLED` is ignored when `NODE_ENV=production`, so prod security is unaffected.
 - DB seeded: `npm --workspace=@app/backend run seed` (so diagnostic/lesson tasks exist)
 
 ## Usage
@@ -74,7 +78,7 @@ POST /api/lesson/attempt       235     0    42ms    95ms   140ms
 |--------|-------------|
 | p95/p99 latency spikes on `diagnostic-start` or `next-phase` | Prisma connection pool exhaustion — add `?connection_limit=20` to `DATABASE_URL` and raise Postgres `max_connections` |
 | `500` errors | Usually a DB error; check backend logs |
-| `429` on register | You're hitting a rate limit; increase `--ramp` |
+| `429` on register | All bots share `localhost` IP — start the backend with `RATE_LIMIT_DISABLED=true` |
 | Journey failures at `lesson-today` | Seed data may be missing — run `npm run seed` |
 
 ## Cleanup

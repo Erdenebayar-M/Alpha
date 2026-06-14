@@ -9,7 +9,7 @@
       "correct_answer": "о",
       "audio_url": null,
       "image_url": null,
-      "primary_skill": "S4",
+      "primary_skill": "S3",
       "secondary_skill": null,
       "level_target": "M2",
       "error_targets": [
@@ -47,7 +47,7 @@
       "correct_answer": "о",
       "audio_url": null,
       "image_url": null,
-      "primary_skill": "S4",
+      "primary_skill": "S3",
       "secondary_skill": null,
       "level_target": "M2",
       "error_targets": [
@@ -85,7 +85,7 @@
       "correct_answer": "э",
       "audio_url": null,
       "image_url": null,
-      "primary_skill": "S4",
+      "primary_skill": "S3",
       "secondary_skill": null,
       "level_target": "M2",
       "error_targets": [
@@ -123,7 +123,7 @@
       "correct_answer": "ө",
       "audio_url": null,
       "image_url": null,
-      "primary_skill": "S4",
+      "primary_skill": "S3",
       "secondary_skill": null,
       "level_target": "M2",
       "error_targets": [
@@ -161,7 +161,7 @@
       "correct_answer": "а",
       "audio_url": null,
       "image_url": null,
-      "primary_skill": "S4",
+      "primary_skill": "S3",
       "secondary_skill": null,
       "level_target": "M2",
       "error_targets": [

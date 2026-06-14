@@ -1,5 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { ERRORS } from '../errors';
+import { env } from '../../config/env';
 
 interface Bucket {
   count: number;
@@ -29,7 +30,10 @@ export function rateLimit(opts: Options): MiddlewareHandler {
   }, 5 * 60 * 1000);
   sweep.unref();
 
+  const disabled = env.RATE_LIMIT_DISABLED === 'true' && env.NODE_ENV !== 'production';
+
   return async (c, next) => {
+    if (disabled) return next();
     const now = Date.now();
     const key = keyFn(c);
     const bucket = buckets.get(key);
