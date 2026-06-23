@@ -40,6 +40,25 @@ function getGradeBand(taskId: string): string[] {
   return ['G1'];
 }
 
+const LEVEL_CODES_INGEST = ['M0','M1','M2','M3','M4','M5'];
+
+function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
+  const rangeMatch = levelTarget.match(/^(M[0-5])-(M[0-5])$/);
+  let levels: string[];
+  if (rangeMatch) {
+    const start = LEVEL_CODES_INGEST.indexOf(rangeMatch[1]);
+    const end = LEVEL_CODES_INGEST.indexOf(rangeMatch[2]);
+    levels = start >= 0 && end >= 0 ? LEVEL_CODES_INGEST.slice(start, end + 1) : ['M0'];
+  } else {
+    levels = LEVEL_CODES_INGEST.includes(levelTarget) ? [levelTarget] : ['M0'];
+  }
+  const cells: string[] = [];
+  for (const g of gradeBand) {
+    for (const l of levels) cells.push(`${g}:${l}`);
+  }
+  return cells;
+}
+
 // ── 1. Seed words ───────────────────────────────────────────────────────────
 
 function ingestWords(wb: XLSX.WorkBook) {
@@ -328,6 +347,7 @@ function ingestTasks(wb: XLSX.WorkBook, specMap: Map<string, SpecLookup>) {
       level_target:           level,
       error_targets:          errorTargets,
       grade_band:             getGradeBand(baseId),
+      grade_levels:           buildGradeLevels(getGradeBand(baseId), level),
       difficulty:             levelToDifficulty(level),
       estimated_time_seconds: TYPE_TIME[taskType] ?? 45,
       lesson_slot_fit:        TYPE_SLOT[taskType] ?? 'CORE',

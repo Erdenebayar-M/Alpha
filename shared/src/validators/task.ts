@@ -17,6 +17,9 @@ export const SKILL_CODES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'] as c
 
 export const GRADE_CODES = ['G1', 'G2', 'G3', 'G4'] as const;
 
+export const GRADE_LEVEL_RE = /^G[1-4]:M[0-5]$/;
+export const gradeLevelSchema = z.string().regex(GRADE_LEVEL_RE, 'Must match G[1-4]:M[0-5] pattern');
+
 export const LESSON_SLOTS = ['WARM_UP', 'CORE', 'MIXED', 'END'] as const;
 
 export const INTERACTION_FORMS = [
@@ -40,6 +43,7 @@ export const TASK_TYPES = [
 
 export const skillCodeSchema = z.enum(SKILL_CODES);
 export const gradeCodeSchema = z.enum(GRADE_CODES);
+export type GradeLevelValue = `G${1|2|3|4}:M${0|1|2|3|4|5}`;
 export const lessonSlotSchema = z.enum(LESSON_SLOTS);
 export const interactionFormSchema = z.enum(INTERACTION_FORMS);
 export const taskSourceSchema = z.enum(TASK_SOURCES);
@@ -189,6 +193,7 @@ export const taskFieldsSchema = z.object({
   level_target: z.string().min(1), // free string — matches Task.level_target column
   error_targets: z.array(z.string()).default([]),
   grade_band: z.array(gradeCodeSchema).min(1),
+  grade_levels: z.array(gradeLevelSchema).min(1), // ["G1:M2","G2:M1"] — one cell per grade×level
   difficulty: z.number().int().min(1).max(5),
   estimated_time_seconds: z.number().int().positive(),
   lesson_slot_fit: lessonSlotSchema,
@@ -200,6 +205,23 @@ export const taskFieldsSchema = z.object({
   audio_url: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
 });
+
+/** Every grade in grade_band must appear in at least one grade_levels cell. */
+function refineGradeLevels(
+  val: { grade_band: string[]; grade_levels: string[] },
+  ctx: z.RefinementCtx,
+): void {
+  const gradePrefixes = new Set(val.grade_levels.map((c) => c.split(':')[0]));
+  for (const g of val.grade_band) {
+    if (!gradePrefixes.has(g)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['grade_levels'],
+        message: `Grade ${g} is in grade_band but has no entry in grade_levels`,
+      });
+    }
+  }
+}
 
 /** Validate `options` against the shape required by `task_type`. */
 function refineOptionsByType(
@@ -223,8 +245,10 @@ function refineOptionsByType(
   }
 }
 
-/** Full task-content schema (base fields + per-type options). */
-export const taskContentSchema = taskFieldsSchema.superRefine(refineOptionsByType);
+/** Full task-content schema (base fields + per-type options + grade×level consistency). */
+export const taskContentSchema = taskFieldsSchema
+  .superRefine(refineGradeLevels)
+  .superRefine(refineOptionsByType);
 
 /** Request body for the manual "create by hand" route. */
 export const createTaskSchema = taskFieldsSchema
@@ -232,6 +256,7 @@ export const createTaskSchema = taskFieldsSchema
     source: taskSourceSchema.default('HUMAN'),
     initial_text: z.string().optional(),
   })
+  .superRefine(refineGradeLevels)
   .superRefine(refineOptionsByType);
 
 export type TaskFields = z.infer<typeof taskFieldsSchema>;

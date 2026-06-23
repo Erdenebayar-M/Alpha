@@ -323,6 +323,7 @@ model TaskDraft {
   level_target           String
   error_targets          String[]
   grade_band             String[]
+  grade_levels           String[]   // ["G1:M2","G2:M1"] — grade×level cells
   difficulty             Int
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
@@ -351,6 +352,7 @@ model TaskDraft {
   @@index([stage])
   @@index([stage, primary_skill])
   @@index([grade_band], type: Gin)
+  @@index([grade_levels], type: Gin)
   @@map("task_drafts")
 }
 
@@ -413,6 +415,7 @@ model Task {
   level_target           String     // M0, M1, M1-M2, M2, …
   error_targets          String[]   // ["C1","C2"]
   grade_band             String[]   // ["G1"], ["G1","G2"], etc.
+  grade_levels           String[]   // ["G1:M2","G2:M1"] — grade×level cells
   difficulty             Int        // 1–5
   estimated_time_seconds Int
   lesson_slot_fit        LessonSlot
@@ -428,6 +431,7 @@ model Task {
 
   @@index([primary_skill, level_target])
   @@index([grade_band], type: Gin)
+  @@index([grade_levels], type: Gin)
   @@map("tasks")
 }
 

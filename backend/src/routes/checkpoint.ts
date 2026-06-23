@@ -31,6 +31,7 @@ const SKILL_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8'] as const;
 
 // avg delta > +10% → LEVEL_UP; avg delta < 0 → NEW_PLAN; else → CONTINUE_PLAN
 const LEVEL_UP_THRESHOLD = 0.10;
+const LEVEL_ORDER = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5'] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -197,6 +198,40 @@ checkpoint.post('/submit', async (c) => {
   }
 
   let new_plan_id: string | undefined;
+
+  if (decision === 'LEVEL_UP') {
+    // Advance general_level one step within the learner's grade, capped at M5.
+    const currentLevel = afterState?.general_level ?? 'M0';
+    const idx = LEVEL_ORDER.indexOf(currentLevel as typeof LEVEL_ORDER[number]);
+    const nextLevel = LEVEL_ORDER[Math.min(idx + 1, LEVEL_ORDER.length - 1)];
+    if (nextLevel !== currentLevel) {
+      await prisma.learnerSkillState.update({
+        where: { learner_id: learnerId },
+        data: { general_level: nextLevel as any },
+      });
+    }
+
+    // Create a new plan at the higher level.
+    await prisma.plan.update({
+      where: { id: plan.id },
+      data: { status: 'REPLACED', is_active: false, ended_at: new Date() },
+    });
+    const newPlan = await prisma.plan.create({
+      data: {
+        learner_id: learnerId,
+        template: plan.template,
+        priority_skills: afterState?.weak_skills ?? plan.priority_skills,
+        target_errors: afterState?.top_error_codes ?? plan.target_errors,
+        daily_minutes: plan.daily_minutes,
+        duration_days: plan.duration_days,
+        source: 'CHECKPOINT',
+        is_active: true,
+        status: 'ACTIVE',
+      },
+    });
+    await generatePlanLessons(newPlan.id, prisma);
+    new_plan_id = newPlan.id;
+  }
 
   if (decision === 'NEW_PLAN') {
     // Deactivate old plan first (@@unique([learner_id, is_active]) requires this)

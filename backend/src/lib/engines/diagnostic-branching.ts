@@ -139,21 +139,27 @@ export function identifyWeakSkills(phaseAAttempts: PhaseAAttempt[]): string[] {
 }
 
 /**
- * Selects 8 Phase B task IDs:
+ * Selects 8 Phase B task IDs scoped to the learner's exact grade:
  *   3 × weak skill 1 (M2+ preferred)
  *   3 × weak skill 2 (M2+ preferred)
  *   2 × cross-skill tasks (primary ↔ secondary matching both weak skills)
  */
 export async function selectPhaseB(
   phaseAAttempts: PhaseAAttempt[],
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  learnerGrade: number,
 ): Promise<PhaseBResult> {
   const weakSkills = identifyWeakSkills(phaseAAttempts);
   const seen = phaseAAttempts.map((a) => a.task_id);
   const taskIds: string[] = [];
+  const gradeCode = `G${learnerGrade}`;
 
   const allSkillTasks = await prisma.task.findMany({
-    where: { primary_skill: { in: weakSkills as any[] }, id: { notIn: seen } },
+    where: {
+      primary_skill: { in: weakSkills as any[] },
+      id: { notIn: seen },
+      grade_band: { has: gradeCode },
+    },
     select: { id: true, level_target: true, primary_skill: true },
     orderBy: { difficulty: 'asc' },
   });
@@ -169,6 +175,7 @@ export async function selectPhaseB(
     const cross = await prisma.task.findMany({
       where: {
         id: { notIn: [...seen, ...taskIds] },
+        grade_band: { has: gradeCode },
         OR: [
           { primary_skill: a as any, secondary_skill: b as any },
           { primary_skill: b as any, secondary_skill: a as any },
@@ -184,6 +191,7 @@ export async function selectPhaseB(
       const fallback = await prisma.task.findMany({
         where: {
           id: { notIn: [...seen, ...taskIds] },
+          grade_band: { has: gradeCode },
           primary_skill: { in: weakSkills as any[] },
         },
         select: { id: true },

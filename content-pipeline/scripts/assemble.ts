@@ -49,6 +49,25 @@ const MVP_CODES: ErrorCode[] = [
 const GRADE_BAND = ['G1', 'G2'];
 const TARGET     = 3;
 
+const LEVEL_CODES_ASSEMBLE = ['M0','M1','M2','M3','M4','M5'];
+
+function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
+  const rangeMatch = levelTarget.match(/^(M[0-5])-(M[0-5])$/);
+  let levels: string[];
+  if (rangeMatch) {
+    const start = LEVEL_CODES_ASSEMBLE.indexOf(rangeMatch[1]);
+    const end = LEVEL_CODES_ASSEMBLE.indexOf(rangeMatch[2]);
+    levels = start >= 0 && end >= 0 ? LEVEL_CODES_ASSEMBLE.slice(start, end + 1) : ['M0'];
+  } else {
+    levels = LEVEL_CODES_ASSEMBLE.includes(levelTarget) ? [levelTarget] : ['M0'];
+  }
+  const cells: string[] = [];
+  for (const g of gradeBand) {
+    for (const l of levels) cells.push(`${g}:${l}`);
+  }
+  return cells;
+}
+
 // ─── Seeded RNG (LCG — pure determinism, no external packages) ────────────
 
 function makeLcg(seed: number) {
@@ -101,7 +120,9 @@ function base(
     audio_url: null, image_url: null,
     primary_skill: skill, secondary_skill: null,
     level_target: level, error_targets: errorTargets,
-    grade_band: GRADE_BAND, difficulty,
+    grade_band: GRADE_BAND,
+    grade_levels: buildGradeLevels(GRADE_BAND, level),
+    difficulty,
     estimated_time_seconds: 30,
     lesson_slot_fit: slot, feedback_text: feedback,
   };

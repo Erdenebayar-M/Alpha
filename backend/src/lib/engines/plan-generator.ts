@@ -24,8 +24,8 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
   const generalLevel: string = skillState?.general_level ?? 'M0';
   const recentTaskIds: string[] = skillState?.recent_task_ids ?? [];
 
-  // Variant A (grades 1–2) → G1/G2 tasks; Variant B (grades 2–4) → G2/G3/G4 tasks
-  const gradeBands = learner.variant === 'A' ? ['G1', 'G2'] : ['G2', 'G3', 'G4'];
+  const gradeCode = `G${learner.grade}`;
+  const gradeLevelCell = `${gradeCode}:${generalLevel}`;
 
   // Skill rotation: priority_skills + skills implied by target_errors, sorted by canonical order
   const errorImpliedSkills = skillsFromErrors(plan.target_errors ?? []);
@@ -36,18 +36,26 @@ export async function generatePlanLessons(planId: string, db: PrismaClient): Pro
 
   const budgetSeconds = plan.daily_minutes * 60;
 
-  // 2. Fetch eligible tasks. Prefer level-matched, but fall back to any level
-  // for this grade band when the level-matched pool is empty (sparse content bank).
   const baseWhere = {
-    grade_band: { hasSome: gradeBands },
     is_diagnostic: false,
     id: { notIn: recentTaskIds },
   } as const;
 
+  // 2. Fetch eligible tasks.
+  // Tier 1: exact grade × exact level cell.
+  // Tier 2: exact grade, any level (sparse bank fallback).
+  // Tier 3: any task (very sparse bank last resort).
   let allTasks = await db.task.findMany({
-    where: { ...baseWhere, level_target: { contains: generalLevel } },
+    where: { ...baseWhere, grade_levels: { hasSome: [gradeLevelCell] } },
     orderBy: { difficulty: 'asc' },
   });
+
+  if (allTasks.length === 0) {
+    allTasks = await db.task.findMany({
+      where: { ...baseWhere, grade_band: { has: gradeCode } },
+      orderBy: { difficulty: 'asc' },
+    });
+  }
 
   if (allTasks.length === 0) {
     allTasks = await db.task.findMany({

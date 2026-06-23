@@ -14,7 +14,7 @@ jest.mock('../../lib/db/client', () => ({
     task:              { findMany: jest.fn(), findUnique: jest.fn() },
     attempt:           { create: jest.fn() },
     errorLog:          { createMany: jest.fn() },
-    learnerSkillState: { findUnique: jest.fn() },
+    learnerSkillState: { findUnique: jest.fn(), update: jest.fn() },
     plan:              { update: jest.fn(), create: jest.fn() },
   },
 }));
@@ -44,6 +44,7 @@ const mockTaskFindMany      = prisma.task.findMany                as jest.Mocked
 const mockTaskFindUnique    = prisma.task.findUnique              as jest.MockedFunction<any>;
 const mockAttemptCreate     = prisma.attempt.create               as jest.MockedFunction<any>;
 const mockSkillStateFind    = prisma.learnerSkillState.findUnique as jest.MockedFunction<any>;
+const mockSkillStateUpdate  = prisma.learnerSkillState.update    as jest.MockedFunction<any>;
 const mockPlanUpdate        = prisma.plan.update                  as jest.MockedFunction<any>;
 const mockPlanCreate        = prisma.plan.create                  as jest.MockedFunction<any>;
 const mockProcessAttempt    = processAttempt                      as jest.MockedFunction<typeof processAttempt>;
@@ -268,13 +269,26 @@ describe('POST /checkpoint/submit', () => {
 
   it('200 LEVEL_UP — when avg skill delta exceeds +0.10', async () => {
     setupBaseMocks(0.5, 0.65); // avgDelta = +0.15 → LEVEL_UP
+    const LEVEL_UP_PLAN_ID = 'level-up-plan-uuid-1';
+    mockSkillStateUpdate.mockResolvedValue({});
+    mockPlanUpdate.mockResolvedValue({});
+    mockPlanCreate.mockResolvedValue({ id: LEVEL_UP_PLAN_ID });
+    mockGenerateLessons.mockResolvedValue(undefined);
 
     const res = await post(SUBMIT_BODY);
 
     const body = await res.json() as any;
     expect(body.data.decision).toBe('LEVEL_UP');
-    expect(body.data).not.toHaveProperty('new_plan_id');
-    expect(mockPlanCreate).not.toHaveBeenCalled();
+    expect(body.data.new_plan_id).toBe(LEVEL_UP_PLAN_ID);
+    expect(mockSkillStateUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { learner_id: LEARNER_ID } }),
+    );
+    expect(mockPlanCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ source: 'CHECKPOINT', is_active: true }),
+      }),
+    );
+    expect(mockGenerateLessons).toHaveBeenCalledWith(LEVEL_UP_PLAN_ID, expect.anything());
   });
 
   it('404 NOT_FOUND — when checkpoint belongs to a different parent', async () => {

@@ -39,6 +39,25 @@ function parseSkillTags(raw: string): string[] {
   return parseStringArray(raw).filter((s) => valid.has(s));
 }
 
+const LEVEL_CODES = ["M0", "M1", "M2", "M3", "M4", "M5"];
+
+function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
+  const rangeMatch = levelTarget.match(/^(M[0-5])-(M[0-5])$/);
+  let levels: string[];
+  if (rangeMatch) {
+    const start = LEVEL_CODES.indexOf(rangeMatch[1]);
+    const end = LEVEL_CODES.indexOf(rangeMatch[2]);
+    levels = start >= 0 && end >= 0 ? LEVEL_CODES.slice(start, end + 1) : ["M0"];
+  } else {
+    levels = LEVEL_CODES.includes(levelTarget) ? [levelTarget] : ["M0"];
+  }
+  const cells: string[] = [];
+  for (const g of gradeBand) {
+    for (const l of levels) cells.push(`${g}:${l}`);
+  }
+  return cells;
+}
+
 // â”€â”€â”€ Word seed data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const wordRows = [
@@ -255,6 +274,7 @@ async function main() {
       level_target: v.level_target,
       error_targets: v.error_targets,
       grade_band: v.grade_band,
+      grade_levels: buildGradeLevels(v.grade_band, v.level_target),
       difficulty: v.difficulty,
       estimated_time_seconds: v.estimated_time_seconds,
       lesson_slot_fit: v.lesson_slot_fit as LessonSlot,

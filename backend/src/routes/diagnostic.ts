@@ -52,14 +52,14 @@ diagnostic.post('/start', async (c) => {
     });
   }
 
-  const gradeBands = learner.variant === 'A' ? ['G1', 'G2'] : ['G2', 'G3', 'G4'];
+  const gradeCode = `G${learner.grade}`;
 
   const taskResults = await Promise.all(
     ALL_SKILLS.map((skill) =>
       prisma.task.findFirst({
         where: {
           primary_skill: skill as any,
-          grade_band: { hasSome: gradeBands },
+          grade_band: { has: gradeCode },
         },
         orderBy: { difficulty: 'asc' },
         select: {
@@ -262,7 +262,7 @@ diagnostic.post('/next-phase', async (c) => {
       error_codes: a.error_codes,
     }));
 
-    const { weakSkills, phaseBTaskIds } = await selectPhaseB(phaseAAttempts, prisma);
+    const { weakSkills, phaseBTaskIds } = await selectPhaseB(phaseAAttempts, prisma, session.learner.grade);
 
     const tasks = await prisma.task.findMany({
       where: { id: { in: phaseBTaskIds } },
@@ -307,25 +307,26 @@ diagnostic.post('/next-phase', async (c) => {
     const partial = calculateFinalResult(phaseABAttempts, session.learner.grade);
     const estimated_level = partial.general_level;
     const seenIds = attempts.map((a) => a.task_id);
+    const gradeCodeC = `G${session.learner.grade}`;
 
     const [mixedDictation, sentenceDictation, correction, boundary] = await Promise.all([
       prisma.task.findFirst({
-        where: { task_type: { in: ['TT_7_1', 'TT_7_3'] as any[] }, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_7_1', 'TT_7_3'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),
       prisma.task.findFirst({
-        where: { task_type: { in: ['TT_7_4', 'TT_7_6'] as any[] }, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_7_4', 'TT_7_6'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),
       prisma.task.findFirst({
-        where: { task_type: { in: ['TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4'] as any[] }, id: { notIn: seenIds } },
+        where: { task_type: { in: ['TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
         orderBy: { difficulty: 'asc' },
         select: TASK_SELECT,
       }),
       prisma.task.findFirst({
-        where: { id: { notIn: seenIds }, difficulty: { gte: 3 } },
+        where: { id: { notIn: seenIds }, difficulty: { gte: 3 }, grade_band: { has: gradeCodeC } },
         orderBy: { difficulty: 'desc' },
         select: TASK_SELECT,
       }),

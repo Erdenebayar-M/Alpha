@@ -1,5 +1,4 @@
 import { generatePlanLessons } from '../plan-generator';
-import type { PrismaClient } from '../../../../generated/prisma';
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -87,7 +86,7 @@ function makeMockDb(opts: MockDbOpts = {}) {
       create: checkpointCreate,
     },
     $transaction,
-  } as unknown as PrismaClient;
+  } as unknown as Parameters<typeof generatePlanLessons>[1];
 
   return { db, lessonCreate, checkpointCreate, taskFindMany, $transaction };
 }
@@ -259,9 +258,9 @@ describe('generatePlanLessons', () => {
   describe('checkpoint placement', () => {
     test('7-day plan places checkpoint at day 4 (midpoint)', async () => {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() + 3); // day 4 = today + 3
+      expectedDate.setUTCDate(today.getUTCDate() + 3); // day 4 = today + 3
 
       const tasks = Array.from({ length: 20 }, (_, i) =>
         makeTask({ id: `task-${i}`, estimated_time_seconds: 60 }),
@@ -277,9 +276,9 @@ describe('generatePlanLessons', () => {
 
     test('14-day plan places checkpoint at day 7 (midpoint)', async () => {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
       const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() + 6); // day 7 = today + 6
+      expectedDate.setUTCDate(today.getUTCDate() + 6); // day 7 = today + 6
 
       const tasks = Array.from({ length: 50 }, (_, i) =>
         makeTask({ id: `task-${i}`, estimated_time_seconds: 60 }),
