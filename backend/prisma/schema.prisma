@@ -405,6 +405,17 @@ model Word {
   part_of_speech      String? // "Үгийн аймаг"
   meaning_type        String? // "Утгын төрөл"
 
+  // Derived capability (from word-bank/derive-capability.ts; populated by a
+  // separate script, NOT in the migration). primary_* are hints; skills_possible
+  // is the load-bearing eligibility filter. Distinct from the legacy
+  // skill_tags/error_tags columns, which are left untouched.
+  skills_possible     String[] @default([]) // S1–S8 the word can exercise
+  errors_possible     String[] @default([]) // C/D/B/E/A codes the word can surface
+  task_types_possible String[] @default([]) // eligible TT_X_Y
+  primary_feature     String?               // headline feature (sort/display hint)
+  primary_skill       String?               // skill implied by primary_feature (hint)
+  balarhai_unknown    Boolean?              // балархай couldn't be resolved → review
+
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
   @@index([grade])
