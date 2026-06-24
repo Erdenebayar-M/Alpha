@@ -11,8 +11,14 @@ export const LONG_VOWEL_PAIRS: readonly string[] = [
 ] as const;
 
 /**
- * Confusable consonant pairs (D3 error targets).
- * Each tuple is [written, expected] — both directions are valid.
+ * Confusable pairs (D3 error targets). Single source of truth for "these two
+ * characters are easily mixed up". Each tuple is [written, expected] — both
+ * directions are valid.
+ *
+ * Note: this set is mostly consonants but intentionally also contains the о↔у
+ * vowel pair, which the spec classifies as D3 (not a vowel-substitution C3).
+ * Previously о↔у lived in a separate EXTRA_CONFUSABLE_PAIRS table inside
+ * error-classifier.ts; it is merged here so there is exactly one confusable set.
  */
 export const CONFUSABLE_CONSONANT_PAIRS: readonly [string, string][] = [
   ["н", "м"],
@@ -21,7 +27,22 @@ export const CONFUSABLE_CONSONANT_PAIRS: readonly [string, string][] = [
   ["б", "п"],
   ["з", "с"],
   ["ж", "ш"],
+  ["о", "у"],
 ] as const;
+
+/**
+ * Mongolian Cyrillic vowels — the single source of truth for vowel membership.
+ * Used by `isVowel`, `syllabify`, and the error classifier's vowel checks.
+ */
+export const VOWELS: ReadonlySet<string> = new Set([
+  "а", "э", "и", "о", "у", "ө", "ү", "е", "ё",
+]);
+
+/** Masculine (эр) vowels — used for vowel-harmony (E3) detection. */
+export const MASCULINE_VOWELS: ReadonlySet<string> = new Set(["а", "о", "у"]);
+
+/** Feminine (эм) vowels — used for vowel-harmony (E3) detection. */
+export const FEMININE_VOWELS: ReadonlySet<string> = new Set(["э", "ө", "ү"]);
 
 // ─── Long-vowel helpers ───────────────────────────────────────────────────────
 
@@ -109,7 +130,7 @@ export function isReducedVowelPosition(word: string, position: number): boolean 
 
 /** Mongolian Cyrillic vowel characters. */
 export function isVowel(char: string): boolean {
-  return new Set<string>(['а', 'э', 'и', 'о', 'у', 'ө', 'ү', 'е', 'ё']).has(char);
+  return VOWELS.has(char);
 }
 
 /** Mongolian Cyrillic consonant characters. */
@@ -140,11 +161,6 @@ export function isLongVowelPosition(word: string, position: number): boolean {
 }
 
 // ─── Syllabification ─────────────────────────────────────────────────────────
-
-/** Mongolian vowel characters (includes long-vowel components). */
-const VOWELS = new Set([
-  "а", "э", "и", "о", "у", "ө", "ү", "е", "ё",
-]);
 
 /**
  * Splits a Mongolian word into syllables following CV(C) structure.

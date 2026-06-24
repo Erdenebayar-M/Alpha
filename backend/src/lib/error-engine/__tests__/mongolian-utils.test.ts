@@ -1,6 +1,9 @@
 import {
   LONG_VOWEL_PAIRS,
   CONFUSABLE_CONSONANT_PAIRS,
+  VOWELS,
+  MASCULINE_VOWELS,
+  FEMININE_VOWELS,
   isLongVowelPart,
   isLongVowelPosition,
   isReducedVowelPosition,
@@ -30,10 +33,12 @@ describe("LONG_VOWEL_PAIRS", () => {
 // ─── CONFUSABLE_CONSONANT_PAIRS ───────────────────────────────────────────────
 
 describe("CONFUSABLE_CONSONANT_PAIRS", () => {
-  it("contains all 6 D3-relevant pairs", () => {
-    expect(CONFUSABLE_CONSONANT_PAIRS).toHaveLength(6);
+  it("contains the 6 D3 consonant pairs plus the merged о↔у vowel pair", () => {
+    expect(CONFUSABLE_CONSONANT_PAIRS).toHaveLength(7);
   });
 
+  // The 6 original consonant pairs are unchanged; о↔у is merged in from the
+  // classifier's former EXTRA_CONFUSABLE_PAIRS table.
   const expected: [string, string][] = [
     ["н", "м"],
     ["г", "к"],
@@ -41,6 +46,7 @@ describe("CONFUSABLE_CONSONANT_PAIRS", () => {
     ["б", "п"],
     ["з", "с"],
     ["ж", "ш"],
+    ["о", "у"],
   ];
   it.each(expected)("includes pair [%s, %s]", (a, b) => {
     expect(CONFUSABLE_CONSONANT_PAIRS).toContainEqual([a, b]);
@@ -533,6 +539,47 @@ describe("isConsonantConfusionPair", () => {
 
   it("('г','г') → false (same letter)", () => {
     expect(isConsonantConfusionPair("г", "г")).toBe(false);
+  });
+
+  // о↔у merged in from the classifier's former EXTRA_CONFUSABLE_PAIRS table.
+  it.each([["о","у"],["у","о"]])(
+    "(%s, %s) → true (о↔у merged into the single confusable set)",
+    (a, b) => { expect(isConsonantConfusionPair(a, b)).toBe(true); },
+  );
+});
+
+// ─── Consolidated constant tables (single source of truth) ───────────────────
+// These lock the values that were previously duplicated inside
+// error-classifier.ts, proving the consolidation is behaviour-preserving.
+
+describe("consolidated constant tables", () => {
+  it("VOWELS contains exactly the 9 Mongolian Cyrillic vowels", () => {
+    expect([...VOWELS].sort()).toEqual(
+      ["а", "е", "и", "о", "у", "э", "ё", "ө", "ү"].sort(),
+    );
+  });
+
+  it("isVowel agrees with the shared VOWELS set", () => {
+    for (const ch of VOWELS) expect(isVowel(ch)).toBe(true);
+    for (const ch of ["б", "г", "н", "с", "т", "х"]) expect(isVowel(ch)).toBe(false);
+  });
+
+  it("MASCULINE_VOWELS = {а, о, у} (эр harmony class, unchanged)", () => {
+    expect([...MASCULINE_VOWELS].sort()).toEqual(["а", "о", "у"].sort());
+  });
+
+  it("FEMININE_VOWELS = {э, ө, ү} (эм harmony class, unchanged)", () => {
+    expect([...FEMININE_VOWELS].sort()).toEqual(["э", "ө", "ү"].sort());
+  });
+
+  it("masculine and feminine vowel classes are disjoint", () => {
+    for (const ch of MASCULINE_VOWELS) expect(FEMININE_VOWELS.has(ch)).toBe(false);
+  });
+
+  it("CONFUSABLE_CONSONANT_PAIRS is the single set incl. all original pairs + о↔у", () => {
+    expect(CONFUSABLE_CONSONANT_PAIRS).toEqual([
+      ["н", "м"], ["г", "к"], ["д", "т"], ["б", "п"], ["з", "с"], ["ж", "ш"], ["о", "у"],
+    ]);
   });
 });
 

@@ -55,6 +55,9 @@ export {
   isConsonantConfusionPair,
   LONG_VOWEL_PAIRS,
   CONFUSABLE_CONSONANT_PAIRS,
+  VOWELS,
+  MASCULINE_VOWELS,
+  FEMININE_VOWELS,
 } from './mongolian-utils';
 
 export type { SuffixType } from './mongolian-utils';

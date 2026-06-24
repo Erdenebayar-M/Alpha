@@ -18,8 +18,9 @@ import {
   isReducedVowelPosition,
   extractSuffix,
   CONFUSABLE_CONSONANT_PAIRS,
-  isConsonant,
-  isVowel,
+  VOWELS,
+  MASCULINE_VOWELS,
+  FEMININE_VOWELS,
 } from './mongolian-utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -51,19 +52,13 @@ export interface TaskMeta {
   correctAnswer?: string;
 }
 
-// ─── Mongolian vowel sets ────────────────────────────────────────────────────
-
-const VOWELS = new Set([
-  'а', 'э', 'и', 'о', 'у', 'ө', 'ү', 'е', 'ё',
-]);
+// ─── Mongolian vowel helpers ─────────────────────────────────────────────────
+// VOWELS / MASCULINE_VOWELS / FEMININE_VOWELS now live in mongolian-utils.ts
+// (single source of truth) and are imported above.
 
 function isVowelChar(ch: string): boolean {
   return VOWELS.has(ch.toLowerCase());
 }
-
-// Masculine vowels (эр үг) vs feminine vowels (эм үг) for harmony detection
-const MASCULINE_VOWELS = new Set(['а', 'о', 'у']);
-const FEMININE_VOWELS = new Set(['э', 'ө', 'ү']);
 
 function getVowelHarmony(word: string): 'masculine' | 'feminine' | 'neutral' {
   let lastHarmony: 'masculine' | 'feminine' | 'neutral' = 'neutral';
@@ -75,18 +70,13 @@ function getVowelHarmony(word: string): 'masculine' | 'feminine' | 'neutral' {
 }
 
 // ─── Confusable pair lookup ──────────────────────────────────────────────────
-
-const EXTRA_CONFUSABLE_PAIRS: readonly [string, string][] = [
-  ['о', 'у'],
-];
+// CONFUSABLE_CONSONANT_PAIRS (imported) is the single confusable set and now
+// includes the о↔у vowel pair that previously lived in a local EXTRA table.
 
 function isConfusablePair(a: string, b: string): boolean {
   const al = a.toLowerCase();
   const bl = b.toLowerCase();
   for (const [x, y] of CONFUSABLE_CONSONANT_PAIRS) {
-    if ((al === x && bl === y) || (al === y && bl === x)) return true;
-  }
-  for (const [x, y] of EXTRA_CONFUSABLE_PAIRS) {
     if ((al === x && bl === y) || (al === y && bl === x)) return true;
   }
   return false;
