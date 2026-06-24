@@ -6,6 +6,7 @@ import {
   type ClassifiedError,
   type TaskMeta,
 } from '../error-classifier';
+import { skillsFromErrors } from '../error-skill-map';
 
 /** Helper: classify a word pair and return error codes found. */
 function classifyWord(
@@ -560,5 +561,45 @@ describe('calculateScore', () => {
       { errorCode: 'D3', severity: 2, position: 1, contextWord: '', message: '' },
     ];
     expect(calculateScore(errors)).toBe(0.5);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Detect-all — classifyWordErrors returns the FULL list (no cap-of-3)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Detect-all (no cap-of-3 in classifier)', () => {
+  // "сургуулиуд" (schools) → "сргулд" drops the уу long vowel + three more
+  // letters, producing 4 distinct errors. Before the cap was moved out of the
+  // classifier this list was trimmed to 3 (highest severity); it must now
+  // return all 4 so score, ErrorLog, and skill attribution see everything.
+  it('returns more than 3 errors when the word has 4 (was capped to 3)', () => {
+    const errors = classifyWord('сургуулиуд', 'сргулд');
+    expect(errors.length).toBeGreaterThan(3);
+    expect(errors).toHaveLength(4);
+  });
+
+  it('the full untrimmed code list is what feeds skillsFromErrors', () => {
+    const found = codes(classifyWord('сургуулиуд', 'сргулд'));
+    // C1 (long-vowel omission) + three B1 deletions
+    expect(found).toEqual(['C1', 'B1', 'B1', 'B1']);
+    // All implied skills must be reachable from the full list. If the list were
+    // trimmed to the first 3, S3 (from C1) could be dropped depending on order.
+    expect(skillsFromErrors(found)).toEqual(['S7', 'S2', 'S3']);
+  });
+
+  // TODO(alignment-fix): "аав" → "авл" should yield BOTH C1 (the аа long vowel
+  // lost an а) and B2 (the extra л) in the list sent to skillsFromErrors.
+  // It currently yields [] because equal-length words with two interior
+  // differences align as two substitutions (а→в, в→л) under Damerau-Levenshtein's
+  // diagonal-first tie-break, and the classifier has no catch-all for
+  // unclassified substitutions. Enabling this needs the diff-layer alignment/cost
+  // change (confusable / long-vowel preferring delete+insert), which is out of
+  // scope for the detect-all cap move. Unskip once that lands.
+  it.skip('аав → авл yields both C1 and B2 (blocked on alignment fix)', () => {
+    const found = codes(classifyWord('аав', 'авл'));
+    expect(found).toContain('C1');
+    expect(found).toContain('B2');
+    expect(skillsFromErrors(found)).toEqual(expect.arrayContaining(['S2', 'S3']));
   });
 });

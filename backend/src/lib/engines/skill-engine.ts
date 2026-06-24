@@ -87,6 +87,20 @@ export interface SkillUpdateInput {
 /**
  * Update LearnerSkillState for one learner after a single attempt.
  * Creates the row if it doesn't exist yet.
+ *
+ * Mastery-signal model (intended behaviour — verified, not a TODO):
+ *   - The mastery EMA (`s{n}_score`) tracks ONLY the task's `primary_skill`.
+ *     A single attempt moves exactly one skill's score, derived from the
+ *     numeric `score` — error codes never enter the score computation.
+ *   - Error-implied skills (via `skillsFromErrors`) feed priority_skills /
+ *     lesson-rotation MEMBERSHIP elsewhere; they do NOT move any mastery score.
+ *   - Repeat-count multiplicity of the same error code does NOT scale mastery.
+ *     `errorCodes` here is already deduped per attempt (see the dedup note in
+ *     attempt-processor.ts), so `top_error_codes` counts each code once per
+ *     attempt and `recent_error_codes` is a unique set. Full multiplicity lives
+ *     only in the ErrorLog table and is not read by this engine.
+ *   Revisit (e.g. count-weighted mastery) only if real student data shows
+ *   persistent same-skill error intensity failing to register in mastery.
  */
 export async function updateSkillState(
   input: SkillUpdateInput,

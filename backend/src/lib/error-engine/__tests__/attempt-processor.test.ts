@@ -186,6 +186,23 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     primary_skill: 'S8',
     error_targets: ['H4'],
   },
+
+  // Word-level choice used to exercise the detect-all path: "сургуулиуд"
+  // mistyped as "сргулд" yields 4 word-level errors (C1 + 3×B1).
+  'G24-100': {
+    id: 'G24-100',
+    task_type: 'TT_2_3',
+    correct_answer: 'сургуулиуд',
+    options: {
+      choices: [
+        { text: 'сургуулиуд', is_correct: true },
+        { text: 'сургууль', is_correct: false },
+      ],
+    },
+    feedback_text: 'Дахин шалгаарай.',
+    primary_skill: 'S3',
+    error_targets: [],
+  },
 };
 
 const mockTaskRepo: TaskRepository = {
@@ -508,5 +525,43 @@ describe('Error handling', () => {
     await expect(
       processAttempt(makeInput('NONEXISTENT', 'x'), mockTaskRepo),
     ).rejects.toThrow('Task not found');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Detect-all wiring — full error list flows to score, errorCodes, and ErrorLog;
+// the cap-of-3 applies ONLY to learner-facing feedback.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Detect-all wiring (cap only in feedback)', () => {
+  it('writes the FULL untrimmed error list to ErrorLog and Attempt.errorCodes', async () => {
+    const { repo: attemptRepo, calls: attemptCalls } = createMockAttemptRepo();
+    const { repo: errorLogRepo, calls: errorLogCalls } = createMockErrorLogRepo();
+
+    // "сургуулиуд" → "сргулд" classifies to 4 errors (C1 + 3×B1).
+    const result = await processAttempt(
+      makeInput('G24-100', 'сргулд'),
+      mockTaskRepo,
+      attemptRepo,
+      errorLogRepo,
+    );
+
+    // AttemptResult exposes the full detail list (not capped to 3).
+    expect(result.errorsDetail).toHaveLength(4);
+
+    // ErrorLog receives every detected error.
+    const logged = (errorLogCalls[0] as { errors: unknown[] }).errors;
+    expect(logged).toHaveLength(4);
+
+    // Attempt.errorCodes carries the full (deduped) code set → skillsFromErrors.
+    const stored = (attemptCalls[0] as { errorCodes: string[] }).errorCodes;
+    expect(stored).toEqual(['C1', 'B1']);
+
+    // Score reflects the full list of severity-2 errors (4 → 0.25), not a cap.
+    expect(result.score).toBe(0.25);
+
+    // Feedback still resolves to a single, non-empty learner message.
+    expect(typeof result.feedback).toBe('string');
+    expect(result.feedback.length).toBeGreaterThan(0);
   });
 });

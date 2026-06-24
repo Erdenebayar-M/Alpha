@@ -187,6 +187,9 @@ const FEEDBACK_MAP: Record<string, (err: ClassifiedError) => string> = {
   H4: () => 'Өөрийн хариуг дахин нягтлан шалгаарай.',
 };
 
+/** Max errors surfaced in learner-facing feedback (does not affect scoring). */
+const FEEDBACK_ERROR_CAP = 3;
+
 function generateFeedback(errors: ClassifiedError[], taskFeedback: string): string {
   if (errors.length === 0) return 'Зөв бичлээ! Баяр хүргэе!';
   const sorted = [...errors].sort((a, b) => b.severity - a.severity);
@@ -344,10 +347,23 @@ export async function processAttempt(
     errors = classifySentenceErrors(sentDiff, { taskType });
   }
 
-  // 3. Calculate score
+  // 3. Calculate score, feedback, and error codes.
+  //    The classifier now returns the FULL untrimmed error list. Score,
+  //    errorCodes (→ skillsFromErrors), and the ErrorLog writes below all
+  //    consume that full list. The cap-of-3 applies ONLY to learner feedback.
   const score = calculateScore(errors);
   const isCorrect = errors.length === 0;
-  const feedback = generateFeedback(errors, task.feedback_text);
+  const feedbackErrors = [...errors]
+    .sort((a, b) => b.severity - a.severity)
+    .slice(0, FEEDBACK_ERROR_CAP);
+  const feedback = generateFeedback(feedbackErrors, task.feedback_text);
+  // Dedup per attempt: Attempt.error_codes records the DISTINCT codes seen, not
+  // their counts. Repeat-count multiplicity (e.g. 3×B1) is intentionally NOT
+  // carried here — full multiplicity is persisted only in ErrorLog (one row per
+  // detected error, written below). Downstream mastery (skill-engine) and
+  // diagnostic branching read these distinct codes for analytics/priority-skill
+  // membership; they do not scale mastery by error count. See updateSkillState's
+  // mastery-signal model. Revisit if real data warrants count-weighted mastery.
   const errorCodes = [...new Set(errors.map((e) => e.errorCode))];
 
   // 4. Write to DB (if repositories provided)

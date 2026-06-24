@@ -282,12 +282,10 @@ export function classifyWordErrors(
     classifiedExtra.add(i);
   }
 
-  // Cap at 3 errors per word, keeping highest severity
-  if (errors.length > 3) {
-    errors.sort((a, b) => b.severity - a.severity);
-    errors.length = 3;
-  }
-
+  // Return the FULL list of detected errors. The cap-of-3 is intentionally NOT
+  // applied here: score, skill attribution (errorCodes → skillsFromErrors), and
+  // the ErrorLog DB writes all need every detected error. The cap is applied
+  // only to the learner-facing feedback inside processAttempt.
   return errors;
 }
 
