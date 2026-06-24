@@ -228,14 +228,34 @@ export async function processAttempt(
     const contextWord = opts.context_word ?? task.correct_answer;
     const blankAnswer = opts.blank_answer ?? task.correct_answer;
     const pos = opts.blank_position ?? 0;
-    const blankLen = blankAnswer.length;
+    const blankLen = blankAnswer.length; // may be >1 — multi-char blanks supported
     const fullActual = contextWord.slice(0, pos) + input.inputText + contextWord.slice(pos + blankLen);
+
+    // TT_5_2 / TT_7_5 are sentenceFillOptions (context is a sentence, no real
+    // blank_position) — they must NOT take the word-level DP path below.
+    // NOTE: their dedicated branch (`taskType === 'TT_5_2' || 'TT_7_5'` further
+    // down) is currently DEAD code because FILL_TYPES.has() matches them here
+    // first. That ordering bug is out of scope for this fix; this guard just
+    // keeps them on the legacy whole-string check so we don't deepen it.
+    // Follow-up: pull TT_5_2/TT_7_5 out of FILL_TYPES (or reorder the branches).
+    const isSentenceFill = taskType === 'TT_5_2' || taskType === 'TT_7_5';
+
     if (blankAnswer.toLowerCase() === input.inputText.toLowerCase()) {
       errors = [];
     } else {
-      const diff = checkAnswer(contextWord, fullActual, taskType);
+      // Word-level fills: run the REAL DP on the reconstructed word by omitting
+      // the taskType, so checkAnswer uses wordLevelDiff instead of the FILL
+      // exact-match bypass. The diff localises to the blank region (only that
+      // part differs) but at correct full-word positions, and the classifier
+      // sees full-word context — so isReducedVowelPosition / isLongVowelPart
+      // work, surfacing C1/C3/C4/D3/… instead of always collapsing to B1.
+      const diff = isSentenceFill
+        ? checkAnswer(contextWord, fullActual, taskType) // legacy bypass (unchanged)
+        : checkAnswer(contextWord, fullActual);          // word-level DP path
       errors = classifyWordErrors(diff, contextWord, fullActual, { taskType });
       if (errors.length === 0) {
+        // Empty-diff safety net: a wrong blank the classifier can't pin to a
+        // specific code (e.g. an unclassified substitution) still records B1.
         errors.push({
           errorCode: 'B1', severity: 2, position: pos,
           expectedChar: blankAnswer, actualChar: input.inputText, contextWord,

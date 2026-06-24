@@ -6,6 +6,7 @@ import {
   type AttemptRepository,
   type ErrorLogRepository,
 } from '../attempt-processor';
+import { skillsFromErrors } from '../error-skill-map';
 
 // ─── Mock task repository ────────────────────────────────────────────────────
 
@@ -185,6 +186,51 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     feedback_text: 'Алдаатай үгийг ол.',
     primary_skill: 'S8',
     error_targets: ['H4'],
+  },
+
+  // ── Word-level fill fixtures (NEW-code) for the FILL classification fix ──────
+  // TT_3_2 vowel fill: "н_м" → context "ном", blank "о" at pos 1.
+  'FILL-3-2-nom': {
+    id: 'FILL-3-2-nom',
+    task_type: 'TT_3_2',
+    correct_answer: 'ном',
+    options: { display_text: 'н_м', blank_position: 1, blank_answer: 'о', context_word: 'ном' },
+    feedback_text: 'Эгшгийг анзаар.',
+    primary_skill: 'S3',
+    error_targets: [],
+  },
+
+  // TT_3_2 reduced-vowel fill: "газ_р" → context "газар", reduced "а" at pos 3.
+  'FILL-3-2-gazar': {
+    id: 'FILL-3-2-gazar',
+    task_type: 'TT_3_2',
+    correct_answer: 'газар',
+    options: { display_text: 'газ_р', blank_position: 3, blank_answer: 'а', context_word: 'газар' },
+    feedback_text: 'Балархай эгшгийг бүү март.',
+    primary_skill: 'S3',
+    error_targets: [],
+  },
+
+  // TT_3_2 long-vowel fill with a MULTI-CHAR blank: "_в" → context "аав", blank "аа" at pos 0.
+  'FILL-3-2-aav': {
+    id: 'FILL-3-2-aav',
+    task_type: 'TT_3_2',
+    correct_answer: 'аав',
+    options: { display_text: '_в', blank_position: 0, blank_answer: 'аа', context_word: 'аав' },
+    feedback_text: 'Урт эгшгийг анзаар.',
+    primary_skill: 'S3',
+    error_targets: [],
+  },
+
+  // TT_4_4 consonant fill: "_ар" → context "нар", consonant "н" at pos 0.
+  'FILL-4-4-nar': {
+    id: 'FILL-4-4-nar',
+    task_type: 'TT_4_4',
+    correct_answer: 'нар',
+    options: { display_text: '_ар', blank_position: 0, blank_answer: 'н', context_word: 'нар' },
+    feedback_text: 'Гийгүүлэгчийг анзаар.',
+    primary_skill: 'S4',
+    error_targets: [],
   },
 
   // Word-level choice used to exercise the detect-all path: "сургуулиуд"
@@ -563,5 +609,45 @@ describe('Detect-all wiring (cap only in feedback)', () => {
     // Feedback still resolves to a single, non-empty learner message.
     expect(typeof result.feedback).toBe('string');
     expect(result.feedback.length).toBeGreaterThan(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FILL classification — word-level fills route through the real DP and yield
+// fine-grained codes (C1/C3/C4/D3), not a blanket B1.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('FILL fine-grained classification (TT_3_2 / TT_4_4)', () => {
+  it('wrong vowel "ном"→"нам" yields C3 (not B1) and C3 reaches skillsFromErrors', async () => {
+    const result = await processAttempt(makeInput('FILL-3-2-nom', 'а'), mockTaskRepo);
+    expect(result.errorCodes).toContain('C3');
+    expect(result.errorCodes).not.toContain('B1');
+    // C3 → primary S3 in ERROR_SKILL_MAP; must survive into skill attribution.
+    expect(skillsFromErrors(result.errorCodes)).toContain('S3');
+  });
+
+  it('dropped reduced vowel "газар"→"газр" yields C4 (full-word context reaches isReducedVowelPosition)', async () => {
+    const result = await processAttempt(makeInput('FILL-3-2-gazar', ''), mockTaskRepo);
+    expect(result.errorCodes).toContain('C4');
+    expect(result.errorCodes).not.toContain('B1');
+  });
+
+  it('dropped long vowel via MULTI-CHAR blank "аа"→"а" yields C1 (isLongVowelPart)', async () => {
+    const result = await processAttempt(makeInput('FILL-3-2-aav', 'а'), mockTaskRepo);
+    expect(result.errorCodes).toContain('C1');
+    expect(result.errorCodes).not.toContain('B1');
+  });
+
+  it('confusable consonant swap "нар"→"мар" yields D3', async () => {
+    const result = await processAttempt(makeInput('FILL-4-4-nar', 'м'), mockTaskRepo);
+    expect(result.errorCodes).toContain('D3');
+    expect(result.errorCodes).not.toContain('B1');
+  });
+
+  it('regression: a correct fill still scores 1.0 with no errors', async () => {
+    const result = await processAttempt(makeInput('FILL-3-2-nom', 'о'), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+    expect(result.errorCodes).toEqual([]);
   });
 });
