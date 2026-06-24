@@ -26,6 +26,13 @@ import {
 } from '@app/shared';
 import { generateForSpec, TASK_SPECS, AVAILABLE_TASK_IDS } from '../lib/pipeline/generator';
 import { reviewTaskDraft, AIReviewResult } from '../lib/pipeline/aiReviewer';
+import {
+  parseClassifiedWorkbook,
+  filterWords,
+  toWordRecords,
+  datasetInfo,
+  summarizeFilter,
+} from '../lib/word-bank/import';
 
 const content = new Hono();
 content.use('/*', withAdmin);
@@ -1177,6 +1184,119 @@ content.post('/bulk-delete-drafts', async (c) => {
   });
 
   return ok(c, { action: 'bulk_deleted', deleted_count: drafts.length, variant_ids });
+});
+
+// ─── Word bank ────────────────────────────────────────────────────────────────
+
+// GET /api/admin/content/words — paginated, filterable list of the word bank.
+const wordsListQuerySchema = z.object({
+  grade:     z.coerce.number().int().optional(),
+  category:  z.string().optional(),
+  app_level: z.string().optional(),
+  q:         z.string().optional(),
+  page:      z.coerce.number().int().min(1).default(1),
+  per_page:  z.coerce.number().int().min(1).max(200).default(50),
+});
+
+content.get('/words', async (c) => {
+  const parsed = wordsListQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
+  }
+  const { grade, category, app_level, q, page, per_page } = parsed.data;
+
+  const where = {
+    ...(grade !== undefined ? { grade } : {}),
+    ...(category ? { category } : {}),
+    ...(app_level ? { app_level } : {}),
+    ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
+  };
+
+  const [words, total] = await Promise.all([
+    prisma.word.findMany({
+      where,
+      orderBy: { word: 'asc' },
+      skip: (page - 1) * per_page,
+      take: per_page,
+    }),
+    prisma.word.count({ where }),
+  ]);
+
+  return ok(c, {
+    words,
+    total,
+    meta: { page, per_page, total, has_next: page * per_page < total },
+  });
+});
+
+// GET /api/admin/content/words/facets — distinct values for the filter dropdowns.
+content.get('/words/facets', async (c) => {
+  const [grades, categories, levels] = await Promise.all([
+    prisma.word.findMany({ where: { grade: { not: null } }, distinct: ['grade'], select: { grade: true } }),
+    prisma.word.findMany({ where: { category: { not: '' }, grade: { not: null } }, distinct: ['category'], select: { category: true } }),
+    prisma.word.findMany({ where: { app_level: { not: null } }, distinct: ['app_level'], select: { app_level: true } }),
+  ]);
+
+  return ok(c, {
+    grades: grades.map((g) => g.grade).filter((g): g is number => g != null).sort((a, b) => a - b),
+    categories: categories.map((c2) => c2.category).filter(Boolean).sort((a, b) => a.localeCompare(b, 'mn')),
+    app_levels: levels.map((l) => l.app_level).filter((l): l is string => !!l).sort(),
+  });
+});
+
+// POST /api/admin/content/words/import — upload an xlsx; preview (default) or commit.
+// Commit replaces all words sharing the dataset id-prefix (e.g. WG1-*) with the parsed set.
+const MAX_IMPORT_BYTES = 5 * 1024 * 1024; // 5 MB
+
+content.post('/words/import', async (c) => {
+  let body: Record<string, unknown>;
+  try {
+    body = await c.req.parseBody();
+  } catch {
+    return ERRORS.VALIDATION_ERROR(c, 'Expected multipart/form-data with a "file" field');
+  }
+
+  const file = body['file'];
+  const commit = body['commit'] === 'true' || c.req.query('commit') === 'true';
+
+  if (!(file instanceof File)) {
+    return ERRORS.VALIDATION_ERROR(c, 'Missing "file" upload');
+  }
+  if (!file.name.toLowerCase().endsWith('.xlsx')) {
+    return ERRORS.VALIDATION_ERROR(c, 'File must be an .xlsx spreadsheet');
+  }
+  if (file.size > MAX_IMPORT_BYTES) {
+    return ERRORS.VALIDATION_ERROR(c, `File too large (max ${MAX_IMPORT_BYTES / 1024 / 1024} MB)`);
+  }
+
+  let parseResult;
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    parseResult = parseClassifiedWorkbook(buffer);
+  } catch (e) {
+    return ERRORS.VALIDATION_ERROR(c, `Could not read spreadsheet: ${(e as Error).message}`);
+  }
+
+  const { rows, reviewNos } = parseResult;
+  if (rows.length === 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'No words found in sheet "Ангилсан_үгс"');
+  }
+
+  const { kept, dropped } = filterWords(rows, reviewNos);
+  const records = toWordRecords(kept);
+  const { grade, prefix } = datasetInfo(rows);
+  const summary = { parsed: rows.length, kept: records.length, ...summarizeFilter(dropped) };
+
+  if (!commit) {
+    return ok(c, { committed: false, grade, prefix, summary, dropped });
+  }
+
+  await prisma.$transaction([
+    prisma.word.deleteMany({ where: { id: { startsWith: `${prefix}-` } } }),
+    prisma.word.createMany({ data: records }),
+  ]);
+
+  return ok(c, { committed: true, grade, prefix, summary, imported: records.length });
 });
 
 export default content;

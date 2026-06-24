@@ -394,8 +394,20 @@ model Word {
   distractors     String[] // Incorrect choices for TT1
   blank_hint      String?  // Hint text for TT2
 
+  // Classification metadata (from grade/MVP word-bank spreadsheets; null for legacy seed rows)
+  grade               Int?    // 1, 2, … (single grade from the source sheet's "Анги" column)
+  app_level           String? // M0–M5 ("Апп түвшин")
+  meaning_complexity  Int?    // "Утгын төвөгшил" 1–5
+  spelling_complexity Int?    // "Зөв бичих төвөгшил" 1–4
+  morph_complexity    Int?    // "Морфологийн төвөгшил" 1–3
+  suggested_exercises String? // "Санал болгох дасгал"
+  spelling_tag        String? // "Зөв бичих tag"
+  part_of_speech      String? // "Үгийн аймаг"
+  meaning_type        String? // "Утгын төрөл"
+
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
+  @@index([grade])
   @@map("words")
 }
 
