@@ -1,5 +1,5 @@
-﻿if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_PROD_SEED) {
-  console.error('Cannot run seed in production!');
+﻿if (process.env.NODE_ENV === "production" && !process.env.ALLOW_PROD_SEED) {
+  console.error("Cannot run seed in production!");
   process.exit(1);
 }
 
@@ -34,7 +34,8 @@ function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
   if (rangeMatch) {
     const start = LEVEL_CODES.indexOf(rangeMatch[1]);
     const end = LEVEL_CODES.indexOf(rangeMatch[2]);
-    levels = start >= 0 && end >= 0 ? LEVEL_CODES.slice(start, end + 1) : ["M0"];
+    levels =
+      start >= 0 && end >= 0 ? LEVEL_CODES.slice(start, end + 1) : ["M0"];
   } else {
     levels = LEVEL_CODES.includes(levelTarget) ? [levelTarget] : ["M0"];
   }
@@ -44,14 +45,6 @@ function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
   }
   return cells;
 }
-
-// â”€â”€â”€ Word seed data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-// â”€â”€â”€ Task seed data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-// Tasks come exclusively from content-pipeline/validated/*.json via loadValidatedTasks().
-
-// â”€â”€â”€ Load validated task variants from content-pipeline/validated/*.json â”€â”€â”€â”€â”€â”€
 
 interface ValidatedVariant {
   id: string;
@@ -79,7 +72,9 @@ function loadValidatedTasks(): ValidatedVariant[] {
   if (!fs.existsSync(validatedDir)) return variants;
   const files = fs.readdirSync(validatedDir).filter((f) => f.endsWith(".json"));
   for (const file of files) {
-    const raw = JSON.parse(fs.readFileSync(path.join(validatedDir, file), "utf-8"));
+    const raw = JSON.parse(
+      fs.readFileSync(path.join(validatedDir, file), "utf-8"),
+    );
     if (Array.isArray(raw.variants)) {
       variants.push(...raw.variants);
     }
@@ -108,7 +103,10 @@ interface SeedWordEntry {
 }
 
 function loadSeedWords(): SeedWordEntry[] {
-  const seedFile = path.join(__dirname, "../content-pipeline/generated/seed-words.json");
+  const seedFile = path.join(
+    __dirname,
+    "../content-pipeline/generated/seed-words.json",
+  );
   if (!fs.existsSync(seedFile)) return [];
   const raw = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
   return Array.isArray(raw.words) ? raw.words : [];
@@ -124,7 +122,8 @@ async function main() {
   let wordErrored = 0;
 
   // ── Words from content-pipeline/generated/seed-words.json ──
-  const seedWords = loadSeedWords();
+  const seedWords = loadSeedWords();
+
   for (const w of seedWords) {
     const data = {
       word: w.word,
@@ -145,11 +144,17 @@ async function main() {
     try {
       if (isDryRun) {
         const exists = await prisma.word.findUnique({ where: { id: w.id } });
-        console.log(`[DRY RUN] Word ${w.id} (${w.word}): ${exists ? "UPDATE" : "CREATE"}`);
+        console.log(
+          `[DRY RUN] Word ${w.id} (${w.word}): ${exists ? "UPDATE" : "CREATE"}`,
+        );
         exists ? wordUpdated++ : wordCreated++;
       } else {
         const exists = await prisma.word.findUnique({ where: { id: w.id } });
-        await prisma.word.upsert({ where: { id: w.id }, update: data, create: { id: w.id, ...data } });
+        await prisma.word.upsert({
+          where: { id: w.id },
+          update: data,
+          create: { id: w.id, ...data },
+        });
         exists ? wordUpdated++ : wordCreated++;
       }
     } catch (e) {
@@ -176,7 +181,9 @@ async function main() {
       audio_url: v.audio_url,
       image_url: v.image_url,
       primary_skill: v.primary_skill as SkillCode,
-      secondary_skill: v.secondary_skill ? (v.secondary_skill as SkillCode) : undefined,
+      secondary_skill: v.secondary_skill
+        ? (v.secondary_skill as SkillCode)
+        : undefined,
       level_target: v.level_target,
       error_targets: v.error_targets,
       grade_band: v.grade_band,
@@ -190,11 +197,17 @@ async function main() {
     try {
       if (isDryRun) {
         const exists = await prisma.task.findUnique({ where: { id: v.id } });
-        console.log(`[DRY RUN] ValidatedTask ${v.id}: ${exists ? "UPDATE" : "CREATE"}`);
+        console.log(
+          `[DRY RUN] ValidatedTask ${v.id}: ${exists ? "UPDATE" : "CREATE"}`,
+        );
         exists ? taskUpdated++ : taskCreated++;
       } else {
         const exists = await prisma.task.findUnique({ where: { id: v.id } });
-        await prisma.task.upsert({ where: { id: v.id }, update: data, create: { id: v.id, ...data } });
+        await prisma.task.upsert({
+          where: { id: v.id },
+          update: data,
+          create: { id: v.id, ...data },
+        });
         exists ? taskUpdated++ : taskCreated++;
       }
     } catch (e) {
@@ -206,71 +219,128 @@ async function main() {
   const taskTotal = taskCreated + taskUpdated;
 
   // â”€â”€ Test accounts (development only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  if (process.env.NODE_ENV === 'development') {
-    const bcrypt = await import('bcrypt');
-    const passwordHash = await bcrypt.hash('password123', 12);
+  if (process.env.NODE_ENV === "development") {
+    const bcrypt = await import("bcrypt");
+    const passwordHash = await bcrypt.hash("password123", 12);
 
     const parent = await prisma.parent.upsert({
-      where: { email: 'test@local.dev' },
+      where: { email: "test@local.dev" },
       update: {},
-      create: { email: 'test@local.dev', password_hash: passwordHash, name: 'Test Parent' },
+      create: {
+        email: "test@local.dev",
+        password_hash: passwordHash,
+        name: "Test Parent",
+      },
     });
 
     await prisma.learner.upsert({
-      where: { id: 'test-learner-a' },
+      where: { id: "test-learner-a" },
       update: {},
-      create: { id: 'test-learner-a', parent_id: parent.id, name: 'Test A', grade: 1, variant: 'A' },
+      create: {
+        id: "test-learner-a",
+        parent_id: parent.id,
+        name: "Test A",
+        grade: 1,
+        variant: "A",
+      },
     });
 
     await prisma.learner.upsert({
-      where: { id: 'test-learner-b' },
+      where: { id: "test-learner-b" },
       update: {},
-      create: { id: 'test-learner-b', parent_id: parent.id, name: 'Test B', grade: 3, variant: 'B' },
+      create: {
+        id: "test-learner-b",
+        parent_id: parent.id,
+        name: "Test B",
+        grade: 3,
+        variant: "B",
+      },
     });
 
-    console.log('Test accounts seeded (test@local.dev / password123)');
+    console.log("Test accounts seeded (test@local.dev / password123)");
   }
 
   // â”€â”€ Coverage analysis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  console.log("\nâ”€â”€â”€ Seed Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
-  console.log(`Words upserted:  ${wordTotal} (${wordCreated} created, ${wordUpdated} updated, ${wordErrored} errors)`);
-  console.log(`Tasks upserted:  ${taskTotal} (${taskCreated} created, ${taskUpdated} updated, ${taskErrored} errors)`);
+  console.log(
+    "\nâ”€â”€â”€ Seed Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€",
+  );
+  console.log(
+    `Words upserted:  ${wordTotal} (${wordCreated} created, ${wordUpdated} updated, ${wordErrored} errors)`,
+  );
+  console.log(
+    `Tasks upserted:  ${taskTotal} (${taskCreated} created, ${taskUpdated} updated, ${taskErrored} errors)`,
+  );
 
   if (!isDryRun) {
     // Compute coverage from DB
-    const allTasks = await prisma.task.findMany({ select: { primary_skill: true, level_target: true, error_targets: true } });
+    const allTasks = await prisma.task.findMany({
+      select: { primary_skill: true, level_target: true, error_targets: true },
+    });
 
     const skillCounts = new Map<string, number>();
     const levelCounts = new Map<string, number>();
     const errorCounts = new Map<string, number>();
 
     for (const t of allTasks) {
-      skillCounts.set(t.primary_skill, (skillCounts.get(t.primary_skill) ?? 0) + 1);
-      levelCounts.set(t.level_target, (levelCounts.get(t.level_target) ?? 0) + 1);
+      skillCounts.set(
+        t.primary_skill,
+        (skillCounts.get(t.primary_skill) ?? 0) + 1,
+      );
+      levelCounts.set(
+        t.level_target,
+        (levelCounts.get(t.level_target) ?? 0) + 1,
+      );
       for (const e of t.error_targets) {
         errorCounts.set(e, (errorCounts.get(e) ?? 0) + 1);
       }
     }
 
-    console.log("\nâ”€â”€â”€ Coverage Warnings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€");
+    console.log(
+      "\nâ”€â”€â”€ Coverage Warnings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€",
+    );
 
-    const skillsUnder10 = [...skillCounts.entries()].filter(([, n]) => n < 10).map(([s]) => s);
-    if (skillsUnder10.length) console.log(`  Skills < 10 tasks: ${skillsUnder10.join(", ")}`);
+    const skillsUnder10 = [...skillCounts.entries()]
+      .filter(([, n]) => n < 10)
+      .map(([s]) => s);
+    if (skillsUnder10.length)
+      console.log(`  Skills < 10 tasks: ${skillsUnder10.join(", ")}`);
     else console.log("  Skills < 10 tasks: none");
 
-    const levelsUnder15 = [...levelCounts.entries()].filter(([, n]) => n < 15).map(([l]) => l);
-    if (levelsUnder15.length) console.log(`  Levels < 15 tasks: ${levelsUnder15.join(", ")}`);
+    const levelsUnder15 = [...levelCounts.entries()]
+      .filter(([, n]) => n < 15)
+      .map(([l]) => l);
+    if (levelsUnder15.length)
+      console.log(`  Levels < 15 tasks: ${levelsUnder15.join(", ")}`);
     else console.log("  Levels < 15 tasks: none");
 
-    const mvpErrors = ["B1","B3","C1","C2","C4","D3","E1","E2","E7","G1","G2","H4"];
+    const mvpErrors = [
+      "B1",
+      "B3",
+      "C1",
+      "C2",
+      "C4",
+      "D3",
+      "E1",
+      "E2",
+      "E7",
+      "G1",
+      "G2",
+      "H4",
+    ];
     const errorsUnder5 = mvpErrors.filter((e) => (errorCounts.get(e) ?? 0) < 5);
-    if (errorsUnder5.length) console.log(`  Error codes < 5 tasks: ${errorsUnder5.join(", ")}`);
+    if (errorsUnder5.length)
+      console.log(`  Error codes < 5 tasks: ${errorsUnder5.join(", ")}`);
     else console.log("  Error codes < 5 tasks: none");
   }
 
-  console.log("â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n");
+  console.log(
+    "â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n",
+  );
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());
