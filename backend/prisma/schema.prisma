@@ -419,6 +419,10 @@ model Word {
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
   @@index([grade])
+  // GIN indexes for capability containment queries (errors_possible @> {C1}, etc.)
+  @@index([skills_possible], type: Gin)
+  @@index([errors_possible], type: Gin)
+  @@index([task_types_possible], type: Gin)
   @@map("words")
 }
 
