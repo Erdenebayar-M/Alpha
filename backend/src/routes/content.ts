@@ -1190,7 +1190,7 @@ content.post('/bulk-delete-drafts', async (c) => {
 
 // GET /api/admin/content/words — paginated, filterable list of the word bank.
 const wordsListQuerySchema = z.object({
-  grade:     z.coerce.number().int().optional(),
+  grade:     z.enum(['G1', 'G2', 'G3', 'G4']).optional(),
   category:  z.string().optional(),
   app_level: z.string().optional(),
   q:         z.string().optional(),
@@ -1206,7 +1206,7 @@ content.get('/words', async (c) => {
   const { grade, category, app_level, q, page, per_page } = parsed.data;
 
   const where = {
-    ...(grade !== undefined ? { grade } : {}),
+    ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
     ...(app_level ? { app_level } : {}),
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
@@ -1230,15 +1230,16 @@ content.get('/words', async (c) => {
 });
 
 // GET /api/admin/content/words/facets — distinct values for the filter dropdowns.
+// grades: unnests grade_band arrays so a word in ['G1','G2'] contributes to both buckets.
 content.get('/words/facets', async (c) => {
-  const [grades, categories, levels] = await Promise.all([
-    prisma.word.findMany({ where: { grade: { not: null } }, distinct: ['grade'], select: { grade: true } }),
-    prisma.word.findMany({ where: { category: { not: '' }, grade: { not: null } }, distinct: ['category'], select: { category: true } }),
+  const [gradeRows, categories, levels] = await Promise.all([
+    prisma.$queryRaw<{ grade: string }[]>`SELECT DISTINCT unnest(grade_band) AS grade FROM words WHERE cardinality(grade_band) > 0 ORDER BY grade`,
+    prisma.word.findMany({ where: { category: { not: '' } }, distinct: ['category'], select: { category: true } }),
     prisma.word.findMany({ where: { app_level: { not: null } }, distinct: ['app_level'], select: { app_level: true } }),
   ]);
 
   return ok(c, {
-    grades: grades.map((g) => g.grade).filter((g): g is number => g != null).sort((a, b) => a - b),
+    grades: gradeRows.map((g) => g.grade),
     categories: categories.map((c2) => c2.category).filter(Boolean).sort((a, b) => a.localeCompare(b, 'mn')),
     app_levels: levels.map((l) => l.app_level).filter((l): l is string => !!l).sort(),
   });
