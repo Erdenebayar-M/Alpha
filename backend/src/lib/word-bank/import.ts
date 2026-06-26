@@ -107,21 +107,24 @@ function intOrNull(v: unknown): number | null {
 }
 
 /** Every character is a Mongolian Cyrillic letter (vowel or consonant). */
-function isAllMongolian(word: string): boolean {
+export function isAllMongolian(word: string): boolean {
   return [...word.toLowerCase()].every((ch) => MN_VOWELS.has(ch) || MN_CONSONANTS.has(ch));
 }
 
-function hasVowel(word: string): boolean {
+export function hasVowel(word: string): boolean {
   return [...word.toLowerCase()].some((ch) => MN_VOWELS.has(ch));
 }
 
 /**
  * Id / delete-scope prefix for a dataset: `WG{grade}` for a numeric grade,
+ * `WMVP` for a comma-separated multi-grade list (e.g. "1,2,3,4"),
  * else `W{sanitised rawGrade}` (e.g. "MVP" → "WMVP"). Single source of truth
  * for both record ids and the replace-by-prefix delete in the import route.
  */
 export function wordBankPrefix(grade: number | null, rawGrade?: string): string {
   if (grade != null) return `WG${grade}`;
+  const parts = (rawGrade ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (parts.length > 1 && parts.every((p) => /^\d+$/.test(p))) return "WMVP";
   const slug = (rawGrade ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   return slug ? `W${slug}` : "WGX";
 }
@@ -239,6 +242,20 @@ export function filterWords(rows: ClassifiedRow[], reviewNos: Set<number>): Filt
 // ─── Mapping ─────────────────────────────────────────────────────────────────
 
 /**
+ * Converts a raw grade string into a `grade_band` array.
+ * - Single value: "1"       → ["G1"]
+ * - Comma list:  "1,2,3,4" → ["G1","G2","G3","G4"]
+ * - Non-numeric / empty:    → []
+ */
+function parseGradeBand(rawGrade: string): string[] {
+  return rawGrade
+    .split(",")
+    .map((s) => intOrNull(s.trim()))
+    .filter((n): n is number => n !== null)
+    .map((n) => `G${n}`);
+}
+
+/**
  * Maps a kept row to a `Word` record. `seq` is a stable index used only for the
  * id; pass the position within the sorted, filtered list so re-imports are
  * idempotent. `idPrefix` defaults to `wordBankPrefix(grade, grade_raw)`.
@@ -250,7 +267,7 @@ export function toWordRecord(row: ClassifiedRow, seq: number, idPrefix?: string)
     id,
     word: row.word,
     category: row.topic,
-    grade_band: row.grade != null ? [`G${row.grade}`] : [],
+    grade_band: parseGradeBand(row.grade_raw),
     char_count: [...row.word].length,
     syllable_count: syllabify(row.word).length,
     skill_tags: [],

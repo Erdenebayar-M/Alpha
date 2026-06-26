@@ -32,7 +32,15 @@ import {
   toWordRecords,
   datasetInfo,
   summarizeFilter,
+  isAllMongolian,
+  hasVowel,
 } from '../lib/word-bank/import';
+import { deriveCapability } from '../lib/word-bank/derive-capability';
+
+// Verbatim from populateWordCapability.ts — keep in sync.
+const IMAGEABLE_MEANING = 'бодит/зурагтай холбож болно'.normalize('NFC');
+const isImageable = (meaningType: string | null | undefined): boolean =>
+  (meaningType ?? '').normalize('NFC') === IMAGEABLE_MEANING;
 
 const content = new Hono();
 content.use('/*', withAdmin);
@@ -1298,6 +1306,106 @@ content.post('/words/import', async (c) => {
   ]);
 
   return ok(c, { committed: true, grade, prefix, summary, imported: records.length });
+});
+
+// ─── PATCH /api/admin/content/words/:id ──────────────────────────────────────
+
+const WORD_DERIVED_FIELDS = new Set([
+  'id', 'skills_possible', 'errors_possible', 'task_types_possible',
+  'primary_feature', 'primary_skill', 'balarhai_unknown',
+]);
+
+const patchWordSchema = z.object({
+  word:                z.string().min(1).optional(),
+  part_of_speech:      z.string().nullable().optional(),
+  meaning_type:        z.string().nullable().optional(),
+  spelling_tag:        z.string().nullable().optional(),
+  suggested_exercises: z.string().nullable().optional(),
+  app_level:           z.string().nullable().optional(),
+  grade_band:          z.array(z.string()).optional(),
+  meaning_complexity:  z.number().int().nullable().optional(),
+  spelling_complexity: z.number().int().nullable().optional(),
+  morph_complexity:    z.number().int().nullable().optional(),
+  category:            z.string().optional(),
+  is_active:           z.boolean().optional(),
+});
+
+content.patch('/words/:id', async (c) => {
+  const id  = c.req.param('id');
+  const raw = await c.req.json().catch(() => null);
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body');
+  }
+
+  const forbidden = Object.keys(raw).filter((k) => WORD_DERIVED_FIELDS.has(k));
+  if (forbidden.length > 0) {
+    return ERRORS.VALIDATION_ERROR(c, `Cannot set derived/immutable fields: ${forbidden.join(', ')}`);
+  }
+
+  const parsed = patchWordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+
+  const updates = parsed.data;
+  if (Object.keys(updates).length === 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'No editable fields provided');
+  }
+
+  if (updates.word !== undefined) {
+    const w = updates.word.trim();
+    if (/\s/.test(w)) {
+      return ERRORS.VALIDATION_ERROR(c, 'word must be a single token (no spaces or whitespace)');
+    }
+    if (!isAllMongolian(w)) {
+      return ERRORS.VALIDATION_ERROR(c, 'word must contain only Mongolian Cyrillic characters');
+    }
+    if (!hasVowel(w)) {
+      return ERRORS.VALIDATION_ERROR(c, 'word must contain at least one vowel');
+    }
+  }
+
+  const word = await prisma.word.findUnique({ where: { id } });
+  if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
+
+  const needsRederive =
+    updates.word !== undefined ||
+    updates.part_of_speech !== undefined ||
+    updates.meaning_type !== undefined;
+
+  let derivedUpdates: Record<string, unknown> = {};
+  if (needsRederive) {
+    const cap = deriveCapability({
+      word:         updates.word        ?? word.word,
+      part_of_speech: updates.part_of_speech !== undefined
+        ? (updates.part_of_speech ?? '')
+        : (word.part_of_speech ?? ''),
+      imageable:    isImageable(
+        updates.meaning_type !== undefined ? updates.meaning_type : word.meaning_type,
+      ),
+    });
+    derivedUpdates = {
+      skills_possible:     cap.skills_possible,
+      errors_possible:     cap.errors_possible,
+      task_types_possible: cap.task_types_possible,
+      primary_feature:     cap.primary_feature,
+      primary_skill:       cap.primary_skill,
+      balarhai_unknown:    cap.flags.balarhai_unknown,
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.word.update({ where: { id }, data: { ...updates, ...derivedUpdates } });
+  });
+
+  const updatedFields = [
+    ...Object.keys(updates),
+    ...(needsRederive
+      ? ['skills_possible', 'errors_possible', 'task_types_possible', 'primary_feature', 'primary_skill', 'balarhai_unknown']
+      : []),
+  ];
+
+  return ok(c, { action: 'updated', id, updated_fields: updatedFields, rederived: needsRederive });
 });
 
 export default content;

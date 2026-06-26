@@ -41,8 +41,14 @@ jest.mock('../../lib/auth/adminMiddleware', () => ({
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
-    word:       { findMany: jest.fn(), count: jest.fn() },
-    $queryRaw:  jest.fn(),
+    word: {
+      findMany:   jest.fn(),
+      count:      jest.fn(),
+      findUnique: jest.fn(),
+      update:     jest.fn(),
+    },
+    $queryRaw:    jest.fn(),
+    $transaction: jest.fn(),
   },
 }));
 
@@ -59,9 +65,12 @@ jest.mock('../../lib/pipeline/aiReviewer', () => ({
 import { prisma } from '../../lib/db/client';
 import contentRouter from '../content';
 
-const mockFindMany  = prisma.word.findMany as jest.MockedFunction<any>;
-const mockCount     = prisma.word.count   as jest.MockedFunction<any>;
-const mockQueryRaw  = prisma.$queryRaw    as jest.MockedFunction<any>;
+const mockFindMany   = prisma.word.findMany   as jest.MockedFunction<any>;
+const mockCount      = prisma.word.count      as jest.MockedFunction<any>;
+const mockFindUnique = prisma.word.findUnique as jest.MockedFunction<any>;
+const mockUpdate     = prisma.word.update     as jest.MockedFunction<any>;
+const mockQueryRaw   = prisma.$queryRaw       as jest.MockedFunction<any>;
+const mockTx         = prisma.$transaction    as jest.MockedFunction<any>;
 
 const BEARER = 'Bearer test-admin-secret-that-is-32chars-ok';
 
@@ -195,3 +204,119 @@ describe('GET /words/facets — grade facet uses grade_band', () => {
     expect(body.data.grades).toContain('G2');
   });
 });
+
+// ─── PATCH /words/:id ─────────────────────────────────────────────────────────
+
+function patch(path: string, body: unknown) {
+  return contentRouter.request(path, {
+    method: 'PATCH',
+    headers: { Authorization: BEARER, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+function del(path: string) {
+  return contentRouter.request(path, {
+    method: 'DELETE',
+    headers: { Authorization: BEARER },
+  });
+}
+
+const EXISTING_WORD = { ...MULTI_GRADE_WORD, is_active: true };
+
+describe('PATCH /words/:id', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindUnique.mockResolvedValue(EXISTING_WORD);
+    mockTx.mockImplementation((fn: (tx: any) => Promise<unknown>) =>
+      fn({
+        word: { update: mockUpdate },
+      }),
+    );
+    mockUpdate.mockResolvedValue(EXISTING_WORD);
+  });
+
+  it('returns 404 when word does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const res = await patch('/words/WG1-TEST-0001', { category: 'Амьтад' });
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects body with no editable fields', async () => {
+    const res = await patch('/words/WG1-TEST-0001', {});
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects attempt to set a derived field (skills_possible)', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { skills_possible: ['S1'] });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.error.message).toMatch(/derived/i);
+  });
+
+  it('rejects attempt to set id', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { id: 'WG1-HACK' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects word with embedded space (phrase guard)', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { word: 'авах гэх' });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.error.message).toMatch(/single token/i);
+  });
+
+  it('rejects word with non-Mongolian characters', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { word: 'hello' });
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as any;
+    expect(body.error.message).toMatch(/mongolian cyrillic/i);
+  });
+
+  it('editing only category does NOT trigger re-derivation', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { category: 'Амьтад' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.rederived).toBe(false);
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data).not.toHaveProperty('skills_possible');
+  });
+
+  it('editing word triggers re-derivation and overwrites derived columns', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { word: 'ном' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.rederived).toBe(true);
+    expect(body.data.updated_fields).toContain('skills_possible');
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data).toHaveProperty('skills_possible');
+    expect(Array.isArray(updateCall.data.skills_possible)).toBe(true);
+  });
+
+  it('editing part_of_speech triggers re-derivation', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { part_of_speech: 'үйл үг' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.rederived).toBe(true);
+  });
+
+  it('editing meaning_type triggers re-derivation', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { meaning_type: 'бодит/зурагтай холбож болно' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.rederived).toBe(true);
+    const updateCall = mockUpdate.mock.calls[0][0];
+    // imageable=true for this meaning_type, so picture task types should be included
+    expect(updateCall.data.task_types_possible).toEqual(
+      expect.arrayContaining(['TT_1_2', 'TT_1_3']),
+    );
+  });
+
+  it('is_active can be set to true (reactivation)', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { is_active: true });
+    expect(res.status).toBe(200);
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data.is_active).toBe(true);
+  });
+});
+
