@@ -387,6 +387,7 @@ model Word {
   skill_tags      String[] // ["S1","S2"]
   error_tags      String[] // ["A2","B1"]
   image_ok        Boolean
+  image_url       String?
   audio_ok        Boolean
   image_prompt    String?
   audio_text      String?
@@ -415,6 +416,7 @@ model Word {
   primary_feature     String?               // headline feature (sort/display hint)
   primary_skill       String?               // skill implied by primary_feature (hint)
   balarhai_unknown    Boolean?              // балархай couldn't be resolved → review
+  is_active           Boolean  @default(true)
 
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
