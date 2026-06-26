@@ -283,21 +283,31 @@ describe('PATCH /words/:id', () => {
   });
 
   it('editing word triggers re-derivation and overwrites derived columns', async () => {
+    // 'ном' = noun, ends in consonant → FINAL_CONSONANT + TAKES_SUFFIX features.
+    // Universal skills S1/S2/S7 always present; TAKES_SUFFIX (noun) adds S5, E4, E5.
+    // EXISTING_WORD has part_of_speech 'нэр үг' (noun) and meaning_type null (not imageable).
     const res = await patch('/words/WG1-TEST-0001', { word: 'ном' });
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body.data.rederived).toBe(true);
-    expect(body.data.updated_fields).toContain('skills_possible');
-    const updateCall = mockUpdate.mock.calls[0][0];
-    expect(updateCall.data).toHaveProperty('skills_possible');
-    expect(Array.isArray(updateCall.data.skills_possible)).toBe(true);
+    const { data: d } = mockUpdate.mock.calls[0][0];
+    expect(d.skills_possible).toEqual(expect.arrayContaining(['S1', 'S2', 'S5', 'S7']));
+    expect(d.errors_possible).toEqual(expect.arrayContaining(['D5', 'E4', 'E5']));
+    expect(d.primary_skill).toBe('S5');           // TAKES_SUFFIX is highest-ranked for a noun
+    expect(d.balarhai_unknown).toBe(false);
   });
 
-  it('editing part_of_speech triggers re-derivation', async () => {
+  it('editing part_of_speech to verb adds verb suffix task types', async () => {
+    // Existing word is 'тест' (noun). Changing to verb → TAKES_SUFFIX still fires but
+    // verb branch: adds E6 (conjugation error) instead of E4/E5, and TT_5_4 instead of noun tasks.
     const res = await patch('/words/WG1-TEST-0001', { part_of_speech: 'үйл үг' });
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body.data.rederived).toBe(true);
+    const { data: d } = mockUpdate.mock.calls[0][0];
+    expect(d.errors_possible).toEqual(expect.arrayContaining(['E6']));
+    expect(d.task_types_possible).toEqual(expect.arrayContaining(['TT_5_4']));
+    expect(d.errors_possible).not.toEqual(expect.arrayContaining(['E4']));
   });
 
   it('editing meaning_type triggers re-derivation', async () => {
