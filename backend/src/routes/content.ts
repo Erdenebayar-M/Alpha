@@ -1408,4 +1408,18 @@ content.patch('/words/:id', async (c) => {
   return ok(c, { action: 'updated', id, updated_fields: updatedFields, rederived: needsRederive });
 });
 
+// ─── DELETE /api/admin/content/words/:id — soft-delete (sets is_active=false) ─
+
+content.delete('/words/:id', async (c) => {
+  const id = c.req.param('id');
+  const word = await prisma.word.findUnique({ where: { id } });
+  if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.word.update({ where: { id }, data: { is_active: false } });
+  });
+
+  return ok(c, { action: 'deactivated', id });
+});
+
 export default content;

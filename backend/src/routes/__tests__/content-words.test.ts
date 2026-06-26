@@ -320,3 +320,34 @@ describe('PATCH /words/:id', () => {
   });
 });
 
+// ─── DELETE /words/:id (soft-delete) ─────────────────────────────────────────
+
+describe('DELETE /words/:id', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindUnique.mockResolvedValue(EXISTING_WORD);
+    mockTx.mockImplementation((fn: (tx: any) => Promise<unknown>) =>
+      fn({ word: { update: mockUpdate } }),
+    );
+    mockUpdate.mockResolvedValue({ ...EXISTING_WORD, is_active: false });
+  });
+
+  it('returns 404 when word does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const res = await del('/words/WG1-TEST-0001');
+    expect(res.status).toBe(404);
+  });
+
+  it('sets is_active=false and the row still exists (soft-delete)', async () => {
+    const res = await del('/words/WG1-TEST-0001');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.action).toBe('deactivated');
+    expect(body.data.id).toBe('WG1-TEST-0001');
+    // update was called (not delete) — the row is preserved
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { is_active: false } }),
+    );
+  });
+});
+
