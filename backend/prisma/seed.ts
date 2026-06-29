@@ -84,86 +84,13 @@ function loadValidatedTasks(): ValidatedVariant[] {
 
 // â”€â”€â”€ Load words from content-pipeline/generated/seed-words.json â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-interface SeedWordEntry {
-  id: string;
-  word: string;
-  category: string;
-  grade_band: string;
-  letter_count: number;
-  word_count: number;
-  skills: string[];
-  errors: string[];
-  image_ok: boolean;
-  audio_ok: boolean;
-  image_prompt: string | null;
-  audio_text: string | null;
-  sentence: string | null;
-  distractors: string[];
-  blank_template: string | null;
-}
-
-function loadSeedWords(): SeedWordEntry[] {
-  const seedFile = path.join(
-    __dirname,
-    "../content-pipeline/generated/seed-words.json",
-  );
-  if (!fs.existsSync(seedFile)) return [];
-  const raw = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
-  return Array.isArray(raw.words) ? raw.words : [];
-}
 
 // â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function main() {
   if (isDryRun) console.log("[DRY RUN] No writes will be made.\n");
 
-  let wordCreated = 0;
-  let wordUpdated = 0;
-  let wordErrored = 0;
-
-  // ── Words from content-pipeline/generated/seed-words.json ──
-  const seedWords = loadSeedWords();
-
-  for (const w of seedWords) {
-    const data = {
-      word: w.word,
-      category: w.category,
-      grade_band: parseGradeBand(w.grade_band),
-      char_count: w.letter_count,
-      syllable_count: w.word_count,
-      skill_tags: w.skills,
-      error_tags: w.errors,
-      image_ok: w.image_ok,
-      audio_ok: w.audio_ok,
-      image_prompt: w.image_prompt ?? null,
-      audio_text: w.audio_text ?? null,
-      sample_sentence: w.sentence ?? null,
-      distractors: w.distractors,
-      blank_hint: w.blank_template ?? null,
-    };
-    try {
-      if (isDryRun) {
-        const exists = await prisma.word.findUnique({ where: { id: w.id } });
-        console.log(
-          `[DRY RUN] Word ${w.id} (${w.word}): ${exists ? "UPDATE" : "CREATE"}`,
-        );
-        exists ? wordUpdated++ : wordCreated++;
-      } else {
-        const exists = await prisma.word.findUnique({ where: { id: w.id } });
-        await prisma.word.upsert({
-          where: { id: w.id },
-          update: data,
-          create: { id: w.id, ...data },
-        });
-        exists ? wordUpdated++ : wordCreated++;
-      }
-    } catch (e) {
-      console.error(`  ERROR word ${w.id}:`, (e as Error).message);
-      wordErrored++;
-    }
-  }
-
-  const wordTotal = wordCreated + wordUpdated;
+  // Words come from importWordBank.ts + populateWordCapability.ts, not seed.ts.
 
   // â”€â”€ Task variants from content-pipeline/validated/*.json â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let taskCreated = 0;
@@ -263,9 +190,6 @@ async function main() {
   // â”€â”€ Coverage analysis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   console.log(
     "\nâ”€â”€â”€ Seed Summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€",
-  );
-  console.log(
-    `Words upserted:  ${wordTotal} (${wordCreated} created, ${wordUpdated} updated, ${wordErrored} errors)`,
   );
   console.log(
     `Tasks upserted:  ${taskTotal} (${taskCreated} created, ${taskUpdated} updated, ${taskErrored} errors)`,

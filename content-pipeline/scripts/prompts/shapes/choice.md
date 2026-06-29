@@ -4,8 +4,8 @@
 
 Заавар: {generation_hints}
 
-Ашиглаж болох seed үгс:
-{seed_list}
+Доорх target үгс бүрт ЯГ НЭГ variant үүсгэ. Өгсөн үгийг ЯГ хэвээр нь ашигла, өөр үг бүү зохио:
+{target_words}
 
 {few_shot_block}
 
@@ -14,8 +14,9 @@
 - choices: яг 3 элемент бүхий массив, тус бүр {"text": "...", "is_correct": true|false}
 - Зөвхөн 1 choice-д is_correct=true
 - 2 буруу сонголт нь зорилтот алдаа (error_targets)-аар будилуулсан байх
-- correct_answer: зөв choice-ийн text
+- correct_answer: зөв choice-ийн text (target_word-тай ижил байх ёстой)
+- target_word: ашигласан target үг (өгсөн жагсаалтаас ЯГ хэвээр)
 - feedback_text: монголоор богино зааварчилгаа (≤120 тэмдэгт)
 
 Зөвхөн JSON гарга, бусад текст бүү бич:
-{"variants":[{"prompt_text":"...","choices":[{"text":"...","is_correct":true},{"text":"...","is_correct":false},{"text":"...","is_correct":false}],"correct_answer":"...","feedback_text":"..."}]}
+{"variants":[{"prompt_text":"...","choices":[{"text":"...","is_correct":true},{"text":"...","is_correct":false},{"text":"...","is_correct":false}],"correct_answer":"...","target_word":"...","feedback_text":"..."}]}

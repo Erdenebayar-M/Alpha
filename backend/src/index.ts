@@ -27,7 +27,17 @@ const corsOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
 app.use('*', cors({ origin: corsOrigins, credentials: true }));
 app.use('*', requestId());
 if (env.NODE_ENV !== 'test') app.use('*', requestLogger);
-app.use('/api/*', timeout(15000));
+// LLM-backed endpoints make sequential model calls and routinely exceed 15s;
+// give them a long timeout while keeping the strict default for everything else.
+const LLM_PATHS = [
+  '/api/admin/content/generate',
+  '/api/admin/content/generate-image',
+  '/api/admin/content/generate-audio',
+];
+app.use('/api/*', (c, next) => {
+  const isLLM = LLM_PATHS.some((p) => c.req.path.startsWith(p));
+  return timeout(isLLM ? 600_000 : 15_000)(c, next);
+});
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
