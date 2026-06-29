@@ -880,8 +880,8 @@ content.get('/generate/specs', (c) => {
 
 const generateSchema = z.object({
   task_ids:  z.array(z.string().min(1)).min(1),
-  grade:     z.number().int().min(1).max(4),
-  level:     z.enum(['M0', 'M1', 'M2', 'M3', 'M4', 'M5']).optional(),
+  grades:    z.array(z.number().int().min(1).max(4)).min(1),
+  levels:    z.array(z.enum(['M0', 'M1', 'M2', 'M3', 'M4', 'M5'])).optional(),
   max_items: z.number().int().min(1).max(10).default(3),
   max_cost:  z.number().positive().max(50).default(5),
 });
@@ -898,7 +898,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { task_ids, grade, level, max_items, max_cost } = parsed.data;
+  const { task_ids, grades, levels, max_items, max_cost } = parsed.data;
 
   // Reject unknown or unavailable task IDs upfront
   const unknown = task_ids.filter((id) => !AVAILABLE_TASK_IDS.includes(id));
@@ -906,9 +906,25 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, `Unknown or unavailable task IDs: ${unknown.join(', ')}. Available: ${AVAILABLE_TASK_IDS.join(', ')}`);
   }
 
+  // Expand the request into one generation cell per (grade × level × task type).
+  // No levels selected → a single "any level" pass per grade (level undefined).
+  type GenLevel = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5';
+  const levelTargets: (GenLevel | undefined)[] =
+    levels && levels.length > 0 ? levels : [undefined];
+  const cells: Array<{ grade: number; level: GenLevel | undefined; task_type_spec_id: string }> = [];
+  for (const grade of grades) {
+    for (const level of levelTargets) {
+      for (const task_type_spec_id of task_ids) {
+        cells.push({ grade, level, task_type_spec_id });
+      }
+    }
+  }
+
   const runningCost = { value: 0 };
   const results: Array<{
     task_type: string;
+    grade: number;
+    level: string | null;
     passed: number;
     rejected: number;
     drafts_created: number;
@@ -917,7 +933,9 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
     error?: string;
   }> = [];
 
-  for (const task_type_spec_id of task_ids) {
+  for (const { grade, level, task_type_spec_id } of cells) {
+    // One shared cost budget across every cell; stop cleanly once it's spent.
+    if (runningCost.value >= max_cost) break;
     const spec = TASK_SPECS.find((s) => s.id === task_type_spec_id);
     if (!spec) continue;
 
@@ -927,7 +945,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
       result = await generateForSpec(spec, { apiKey, db: prisma, target: { grade, level }, maxItems: max_items, maxCost: max_cost, runningCost });
     } catch (err) {
       const cost_usd = runningCost.value - costBefore;
-      results.push({ task_type: task_type_spec_id, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
+      results.push({ task_type: task_type_spec_id, grade, level: level ?? null, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
       continue;
     }
     const cost_usd = runningCost.value - costBefore;
@@ -1034,7 +1052,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
       }
     }
 
-    results.push({ task_type: task_type_spec_id, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });
+    results.push({ task_type: task_type_spec_id, grade, level: level ?? null, passed: result.passed.length, rejected: result.rejected.length, drafts_created, ai_blocked, cost_usd });
   }
 
   return ok(c, { results, total_cost_usd: runningCost.value });
