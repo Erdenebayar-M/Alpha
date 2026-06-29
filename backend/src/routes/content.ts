@@ -306,6 +306,7 @@ content.post('/approve', async (c) => {
         level_target:           draft.level_target,
         error_targets:          draft.error_targets,
         grade_band:             draft.grade_band,
+        grade_levels:           draft.grade_levels,
         difficulty:             draft.difficulty,
         estimated_time_seconds: draft.estimated_time_seconds,
         lesson_slot_fit:        draft.lesson_slot_fit,
@@ -328,6 +329,7 @@ content.post('/approve', async (c) => {
         level_target:           draft.level_target,
         error_targets:          draft.error_targets,
         grade_band:             draft.grade_band,
+        grade_levels:           draft.grade_levels,
         difficulty:             draft.difficulty,
         estimated_time_seconds: draft.estimated_time_seconds,
         lesson_slot_fit:        draft.lesson_slot_fit,
@@ -878,6 +880,8 @@ content.get('/generate/specs', (c) => {
 
 const generateSchema = z.object({
   task_ids:  z.array(z.string().min(1)).min(1),
+  grade:     z.number().int().min(1).max(4),
+  level:     z.enum(['M0', 'M1', 'M2', 'M3', 'M4', 'M5']).optional(),
   max_items: z.number().int().min(1).max(10).default(3),
   max_cost:  z.number().positive().max(50).default(5),
 });
@@ -894,7 +898,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
   }
 
-  const { task_ids, max_items, max_cost } = parsed.data;
+  const { task_ids, grade, level, max_items, max_cost } = parsed.data;
 
   // Reject unknown or unavailable task IDs upfront
   const unknown = task_ids.filter((id) => !AVAILABLE_TASK_IDS.includes(id));
@@ -920,7 +924,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
     const costBefore = runningCost.value;
     let result: Awaited<ReturnType<typeof generateForSpec>>;
     try {
-      result = await generateForSpec(spec, { apiKey, maxItems: max_items, maxCost: max_cost, runningCost });
+      result = await generateForSpec(spec, { apiKey, db: prisma, target: { grade, level }, maxItems: max_items, maxCost: max_cost, runningCost });
     } catch (err) {
       const cost_usd = runningCost.value - costBefore;
       results.push({ task_type: task_type_spec_id, passed: 0, rejected: 0, drafts_created: 0, ai_blocked: 0, cost_usd, error: (err as Error).message });
@@ -945,6 +949,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
         level_target: string;
         error_targets: string[];
         grade_band: string[];
+        grade_levels: string[];
         difficulty: number;
         estimated_time_seconds: number;
         lesson_slot_fit: LessonSlot;
@@ -963,6 +968,7 @@ content.post('/generate', adminGenerateLimiter, async (c) => {
           level_target:           (variant['level_target'] as string) ?? '',
           error_targets:          (variant['error_targets'] as string[]) ?? [],
           grade_band:             (variant['grade_band'] as string[]) ?? [],
+          grade_levels:           (variant['grade_levels'] as string[]) ?? [],
           difficulty:             (variant['difficulty'] as number) ?? 1,
           estimated_time_seconds: (variant['estimated_time_seconds'] as number) ?? 30,
           lesson_slot_fit:        toSlot(variant['lesson_slot_fit'] as string),
@@ -1040,6 +1046,7 @@ const liveListQuerySchema = z.object({
   grade:    z.enum(['G1', 'G2', 'G3', 'G4']).optional(),
   type:     z.string().optional(),
   skill:    z.string().optional(),
+  active:   z.enum(['true', 'false', 'all']).default('true'),
   page:     z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(200).default(100),
 });
@@ -1049,7 +1056,7 @@ content.get('/live-tasks', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, type, skill, page, per_page } = parsed.data;
+  const { grade, type, skill, active, page, per_page } = parsed.data;
 
   const where = {
     ...(grade ? { grade_band: { has: grade } } : {}),
@@ -1058,6 +1065,7 @@ content.get('/live-tasks', async (c) => {
       { primary_skill:   toSkill(skill) as SkillCode },
       { secondary_skill: toSkill(skill) as SkillCode },
     ]} : {}),
+    ...(active !== 'all' ? { is_active: active === 'true' } : {}),
   } as const;
 
   const [tasks, total] = await Promise.all([
@@ -1145,15 +1153,15 @@ content.delete('/live-tasks/:id', async (c) => {
       data: {
         draft_id:  null,
         task_id:   id,
-        action:    'deleted_live',
+        action:    'deactivated_live',
         from_stage: DraftStage.STAGE2,
         snapshot:  task as object,
       },
     });
-    await tx.task.delete({ where: { id } });
+    await tx.task.update({ where: { id }, data: { is_active: false } });
   });
 
-  return ok(c, { action: 'deleted', id });
+  return ok(c, { action: 'deactivated', id });
 });
 
 // ─── POST /api/admin/content/bulk-delete-drafts ───────────────────────────────

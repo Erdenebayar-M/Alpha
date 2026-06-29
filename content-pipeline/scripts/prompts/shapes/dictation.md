@@ -4,17 +4,19 @@
 
 Заавар: {generation_hints}
 
-Ашиглаж болох seed үгс:
-{seed_list}
+Доорх target үгс бүрт ЯГ НЭГ variant үүсгэ. Өгсөн үгийг ЯГ хэвээр нь ашигла, өөр үг бүү зохио.
+Үгийн диктант (TT_7_3) үед target үг нь expected_answers-ийн гол үг байна:
+{target_words}
 
 {few_shot_block}
 
 {count} variant үүсгэ. Тус бүр:
-- expected_answers: бичих ёстой үг/өгүүлбэрүүдийн массив (даалгаврын төрлийн дагуу 1–3 элемент)
+- expected_answers: бичих ёстой үг/өгүүлбэрүүдийн массив (target үгийг заавал агуулсан)
 - audio_text: бүх expected_answers-ийг нэгтгэсэн уншигдах текст
 - word_count: expected_answers дахь үгсийн нийт тоо
-- correct_answer: expected_answers-ийг ";"-р зааглан нэгтгэсэн стринг
+- correct_answer: expected_answers-ийг ";"-р зааглан нэгтгэсэн стринг (target үг багтана)
+- target_word: ашигласан target үг (өгсөн жагсаалтаас ЯГ хэвээр)
 - feedback_text: монголоор богино зааварчилгаа (≤120 тэмдэгт)
 
 Зөвхөн JSON гарга, бусад текст бүү бич:
-{"variants":[{"expected_answers":["ном","гэр","мал"],"audio_text":"ном, гэр, мал","word_count":3,"correct_answer":"ном;гэр;мал","feedback_text":"..."}]}
+{"variants":[{"expected_answers":["ном","гэр","мал"],"audio_text":"ном, гэр, мал","word_count":3,"correct_answer":"ном;гэр;мал","target_word":"ном","feedback_text":"..."}]}

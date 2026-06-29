@@ -4,16 +4,17 @@
 
 Заавар: {generation_hints}
 
-Ашиглаж болох seed үгс:
-{seed_list}
+Доорх target үгс бүрт ЯГ НЭГ variant үүсгэ. Өгсөн үгийг ЯГ хэвээр нь ашигла, өөр үг бүү зохио:
+{target_words}
 
 {few_shot_block}
 
 {count} variant үүсгэ. Тус бүр:
-- tiles: санамсаргүй дараалалтай үсэг/үе/хэсгүүдийн массив
-- correct_order: зөв дараалалтай тайлбар (tiles-ийн элементүүдийг зөв эрэмбэлсэн байдлаар)
-- correct_answer: correct_order-ийг нэгтгэсэн бүтэн үг
+- tiles: target үгийн үсэг/үе/хэсгүүдийг санамсаргүй дарааллаар
+- correct_order: tiles-ийн элементүүдийг зөв дарааллаар
+- correct_answer: correct_order-ийг нэгтгэсэн бүтэн үг (target_word-тай ижил байх ёстой)
+- target_word: ашигласан target үг (өгсөн жагсаалтаас ЯГ хэвээр)
 - feedback_text: монголоор богино зааварчилгаа (≤120 тэмдэгт)
 
 Зөвхөн JSON гарга, бусад текст бүү бич:
-{"variants":[{"tiles":["б","а","т"],"correct_order":["б","а","т"],"correct_answer":"бат","feedback_text":"..."}]}
+{"variants":[{"tiles":["б","а","т"],"correct_order":["б","а","т"],"correct_answer":"бат","target_word":"бат","feedback_text":"..."}]}

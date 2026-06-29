@@ -14,16 +14,18 @@ import * as path from 'path';
 import { randomUUID } from 'crypto';
 import OpenAI from 'openai';
 import { TaskType, SkillCode, LessonSlot } from '../../../generated/prisma';
+import type { PrismaClient } from '../../../generated/prisma';
+import { selectTargetWords, type TargetWord } from '../word-bank/select-words';
+import { tierFor } from '../word-bank/task-tier';
 
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
-const PROJECT_ROOT     = path.resolve(__dirname, '../../../..');
-const TASK_TYPES_PATH  = path.join(PROJECT_ROOT, 'content-pipeline/schemas/task-types.json');
-const SHAPES_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/scripts/prompts/shapes');
-const VALIDATED_DIR    = path.join(PROJECT_ROOT, 'content-pipeline/validated');
-const STAGE2_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/stage2');
-const STAGE1_DIR       = path.join(PROJECT_ROOT, 'content-pipeline/stage1');
-const SEED_WORDS_PATH  = path.join(PROJECT_ROOT, 'content-pipeline/generated/seed-words.json');
+const PROJECT_ROOT    = path.resolve(__dirname, '../../../..');
+const TASK_TYPES_PATH = path.join(PROJECT_ROOT, 'content-pipeline/schemas/task-types.json');
+const SHAPES_DIR      = path.join(PROJECT_ROOT, 'content-pipeline/scripts/prompts/shapes');
+const VALIDATED_DIR   = path.join(PROJECT_ROOT, 'content-pipeline/validated');
+const STAGE2_DIR      = path.join(PROJECT_ROOT, 'content-pipeline/stage2');
+const STAGE1_DIR      = path.join(PROJECT_ROOT, 'content-pipeline/stage1');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -143,53 +145,52 @@ export interface GenerateResult {
   cost: number;
 }
 
-// ─── Seed words ───────────────────────────────────────────────────────────────
+// ─── Word-derived field helpers ───────────────────────────────────────────────
 
-interface SeedWord {
-  id: string;
-  word: string;
-  grade_band: string;
-  skills: string[];
-  errors: string[];
-  sentence: string;
-  distractors: string[];
-}
-
-let _cachedSeedWords: SeedWord[] | null = null;
-
-function loadSeedWords(): SeedWord[] {
-  if (_cachedSeedWords) return _cachedSeedWords;
-  if (!fs.existsSync(SEED_WORDS_PATH)) return [];
-  const raw = JSON.parse(fs.readFileSync(SEED_WORDS_PATH, 'utf8'));
-  _cachedSeedWords = raw.words as SeedWord[];
-  return _cachedSeedWords;
-}
-
-function sampleSeedWords(allWords: SeedWord[], spec: TaskSpec, count = 12): SeedWord[] {
-  const gradePrefixes = spec.grade_band.map((g) => g.replace('G', ''));
-  let pool = allWords.filter((w) => {
-    const wb = w.grade_band.replace(/G/g, '');
-    return gradePrefixes.some((p) => wb.includes(p));
-  });
-  const skillFiltered = pool.filter((w) => w.skills.includes(spec.primary_skill));
-  if (skillFiltered.length >= count) pool = skillFiltered;
-  if (pool.length < count) pool = allWords;
-
-  const arr = [...pool];
-  let seed = spec.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) || 1;
-  const rand = () => {
-    seed = (seed * 1664525 + 1013904223) & 0xffffffff;
-    return Math.abs(seed) / 0x7fffffff;
-  };
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+/** M0–M5 → 1–5 difficulty scale. */
+function levelToDifficulty(level: string | null | undefined): number {
+  switch (level) {
+    case 'M0': return 1;
+    case 'M1': return 2;
+    case 'M2': return 3;
+    case 'M3': return 4;
+    case 'M4': case 'M5': return 5;
+    default: return 3;
   }
-  return arr.slice(0, count);
 }
 
-function formatSeedList(words: SeedWord[]): string {
-  return words.map((w) => `- ${w.word} [${w.skills.join(',')}] — «${w.sentence}»`).join('\n');
+/** Grade-level cell format: "G1:M2". Returns '' if either part is missing. */
+function gradeLevel(word: TargetWord): string {
+  const g = word.grade != null ? `G${word.grade}` : null;
+  const l = word.app_level ?? null;
+  if (g && l) return `${g}:${l}`;
+  return g ?? '';
+}
+
+/**
+ * error_targets for a task = intersection of spec defaults ∩ word's errors_possible.
+ * Fallback to spec defaults when intersection is empty.
+ * Force-include C4/C5 when the word qualified via balarhai_unknown.
+ */
+function deriveErrorTargets(spec: TaskSpec, word: TargetWord): string[] {
+  const wordErrors = new Set(word.errors_possible);
+  const intersection = spec.error_targets.filter((e) => wordErrors.has(e));
+  if (intersection.length > 0) return intersection;
+  // balarhai_unknown words can target C4/C5 even without those in errors_possible
+  if (word.balarhai_unknown && spec.error_targets.some((e) => e === 'C4' || e === 'C5')) {
+    return spec.error_targets.filter((e) => e === 'C4' || e === 'C5');
+  }
+  return spec.error_targets;
+}
+
+/** Format target word list for the LLM prompt. */
+function formatTargetWords(words: TargetWord[]): string {
+  return words
+    .map((w, i) => {
+      const ctx = w.sample_sentence ? ` — «${w.sample_sentence}»` : '';
+      return `${i + 1}. ${w.word}${ctx}`;
+    })
+    .join('\n');
 }
 
 // ─── Few-shot from validated/ ─────────────────────────────────────────────────
@@ -245,7 +246,13 @@ function gradeLabel(grade_band: string[]): string {
   return grade_band.some((g) => g === 'G3' || g === 'G4') ? '2-4' : '1-2';
 }
 
-function buildUserPrompt(spec: TaskSpec, seedList: string, fewShotBlock: string, count: number): string {
+function buildUserPrompt(
+  spec: TaskSpec,
+  targetWords: string,
+  fewShotBlock: string,
+  count: number,
+  levelOverride?: string,
+): string {
   const tmplFile = SHAPE_TO_TEMPLATE[spec.options_shape];
   if (!tmplFile) throw new Error(`No shape template for ${spec.options_shape}`);
   const tmplPath = path.join(SHAPES_DIR, tmplFile);
@@ -256,13 +263,13 @@ function buildUserPrompt(spec: TaskSpec, seedList: string, fewShotBlock: string,
     '{task_type}':        spec.task_type,
     '{mongolian_name}':   spec.mongolian_name,
     '{skill}':            spec.primary_skill,
-    '{level}':            spec.level_target,
+    '{level}':            levelOverride ?? spec.level_target,
     '{error_targets}':    spec.error_targets.join(', '),
     '{grade_band}':       spec.grade_band.join(','),
     '{grade_label}':      gradeLabel(spec.grade_band),
     '{generation_hints}': spec.generation_hints,
     '{count}':            String(count),
-    '{seed_list}':        seedList,
+    '{target_words}':     targetWords,
     '{few_shot_block}':   fewShotBlock,
   };
 
@@ -508,17 +515,18 @@ function loadSelfCheckSource(sourceShape: string): TaskRecord[] {
 
 const REQUIRED_FIELDS = [
   'id', 'task_type', 'prompt_text', 'correct_answer', 'options',
-  'primary_skill', 'level_target', 'grade_band', 'difficulty',
+  'primary_skill', 'level_target', 'grade_band', 'grade_levels', 'difficulty',
   'estimated_time_seconds', 'lesson_slot_fit', 'feedback_text',
 ];
 const VALID_TASK_TYPES = new Set(Object.values(TaskType));
 const VALID_SKILLS     = new Set(Object.values(SkillCode));
 const VALID_SLOTS      = new Set(Object.values(LessonSlot));
 
-function validateVariant(task: TaskRecord): { ok: boolean; reasons: string[] } {
+function validateVariant(task: TaskRecord, sourceWord?: TargetWord): { ok: boolean; reasons: string[] } {
   const reasons: string[] = [];
   for (const f of REQUIRED_FIELDS) {
-    if (task[f] === undefined || task[f] === null || task[f] === '') {
+    const v = task[f];
+    if (v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0)) {
       reasons.push(`missing required field: ${f}`);
     }
   }
@@ -533,6 +541,14 @@ function validateVariant(task: TaskRecord): { ok: boolean; reasons: string[] } {
   }
   if (typeof task['difficulty'] === 'number' && (task['difficulty'] < 1 || task['difficulty'] > 5)) {
     reasons.push(`difficulty out of range: ${task['difficulty']}`);
+  }
+  // Word-faithfulness check: for word-anchored types the correct_answer must equal the pinned word
+  if (sourceWord) {
+    const answer = ((task['correct_answer'] as string) ?? '').normalize('NFC').trim().toLowerCase();
+    const expected = sourceWord.word.normalize('NFC').trim().toLowerCase();
+    if (answer && answer !== expected) {
+      reasons.push(`word-faithfulness: correct_answer "${task['correct_answer']}" !== target word "${sourceWord.word}"`);
+    }
   }
   return { ok: reasons.length === 0, reasons };
 }
@@ -549,15 +565,22 @@ function sleep(ms: number): Promise<void> {
 
 // ─── Main exported function ───────────────────────────────────────────────────
 
+export interface GenerateTarget {
+  grade: number;
+  level?: string; // M0–M5; undefined = any level
+}
+
 export interface GenerateOptions {
   apiKey: string;
+  db: PrismaClient;
+  target: GenerateTarget;
   maxItems?: number;
   maxCost?: number;
   runningCost?: { value: number };
 }
 
 export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Promise<GenerateResult> {
-  const { apiKey, maxItems = 3, maxCost = 10 } = opts;
+  const { apiKey, db, target, maxItems = 3, maxCost = 10 } = opts;
   const runningCost = opts.runningCost ?? { value: 0 };
 
   // Self-check tasks: build from existing correction tasks, no LLM call
@@ -577,6 +600,31 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     return { passed, rejected, cost: 0 };
   }
 
+  // Select target words from DB
+  const tier = tierFor(spec.task_type);
+  const dbWords = await selectTargetWords(
+    db,
+    {
+      taskType: spec.task_type,
+      skill: spec.primary_skill,
+      errorTargets: spec.error_targets,
+      grade: target.grade,
+      level: target.level,
+    },
+    maxItems,
+  );
+
+  if (dbWords.length === 0) {
+    return {
+      passed: [],
+      rejected: [{ _skip: true, reason: `no eligible words in DB for grade=${target.grade} level=${target.level ?? 'any'} task=${spec.task_type}` }],
+      cost: 0,
+    };
+  }
+
+  // Build a word-keyed map for post-processing
+  const wordMap = new Map<string, TargetWord>(dbWords.map((w) => [w.word, w]));
+
   // LLM tasks: build prompt from shape template
   const client = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
@@ -587,12 +635,10 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     },
   });
 
-  const allWords    = loadSeedWords();
-  const seedWords   = sampleSeedWords(allWords, spec, 12);
-  const seedList    = formatSeedList(seedWords);
-  const fewShot     = loadFewShotExamples(spec.task_type);
-  const fewShotBlock = formatFewShotBlock(fewShot);
-  const userPrompt  = buildUserPrompt(spec, seedList, fewShotBlock, maxItems);
+  const targetWordsList = formatTargetWords(dbWords);
+  const fewShot        = loadFewShotExamples(spec.task_type);
+  const fewShotBlock   = formatFewShotBlock(fewShot);
+  const userPrompt     = buildUserPrompt(spec, targetWordsList, fewShotBlock, dbWords.length, target.level);
 
   let parsed: unknown = null;
   let totalTokensIn  = 0;
@@ -628,20 +674,46 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     const key = Object.keys(p).find((k) => Array.isArray(p[k]));
     if (key) rawVariants = p[key] as unknown[];
   }
-  if (rawVariants.length > maxItems) rawVariants = rawVariants.slice(0, maxItems);
+  if (rawVariants.length > dbWords.length) rawVariants = rawVariants.slice(0, dbWords.length);
 
   const passed: TaskRecord[] = [];
   const rejected: TaskRecord[] = [];
 
   for (let i = 0; i < rawVariants.length; i++) {
+    const raw = rawVariants[i] as Record<string, unknown>;
     let task: TaskRecord;
     try {
-      task = buildVariant(spec, rawVariants[i] as Record<string, unknown>);
+      task = buildVariant(spec, raw);
     } catch (err) {
-      rejected.push({ _raw: rawVariants[i], _error: (err as Error).message } as TaskRecord);
+      rejected.push({ _raw: raw, _error: (err as Error).message } as TaskRecord);
       continue;
     }
-    const { ok, reasons } = validateVariant(task);
+
+    // Match variant back to its source word
+    const targetWordKey = ((raw['target_word'] as string) ?? '').normalize('NFC').trim().toLowerCase();
+    const sourceWord = wordMap.get(targetWordKey) ??
+      // case-insensitive fallback
+      [...wordMap.values()].find((w) => w.word.normalize('NFC').toLowerCase() === targetWordKey);
+
+    // Apply per-word field overrides
+    if (sourceWord) {
+      if (sourceWord.grade != null) {
+        task['grade_band'] = [`G${sourceWord.grade}`];
+      }
+      const gl = gradeLevel(sourceWord);
+      task['grade_levels'] = gl ? [gl] : [];
+      task['level_target'] = sourceWord.app_level ?? spec.level_target;
+      task['difficulty'] = levelToDifficulty(sourceWord.app_level);
+      task['error_targets'] = deriveErrorTargets(spec, sourceWord);
+      if (sourceWord.image_url) task['image_url'] = sourceWord.image_url;
+    } else {
+      // No matched word — still emit grade_levels from target
+      const gl = target.level ? `G${target.grade}:${target.level}` : `G${target.grade}`;
+      task['grade_levels'] = [gl];
+      task['grade_band'] = [`G${target.grade}`];
+    }
+
+    const { ok, reasons } = validateVariant(task, tier === 'word' ? sourceWord : undefined);
     if (ok) passed.push(task);
     else rejected.push({ ...task, _rejection_reasons: reasons });
   }
