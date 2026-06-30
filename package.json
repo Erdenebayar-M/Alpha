@@ -4,12 +4,10 @@
   "private": true,
   "workspaces": [
     "backend",
-    "shared",
-    "frontend"
+    "shared"
   ],
   "scripts": {
     "dev:backend": "npm --workspace=@app/backend run dev",
-    "dev:frontend": "npm --workspace=@app/frontend run dev",
     "test:backend": "npm --workspace=@app/backend run test",
     "seed": "npm --workspace=@app/backend run seed",
     "db:migrate": "npm --workspace=@app/backend run db:migrate",
