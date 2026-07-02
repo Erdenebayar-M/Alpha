@@ -272,7 +272,18 @@ the submit endpoint differs. Pass the submit handler in as a prop.
 
 ---
 
-## 12. Do NOT (guardrails)
+## 12. Figma → code
+
+- MCP `download_assets` flattens to opaque white → export vectors as **SVG** (strip the `#F5F5F5` rect + "flows" paths); for raster, flood-fill edge white or check alpha immediately.
+- Prefer **layered assets + Reanimated**; ask for the designer's **CSS/Lottie** before approximating gradients/blur.
+- **Verify offline** (composite + centroid-measure vs the screenshot) before handing off.
+- **Responsive:** lay out with flex/percentages + `useWindowDimensions` clamps (size off *both* width and height); never use Figma's fixed frame coordinates. Test SE → large.
+- **Native deps** (`react-native-svg`, etc.) require `--legacy-peer-deps` here + a dev-client rebuild (`npx expo run:ios`), not just Fast Refresh.
+- **Fonts:** bundle TTFs + verify Өө/Үү in the cmap.
+
+---
+
+## 13. Do NOT (guardrails)
 
 - ❌ Do NOT create one screen/component per `task_type`. Use the registry (§3.1).
 - ❌ Do NOT put a big `switch(task_type)` inside a screen.
@@ -287,8 +298,19 @@ the submit endpoint differs. Pass the submit handler in as a prop.
 
 ---
 
-## 13. Open questions to confirm with the human
+## 14. Open questions to confirm with the human
 
 - Exact `task_type → interaction_form` mapping for all ~43 types (start with `TT_1_5` = multiple-choice fill-in; ask for the rest or infer from `interaction_form` once populated).
 - Does `/lesson/attempt` return per-attempt feedback, or does the app rely on the task's own feedback fields?
 - App display name, icon, and brand colors.
+
+---
+
+## 15. Git branching convention
+
+No long-lived `mobile` integration branch. Each new page/feature is a short-lived branch
+cut directly off `master`, named `mobile/<feature-name>` (e.g. `mobile/checkpoint-screen`,
+`mobile/diagnostic-flow`), PR'd straight back into `master` — same trunk-based pattern as
+the rest of the repo (see `content-pipeline-word-driven-generation`). Do not nest feature
+branches under a shared `mobile` branch; it adds a second merge step and non-default PR
+base branches for no benefit at this stage.

@@ -104,17 +104,21 @@ export const mockTasks: Task[] = [
     stage: 'STAGE1',
     task_type: 'TT_4_2',
     interaction_form: 'audio_choice',
-    prompt_text: 'Сонссон үгээ сонгоно уу.',
-    correct_answer: 'гүрвэл',
+    prompt_text: 'Сайн уу? Болдоо',
+    correct_answer: 'Хурга',
     options: {
       audio_trigger: true,
       choices: [
-        { text: 'гүрвэл', is_correct: true },
-        { text: 'гурвал', is_correct: false },
+        { text: 'Хурга', is_correct: true },
+        { text: 'Хуурга', is_correct: false },
+        { text: 'Хураг', is_correct: false },
+        { text: 'Хург', is_correct: false },
       ],
     },
     audio_url: null,
-    prompt_audio_url: 'https://example.com/audio/mock-gurvel.mp3',
+    // example.com is a placeholder that never resolves, so playback (and the
+    // playing-gated animation) could never trigger; use a real test file locally.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     image_url: 'https://example.com/images/mock-gurvel.png',
     primary_skill: 'CONSONANT_CLUSTER',
     secondary_skill: 'VOWEL_HARMONY',
@@ -134,5 +138,7 @@ export const mockTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  tasks: mockTasks,
+  // audio_choice (mock-task-3) first: fill_blank still falls back to a static
+  // placeholder that never calls onResult, which would otherwise block advancing.
+  tasks: [mockTasks[2], mockTasks[0], mockTasks[1]],
 };

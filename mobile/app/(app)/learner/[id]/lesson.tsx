@@ -1,9 +1,19 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import LessonHeader from '@/src/components/LessonHeader';
 import ExerciseEngine from '@/src/features/exercise/ExerciseEngine';
 import { useCompleteLesson, useGetTodayLesson, useSubmitAttempt } from '@/src/features/lesson/useLesson';
+import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
+
+const handleBack = () => {
+  if (router.canGoBack()) {
+    router.back();
+  }
+};
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,38 +68,36 @@ export default function LessonScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator />
-      </View>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <ActivityIndicator color={colors.progressFill} />
+      </SafeAreaView>
     );
   }
 
   if (isError || tasks.length === 0) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <Text style={styles.message}>No lesson available right now.</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (isFinished) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <Text style={styles.celebration}>Lesson complete! 🎉</Text>
         <Text style={styles.message}>
           {correctCount} / {tasks.length} correct
         </Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.screen}>
-      <Text style={styles.progress}>
-        Task {taskIndex + 1} of {tasks.length}
-      </Text>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+      <LessonHeader current={taskIndex + 1} total={tasks.length} onBack={handleBack} />
       <ExerciseEngine key={currentTask.id} task={currentTask} onResult={handleResult} />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -100,23 +108,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     gap: 12,
+    backgroundColor: colors.background,
   },
   screen: {
     flex: 1,
-  },
-  progress: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 16,
-    marginBottom: 8,
+    backgroundColor: colors.background,
   },
   celebration: {
+    fontFamily: fonts.black,
     fontSize: 28,
-    fontWeight: '700',
+    color: colors.textNavy,
   },
   message: {
+    fontFamily: fonts.semibold,
     fontSize: 18,
-    color: '#4b5563',
+    color: colors.textNavy,
   },
 });
