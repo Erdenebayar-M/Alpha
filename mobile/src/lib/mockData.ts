@@ -1,4 +1,11 @@
+import { Image } from 'react-native';
+
 import type { Task } from '@/src/features/exercise/types';
+
+// Bundled demo picture for the image-match task. In production image_url is a
+// remote URL from the backend; resolveAssetSource gives us a URI string here so
+// the mock keeps Task.image_url typed as a plain string.
+const toothbrushUri = Image.resolveAssetSource(require('@/assets/images/toothbrush.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -135,6 +142,39 @@ export const mockTasks: Task[] = [
     is_diagnostic: false,
   },
   {
+    id: 'mock-task-4',
+    task_id: 'TASK-MOCK-004',
+    stage: 'STAGE1',
+    task_type: 'TT_1_2',
+    interaction_form: 'image_match',
+    prompt_text: 'Зөв бичсэн үгийг олоорой',
+    correct_answer: 'Сойз',
+    options: {
+      choices: [
+        { text: 'Сойз', is_correct: true },
+        { text: 'Сойс', is_correct: false },
+        { text: 'Шойз', is_correct: false },
+        { text: 'Сооз', is_correct: false },
+      ],
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: toothbrushUri,
+    primary_skill: 'CONSONANT_SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 1,
+    estimated_time_seconds: 20,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Гоё байна!',
+    feedback_wrong: 'Дахиад нэг харцгаая.',
+    is_diagnostic: false,
+  },
+  {
     id: 'mock-task-5',
     task_id: 'TASK-MOCK-005',
     stage: 'STAGE1',
@@ -170,5 +210,5 @@ export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
   // audio_choice (mock-task-3) first: fill_blank still falls back to a static
   // placeholder that never calls onResult, which would otherwise block advancing.
-  tasks: [mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[1]],
+  tasks: [mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[0], mockTasks[1]],
 };
