@@ -9,7 +9,9 @@ export interface MockParent {
 export interface MockLearner {
   id: string;
   name: string;
-  grade_band: string;
+  grade: number;
+  variant: 'A' | 'B';
+  daily_minutes: number;
 }
 
 export interface MockLesson {
@@ -28,8 +30,12 @@ export const mockParent: MockParent = {
 export const mockLearner: MockLearner = {
   id: 'mock-learner-1',
   name: 'Сарнай',
-  grade_band: 'G1',
+  grade: 1,
+  variant: 'A',
+  daily_minutes: 10,
 };
+
+export const mockLearners: MockLearner[] = [mockLearner];
 
 export const mockTasks: Task[] = [
   {

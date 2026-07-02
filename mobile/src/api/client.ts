@@ -1,4 +1,4 @@
-import { mockParent, MOCK_TOKEN } from '@/src/lib/mockData';
+import { mockLearners, mockLesson, mockParent, MOCK_TOKEN } from '@/src/lib/mockData';
 import { clearToken, getToken } from '@/src/lib/secureStore';
 
 // Flip to false once EXPO_PUBLIC_API_URL points at a deployed backend.
@@ -132,6 +132,72 @@ async function mockFetch<T>(
       };
     }
     return { status: 200, json: { success: true, data: mockParent as T } };
+  }
+
+  if (path === '/learner' && method === 'GET') {
+    return { status: 200, json: { success: true, data: { learners: mockLearners } as T } };
+  }
+
+  if (path === '/learner' && method === 'POST') {
+    const grade = Number(body.grade);
+    const newLearner = {
+      id: `mock-learner-${mockLearners.length + 1}`,
+      name: body.name as string,
+      grade,
+      variant: grade <= 2 ? 'A' : 'B',
+      daily_minutes: typeof body.daily_minutes === 'number' ? body.daily_minutes : 10,
+    } as const;
+    mockLearners.push(newLearner);
+    return { status: 201, json: { success: true, data: newLearner as T } };
+  }
+
+  const learnerDetailMatch = /^\/learner\/(.+)$/.exec(path);
+  if (learnerDetailMatch && method === 'GET') {
+    const found = mockLearners.find((learner) => learner.id === learnerDetailMatch[1]);
+    if (!found) {
+      return {
+        status: 404,
+        json: { success: false, error: { code: 'NOT_FOUND', message: 'Learner not found' } },
+      };
+    }
+    return { status: 200, json: { success: true, data: found as T } };
+  }
+
+  if (path.startsWith('/lesson/today') && method === 'GET') {
+    return { status: 200, json: { success: true, data: { lesson: mockLesson } as T } };
+  }
+
+  if (path === '/lesson/attempt' && method === 'POST') {
+    const taskId = body.task_id as string;
+    const inputText = typeof body.input_text === 'string' ? body.input_text : '';
+    const task = mockLesson.tasks.find((t) => t.id === taskId);
+    const isCorrect = task ? inputText.trim() === task.correct_answer : false;
+    return {
+      status: 200,
+      json: {
+        success: true,
+        data: {
+          score: isCorrect ? 1 : 0,
+          is_correct: isCorrect,
+          feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
+        } as T,
+      },
+    };
+  }
+
+  const lessonCompleteMatch = /^\/lesson\/(.+)\/complete$/.exec(path);
+  if (lessonCompleteMatch && method === 'POST') {
+    return {
+      status: 200,
+      json: {
+        success: true,
+        data: {
+          completed: true,
+          lesson_id: lessonCompleteMatch[1],
+          completed_at: new Date().toISOString(),
+        } as T,
+      },
+    };
   }
 
   return {
