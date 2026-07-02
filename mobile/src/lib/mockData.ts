@@ -6,6 +6,7 @@ import type { Task } from '@/src/features/exercise/types';
 // remote URL from the backend; resolveAssetSource gives us a URI string here so
 // the mock keeps Task.image_url typed as a plain string.
 const toothbrushUri = Image.resolveAssetSource(require('@/assets/images/toothbrush.png')).uri;
+const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -83,18 +84,25 @@ export const mockTasks: Task[] = [
     stage: 'STAGE1',
     task_type: 'TT_2_3',
     interaction_form: 'fill_blank',
-    prompt_text: 'д_ү',
-    correct_answer: 'дүү',
+    // "_" marks the blank (AGENTS §5): the child fills the missing "э" in эрвээхэй.
+    prompt_text: 'Эрвээх_й',
+    correct_answer: 'Эрвээхэй',
     options: {
-      distractors: ['ду', 'дү'],
+      audio_trigger: true,
+      choices: [
+        { text: 'И', is_correct: false },
+        { text: 'Э', is_correct: true },
+      ],
     },
     audio_url: null,
-    prompt_audio_url: 'https://example.com/audio/mock-duu.mp3',
-    image_url: null,
-    primary_skill: 'LONG_VOWEL',
+    // example.com never resolves, so playback (and the audio-gated pose changes) could
+    // never fire; use a real test file locally so didJustFinish drives pose 3.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    image_url: butterflyUri,
+    primary_skill: 'VOWEL_HARMONY',
     secondary_skill: null,
     level_target: 'G1:M2',
-    error_targets: ['MISSING_LONG_VOWEL'],
+    error_targets: ['VOWEL_CONFUSION'],
     grade_band: ['G1'],
     grade_levels: ['G1:M2'],
     difficulty: 2,
@@ -208,7 +216,7 @@ export const mockTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // audio_choice (mock-task-3) first: fill_blank still falls back to a static
-  // placeholder that never calls onResult, which would otherwise block advancing.
-  tasks: [mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[0], mockTasks[1]],
+  // fill_blank (mock-task-2) runs right after text_input/AudioSpelling (mock-task-5),
+  // so the fill-letter screen follows the audio-spelling screen in the flow.
+  tasks: [mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };
