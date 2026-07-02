@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import AudioChoice from '@/src/features/exercise/renderers/AudioChoice';
 import AudioSpelling from '@/src/features/exercise/renderers/AudioSpelling';
 import Fallback from '@/src/features/exercise/renderers/Fallback';
+import FillBlank from '@/src/features/exercise/renderers/FillBlank';
 import ImageMatch from '@/src/features/exercise/renderers/ImageMatch';
 import MultipleChoice from '@/src/features/exercise/renderers/MultipleChoice';
 import type { Task } from '@/src/features/exercise/types';
@@ -12,10 +13,9 @@ export interface ExerciseRendererProps {
   onResult: (isCorrect: boolean) => void;
 }
 
-// fill_blank falls back to Fallback until its renderer is built.
 export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   multiple_choice: MultipleChoice,
-  fill_blank: Fallback,
+  fill_blank: FillBlank,
   audio_choice: AudioChoice,
   image_match: ImageMatch,
   text_input: AudioSpelling,
