@@ -7,6 +7,7 @@ import type { Task } from '@/src/features/exercise/types';
 // the mock keeps Task.image_url typed as a plain string.
 const toothbrushUri = Image.resolveAssetSource(require('@/assets/images/toothbrush.png')).uri;
 const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly.png')).uri;
+const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbrush.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -212,11 +213,46 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Дахин сонсоод оролдоорой.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-6',
+    task_id: 'TASK-MOCK-006',
+    stage: 'STAGE1',
+    task_type: 'TT_1_1',
+    interaction_form: 'letter_choice',
+    prompt_text: 'Эхний үсэг аль нь вэ?',
+    correct_answer: 'Б',
+    options: {
+      audio_trigger: true,
+      choices: [
+        { text: 'Б', is_correct: true },
+        { text: 'Р', is_correct: false },
+        { text: 'В', is_correct: false },
+      ],
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the talking animation) could never
+    // fire; use a real test file locally so the speaker button drives the sprout.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    image_url: paintbrushUri,
+    primary_skill: 'LETTER_RECOGNITION',
+    secondary_skill: null,
+    level_target: 'G1:M1',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M1'],
+    difficulty: 1,
+    estimated_time_seconds: 20,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Зөв байна!',
+    feedback_wrong: 'Дахиад оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // fill_blank (mock-task-2) runs right after text_input/AudioSpelling (mock-task-5),
-  // so the fill-letter screen follows the audio-spelling screen in the flow.
-  tasks: [mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // letter_choice (mock-task-6) leads so the new "first letter" screen is seen first;
+  // fill_blank (mock-task-2) runs right after text_input/AudioSpelling (mock-task-5).
+  tasks: [mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };

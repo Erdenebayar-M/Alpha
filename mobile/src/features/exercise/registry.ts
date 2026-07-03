@@ -5,6 +5,7 @@ import AudioSpelling from '@/src/features/exercise/renderers/AudioSpelling';
 import Fallback from '@/src/features/exercise/renderers/Fallback';
 import FillBlank from '@/src/features/exercise/renderers/FillBlank';
 import ImageMatch from '@/src/features/exercise/renderers/ImageMatch';
+import LetterChoice from '@/src/features/exercise/renderers/LetterChoice';
 import MultipleChoice from '@/src/features/exercise/renderers/MultipleChoice';
 import type { Task } from '@/src/features/exercise/types';
 
@@ -19,5 +20,6 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   audio_choice: AudioChoice,
   image_match: ImageMatch,
   text_input: AudioSpelling,
+  letter_choice: LetterChoice,
   fallback: Fallback,
 };

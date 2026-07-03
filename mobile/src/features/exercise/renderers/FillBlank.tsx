@@ -4,15 +4,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { ArrowRightIcon } from '@/src/features/exercise/components/icons';
+import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import LetterTileBar from '@/src/features/exercise/components/LetterTileBar';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
+import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
+import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
-const FEEDBACK_DELAY_MS = 1200;
 const BUBBLE_LABEL = 'Үгийг нөхөөрэй';
 
 /**
@@ -25,9 +26,8 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const { width, height } = useWindowDimensions();
   const avatarWidth = Math.max(88, Math.min(width * 0.26, height * 0.14, 120));
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
   const [hasFinished, setHasFinished] = useState(false);
+  const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
 
   const player = useAudioPlayer(task.prompt_audio_url);
   const status = useAudioPlayerStatus(player);
@@ -67,8 +67,6 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
     }
   };
 
-  const tiles = task.options.choices ?? [];
-
   // Split the prompt on the "_" blank marker (AGENTS §5): "Эрвээх_й" -> "Эрвээх" / "й".
   const [prefix, suffix] = useMemo(() => {
     const idx = task.prompt_text.indexOf('_');
@@ -76,26 +74,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
     return [task.prompt_text.slice(0, idx), task.prompt_text.slice(idx + 1)];
   }, [task.prompt_text]);
 
-  const selectedTile = selectedIndex !== null ? tiles[selectedIndex] : null;
-  const filledLetter = selectedTile ? selectedTile.text.toLowerCase() : '';
-
-  const handleSelect = (index: number) => {
-    if (isAnswered) return;
-    setSelectedIndex(index);
-  };
-
-  const handleSubmit = () => {
-    if (isAnswered || selectedTile === null) return;
-    setIsAnswered(true);
-    const isCorrect = selectedTile.is_correct;
-    setTimeout(() => onResult(isCorrect), FEEDBACK_DELAY_MS);
-  };
-
-  const feedback = isAnswered
-    ? ((selectedTile?.is_correct ? task.feedback_correct : task.feedback_wrong) ?? task.feedback_text)
-    : null;
-
-  const canSubmit = selectedTile !== null && !isAnswered;
+  const filledLetter = ex.selectedChoice ? ex.selectedChoice.text.toLowerCase() : '';
 
   return (
     <View style={styles.container}>
@@ -126,33 +105,25 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
           ) : null}
           <View style={styles.word}>
             <Text style={styles.wordText}>{prefix}</Text>
-            <View style={[styles.slot, selectedTile ? styles.slotFilled : null]}>
+            <View style={[styles.slot, ex.selectedChoice ? styles.slotFilled : null]}>
               <Text style={styles.slotText}>{filledLetter}</Text>
             </View>
             <Text style={styles.wordText}>{suffix}</Text>
           </View>
         </View>
 
-        {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
+        <FeedbackText>{ex.feedback}</FeedbackText>
       </ScrollView>
 
       <LetterTileBar
-        tiles={tiles}
-        selectedIndex={selectedIndex}
-        isAnswered={isAnswered}
-        onSelect={handleSelect}
-        onBackspace={() => setSelectedIndex(null)}
+        tiles={ex.choices}
+        selectedIndex={ex.selectedIndex}
+        isAnswered={ex.isAnswered}
+        onSelect={ex.select}
+        onBackspace={ex.clear}
       />
 
-      <Pressable
-        style={[styles.submit, canSubmit ? styles.submitActive : styles.submitDisabled]}
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-        accessibilityRole="button"
-        accessibilityLabel="Үргэлжлүүлэх"
-      >
-        <ArrowRightIcon size={28} color={colors.white} />
-      </Pressable>
+      <SubmitButton onPress={ex.submit} disabled={!ex.canSubmit} />
     </View>
   );
 }
@@ -251,27 +222,5 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: colors.textChoice,
     letterSpacing: -0.064,
-  },
-  feedback: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: colors.textChoice,
-    textAlign: 'center',
-  },
-  submit: {
-    height: 62,
-    marginTop: 12,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 3,
-  },
-  submitActive: {
-    backgroundColor: colors.primaryBlue,
-    borderBottomColor: '#1E44C4',
-  },
-  submitDisabled: {
-    backgroundColor: 'rgba(46, 91, 232, 0.2)',
-    borderBottomColor: 'rgba(79, 158, 245, 0.5)',
   },
 });
