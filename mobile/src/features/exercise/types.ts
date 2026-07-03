@@ -3,10 +3,26 @@ export interface TaskChoice {
   is_correct: boolean;
 }
 
+/** One correct left↔right pairing for a matching task (mirrors the backend
+ *  `matchPairsOptions` in @app/shared). `image_side` (on TaskOptions) says which
+ *  side is a picture; the other side is text. */
+export interface TaskPair {
+  left: string;
+  right: string;
+  left_image_url?: string;
+  right_image_url?: string;
+}
+
 export interface TaskOptions {
   choices?: TaskChoice[];
   audio_trigger?: boolean;
   distractors?: string[];
+  // Matching tasks (TT_1_3 / TT_3_3 / TT_5_3): the correct pairs + which column is the image.
+  pairs?: TaskPair[];
+  image_side?: 'left' | 'right' | 'none';
+  // Link behavior for matching tasks: 'any' locks every link and grades at submit
+  // (default); 'correct-only' locks a link only when it's the right pair.
+  match_lock_mode?: 'any' | 'correct-only';
   // interaction-form-specific extras may appear here; keep this open/optional
 }
 

@@ -9,6 +9,10 @@ const taskTypeMap: Record<string, string> = {
   TT_1_2: 'image_match',
   TT_1_1: 'letter_choice',
   TT_5_1: 'text_input',
+  // Connect-two-columns matching tasks (backend uses matchPairsOptions for these).
+  TT_1_3: 'match_pairs',
+  TT_3_3: 'match_pairs',
+  TT_5_3: 'match_pairs',
 };
 
 export function getInteractionForm(taskType: string): string {
