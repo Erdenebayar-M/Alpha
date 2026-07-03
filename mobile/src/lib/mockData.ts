@@ -248,11 +248,49 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Дахиад оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-7',
+    task_id: 'TASK-MOCK-007',
+    stage: 'STAGE1',
+    task_type: 'TT_3_3',
+    interaction_form: 'match_pairs',
+    prompt_text: 'Тохирох үгийг холбоорой!',
+    correct_answer: 'Сойз, Эрвээхэй, Бийр',
+    options: {
+      audio_trigger: true,
+      image_side: 'left',
+      // 'any' → every link locks; correctness is graded when the child submits.
+      match_lock_mode: 'any',
+      pairs: [
+        { left: 'toothbrush', right: 'Сойз', left_image_url: toothbrushUri },
+        { left: 'butterfly', right: 'Эрвээхэй', left_image_url: butterflyUri },
+        { left: 'paintbrush', right: 'Бийр', left_image_url: paintbrushUri },
+      ],
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the pose changes) could never fire;
+    // use a real test file locally so the speaker button drives the sprout.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+    image_url: null,
+    primary_skill: 'WORD_RECOGNITION',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Бүгдийг зөв холболоо!',
+    feedback_wrong: 'Заримыг нь зөв холбоогүй байна. Дахин үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // letter_choice (mock-task-6) leads so the new "first letter" screen is seen first;
-  // fill_blank (mock-task-2) runs right after text_input/AudioSpelling (mock-task-5).
-  tasks: [mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // match_pairs (mock-task-7) leads so the new connect-columns screen is seen first;
+  // letter_choice (mock-task-6) follows; fill_blank (mock-task-2) runs last.
+  tasks: [mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };

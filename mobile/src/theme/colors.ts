@@ -28,6 +28,9 @@ export const colors = {
   primaryBlue: '#2E5BE8',
   border: '#D8E3F5',
 
+  // Matching / link-words task: a linked word card fills lavender.
+  matchLockedBg: '#E1E4FF',
+
   // Audio controls
   sliderThumb: '#30374A',
   sliderActive: '#30374A',
