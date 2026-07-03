@@ -1,16 +1,14 @@
 import { useAudioPlayer } from 'expo-audio';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 
-const FEEDBACK_DELAY_MS = 1000;
-
 export default function MultipleChoice({ task, onResult }: ExerciseRendererProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  // Picking a choice submits immediately (this legacy screen has no submit button).
+  const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
   const player = useAudioPlayer(task.prompt_audio_url);
-
-  const choices = task.options.choices ?? [];
 
   const handlePlayAudio = () => {
     try {
@@ -18,12 +16,6 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
     } catch {
       // ignore playback errors (e.g. an unreachable mock URL)
     }
-  };
-
-  const handleSelect = (index: number, isCorrect: boolean) => {
-    if (selectedIndex !== null) return;
-    setSelectedIndex(index);
-    setTimeout(() => onResult(isCorrect), FEEDBACK_DELAY_MS);
   };
 
   return (
@@ -37,9 +29,8 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
       <Text style={styles.prompt}>{task.prompt_text}</Text>
 
       <View style={styles.choices}>
-        {choices.map((choice, index) => {
-          const isSelected = selectedIndex === index;
-          const isAnswered = selectedIndex !== null;
+        {ex.choices.map((choice, index) => {
+          const isSelected = ex.selectedIndex === index;
           return (
             <Pressable
               key={`${choice.text}-${index}`}
@@ -47,8 +38,8 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
                 styles.choiceButton,
                 isSelected && (choice.is_correct ? styles.choiceCorrect : styles.choiceWrong),
               ]}
-              onPress={() => handleSelect(index, choice.is_correct)}
-              disabled={isAnswered}
+              onPress={() => ex.select(index)}
+              disabled={ex.isAnswered}
             >
               <Text style={[styles.choiceText, isSelected && styles.choiceTextSelected]}>
                 {choice.text}
@@ -58,9 +49,7 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
         })}
       </View>
 
-      {selectedIndex !== null && task.feedback_text ? (
-        <Text style={styles.feedback}>{task.feedback_text}</Text>
-      ) : null}
+      <FeedbackText>{ex.feedback}</FeedbackText>
     </View>
   );
 }
@@ -114,10 +103,5 @@ const styles = StyleSheet.create({
   },
   choiceTextSelected: {
     color: '#fff',
-  },
-  feedback: {
-    fontSize: 16,
-    color: '#4b5563',
-    textAlign: 'center',
   },
 });

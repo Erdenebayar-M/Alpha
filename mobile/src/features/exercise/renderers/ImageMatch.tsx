@@ -1,13 +1,12 @@
 import { Image } from 'expo-image';
-import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
+import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
-
-const FEEDBACK_DELAY_MS = 1000;
 
 /**
  * Image + multiple-choice ("Зөв бичсэн үгийг олоорой"): show a picture of the
@@ -19,20 +18,8 @@ export default function ImageMatch({ task, onResult }: ExerciseRendererProps) {
   // Size the picture off both axes so it never crowds a short screen (e.g. SE).
   const cardSize = Math.max(160, Math.min(width * 0.56, height * 0.28, 240));
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const choices = task.options.choices ?? [];
-
-  const handleSelect = (index: number) => {
-    if (selectedIndex !== null) return;
-    setSelectedIndex(index);
-    const isCorrect = choices[index]?.is_correct ?? false;
-    setTimeout(() => onResult(isCorrect), FEEDBACK_DELAY_MS);
-  };
-
-  const selectedChoice = selectedIndex !== null ? choices[selectedIndex] : null;
-  const feedback = selectedChoice
-    ? ((selectedChoice.is_correct ? task.feedback_correct : task.feedback_wrong) ?? task.feedback_text)
-    : null;
+  // Picking a choice submits immediately (no submit button on this screen).
+  const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
 
   return (
     <View style={styles.container}>
@@ -49,14 +36,14 @@ export default function ImageMatch({ task, onResult }: ExerciseRendererProps) {
           ) : null}
         </View>
 
-        {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
+        <FeedbackText>{ex.feedback}</FeedbackText>
       </ScrollView>
 
       <ChoiceGrid
-        choices={choices}
-        selectedIndex={selectedIndex}
-        isAnswered={selectedChoice !== null}
-        onSelect={handleSelect}
+        choices={ex.choices}
+        selectedIndex={ex.selectedIndex}
+        isAnswered={ex.isAnswered}
+        onSelect={ex.select}
       />
     </View>
   );
@@ -100,11 +87,5 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  feedback: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: colors.textChoice,
-    textAlign: 'center',
   },
 });
