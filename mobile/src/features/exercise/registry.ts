@@ -8,6 +8,7 @@ import ImageMatch from '@/src/features/exercise/renderers/ImageMatch';
 import LetterChoice from '@/src/features/exercise/renderers/LetterChoice';
 import MatchPairs from '@/src/features/exercise/renderers/MatchPairs';
 import MultipleChoice from '@/src/features/exercise/renderers/MultipleChoice';
+import SentenceCapital from '@/src/features/exercise/renderers/SentenceCapital';
 import type { Task } from '@/src/features/exercise/types';
 
 export interface ExerciseRendererProps {
@@ -23,5 +24,6 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   text_input: AudioSpelling,
   letter_choice: LetterChoice,
   match_pairs: MatchPairs,
+  sentence_capital: SentenceCapital,
   fallback: Fallback,
 };

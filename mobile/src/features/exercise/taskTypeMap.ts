@@ -13,6 +13,8 @@ const taskTypeMap: Record<string, string> = {
   TT_1_3: 'match_pairs',
   TT_3_3: 'match_pairs',
   TT_5_3: 'match_pairs',
+  // Sentence-starts-with-a-capital: pick the correctly-cased first word (placeholder code).
+  TT_7_1: 'sentence_capital',
 };
 
 export function getInteractionForm(taskType: string): string {
