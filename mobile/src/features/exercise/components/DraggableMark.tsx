@@ -68,6 +68,9 @@ export default function DraggableMark({
       { scale: 1 + lift.value * 0.12 },
     ],
     zIndex: lift.value > 0 ? 50 : 1,
+    // Fade the tile while it's picked up so the orange drop-caret in the gap
+    // underneath stays visible through it (the tile sits on top of the target).
+    opacity: 1 - lift.value * 0.5,
     shadowOpacity: 0.14 + lift.value * 0.24,
     shadowRadius: 9 + lift.value * 10,
   }));

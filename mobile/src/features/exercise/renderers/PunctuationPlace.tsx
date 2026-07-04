@@ -20,7 +20,7 @@ const BUBBLE_LABEL = 'Өгүүлбэрийн төгсгөлийг олж, тэм
 
 // A dropped mark counts for the nearest gap only if the finger lands within this
 // screen distance of the gap centre — keeps a drop onto empty space a no-op.
-const DROP_RADIUS = 130;
+const DROP_RADIUS = 120;
 
 interface Frame {
   x: number;
@@ -48,6 +48,9 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
   const gapRefs = useRef<Record<number, View | null>>({});
   const framesRef = useRef<Record<number, Frame>>({});
   const [hoveredGap, setHoveredGap] = useState<number | null>(null);
+  // The mark is dragged vertically (up from the dispenser), the same axis as the
+  // ScrollView — freeze scrolling mid-drag so the scroll view can't steal the pan.
+  const [dragging, setDragging] = useState(false);
 
   const measureGaps = useCallback(() => {
     for (const [gap, node] of Object.entries(gapRefs.current)) {
@@ -76,6 +79,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
   const handleDragStart = useCallback(() => {
     measureGaps();
     setHoveredGap(null);
+    setDragging(true);
   }, [measureGaps]);
 
   const handleDragMove = useCallback(
@@ -91,6 +95,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
       const gap = gapAt(px, py);
       if (gap !== null) ex.place(gap);
       setHoveredGap(null);
+      setDragging(false);
     },
     [gapAt, ex]
   );
@@ -126,6 +131,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
         style={styles.scroll}
         contentContainerStyle={[styles.content, compact && styles.contentCompact]}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!dragging}
       >
         {/* Naran + speech bubble; tapping either plays the prompt audio. */}
         <Pressable
@@ -278,7 +284,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    rowGap: 12,
+    // Spread each row of chips across the full card width instead of clumping them
+    // left — fills the card and widens the drop-gaps between words.
+    justifyContent: 'space-between',
+    rowGap: 16,
   },
   tokenUnit: {
     flexDirection: 'row',
