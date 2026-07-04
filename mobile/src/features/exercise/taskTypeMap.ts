@@ -15,6 +15,8 @@ const taskTypeMap: Record<string, string> = {
   TT_5_3: 'match_pairs',
   // Sentence-starts-with-a-capital: pick the correctly-cased first word (placeholder code).
   TT_7_1: 'sentence_capital',
+  // Place-the-correct-punctuation: pick the sentence's end mark (. / ? / !) (placeholder code).
+  TT_8_1: 'punctuation_choice',
 };
 
 export function getInteractionForm(taskType: string): string {
