@@ -12,9 +12,13 @@ interface ChoiceGridProps {
   /** Force all choices onto a single row of equal-width cards (e.g. short letter
    *  choices Б/Р/В). Omit for the default two-column wrapping grid. */
   singleRow?: boolean;
+  /** Hide the card at this index entirely (not just deselect it) — used by
+   *  SentenceCapital, where the chosen word "flies" out of the row into the sentence
+   *  blank, so it must leave the grid. Omit to render every choice. */
+  hiddenIndex?: number | null;
 }
 
-export default function ChoiceGrid({ choices, selectedIndex, isAnswered, onSelect, singleRow }: ChoiceGridProps) {
+export default function ChoiceGrid({ choices, selectedIndex, isAnswered, onSelect, singleRow, hiddenIndex }: ChoiceGridProps) {
   const { height } = useWindowDimensions();
   // Shrink the sheet on short screens so it doesn't crowd the content above it.
   const compact = height < 720;
@@ -31,6 +35,7 @@ export default function ChoiceGrid({ choices, selectedIndex, isAnswered, onSelec
     <View style={[styles.sheet, { padding: sheetPadding, borderRadius: compact ? 36 : 46 }]}>
       <View style={[styles.grid, { gap: gridGap }, singleRow && styles.gridSingleRow]}>
         {choices.map((choice, index) => {
+          if (index === hiddenIndex) return null;
           const isSelected = selectedIndex === index;
           return (
             <Pressable

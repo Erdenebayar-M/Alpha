@@ -8,6 +8,7 @@ import type { Task } from '@/src/features/exercise/types';
 const toothbrushUri = Image.resolveAssetSource(require('@/assets/images/toothbrush.png')).uri;
 const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly.png')).uri;
 const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbrush.png')).uri;
+const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -286,11 +287,50 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Заримыг нь зөв холбоогүй байна. Дахин үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-8',
+    task_id: 'TASK-MOCK-008',
+    stage: 'STAGE1',
+    task_type: 'TT_7_1',
+    interaction_form: 'sentence_capital',
+    // "_" marks the blank (AGENTS §5): the sentence's first word is missing. The child
+    // picks the correctly-cased form — a sentence begins with a capital, so "Зуны". The
+    // bubble question ("Өгүүлбэр юугаар эхлэх вэ?") is a static label in the renderer,
+    // like FillBlank's — prompt_text carries the fill-in sentence itself.
+    prompt_text: '_ өдөр сайхан.',
+    correct_answer: 'Зуны',
+    options: {
+      audio_trigger: true,
+      choices: [
+        { text: 'зуны', is_correct: false },
+        { text: 'Зуны', is_correct: true },
+        { text: 'ЗУНЫ', is_correct: false },
+      ],
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the talking animation) could never
+    // fire; use a real test file locally so the speaker button drives the buddy.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: summerUri,
+    primary_skill: 'CAPITALIZATION',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: ['SENTENCE_CAPITAL'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Зөв! Өгүүлбэр том үсгээр эхэлдэг.',
+    feedback_wrong: 'Өгүүлбэр том үсгээр эхэлдэг шүү. Дахин үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // match_pairs (mock-task-7) leads so the new connect-columns screen is seen first;
-  // letter_choice (mock-task-6) follows; fill_blank (mock-task-2) runs last.
-  tasks: [mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // sentence_capital (mock-task-8) leads so the new sentence-capital screen is seen
+  // first; match_pairs (mock-task-7) follows; fill_blank (mock-task-2) runs last.
+  tasks: [mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };
