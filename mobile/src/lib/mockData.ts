@@ -326,11 +326,49 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Өгүүлбэр том үсгээр эхэлдэг шүү. Дахин үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-9',
+    task_id: 'TASK-MOCK-009',
+    stage: 'STAGE1',
+    task_type: 'TT_8_2',
+    interaction_form: 'punctuation_place',
+    // No "_" blank here — the child drags the end mark into the gap AFTER the word that
+    // ends each sentence. options.punctuation carries the tokens + the correct gaps.
+    // "Би ном уншлаа[.] Дараа нь зураг зурлаа[.]" → marks after tokens 2 and 6.
+    prompt_text: 'Би ном уншлаа Дараа нь зураг зурлаа',
+    correct_answer: 'Би ном уншлаа. Дараа нь зураг зурлаа.',
+    options: {
+      audio_trigger: true,
+      punctuation: {
+        mark: '.',
+        tokens: ['Би', 'ном', 'уншлаа', 'Дараа', 'нь', 'зураг', 'зурлаа'],
+        answer_gaps: [2, 6],
+      },
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the talking animation) could never
+    // fire; use a real test file locally so the speaker button drives the buddy.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: null,
+    primary_skill: 'PUNCTUATION',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: ['SENTENCE_PUNCTUATION'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Зөв! Өгүүлбэр бүрийн төгсгөлд цэг тавина.',
+    feedback_wrong: 'Өгүүлбэр бүрийн төгсгөлд цэг тавих ёстой шүү. Дахин үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // sentence_capital (mock-task-8) leads so the new sentence-capital screen is seen
-  // first; match_pairs (mock-task-7) follows; fill_blank (mock-task-2) runs last.
-  tasks: [mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // punctuation_place (mock-task-9) leads so the new drag-the-mark screen is seen first;
+  // sentence_capital (mock-task-8) follows; fill_blank (mock-task-2) runs last.
+  tasks: [mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };
