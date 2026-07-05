@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 
+import AssembleWord from '@/src/features/exercise/renderers/AssembleWord';
 import AudioChoice from '@/src/features/exercise/renderers/AudioChoice';
 import AudioSpelling from '@/src/features/exercise/renderers/AudioSpelling';
 import CommaPlace from '@/src/features/exercise/renderers/CommaPlace';
@@ -31,5 +32,6 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   punctuation_choice: SentencePunctuation,
   punctuation_place: PunctuationPlace,
   comma_place: CommaPlace,
+  assemble_word: AssembleWord,
   fallback: Fallback,
 };
