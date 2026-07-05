@@ -17,6 +17,8 @@ const taskTypeMap: Record<string, string> = {
   TT_7_1: 'sentence_capital',
   // Place-the-correct-punctuation: pick the sentence's end mark (. / ? / !) (placeholder code).
   TT_8_1: 'punctuation_choice',
+  // Drag the end mark into the gap after the word that ends each sentence (placeholder code).
+  TT_8_2: 'punctuation_place',
 };
 
 export function getInteractionForm(taskType: string): string {

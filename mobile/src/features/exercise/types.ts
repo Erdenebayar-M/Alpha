@@ -23,7 +23,20 @@ export interface TaskOptions {
   // Link behavior for matching tasks: 'any' locks every link and grades at submit
   // (default); 'correct-only' locks a link only when it's the right pair.
   match_lock_mode?: 'any' | 'correct-only';
+  // Place-the-punctuation-mark task (TT_8_2): the child drags `mark` into the gaps
+  // between/after `tokens` where a sentence ends. `answer_gaps` lists the correct
+  // "after tokens[i]" indices (e.g. [2, 6]).
+  punctuation?: PunctuationOptions;
   // interaction-form-specific extras may appear here; keep this open/optional
+}
+
+/** Content for the drag-the-mark-into-the-sentence task ("Өгүүлбэрийн төгсгөлд
+ *  тэмдэг тавих"). `tokens` are the sentence words in order; `answer_gaps` are the
+ *  0-based indices such that the mark belongs *after* `tokens[i]`. */
+export interface PunctuationOptions {
+  mark: string;
+  tokens: string[];
+  answer_gaps: number[];
 }
 
 export interface Task {

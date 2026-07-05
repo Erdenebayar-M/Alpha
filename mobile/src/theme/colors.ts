@@ -20,6 +20,12 @@ export const colors = {
   backButtonBg: '#E1E4FF',
   backButtonIcon: '#4338CA',
 
+  // Pastel word chips (Figma "Pastel background" variable) — sentence tokens,
+  // draggable punctuation mark.
+  pastelBg: '#FFF7FC',
+  // Orange text-caret shown at the gap a dragged mark will drop into.
+  dropCaret: '#FF7A1A',
+
   // Choice cards
   choiceBg: '#F8FBFF',
   choiceBorder: '#D8E3F5',
