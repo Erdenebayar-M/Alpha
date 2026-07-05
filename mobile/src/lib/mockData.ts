@@ -608,12 +608,16 @@ export const mockTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The five new assemble-the-word screens (mock-task-12..16: сав → чацаргана, short →
-  // long) lead so they're seen first; then comma_place, punctuation_place,
-  // punctuation_choice, sentence_capital, and the rest.
+  // Figma-designed tasks in order: audio_choice → match_pairs → sentence_capital →
+  // punctuation_choice → punctuation_place → comma_place → assemble_word (5 words).
   tasks: [
-    mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15],
-    mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6],
-    mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1],
+    mockTasks[2],  // audio_choice (TT_4_2)
+    mockTasks[6],  // match_pairs (TT_3_3)
+    mockTasks[7],  // sentence_capital (TT_7_1)
+    mockTasks[8],  // punctuation_choice (TT_8_1)
+    mockTasks[9],  // punctuation_place (TT_8_2)
+    mockTasks[10], // comma_place (TT_8_3)
+    mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15], // assemble_word (5 words)
+    mockTasks[5], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1], // other tasks
   ],
 };
