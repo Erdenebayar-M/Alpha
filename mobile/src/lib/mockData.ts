@@ -404,11 +404,51 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Өгүүлбэр бүрийн төгсгөлд цэг тавих ёстой шүү. Дахин үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-11',
+    task_id: 'TASK-MOCK-011',
+    stage: 'STAGE1',
+    task_type: 'TT_8_3',
+    interaction_form: 'comma_place',
+    // Comma between words: the child drags a comma into the dashed gaps between the listed
+    // items. gap_positions marks where a ring shows; answer_gaps are the correct ones.
+    // "Ээж, аав, ах, бид дөрөв явлаа." → commas after tokens 0, 1 and 2.
+    prompt_text: 'Ээж аав ах бид дөрөв явлаа.',
+    correct_answer: 'Ээж, аав, ах, бид дөрөв явлаа.',
+    options: {
+      audio_trigger: true,
+      punctuation: {
+        mark: ',',
+        tokens: ['Ээж', 'аав', 'ах', 'бид', 'дөрөв', 'явлаа.'],
+        gap_positions: [0, 1, 2],
+        answer_gaps: [0, 1, 2],
+      },
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the talking animation) could never fire;
+    // use a real test file locally so the speaker button drives the buddy.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: null,
+    primary_skill: 'PUNCTUATION',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: ['SENTENCE_PUNCTUATION'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Зөв! Зэрэгцсэн үгсийн хооронд таслал тавина.',
+    feedback_wrong: 'Зэрэгцсэн үгсийн хооронд таслал тавих ёстой шүү. Дахин үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // punctuation_place (mock-task-10) leads so the new drag-the-mark screen is seen first;
-  // punctuation_choice (mock-task-9) follows; sentence_capital (mock-task-8) then the rest.
-  tasks: [mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // comma_place (mock-task-11) leads so the new drag-the-comma screen is seen first;
+  // punctuation_place (mock-task-10) follows, then punctuation_choice (mock-task-9),
+  // sentence_capital (mock-task-8), then the rest.
+  tasks: [mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };

@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import AudioChoice from '@/src/features/exercise/renderers/AudioChoice';
 import AudioSpelling from '@/src/features/exercise/renderers/AudioSpelling';
+import CommaPlace from '@/src/features/exercise/renderers/CommaPlace';
 import Fallback from '@/src/features/exercise/renderers/Fallback';
 import FillBlank from '@/src/features/exercise/renderers/FillBlank';
 import ImageMatch from '@/src/features/exercise/renderers/ImageMatch';
@@ -29,5 +30,6 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   sentence_capital: SentenceCapital,
   punctuation_choice: SentencePunctuation,
   punctuation_place: PunctuationPlace,
+  comma_place: CommaPlace,
   fallback: Fallback,
 };

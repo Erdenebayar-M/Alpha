@@ -19,6 +19,8 @@ const taskTypeMap: Record<string, string> = {
   TT_8_1: 'punctuation_choice',
   // Drag the end mark into the gap after the word that ends each sentence (placeholder code).
   TT_8_2: 'punctuation_place',
+  // Drag a comma into the dashed gaps between words within a sentence (placeholder code).
+  TT_8_3: 'comma_place',
 };
 
 export function getInteractionForm(taskType: string): string {

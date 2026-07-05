@@ -25,6 +25,8 @@ export const colors = {
   pastelBg: '#FFF7FC',
   // Orange text-caret shown at the gap a dragged mark will drop into.
   dropCaret: '#FF7A1A',
+  // Dashed orange ring drawn at each empty comma-drop gap (CommaPlace / TT_8_3).
+  gapRing: '#FF8C3B',
 
   // Choice cards
   choiceBg: '#F8FBFF',
