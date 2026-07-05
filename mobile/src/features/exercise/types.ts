@@ -27,6 +27,12 @@ export interface TaskOptions {
   // between/after `tokens` where a sentence ends. `answer_gaps` lists the correct
   // "after tokens[i]" indices (e.g. [2, 6]).
   punctuation?: PunctuationOptions;
+  // Assemble-the-word task (TT_1_4 / TT_2_2), mirrors the backend `assembleWordOptions`
+  // in @app/shared: `tiles` is the scrambled letter pool (word letters + a few
+  // distractors), `correct_order` is the target letter sequence. The child taps tiles
+  // to fill slots in order — slot count is `correct_order.length`.
+  tiles?: string[];
+  correct_order?: string[];
   // interaction-form-specific extras may appear here; keep this open/optional
 }
 

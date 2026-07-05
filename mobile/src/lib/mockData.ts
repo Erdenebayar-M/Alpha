@@ -11,6 +11,15 @@ const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbru
 const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')).uri;
 const childWalkingUri = Image.resolveAssetSource(require('@/assets/images/child-walking.png')).uri;
 
+// Placeholder pictures for the assemble-the-word mock tasks. In production each word
+// carries its own image_url from the backend; these just exercise the renderer's image
+// card locally (сав/талх/чанах/хутгах/чацаргана have no bundled art yet).
+const savUri = summerUri;
+const talhUri = paintbrushUri;
+const chanahUri = childWalkingUri;
+const hutgahUri = toothbrushUri;
+const chatsarganaUri = butterflyUri;
+
 export interface MockParent {
   id: string;
   email: string;
@@ -443,12 +452,168 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Зэрэгцсэн үгсийн хооронд таслал тавих ёстой шүү. Дахин үзээрэй.',
     is_diagnostic: false,
   },
+  // --- Assemble-the-word tasks (TT_1_4, interaction_form `assemble_word`). One per
+  // Figma word; they differ only in length + how many distractor tiles the pool holds.
+  {
+    id: 'mock-task-12',
+    task_id: 'TASK-MOCK-012',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'assemble_word',
+    prompt_text: 'Үсгүүдийг зөв дараалалд оруулж үг бүтээгээрэй.',
+    correct_answer: 'сав',
+    // 3 letters, no distractor — the simplest case.
+    options: {
+      tiles: ['В', 'С', 'А'],
+      correct_order: ['С', 'А', 'В'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: savUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-13',
+    task_id: 'TASK-MOCK-013',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'assemble_word',
+    prompt_text: 'Үсгүүдийг зөв дараалалд оруулж үг бүтээгээрэй.',
+    correct_answer: 'талх',
+    // 4 letters + one distractor (Д).
+    options: {
+      tiles: ['А', 'Т', 'Л', 'Х', 'Д'],
+      correct_order: ['Т', 'А', 'Л', 'Х'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: talhUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-14',
+    task_id: 'TASK-MOCK-014',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'assemble_word',
+    prompt_text: 'Үсгүүдийг зөв дараалалд оруулж үг бүтээгээрэй.',
+    correct_answer: 'чанах',
+    // 5 letters with a repeated А + one distractor (Ш).
+    options: {
+      tiles: ['А', 'Ш', 'А', 'Н', 'Ч', 'Х'],
+      correct_order: ['Ч', 'А', 'Н', 'А', 'Х'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: chanahUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-15',
+    task_id: 'TASK-MOCK-015',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'assemble_word',
+    prompt_text: 'Үсгүүдийг зөв дараалалд оруулж үг бүтээгээрэй.',
+    correct_answer: 'хутгах',
+    // 6 letters with a repeated Х + one distractor (Ө).
+    options: {
+      tiles: ['У', 'Х', 'Х', 'Ө', 'Г', 'Т', 'А'],
+      correct_order: ['Х', 'У', 'Т', 'Г', 'А', 'Х'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: hutgahUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-16',
+    task_id: 'TASK-MOCK-016',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'assemble_word',
+    prompt_text: 'Үсгүүдийг зөв дараалалд оруулж үг бүтээгээрэй.',
+    correct_answer: 'чацаргана',
+    // 9 letters (four А's) + two distractors (Ш, З) — the wrap/edge case.
+    options: {
+      tiles: ['Г', 'А', 'Ш', 'Ч', 'А', 'Р', 'Н', 'А', 'Ц', 'А', 'З'],
+      correct_order: ['Ч', 'А', 'Ц', 'А', 'Р', 'Г', 'А', 'Н', 'А'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: chatsarganaUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 40,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // comma_place (mock-task-11) leads so the new drag-the-comma screen is seen first;
-  // punctuation_place (mock-task-10) follows, then punctuation_choice (mock-task-9),
-  // sentence_capital (mock-task-8), then the rest.
-  tasks: [mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // The five new assemble-the-word screens (mock-task-12..16: сав → чацаргана, short →
+  // long) lead so they're seen first; then comma_place, punctuation_place,
+  // punctuation_choice, sentence_capital, and the rest.
+  tasks: [
+    mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15],
+    mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6],
+    mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1],
+  ],
 };

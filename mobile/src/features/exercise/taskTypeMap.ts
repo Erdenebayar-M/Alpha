@@ -21,6 +21,9 @@ const taskTypeMap: Record<string, string> = {
   TT_8_2: 'punctuation_place',
   // Drag a comma into the dashed gaps between words within a sentence (placeholder code).
   TT_8_3: 'comma_place',
+  // Assemble the word: tap scrambled letter tiles to fill the slots in order.
+  TT_1_4: 'assemble_word',
+  TT_2_2: 'assemble_word',
 };
 
 export function getInteractionForm(taskType: string): string {
