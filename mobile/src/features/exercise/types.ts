@@ -37,6 +37,11 @@ export interface PunctuationOptions {
   mark: string;
   tokens: string[];
   answer_gaps: number[];
+  /** Boundaries that show a droppable gap (comma task, TT_8_3). A dashed circle renders
+   *  after `tokens[i]` for each `i` here, and `answer_gaps` is a subset (the rest are
+   *  distractors the child must leave empty). Absent → PunctuationPlace behaviour, where
+   *  every token boundary is an (invisible) drop slot. */
+  gap_positions?: number[];
 }
 
 export interface Task {
