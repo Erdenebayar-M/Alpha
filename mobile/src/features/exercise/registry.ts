@@ -10,6 +10,7 @@ import MatchPairs from '@/src/features/exercise/renderers/MatchPairs';
 import MultipleChoice from '@/src/features/exercise/renderers/MultipleChoice';
 import PunctuationPlace from '@/src/features/exercise/renderers/PunctuationPlace';
 import SentenceCapital from '@/src/features/exercise/renderers/SentenceCapital';
+import SentencePunctuation from '@/src/features/exercise/renderers/SentencePunctuation';
 import type { Task } from '@/src/features/exercise/types';
 
 export interface ExerciseRendererProps {
@@ -26,6 +27,7 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   letter_choice: LetterChoice,
   match_pairs: MatchPairs,
   sentence_capital: SentenceCapital,
+  punctuation_choice: SentencePunctuation,
   punctuation_place: PunctuationPlace,
   fallback: Fallback,
 };

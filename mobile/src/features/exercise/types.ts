@@ -23,7 +23,7 @@ export interface TaskOptions {
   // Link behavior for matching tasks: 'any' locks every link and grades at submit
   // (default); 'correct-only' locks a link only when it's the right pair.
   match_lock_mode?: 'any' | 'correct-only';
-  // Place-the-punctuation-mark task (TT_7_2): the child drags `mark` into the gaps
+  // Place-the-punctuation-mark task (TT_8_2): the child drags `mark` into the gaps
   // between/after `tokens` where a sentence ends. `answer_gaps` lists the correct
   // "after tokens[i]" indices (e.g. [2, 6]).
   punctuation?: PunctuationOptions;

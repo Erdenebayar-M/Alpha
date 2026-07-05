@@ -9,6 +9,7 @@ const toothbrushUri = Image.resolveAssetSource(require('@/assets/images/toothbru
 const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly.png')).uri;
 const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbrush.png')).uri;
 const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')).uri;
+const childWalkingUri = Image.resolveAssetSource(require('@/assets/images/child-walking.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -330,6 +331,45 @@ export const mockTasks: Task[] = [
     id: 'mock-task-9',
     task_id: 'TASK-MOCK-009',
     stage: 'STAGE1',
+    task_type: 'TT_8_1',
+    interaction_form: 'punctuation_choice',
+    // "_" marks the blank (AGENTS §5) — here the sentence's END mark is missing. The child
+    // picks the correct punctuation. "Хүүхэд хаашаа явж байна_" is a question, so "?" is
+    // correct. The bubble question ("Зөв тэмдэг аль нь вэ? Сонгоорой") is a static label
+    // in the renderer, like FillBlank's — prompt_text carries the sentence itself.
+    prompt_text: 'Хүүхэд хаашаа явж байна_',
+    correct_answer: '?',
+    options: {
+      audio_trigger: true,
+      choices: [
+        { text: '.', is_correct: false },
+        { text: '?', is_correct: true },
+        { text: '!', is_correct: false },
+      ],
+    },
+    audio_url: null,
+    // example.com never resolves, so playback (and the talking animation) could never
+    // fire; use a real test file locally so the speaker button drives the buddy.
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: childWalkingUri,
+    primary_skill: 'PUNCTUATION',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: ['SENTENCE_PUNCTUATION'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Зөв! Асуултын төгсгөлд асуултын тэмдэг тавина.',
+    feedback_wrong: 'Энэ өгүүлбэр асууж байна. Асуултын тэмдэг тавь шүү.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-10',
+    task_id: 'TASK-MOCK-010',
+    stage: 'STAGE1',
     task_type: 'TT_8_2',
     interaction_form: 'punctuation_place',
     // No "_" blank here — the child drags the end mark into the gap AFTER the word that
@@ -368,7 +408,7 @@ export const mockTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // punctuation_place (mock-task-9) leads so the new drag-the-mark screen is seen first;
-  // sentence_capital (mock-task-8) follows; fill_blank (mock-task-2) runs last.
-  tasks: [mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
+  // punctuation_place (mock-task-10) leads so the new drag-the-mark screen is seen first;
+  // punctuation_choice (mock-task-9) follows; sentence_capital (mock-task-8) then the rest.
+  tasks: [mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6], mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1]],
 };
