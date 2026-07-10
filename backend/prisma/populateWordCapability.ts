@@ -37,6 +37,7 @@ async function main() {
   if (isDryRun) console.log("[DRY RUN] No writes will be made.\n");
 
   const words = await prisma.word.findMany({
+    where: { root_word_id: null }, // roots only — inflected-form rows stay non-eligible (empty capability arrays)
     select: { id: true, word: true, part_of_speech: true, meaning_type: true },
   });
   console.log(`Loaded ${words.length} words.\n`);

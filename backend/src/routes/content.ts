@@ -1241,6 +1241,7 @@ content.get('/words', async (c) => {
   const { grade, category, app_level, q, active, page, per_page } = parsed.data;
 
   const where = {
+    root_word_id: null, // roots only — inflected-form rows are excluded from the word list
     ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
     ...(app_level ? { app_level } : {}),
@@ -1268,10 +1269,11 @@ content.get('/words', async (c) => {
 // GET /api/admin/content/words/facets — distinct values for the filter dropdowns.
 // grades: flattens each word's grade_band array so a word in ['G1','G2'] contributes to both buckets.
 content.get('/words/facets', async (c) => {
+  // roots only — inflected-form rows are excluded from the facet buckets.
   const [gradeBands, categories, levels] = await Promise.all([
-    prisma.word.findMany({ where: { grade_band: { isEmpty: false } }, select: { grade_band: true } }),
-    prisma.word.findMany({ where: { category: { not: '' } }, distinct: ['category'], select: { category: true } }),
-    prisma.word.findMany({ where: { app_level: { not: null } }, distinct: ['app_level'], select: { app_level: true } }),
+    prisma.word.findMany({ where: { grade_band: { isEmpty: false }, root_word_id: null }, select: { grade_band: true } }),
+    prisma.word.findMany({ where: { category: { not: '' }, root_word_id: null }, distinct: ['category'], select: { category: true } }),
+    prisma.word.findMany({ where: { app_level: { not: null }, root_word_id: null }, distinct: ['app_level'], select: { app_level: true } }),
   ]);
 
   const grades = new Set<string>();

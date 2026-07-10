@@ -183,7 +183,7 @@ describe('selectTargetWords — fallback ladder', () => {
 
     expect(result).toHaveLength(3);
     const absoluteFloorWhere = capturedWhereN(db, 3);
-    expect(absoluteFloorWhere).toEqual({ is_active: true, grade: 1 });
+    expect(absoluteFloorWhere).toEqual({ is_active: true, root_word_id: null, grade: 1 });
   });
 
   it('returns empty array and does not throw when all ladder steps return empty', async () => {

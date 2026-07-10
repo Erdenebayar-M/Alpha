@@ -70,6 +70,7 @@ function needsBalarhaiWidening(errorTargets: string[]): boolean {
 function baseWhere(grade: number, skill: string): WordWhereInput {
   return {
     is_active: true,
+    root_word_id: null, // roots only — inflected-form rows are never exercise targets
     grade,
     skills_possible: { has: skill },
   };
@@ -167,10 +168,10 @@ export async function selectTargetWords(
     where: baseWhere(grade, skill),
   });
 
-  // absolute floor: grade only
+  // absolute floor: grade only (still roots-only — forms are never targets)
   ladderSteps.push({
     label: `grade=${grade} (absolute floor)`,
-    where: { is_active: true, grade },
+    where: { is_active: true, root_word_id: null, grade },
   });
 
   for (const step of ladderSteps) {

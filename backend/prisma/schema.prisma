@@ -418,9 +418,20 @@ model Word {
   balarhai_unknown    Boolean?              // балархай couldn't be resolved → review
   is_active           Boolean  @default(true)
 
+  // Root ↔ inflected-form self-relation. root_word_id null = this row is a root
+  // (lemma); non-null = an inflected surface form pointing at its root lemma
+  // (e.g. "ахтайгаа" → "ах"). Populated from the grade-2 workbook's
+  // "Илэрсэн хэлбэрүүд" column by prisma/populateWordForms.ts. Form rows are
+  // excluded from exercise selection / admin listing (see root_word_id: null
+  // filters). Cascade so deleting a root removes its forms.
+  root_word_id String?
+  root_word    Word?   @relation("WordForms", fields: [root_word_id], references: [id], onDelete: Cascade)
+  forms        Word[]  @relation("WordForms")
+
   @@index([grade_band], type: Gin)
   @@index([skill_tags], type: Gin)
   @@index([grade])
+  @@index([root_word_id])
   // GIN indexes for capability containment queries (errors_possible @> {C1}, etc.)
   @@index([skills_possible], type: Gin)
   @@index([errors_possible], type: Gin)
