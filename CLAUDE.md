@@ -120,3 +120,4 @@ The `TaskSource` enum (`HUMAN` | `AI`) is set automatically: hand-created and pi
 2. **Never change error code definitions without asking.** All 38 error codes are locked. Adding, renaming, or redefining a code requires explicit user approval and a schema version bump.
 3. **Never write directly to `seed-data/`.** That folder is read-only reference. Scripts may read from it but must never modify or overwrite its files.
 4. **Rejected tasks stay.** Move to `rejected/` with a rejection note — do not delete, as they form the audit trail.
+5. **Never commit changes in `../docs/` or `../words/`.** `docs/` isn't version-controlled. `words/` is a git clone of the external `unimorph/khk` repo (plus a nested `monwn/` repo) — local edits there are working-copy reference data, not part of this project's history.
