@@ -1,8 +1,9 @@
 /**
  * End-to-End: Full Learning Flow
  *
- * Covers all 16 steps from parent registration through plan creation,
- * lesson completion, and dashboard verification — using mocked DB and services.
+ * Covers registration through plan creation, lesson completion, and dashboard
+ * verification — using mocked DB and services. The diagnostic is the
+ * single-phase adaptive climb (start → submit → submit … → complete).
  */
 
 import { prisma } from '../../lib/db/client';
@@ -117,41 +118,8 @@ const PLAN_ID    = 'plan-e2e-1';
 const LESSON_ID  = 'lesson-e2e-1';
 const BEARER     = 'Bearer e2e-test-token';
 
-const ALL_SKILLS = ['S1','S2','S3','S4','S5','S6','S7','S8'] as const;
-
-// Phase A: tasks one per skill, IDs match skill names for clarity
-const PA_TASK_IDS = ALL_SKILLS.map((s) => `task-${s}`);
-
-// Phase B tasks: 3×S3, 3×S5, 2 cross-skill
-const PB_IDS    = ['pb-s3-1','pb-s3-2','pb-s3-3','pb-s5-1','pb-s5-2','pb-s5-3','pb-cross-1','pb-cross-2'];
-const PB_SKILLS = ['S3','S3','S3','S5','S5','S5','S3','S5'] as const;
-
-// Phase C tasks: one each for boundary
-const PC_IDS    = ['pc-1','pc-2','pc-3','pc-4'];
-const PC_SKILLS = ['S7','S2','S3','S5'] as const;
-
 // Lesson tasks targeting S3 and S5
-const LES_IDS = ['lesson-task-s3','lesson-task-s5'];
-
-// ─── Score fixtures ───────────────────────────────────────────────────────────
-
-// Phase A — S3, S4, S5, S6 all score 0.5 (below 0.6 threshold).
-// identifyWeakSkills tiebreak (S7>S2>S3>S5>S4>S6>S8>S1) picks S3 and S5.
-const PA_SCORES: Record<string, number> = {
-  S1: 1.0, S2: 1.0, S3: 0.5, S4: 0.5,
-  S5: 0.5, S6: 0.5, S7: 1.0, S8: 1.0,
-};
-const PA_ERRORS: Record<string, string[]> = {
-  S3: ['C1'], S4: ['C4'], S5: ['E2'], S6: ['G1', 'G2'],
-};
-
-// Phase B — mix of correct and wrong; S3/S5 consistently low
-const PB_SCORES = [0.0, 0.5, 0.0,  0.0, 0.5, 0.0,  0.75, 0.75] as const;
-const PB_ERRORS = [['C1'],['C1'],['C1'], ['E2'],['E2'],['E2'], [],[]];
-
-// Phase C
-const PC_SCORES = [0.75, 1.0, 0.5, 0.5] as const;
-const PC_ERRORS = [[], [], ['C1'], ['E2']];
+const LES_IDS = ['lesson-task-s3', 'lesson-task-s5'];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -171,25 +139,72 @@ function fakeTask(id: string, skill: string, type = 'TT1_CHOICE') {
 }
 
 function fakeLearner() {
-  return {
-    id: LEARNER_ID,
-    parent_id: PARENT_ID,
-    name: 'Болд',
-    grade: 2,
-    variant: 'A',
-    daily_minutes: 10,
-  };
+  return { id: LEARNER_ID, parent_id: PARENT_ID, name: 'Болд', grade: 2, variant: 'A', daily_minutes: 10 };
 }
 
-function fakeSession(phase: string, overrides: Record<string, unknown> = {}) {
+function fakeSession(overrides: Record<string, unknown> = {}) {
   return {
     id: SESSION_ID,
     learner_id: LEARNER_ID,
     status: 'IN_PROGRESS',
-    current_phase: phase,
     weak_skills_detected: [],
+    result: { available_rungs: [1, 2, 3], served: [] },
     learner: fakeLearner(),
     ...overrides,
+  };
+}
+
+// Rendered item payload the diagnostic route returns (TASK_SELECT shape).
+function renderedTask(id: string, skill = 'S2') {
+  return {
+    id,
+    task_type: 'TT_1_1',
+    prompt_text: 'Choose the correct word',
+    options: { choices: [{ text: 'нар', is_correct: true }] },
+    audio_url: null,
+    image_url: null,
+    primary_skill: skill,
+    estimated_time_seconds: 30,
+  };
+}
+
+// Configures the smart task.findMany used by the adaptive route: grade_band
+// queries return the bank's rung rows; grade_levels queries return the pool.
+function setupBank(
+  rungs: number[],
+  pools: Record<string, { id: string; primary_skill?: string; task_type?: string; difficulty?: number }[]>,
+) {
+  const bankRows = rungs.map((r) => ({ grade_levels: [`G2:M${r}`] }));
+  m.taskFindMany.mockImplementation((args: any) => {
+    const where = args?.where ?? {};
+    if (where.grade_band) return Promise.resolve(bankRows);
+    const cell: string | undefined = where.grade_levels?.has;
+    if (cell) {
+      const notIn: string[] = where.id?.notIn ?? [];
+      return Promise.resolve(
+        (pools[cell] ?? [])
+          .map((p) => ({
+            id: p.id,
+            primary_skill: p.primary_skill ?? 'S2',
+            task_type: p.task_type ?? 'TT_1_1',
+            difficulty: p.difficulty ?? 2,
+          }))
+          .filter((t) => !notIn.includes(t.id)),
+      );
+    }
+    return Promise.resolve([]);
+  });
+  m.taskFindUnique.mockImplementation((args: any) => Promise.resolve(renderedTask(args.where.id)));
+}
+
+// One answered item in the reconstructed climb history.
+function histAttempt(task_id: string, skill: string, score: number, errors: string[] = []) {
+  return {
+    task_id,
+    score,
+    time_seconds: 15,
+    error_codes: errors,
+    task: { primary_skill: skill, estimated_time_seconds: 30 },
   };
 }
 
@@ -210,6 +225,10 @@ async function json(res: Response) {
 
 function authHeaders() {
   return { 'Content-Type': 'application/json', Authorization: BEARER };
+}
+
+function submitBody(task_id: string) {
+  return JSON.stringify({ session_id: SESSION_ID, task_id, input_text: 'тест', time_seconds: 15 });
 }
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
@@ -313,13 +332,13 @@ describe('3 – LearnerSkillState created with all M0/0/LOW defaults', () => {
   });
 });
 
-// ─── Step 4: Start diagnostic → 8 Phase A tasks ──────────────────────────────
+// ─── Step 4: Start diagnostic → first (warm-up) item ─────────────────────────
 
-describe('4 – start diagnostic → 8 Phase A tasks', () => {
-  it('201 → session created, 8 tasks returned (one per skill)', async () => {
+describe('4 – start diagnostic → warm-up item served first', () => {
+  it('201 → session created, first task returned at item 1', async () => {
     m.learnerFindUnique.mockResolvedValue(fakeLearner());
     m.sessionFindFirst.mockResolvedValue(null);
-    ALL_SKILLS.forEach((s, i) => m.taskFindFirst.mockResolvedValueOnce(fakeTask(PA_TASK_IDS[i], s)));
+    setupBank([1, 2, 3], { 'G2:M1': [{ id: 'd1' }] });
     m.sessionCreate.mockResolvedValue({ id: SESSION_ID });
 
     const res = await diagnosticRouter.request('/start', {
@@ -331,294 +350,123 @@ describe('4 – start diagnostic → 8 Phase A tasks', () => {
 
     expect(res.status).toBe(201);
     expect(body.data.session_id).toBe(SESSION_ID);
-    expect(body.data.phase).toBe('A');
-    expect(body.data.total_phases).toBe(3);
-    expect(body.data.tasks).toHaveLength(8);
-    expect(body.data.tasks.map((t: any) => t.primary_skill)).toEqual([...ALL_SKILLS]);
-  });
-});
+    expect(body.data.item_number).toBe(1);
+    expect(body.data.task.id).toBe('d1');
 
-// ─── Step 5: Submit 8 Phase A answers ────────────────────────────────────────
-
-describe('5 – submit 8 Phase A answers', () => {
-  const PHASE_A_INPUTS: Record<string, { text: string; desc: string }> = {
-    S1: { text: 'ном',           desc: 'correct (score 1.0)' },
-    S2: { text: 'ном',           desc: 'correct (score 1.0)' },
-    S3: { text: 'того',          desc: '"того" vs "тогоо" → C1, score 0.5' },
-    S4: { text: 'дэвтр',         desc: '"дэвтр" vs "дэвтэр" → C4, score 0.5' },
-    S5: { text: 'гэрд',          desc: '"гэрд" vs "гэрт" → E2, score 0.5' },
-    S6: { text: 'би явна',       desc: '"би явна" vs "Би явна." → G1+G2, score 0.5' },
-    S7: { text: 'ном гэр нар',   desc: 'dictation (score 1.0)' },
-    S8: { text: 'ном',           desc: 'correction (score 1.0)' },
-  };
-
-  ALL_SKILLS.forEach((skill, idx) => {
-    it(`S${idx + 1}: ${PHASE_A_INPUTS[skill].desc}`, async () => {
-      m.sessionFindUnique.mockResolvedValue(fakeSession('PHASE_A'));
-      m.attemptFindFirst.mockResolvedValue(null);
-      m.processAttempt.mockResolvedValueOnce(
-        attemptResult(PA_SCORES[skill], PA_ERRORS[skill] ?? []),
-      );
-      m.attemptCount.mockResolvedValueOnce(idx + 1);
-
-      const res = await diagnosticRouter.request('/submit', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({
-          session_id: SESSION_ID,
-          task_id: PA_TASK_IDS[idx],
-          input_text: PHASE_A_INPUTS[skill].text,
-          time_seconds: 15,
-        }),
-      });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.score).toBe(PA_SCORES[skill]);
-      if (PA_ERRORS[skill]?.length) {
-        expect(body.data.error_codes).toEqual(expect.arrayContaining(PA_ERRORS[skill]));
-      }
-      expect(body.data.phase_progress.total).toBe(8);
-      expect(body.data.phase_progress.completed).toBe(idx + 1);
-    });
-  });
-});
-
-// ─── Step 6: next-phase A → B targets S3 and S5 ──────────────────────────────
-
-describe('6 – next-phase A→B: Phase B targets S3 and S5', () => {
-  it('200 → phase B returned, weak_skills = [S3, S5]', async () => {
-    m.sessionFindUnique.mockResolvedValue(fakeSession('PHASE_A'));
-    m.sessionUpdate.mockResolvedValue({});
-
-    const phaseAData = ALL_SKILLS.map((s, i) => ({
-      task_id: PA_TASK_IDS[i],
-      score: PA_SCORES[s],
-      error_codes: PA_ERRORS[s] ?? [],
-      task: { primary_skill: s },
-    }));
-    m.attemptFindMany.mockResolvedValueOnce(phaseAData);
-
-    // selectPhaseB calls task.findMany: once for all weak skills batched, once for cross-skill
-    m.taskFindMany
-      .mockResolvedValueOnce([
-        { id: 'pb-s3-1', level_target: 'M1-M2', primary_skill: 'S3' },
-        { id: 'pb-s3-2', level_target: 'M2', primary_skill: 'S3' },
-        { id: 'pb-s3-3', level_target: 'M2', primary_skill: 'S3' },
-        { id: 'pb-s5-1', level_target: 'M1-M2', primary_skill: 'S5' },
-        { id: 'pb-s5-2', level_target: 'M2', primary_skill: 'S5' },
-        { id: 'pb-s5-3', level_target: 'M2', primary_skill: 'S5' },
-      ])
-      .mockResolvedValueOnce([
-        { id: 'pb-cross-1' },
-        { id: 'pb-cross-2' },
-      ])
-      // Final task.findMany in route for display
-      .mockResolvedValueOnce(PB_IDS.map((id, i) => fakeTask(id, PB_SKILLS[i])));
-
-    const res = await diagnosticRouter.request('/next-phase', {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ session_id: SESSION_ID }),
-    });
-    const body = await json(res);
-
-    expect(res.status).toBe(200);
-    expect(body.data.phase).toBe('B');
-    expect(body.data.tasks).toHaveLength(8);
-    expect(body.data.weak_skills).toContain('S3');
-    expect(body.data.weak_skills).toContain('S5');
-    expect(body.data.weak_skills).not.toContain('S1');
-    expect(body.data.weak_skills).not.toContain('S2');
-
-    expect(m.sessionUpdate).toHaveBeenCalledWith(
+    expect(m.sessionCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          phase_a_completed: true,
-          current_phase: 'PHASE_B',
-          weak_skills_detected: expect.arrayContaining(['S3', 'S5']),
+          status: 'IN_PROGRESS',
+          result: expect.objectContaining({
+            available_rungs: [1, 2, 3],
+            served: [{ task_id: 'd1', rung: 1 }],
+          }),
         }),
       }),
     );
   });
 });
 
-// ─── Step 7: Submit 8 Phase B answers ────────────────────────────────────────
+// ─── Step 5: Submit first answer → next item served ──────────────────────────
 
-describe('7 – submit 8 Phase B answers (mix of correct and wrong)', () => {
-  PB_IDS.forEach((taskId, i) => {
-    it(`Phase B task ${i + 1} (${PB_SKILLS[i]}) → score ${PB_SCORES[i]}`, async () => {
-      m.sessionFindUnique.mockResolvedValue(
-        fakeSession('PHASE_B', { weak_skills_detected: ['S3', 'S5'] }),
-      );
-      m.attemptFindFirst.mockResolvedValue(null);
-      m.processAttempt.mockResolvedValueOnce(
-        attemptResult(PB_SCORES[i], PB_ERRORS[i]),
-      );
-      m.attemptCount.mockResolvedValueOnce(9 + i);
-
-      const res = await diagnosticRouter.request('/submit', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({
-          session_id: SESSION_ID,
-          task_id: taskId,
-          input_text: 'тест',
-          time_seconds: 15,
-        }),
-      });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.score).toBe(PB_SCORES[i]);
-      expect(body.data.phase_progress.total).toBe(8);
-    });
-  });
-});
-
-// ─── Step 8: next-phase B → C ────────────────────────────────────────────────
-
-describe('8 – next-phase B→C: Phase C tasks returned', () => {
-  it('200 → 4 Phase C tasks and estimated_level string', async () => {
+describe('5 – submit first answer → adaptive next item', () => {
+  it('200 → continue with next_task at item 2 (climb starts at M2)', async () => {
     m.sessionFindUnique.mockResolvedValue(
-      fakeSession('PHASE_B', { weak_skills_detected: ['S3', 'S5'] }),
+      fakeSession({ result: { available_rungs: [1, 2, 3], served: [{ task_id: 'd1', rung: 1 }] } }),
     );
+    m.attemptFindFirst.mockResolvedValue(null);
+    m.processAttempt.mockResolvedValueOnce(attemptResult(1.0, []));
+    m.attemptFindMany.mockResolvedValueOnce([histAttempt('d1', 'S1', 1.0, [])]);
+    setupBank([1, 2, 3], { 'G2:M2': [{ id: 'd2', primary_skill: 'S2' }] });
     m.sessionUpdate.mockResolvedValue({});
 
-    const phaseAData = ALL_SKILLS.map((s, i) => ({
-      task_id: PA_TASK_IDS[i],
-      score: PA_SCORES[s],
-      error_codes: PA_ERRORS[s] ?? [],
-      task: { primary_skill: s },
-    }));
-    const phaseBData = PB_IDS.map((id, i) => ({
-      task_id: id,
-      score: PB_SCORES[i],
-      error_codes: PB_ERRORS[i],
-      task: { primary_skill: PB_SKILLS[i] },
-    }));
-    m.attemptFindMany.mockResolvedValueOnce([...phaseAData, ...phaseBData]);
-
-    m.taskFindFirst
-      .mockResolvedValueOnce(fakeTask('pc-1', 'S7', 'TT4_DICTATION'))
-      .mockResolvedValueOnce(fakeTask('pc-2', 'S2', 'TT5_MINI_TEXT'))
-      .mockResolvedValueOnce(fakeTask('pc-3', 'S3', 'TT3_CORRECTION'))
-      .mockResolvedValueOnce(fakeTask('pc-4', 'S5', 'TT1_CHOICE'));
-
-    const res = await diagnosticRouter.request('/next-phase', {
+    const res = await diagnosticRouter.request('/submit', {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ session_id: SESSION_ID }),
+      body: submitBody('d1'),
     });
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.data.phase).toBe('C');
-    expect(body.data.tasks).toHaveLength(4);
-    expect(typeof body.data.estimated_level).toBe('string');
-    expect(body.data.estimated_level).toMatch(/^M[0-5]$/);
-
+    expect(body.data.completed).toBe(false);
+    expect(body.data.next_task.id).toBe('d2');
+    expect(body.data.item_number).toBe(2);
     expect(m.sessionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          phase_b_completed: true,
-          current_phase: 'PHASE_C',
+          result: expect.objectContaining({
+            served: [
+              { task_id: 'd1', rung: 1 },
+              { task_id: 'd2', rung: 2 },
+            ],
+          }),
         }),
       }),
     );
   });
 });
 
-// ─── Step 9: Submit 4 Phase C answers ────────────────────────────────────────
+// ─── Steps 6–10: submit final answer → diagnostic completes with a plan ──────
 
-describe('9 – submit 4 Phase C answers', () => {
-  PC_IDS.forEach((taskId, i) => {
-    it(`Phase C task ${i + 1} (${PC_SKILLS[i]}) → score ${PC_SCORES[i]}`, async () => {
-      m.sessionFindUnique.mockResolvedValue(fakeSession('PHASE_C'));
-      m.attemptFindFirst.mockResolvedValue(null);
-      m.processAttempt.mockResolvedValueOnce(
-        attemptResult(PC_SCORES[i], PC_ERRORS[i]),
-      );
-      m.attemptCount.mockResolvedValueOnce(17 + i);
-
-      const res = await diagnosticRouter.request('/submit', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({
-          session_id: SESSION_ID,
-          task_id: taskId,
-          input_text: 'тест',
-          time_seconds: 15,
-        }),
-      });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.score).toBe(PC_SCORES[i]);
-      expect(body.data.phase_progress.total).toBe(4);
-    });
-  });
-});
-
-// ─── Steps 10–12: next-phase C→COMPLETED + result + plan ─────────────────────
-
-describe('10–12 – next-phase C→COMPLETED: result, plan auto-created', () => {
-  // Build full 20-attempt data for calculateFinalResult
-  const phaseAData = ALL_SKILLS.map((s, i) => ({
-    task_id: PA_TASK_IDS[i],
-    score: PA_SCORES[s],
-    error_codes: PA_ERRORS[s] ?? [],
-    task: { primary_skill: s },
-  }));
-  const phaseBData = PB_IDS.map((id, i) => ({
-    task_id: id,
-    score: PB_SCORES[i],
-    error_codes: PB_ERRORS[i],
-    task: { primary_skill: PB_SKILLS[i] },
-  }));
-  const phaseCData = PC_IDS.map((id, i) => ({
-    task_id: id,
-    score: PC_SCORES[i],
-    error_codes: PC_ERRORS[i],
-    task: { primary_skill: PC_SKILLS[i] },
-  }));
-  const allAttemptData = [...phaseAData, ...phaseBData, ...phaseCData];
+describe('6–10 – final answer brackets the level and completes the diagnostic', () => {
+  // A 6-item climb: passes at M2, fails at M3 → bracketed at M2. S3/S5 are the
+  // weakest skills (score 0, errors C1/E2), matching the learner's profile.
+  const served = [
+    { task_id: 'd1', rung: 1 },
+    { task_id: 'd2', rung: 2 },
+    { task_id: 'd3', rung: 2 },
+    { task_id: 'd4', rung: 3 },
+    { task_id: 'd5', rung: 3 },
+    { task_id: 'd6', rung: 2 },
+  ];
+  const history = [
+    histAttempt('d1', 'S1', 1.0, []),
+    histAttempt('d2', 'S2', 1.0, []),
+    histAttempt('d3', 'S7', 1.0, []),
+    histAttempt('d4', 'S3', 0.0, ['C1']),
+    histAttempt('d5', 'S5', 0.0, ['E2']),
+    histAttempt('d6', 'S6', 1.0, []),
+  ];
 
   let completedBody: any;
 
   beforeEach(async () => {
-    m.sessionFindUnique.mockResolvedValue(fakeSession('PHASE_C'));
+    m.sessionFindUnique.mockResolvedValue(
+      fakeSession({ result: { available_rungs: [1, 2, 3], served } }),
+    );
+    m.attemptFindFirst.mockResolvedValue(null);
+    m.processAttempt.mockResolvedValueOnce(attemptResult(1.0, []));
+    m.attemptFindMany.mockResolvedValueOnce(history);
     m.sessionUpdate.mockResolvedValue({});
     m.skillStateUpsert.mockResolvedValue({});
     m.planCreate.mockResolvedValue({ id: PLAN_ID });
-    m.attemptFindMany.mockResolvedValueOnce(allAttemptData);
 
-    const res = await diagnosticRouter.request('/next-phase', {
+    const res = await diagnosticRouter.request('/submit', {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ session_id: SESSION_ID }),
+      body: submitBody('d6'),
     });
     completedBody = await json(res);
     expect(res.status).toBe(200);
   });
 
-  it('10 – completed = true', () => {
+  it('10 – completed = true, lessons generated', () => {
     expect(completedBody.data.completed).toBe(true);
+    expect(completedBody.data.lessons_generated).toBe(true);
   });
 
-  it('11 – result: general_level M1 or M2, S3/S5 priority, C1/E2 top errors', () => {
+  it('11 – result: level M2 (bracketed), S3/S5 priority, C1/E2 errors', () => {
     const r = completedBody.data.result;
 
-    expect(r.general_level).toMatch(/^M[12]$/);
-    expect(r.priority_skills).toContain('S3');
-    expect(r.priority_skills).toContain('S5');
-    expect(r.top_error_codes).toContain('C1');
-    expect(r.top_error_codes).toContain('E2');
+    expect(r.general_level).toBe('M2');
+    expect(r.level_confidence).toBe('HIGH');
+    expect(r.bank_coverage).toBe(3);
+    expect(r.capped_by_bank).toBe(false);
+    expect(r.priority_skills).toEqual(expect.arrayContaining(['S3', 'S5']));
+    expect(r.top_error_codes).toEqual(expect.arrayContaining(['C1', 'E2']));
 
-    // Verify all 8 skill levels and scores are present
     expect(Object.keys(r.skill_levels)).toHaveLength(8);
     expect(Object.keys(r.skill_scores)).toHaveLength(8);
-    // S3 and S5 should have lower levels than S1/S2/S7/S8
     expect(r.skill_levels['S1']).not.toBe('M0');
     expect(r.skill_levels['S2']).not.toBe('M0');
   });
@@ -639,28 +487,25 @@ describe('10–12 – next-phase C→COMPLETED: result, plan auto-created', () =
   });
 });
 
-// ─── Step 11 (GET result): verify via /result endpoint ───────────────────────
+// ─── Step 11b: GET result endpoint ───────────────────────────────────────────
 
 describe('11b – GET /diagnostic/result/:sessionId', () => {
   it('200 → stored result has general_level, S3/S5 priority, C1/E2 errors', async () => {
     const storedResult = {
-      general_level: 'M1',
+      general_level: 'M2',
+      level_confidence: 'HIGH',
+      bank_coverage: 3,
+      capped_by_bank: false,
       confidence: 'HIGH',
-      skill_levels: {
-        S1:'M3', S2:'M3', S3:'M0', S4:'M1',
-        S5:'M0', S6:'M1', S7:'M3', S8:'M3',
-      },
-      skill_scores: {
-        S1: 1.0,  S2: 1.0,   S3: 0.375, S4: 0.5,
-        S5: 0.375, S6: 0.5, S7: 0.875, S8: 1.0,
-      },
+      skill_levels: { S1: 'M3', S2: 'M3', S3: 'M0', S4: 'M0', S5: 'M0', S6: 'M3', S7: 'M3', S8: 'M0' },
+      skill_scores: { S1: 1.0, S2: 1.0, S3: 0.0, S4: 0.0, S5: 0.0, S6: 1.0, S7: 1.0, S8: 0.0 },
       top_error_codes: ['C1', 'E2'],
       priority_skills: ['S3', 'S5'],
       recommended_daily_minutes: 10,
     };
 
     m.sessionFindUnique.mockResolvedValueOnce(
-      fakeSession('PHASE_C', { status: 'COMPLETED', result: storedResult }),
+      fakeSession({ status: 'COMPLETED', result: storedResult }),
     );
 
     const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
@@ -670,7 +515,7 @@ describe('11b – GET /diagnostic/result/:sessionId', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.data.result.general_level).toBe('M1');
+    expect(body.data.result.general_level).toBe('M2');
     expect(body.data.result.priority_skills).toEqual(['S3', 'S5']);
     expect(body.data.result.top_error_codes).toContain('C1');
     expect(body.data.result.top_error_codes).toContain('E2');
@@ -726,7 +571,6 @@ describe("13 – GET today's lesson → tasks targeting S3 and S5", () => {
     expect(body.data.lesson.tasks).toHaveLength(2);
     expect(body.data.lesson.tasks.map((t: any) => t.id)).toEqual(expect.arrayContaining(LES_IDS));
 
-    // Lesson marked IN_PROGRESS on first fetch
     expect(m.lessonUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'IN_PROGRESS' }),
@@ -863,9 +707,7 @@ describe('15 – GET /dashboard/skills → scores updated after lesson', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    // S3 score updated from initial 0.375 → higher after correct lesson attempt
     expect(body.data.skills.s3_score).toBeGreaterThan(0.375);
-    // S5 score now above 0.6 (M3 level) after correct answer
     expect(body.data.skills.s5_score).toBeGreaterThan(0.375);
     expect(body.data.skills.general_level).toBe('M1');
   });

@@ -1,8 +1,6 @@
-// Diagnostic Branching — drives the 3-phase adaptive assessment
-// (PHASE_A → PHASE_B adaptive → PHASE_C boundary).
-
-import type { PrismaClient } from '../../../generated/prisma';
-import { skillsFromErrors } from '../error-engine/error-skill-map';
+// Diagnostic scoring — aggregates attempts into a final skill/error/level result.
+// Consumed by the single-phase adaptive diagnostic (see diagnostic-adaptive.ts),
+// which sources general_level from the climb and skills/errors from here.
 
 // Tie-break priority: when skills are equally weak, pick in this order
 const TIEBREAK_PRIORITY = ['S7', 'S2', 'S3', 'S5', 'S4', 'S6', 'S8', 'S1'] as const;
@@ -13,18 +11,6 @@ const CORE_SKILLS: SkillKey[] = ['S2', 'S3', 'S5', 'S7'];
 const ALL_SKILLS: SkillKey[] = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
 const LEVEL_ORDER = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5'] as const;
 type LevelCode = (typeof LEVEL_ORDER)[number];
-
-export interface PhaseAAttempt {
-  task_id: string;
-  primary_skill: string;
-  score: number;
-  error_codes: string[];
-}
-
-export interface PhaseBResult {
-  weakSkills: string[];
-  phaseBTaskIds: string[];
-}
 
 export interface DiagnosticAttempt {
   task_id: string;
@@ -68,13 +54,6 @@ function avgPerSkill(
 }
 
 /**
- * Collect all error codes from all attempts.
- */
-function allErrorCodes(attempts: { error_codes: string[] }[]): string[] {
-  return attempts.flatMap((a) => a.error_codes);
-}
-
-/**
  * Count actual task attempts per skill (for confidence calculation).
  * Uses task.primary_skill only (not error-inferred).
  */
@@ -104,108 +83,12 @@ function scoreToLevel(score: number): LevelCode {
   return 'M0';
 }
 
-// level_target strings: "M1", "M1-M2", "M2", "M2-M3", …
-function includesM2Plus(levelTarget: string): boolean {
-  return /M[2-5]/.test(levelTarget);
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Returns true when the overall Phase A average is below 0.25 — learner is at
- * the M0 floor across the board, so targeted Phase B drilling adds no signal.
- * Skip straight to Phase C boundary tasks for level calibration.
- */
-export function shouldBypassPhaseB(phaseAAttempts: PhaseAAttempt[]): boolean {
-  if (phaseAAttempts.length === 0) return false;
-  const avg = avgPerSkill(phaseAAttempts);
-  const values = Object.values(avg);
-  const overall = values.reduce((s, v) => s + v, 0) / values.length;
-  return overall < 0.25;
-}
-
-/**
- * Pure function: returns up to 2 weak skills (<60% avg) from Phase A attempts,
- * ordered by tiebreak priority (S7 > S2 > S3 > S5 > S4 > S6 > S8 > S1).
- */
-export function identifyWeakSkills(phaseAAttempts: PhaseAAttempt[]): string[] {
-  const avg = avgPerSkill(phaseAAttempts);
-  // Skills with no attempts are treated as not-weak (unknown ≠ weak)
-  return TIEBREAK_PRIORITY.filter(
-    (s) => s in avg && avg[s] < 0.6
-  ).slice(0, 2);
-}
-
-/**
- * Selects 8 Phase B task IDs scoped to the learner's exact grade:
- *   3 × weak skill 1 (M2+ preferred)
- *   3 × weak skill 2 (M2+ preferred)
- *   2 × cross-skill tasks (primary ↔ secondary matching both weak skills)
- */
-export async function selectPhaseB(
-  phaseAAttempts: PhaseAAttempt[],
-  prisma: PrismaClient,
-  learnerGrade: number,
-): Promise<PhaseBResult> {
-  const weakSkills = identifyWeakSkills(phaseAAttempts);
-  const seen = phaseAAttempts.map((a) => a.task_id);
-  const taskIds: string[] = [];
-  const gradeCode = `G${learnerGrade}`;
-
-  const allSkillTasks = await prisma.task.findMany({
-    where: {
-      primary_skill: { in: weakSkills as any[] },
-      id: { notIn: seen },
-      grade_band: { has: gradeCode },
-    },
-    select: { id: true, level_target: true, primary_skill: true },
-    orderBy: { difficulty: 'asc' },
-  });
-  for (const skill of weakSkills) {
-    const all = allSkillTasks.filter((t) => t.primary_skill === skill);
-    const m2Plus = all.filter((t) => includesM2Plus(t.level_target));
-    const pool = m2Plus.length >= 3 ? m2Plus : all;
-    taskIds.push(...pool.slice(0, 3).map((t) => t.id));
-  }
-
-  if (weakSkills.length === 2) {
-    const [a, b] = weakSkills;
-    const cross = await prisma.task.findMany({
-      where: {
-        id: { notIn: [...seen, ...taskIds] },
-        grade_band: { has: gradeCode },
-        OR: [
-          { primary_skill: a as any, secondary_skill: b as any },
-          { primary_skill: b as any, secondary_skill: a as any },
-        ],
-      },
-      select: { id: true },
-      take: 2,
-    });
-    taskIds.push(...cross.map((t) => t.id));
-
-    const stillNeeded = 2 - cross.length;
-    if (stillNeeded > 0) {
-      const fallback = await prisma.task.findMany({
-        where: {
-          id: { notIn: [...seen, ...taskIds] },
-          grade_band: { has: gradeCode },
-          primary_skill: { in: weakSkills as any[] },
-        },
-        select: { id: true },
-        take: stillNeeded,
-      });
-      taskIds.push(...fallback.map((t) => t.id));
-    }
-  }
-
-  return { weakSkills, phaseBTaskIds: taskIds.slice(0, 8) };
-}
-
-/**
- * Computes the final diagnostic result from all 20 attempts (Phases A+B+C).
+ * Computes the final diagnostic result from all adaptive-climb attempts.
  *
  * Level mapping per skill:
  *   avg < 50%  → M0 (prev level)
@@ -263,7 +146,8 @@ export function calculateFinalResult(
     .map(([code]) => code);
 
   // Priority skills: 2 weakest by score; tiebreak by TIEBREAK_PRIORITY.
-  // Also incorporate skills implied by error codes (error→skill map).
+  // (Error-implied skills are not merged in here — they already re-enter the
+  // learning path downstream via plan-generator's skillsFromErrors(target_errors).)
   const scoreSorted = [...ALL_SKILLS]
     .sort((a, b) => {
       const diff = skillScores[a] - skillScores[b];
@@ -274,18 +158,7 @@ export function calculateFinalResult(
       );
     });
 
-  const errorCodes = allErrorCodes(allAttempts);
-  const errorImpliedSkills: string[] = skillsFromErrors(errorCodes);
-
-  // Merge: take the 2 weakest by score, then add error-implied skills if not already included
-  const priority_set: string[] = [];
-  for (const s of scoreSorted) {
-    if (priority_set.length < 2) priority_set.push(s);
-  }
-  for (const s of errorImpliedSkills) {
-    if (!priority_set.includes(s) && priority_set.length < 3) priority_set.push(s);
-  }
-  const priority_skills = priority_set.slice(0, 2);
+  const priority_skills = scoreSorted.slice(0, 2);
 
   const recommended_daily_minutes = learnerGrade <= 2 ? 10 : 15;
 
