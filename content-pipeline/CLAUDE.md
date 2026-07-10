@@ -12,7 +12,7 @@ Tasks move through stages in order. Never skip a stage or auto-promote without t
 1. npm run pipeline:generate     → raw drafts land in stage1/
 2. npm run pipeline:review       → validated drafts move to stage2/
 3. Human review                  → approve → validated/  |  reject → rejected/  |  needs work → flagged/
-4. npm run pipeline:import       → imports validated/ tasks into the DB
+4. npm run pipeline:import       → imports stage1/stage2/flagged/needs_revision JSON into the task_drafts review queue (runs importDrafts.ts; validated/ tasks graduate to the live Task table separately, via the admin API's /approve endpoint — never by re-importing the folder)
 5. npm run pipeline:images       → generate images for imported tasks
 6. npm run pipeline:tts          → generate TTS audio
 7. npm run pipeline:upload-images → upload images to R2

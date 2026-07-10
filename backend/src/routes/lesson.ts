@@ -9,21 +9,11 @@ import type { ErrorCode } from '../../generated/prisma';
 import { updateSkillState } from '../lib/engines/skill-engine';
 import { lessonAttemptSchema } from '@app/shared';
 import { learnerIdQuerySchema } from '@app/shared';
+import { TASK_SELECT } from '../lib/task-select';
 
 const lesson = new Hono<AuthEnv>();
 
 lesson.use('/*', withAuth);
-
-const TASK_SELECT = {
-  id: true,
-  task_type: true,
-  prompt_text: true,
-  options: true,
-  audio_url: true,
-  image_url: true,
-  primary_skill: true,
-  estimated_time_seconds: true,
-} as const;
 
 // ─── GET /today?learner_id=... ────────────────────────────────────────────────
 

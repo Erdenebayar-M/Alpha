@@ -42,6 +42,7 @@ import {
   isReducedVowelPosition,
 } from '../error-engine/mongolian-utils';
 import type { SkillCode } from '../error-engine/error-skill-map';
+import type { TaskTypeValue } from '@app/shared';
 
 // ─── This script's own vocabulary (not phonological tables) ──────────────────
 
@@ -64,18 +65,20 @@ export type DerivedErrorCode =
   | 'E4' | 'E5' | 'E6';
 
 /**
- * The closed set of scheme-C (v3) task types this derivation can emit. Defined
- * locally on purpose: the canonical list lives in @app/shared, but its compiled
- * build can lag the source (stale .d.ts), and this module is meant to be
- * standalone. Keep in sync with the FEATURE/UNIVERSAL/SUFFIX task-type maps below.
+ * The closed set of scheme-C (v3) task types this derivation can emit — a
+ * deliberate subset of the canonical @app/shared list. Extract<> ties each
+ * member to the canonical union, so a renamed or removed code fails to compile
+ * here instead of drifting silently.
  */
-export type TTCode =
+export type TTCode = Extract<
+  TaskTypeValue,
   | 'TT_1_2' | 'TT_1_3' | 'TT_1_4'
   | 'TT_2_1'
   | 'TT_3_1' | 'TT_3_2'
   | 'TT_4_2' | 'TT_4_3' | 'TT_4_4'
   | 'TT_5_1' | 'TT_5_2' | 'TT_5_3' | 'TT_5_4' | 'TT_5_5' | 'TT_5_6' | 'TT_5_7'
-  | 'TT_7_3';
+  | 'TT_7_3'
+>;
 
 export interface CapabilityInput {
   word: string;

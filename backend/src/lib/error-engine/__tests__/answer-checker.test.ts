@@ -288,31 +288,48 @@ describe('TT_7_3 via taskType', () => {
   });
 });
 
-describe('TT_6_1 case errors via taskType', () => {
-  it("'би явна.' vs 'Би явна.' → caseError at pos 0, no missingPunctuation", () => {
+// TT_6_1/TT_6_2 are choice types (choiceOptions in the shared schema) — exact
+// match, no sentence analysis. Sentence-aware diffing belongs to the correction
+// types TT_6_3/TT_6_4, which fall through to sentenceAwareDiff.
+describe('TT_6_1 choice via taskType', () => {
+  it('exact match → isCorrect: true, no sentence analysis', () => {
+    const r = checkAnswer('Би явна.', 'Би явна.', 'TT_6_1');
+    expect(r.isCorrect).toBe(true);
+    expect(r.caseErrors).toHaveLength(0);
+  });
+
+  it('different choice → isCorrect: false, no caseErrors extracted', () => {
     const r = checkAnswer('Би явна.', 'би явна.', 'TT_6_1');
+    expect(r.isCorrect).toBe(false);
+    expect(r.caseErrors).toHaveLength(0);
+  });
+});
+
+describe('TT_6_3 case errors via taskType', () => {
+  it("'би явна.' vs 'Би явна.' → caseError at pos 0, no missingPunctuation", () => {
+    const r = checkAnswer('Би явна.', 'би явна.', 'TT_6_3');
     expect(r.caseErrors).toHaveLength(1);
     expect(r.caseErrors![0]).toMatchObject({ expected: 'Б', actual: 'б', position: 0 });
     expect(r.missingPunctuation).toHaveLength(0);
   });
 
   it('same case → no caseError', () => {
-    const r = checkAnswer('Би явна.', 'Би явна.', 'TT_6_1');
+    const r = checkAnswer('Би явна.', 'Би явна.', 'TT_6_3');
     expect(r.caseErrors).toHaveLength(0);
     expect(r.isCorrect).toBe(true);
   });
 });
 
-describe('TT_6_1 missing punctuation via taskType', () => {
+describe('TT_6_3 missing punctuation via taskType', () => {
   it("'Би явна' vs 'Би явна.' → missingPunctuation for '.'", () => {
-    const r = checkAnswer('Би явна.', 'Би явна', 'TT_6_1');
+    const r = checkAnswer('Би явна.', 'Би явна', 'TT_6_3');
     expect(r.missingPunctuation).toHaveLength(1);
     expect(r.missingPunctuation![0].char).toBe('.');
     expect(r.caseErrors).toHaveLength(0);
   });
 
   it('input already has period → no missingPunctuation', () => {
-    expect(checkAnswer('Би явна.', 'Би явна.', 'TT_6_1').missingPunctuation).toHaveLength(0);
+    expect(checkAnswer('Би явна.', 'Би явна.', 'TT_6_3').missingPunctuation).toHaveLength(0);
   });
 });
 

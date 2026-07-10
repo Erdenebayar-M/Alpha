@@ -10,22 +10,13 @@ import { updateSkillState } from '../lib/engines/skill-engine';
 import { generatePlanLessons } from '../lib/engines/plan-generator';
 import { checkpointSubmitSchema } from '@app/shared';
 import { learnerIdQuerySchema } from '@app/shared';
+import { extractSkillScores } from '../lib/skill-state';
+import { TASK_SELECT } from '../lib/task-select';
 
 const checkpoint = new Hono<AuthEnv>();
 checkpoint.use('/*', withAuth);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const TASK_SELECT = {
-  id: true,
-  task_type: true,
-  prompt_text: true,
-  options: true,
-  audio_url: true,
-  image_url: true,
-  primary_skill: true,
-  estimated_time_seconds: true,
-} as const;
 
 const SKILL_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8'] as const;
 
@@ -34,14 +25,6 @@ const LEVEL_UP_THRESHOLD = 0.10;
 const LEVEL_ORDER = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5'] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function extractScores(state: Record<string, unknown> | null): Record<string, number> {
-  const result: Record<string, number> = {};
-  for (const sk of SKILL_KEYS) {
-    result[sk] = state ? ((state[`${sk}_score`] as number) ?? 0) : 0;
-  }
-  return result;
-}
 
 function computeDeltas(
   before: Record<string, number>,
@@ -108,81 +91,87 @@ checkpoint.post('/submit', async (c) => {
   const learnerId = checkpointRecord.learner_id;
   const plan = checkpointRecord.plan;
 
-  // Snapshot skill state before processing answers
-  const beforeState = await prisma.learnerSkillState.findUnique({
-    where: { learner_id: learnerId },
-  });
-  const beforeScores = extractScores(beforeState as unknown as Record<string, unknown> | null);
-
-  const taskRepo: TaskRepository = {
-    findById: (id) => prisma.task.findUnique({ where: { id } }) as never,
-  };
-
-  // Process each answer: score → write attempt → update skill state
-  for (const answer of answers) {
-    const result = await processAttempt(
-      {
-        learnerId,
-        taskId: answer.task_id,
-        inputText: answer.input_text,
-        timeSeconds: answer.time_seconds,
-      },
-      taskRepo,
-    );
-
-    const attempt = await prisma.attempt.create({
-      data: {
-        learner_id: learnerId,
-        task_id: answer.task_id,
-        checkpoint_id,
-        input_text: answer.input_text,
-        score: result.score,
-        time_seconds: answer.time_seconds,
-        self_corrected: result.selfCorrected,
-        error_codes: result.errorCodes,
-        context: 'CHECKPOINT',
-      },
-      select: { id: true },
+  // Snapshot → score every answer → update skill state, all in one transaction
+  // so a mid-loop failure can't leave a partially-scored checkpoint.
+  const { beforeScores, afterScores, afterState } = await prisma.$transaction(async (tx) => {
+    const beforeState = await tx.learnerSkillState.findUnique({
+      where: { learner_id: learnerId },
     });
+    const beforeScores = extractSkillScores(beforeState as unknown as Record<string, unknown> | null);
 
-    if (result.errorsDetail.length > 0) {
-      await prisma.errorLog.createMany({
-        data: result.errorsDetail.map((e) => ({
-          attempt_id: attempt.id,
-          error_code: e.errorCode as ErrorCode,
-          severity: e.severity,
-          position_in_word: e.position ?? null,
-          expected_char: e.expectedChar ?? null,
-          actual_char: e.actualChar ?? null,
-          context_word: e.contextWord ?? null,
-        })),
-      });
-    }
+    const taskRepo: TaskRepository = {
+      findById: (id) => tx.task.findUnique({ where: { id } }) as never,
+    };
 
-    const taskRecord = await prisma.task.findUnique({
-      where: { id: answer.task_id },
-      select: { primary_skill: true },
-    });
-
-    if (taskRecord?.primary_skill) {
-      await updateSkillState(
+    // Process each answer: score → write attempt → update skill state
+    for (const answer of answers) {
+      const result = await processAttempt(
         {
           learnerId,
-          primarySkill: taskRecord.primary_skill,
-          score: result.score,
-          errorCodes: result.errorCodes,
           taskId: answer.task_id,
+          inputText: answer.input_text,
+          timeSeconds: answer.time_seconds,
         },
-        prisma,
+        taskRepo,
       );
-    }
-  }
 
-  // Compute deltas vs. pre-checkpoint snapshot
-  const afterState = await prisma.learnerSkillState.findUnique({
-    where: { learner_id: learnerId },
+      const attempt = await tx.attempt.create({
+        data: {
+          learner_id: learnerId,
+          task_id: answer.task_id,
+          checkpoint_id,
+          input_text: answer.input_text,
+          score: result.score,
+          time_seconds: answer.time_seconds,
+          self_corrected: result.selfCorrected,
+          error_codes: result.errorCodes,
+          context: 'CHECKPOINT',
+        },
+        select: { id: true },
+      });
+
+      if (result.errorsDetail.length > 0) {
+        await tx.errorLog.createMany({
+          data: result.errorsDetail.map((e) => ({
+            attempt_id: attempt.id,
+            error_code: e.errorCode as ErrorCode,
+            severity: e.severity,
+            position_in_word: e.position ?? null,
+            expected_char: e.expectedChar ?? null,
+            actual_char: e.actualChar ?? null,
+            context_word: e.contextWord ?? null,
+          })),
+        });
+      }
+
+      const taskRecord = await tx.task.findUnique({
+        where: { id: answer.task_id },
+        select: { primary_skill: true },
+      });
+
+      if (taskRecord?.primary_skill) {
+        await updateSkillState(
+          {
+            learnerId,
+            primarySkill: taskRecord.primary_skill,
+            score: result.score,
+            errorCodes: result.errorCodes,
+            taskId: answer.task_id,
+          },
+          tx,
+        );
+      }
+    }
+
+    // Compute deltas vs. pre-checkpoint snapshot
+    const afterState = await tx.learnerSkillState.findUnique({
+      where: { learner_id: learnerId },
+    });
+    const afterScores = extractSkillScores(afterState as unknown as Record<string, unknown> | null);
+
+    return { beforeScores, afterScores, afterState };
   });
-  const afterScores = extractScores(afterState as unknown as Record<string, unknown> | null);
+
   const skill_deltas = computeDeltas(beforeScores, afterScores);
 
   const avgDelta =

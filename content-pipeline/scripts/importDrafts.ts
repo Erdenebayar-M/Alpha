@@ -15,10 +15,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import {
   PrismaClient,
   DraftStage,
-  TaskType,
-  SkillCode,
-  LessonSlot,
 } from '../../backend/generated/prisma';
+import { toTaskType, toSkill, toSlot } from './enumCoercion';
 
 dotenv.config({ path: path.resolve(__dirname, '../../backend/.env') });
 
@@ -38,26 +36,6 @@ const STAGE_MAP: Record<string, { dir: string; stage: DraftStage }> = {
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
-
-const VALID_TASK_TYPES = new Set(Object.values(TaskType));
-const VALID_SKILLS     = new Set(Object.values(SkillCode));
-const VALID_SLOTS      = new Set(Object.values(LessonSlot));
-
-function toTaskType(raw: string): TaskType {
-  if (!VALID_TASK_TYPES.has(raw as TaskType)) throw new Error(`Unknown task_type: ${raw}`);
-  return raw as TaskType;
-}
-
-function toSkill(raw: string | null | undefined): SkillCode | null {
-  if (!raw) return null;
-  if (!VALID_SKILLS.has(raw as SkillCode)) throw new Error(`Unknown skill: ${raw}`);
-  return raw as SkillCode;
-}
-
-function toSlot(raw: string): LessonSlot {
-  if (!VALID_SLOTS.has(raw as LessonSlot)) throw new Error(`Unknown lesson_slot_fit: ${raw}`);
-  return raw as LessonSlot;
-}
 
 function readVariants(filePath: string): Record<string, unknown>[] {
   const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));

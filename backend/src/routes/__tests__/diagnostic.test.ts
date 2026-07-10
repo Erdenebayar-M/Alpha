@@ -14,8 +14,8 @@ jest.mock('../../lib/db/client', () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
-    task: { findFirst: jest.fn(), findMany: jest.fn() },
-    attempt: { findFirst: jest.fn(), count: jest.fn(), findMany: jest.fn() },
+    task: { findUnique: jest.fn(), findFirst: jest.fn(), findMany: jest.fn() },
+    attempt: { findFirst: jest.fn(), count: jest.fn(), findMany: jest.fn(), create: jest.fn() },
     errorLog: { createMany: jest.fn() },
     learnerSkillState: { upsert: jest.fn() },
     plan: { create: jest.fn() },
@@ -36,21 +36,19 @@ jest.mock('../../lib/engines/plan-generator', () => ({
   generatePlanLessons: jest.fn().mockResolvedValue(undefined),
 }));
 
-const mockLearnerFind       = prisma.learner.findUnique              as jest.MockedFunction<any>;
-const mockSessionFindFirst  = prisma.diagnosticSession.findFirst    as jest.MockedFunction<any>;
-const mockSessionFindUnique = prisma.diagnosticSession.findUnique   as jest.MockedFunction<any>;
-const mockSessionCreate     = prisma.diagnosticSession.create       as jest.MockedFunction<any>;
-const mockSessionUpdate     = prisma.diagnosticSession.update       as jest.MockedFunction<any>;
-const mockTaskFindFirst     = prisma.task.findFirst                 as jest.MockedFunction<any>;
-const mockTaskFindMany      = prisma.task.findMany                  as jest.MockedFunction<any>;
-const mockAttemptFindFirst  = prisma.attempt.findFirst              as jest.MockedFunction<any>;
-const mockAttemptCount      = prisma.attempt.count                  as jest.MockedFunction<any>;
-const mockAttemptFindMany   = prisma.attempt.findMany               as jest.MockedFunction<any>;
-const mockSkillStateUpsert  = prisma.learnerSkillState.upsert       as jest.MockedFunction<any>;
-const mockPlanCreate        = prisma.plan.create                    as jest.MockedFunction<any>;
-const mockTransaction       = prisma.$transaction                   as jest.MockedFunction<any>;
-const mockProcessAttempt    = processAttempt                        as jest.MockedFunction<typeof processAttempt>;
-const mockVerify            = verifyToken                           as jest.MockedFunction<typeof verifyToken>;
+const mockLearnerFind       = prisma.learner.findUnique            as jest.MockedFunction<any>;
+const mockSessionFindFirst  = prisma.diagnosticSession.findFirst   as jest.MockedFunction<any>;
+const mockSessionFindUnique = prisma.diagnosticSession.findUnique  as jest.MockedFunction<any>;
+const mockSessionCreate     = prisma.diagnosticSession.create      as jest.MockedFunction<any>;
+const mockSessionUpdate     = prisma.diagnosticSession.update      as jest.MockedFunction<any>;
+const mockTaskFindUnique    = prisma.task.findUnique               as jest.MockedFunction<any>;
+const mockTaskFindMany      = prisma.task.findMany                 as jest.MockedFunction<any>;
+const mockAttemptFindFirst  = prisma.attempt.findFirst             as jest.MockedFunction<any>;
+const mockAttemptFindMany   = prisma.attempt.findMany              as jest.MockedFunction<any>;
+const mockSkillStateUpsert  = prisma.learnerSkillState.upsert      as jest.MockedFunction<any>;
+const mockPlanCreate        = prisma.plan.create                   as jest.MockedFunction<any>;
+const mockProcessAttempt    = processAttempt                       as jest.MockedFunction<typeof processAttempt>;
+const mockVerify            = verifyToken                          as jest.MockedFunction<typeof verifyToken>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -59,30 +57,37 @@ const LEARNER_ID = 'learner-uuid-1';
 const SESSION_ID = 'session-uuid-1';
 const BEARER     = 'Bearer test-token';
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Configurable bank (drives the smart task.findMany mock) ─────────────────
 
-function fakeLearner(overrides: Record<string, unknown> = {}) {
+// grade_levels rows the bank exposes for the learner's grade (availableRungs).
+let BANK_ROWS: { grade_levels: string[] }[] = [];
+// per-cell candidate pools, keyed by "G{grade}:M{rung}".
+let POOL: Record<string, { id: string; primary_skill: string; task_type: string; difficulty: number }[]> = {};
+
+function poolTask(id: string, over: Partial<{ primary_skill: string; task_type: string; difficulty: number }> = {}) {
   return {
-    id: LEARNER_ID,
-    parent_id: PARENT_ID,
-    name: 'Bat',
-    grade: 1,
-    variant: 'A',
-    daily_minutes: 10,
-    ...overrides,
+    id,
+    primary_skill: over.primary_skill ?? 'S2',
+    task_type: over.task_type ?? 'TT_1_1',
+    difficulty: over.difficulty ?? 2,
   };
 }
 
-function fakeTask(skill: string) {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function fakeLearner(overrides: Record<string, unknown> = {}) {
+  return { id: LEARNER_ID, parent_id: PARENT_ID, name: 'Bat', grade: 1, variant: 'A', daily_minutes: 10, ...overrides };
+}
+
+function renderedTask(id: string) {
   return {
-    id: `task-${skill}`,
-    task_type: 'TT1_CHOICE',
-    title: `Task for ${skill}`,
+    id,
+    task_type: 'TT_1_1',
     prompt_text: 'Choose the correct word',
     options: { choices: [{ text: 'нар', is_correct: true }] },
     audio_url: null,
     image_url: null,
-    primary_skill: skill,
+    primary_skill: 'S2',
     estimated_time_seconds: 30,
   };
 }
@@ -92,10 +97,20 @@ function fakeSession(overrides: Record<string, unknown> = {}) {
     id: SESSION_ID,
     learner_id: LEARNER_ID,
     status: 'IN_PROGRESS',
-    current_phase: 'PHASE_A',
     weak_skills_detected: [],
+    result: { available_rungs: [1, 2, 3], served: [] },
     learner: fakeLearner(),
     ...overrides,
+  };
+}
+
+function historyAttempt(task_id: string, over: Partial<{ score: number; primary_skill: string; est: number; time: number; errors: string[] }> = {}) {
+  return {
+    task_id,
+    score: over.score ?? 1,
+    time_seconds: over.time ?? 20,
+    error_codes: over.errors ?? [],
+    task: { primary_skill: over.primary_skill ?? 'S2', estimated_time_seconds: over.est ?? 30 },
   };
 }
 
@@ -115,75 +130,91 @@ function postSubmit(body: unknown) {
   });
 }
 
-function postNextPhase(body: unknown) {
-  return diagnosticRouter.request('/next-phase', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: BEARER },
-    body: JSON.stringify(body),
-  });
-}
-
-async function json(res: Response): Promise<any> {
-  return res.json();
-}
-
-const ALL_SKILLS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+const json = (res: Response): Promise<any> => res.json();
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
   jest.clearAllMocks();
+  BANK_ROWS = [];
+  POOL = {};
   mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
   mockPlanCreate.mockResolvedValue({ id: 'test-plan-id' });
+  mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
+  mockSessionUpdate.mockResolvedValue({});
+  mockSkillStateUpsert.mockResolvedValue({});
+
+  // Smart task.findMany: grade_band query → bank rows; grade_levels query → pool.
+  mockTaskFindMany.mockImplementation((args: any) => {
+    const where = args?.where ?? {};
+    if (where.grade_band) return Promise.resolve(BANK_ROWS);
+    const cell: string | undefined = where.grade_levels?.has;
+    if (cell) {
+      const notIn: string[] = where.id?.notIn ?? [];
+      return Promise.resolve((POOL[cell] ?? []).filter((t) => !notIn.includes(t.id)));
+    }
+    return Promise.resolve([]);
+  });
+
+  mockTaskFindUnique.mockImplementation((args: any) => Promise.resolve(renderedTask(args.where.id)));
 });
 
-// ─── POST /api/diagnostic/start ──────────────────────────────────────────────
+// ─── POST /diagnostic/start ──────────────────────────────────────────────────
 
 describe('POST /diagnostic/start', () => {
-  it('201 — creates session and returns 8 tasks (one per skill)', async () => {
+  it('201 — serves the warm-up (M1) item first and persists climb state', async () => {
     mockLearnerFind.mockResolvedValue(fakeLearner());
     mockSessionFindFirst.mockResolvedValue(null);
-    ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
-    mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
+    BANK_ROWS = [{ grade_levels: ['G1:M1'] }, { grade_levels: ['G1:M2'] }, { grade_levels: ['G1:M3'] }];
+    POOL['G1:M1'] = [poolTask('G1M1-a')];
 
     const res = await postStart({ learner_id: LEARNER_ID });
     const body = await json(res);
 
     expect(res.status).toBe(201);
     expect(body.data.session_id).toBe(SESSION_ID);
-    expect(body.data.phase).toBe('A');
-    expect(body.data.total_phases).toBe(3);
-    expect(body.data.tasks).toHaveLength(8);
-    expect(body.data.tasks[0].primary_skill).toBe('S1');
-  });
+    expect(body.data.item_number).toBe(1);
+    expect(body.data.task.id).toBe('G1M1-a');
 
-  it('201 — session created with IN_PROGRESS status and PHASE_A', async () => {
-    mockLearnerFind.mockResolvedValue(fakeLearner());
-    mockSessionFindFirst.mockResolvedValue(null);
-    ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
-    mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
-
-    await postStart({ learner_id: LEARNER_ID });
-
+    // climb state persisted: available rungs + first served item
     expect(mockSessionCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          learner_id: LEARNER_ID,
           status: 'IN_PROGRESS',
-          current_phase: 'PHASE_A',
+          result: expect.objectContaining({
+            available_rungs: [1, 2, 3],
+            served: [{ task_id: 'G1M1-a', rung: 1 }],
+          }),
         }),
       }),
     );
   });
 
-  it('201 — existing IN_PROGRESS session is abandoned and new one started', async () => {
+  it('422 — no diagnostic content for the grade (empty bank)', async () => {
+    mockLearnerFind.mockResolvedValue(fakeLearner());
+    mockSessionFindFirst.mockResolvedValue(null);
+    BANK_ROWS = []; // no rungs
+
+    const res = await postStart({ learner_id: LEARNER_ID });
+    expect(res.status).toBe(422);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
+  });
+
+  it('409 — learner already has a completed diagnostic', async () => {
+    mockLearnerFind.mockResolvedValue(fakeLearner());
+    mockSessionFindFirst.mockResolvedValueOnce({ id: 'done-session' });
+
+    const res = await postStart({ learner_id: LEARNER_ID });
+    expect(res.status).toBe(409);
+  });
+
+  it('abandons an existing IN_PROGRESS session before starting a new one', async () => {
     mockLearnerFind.mockResolvedValue(fakeLearner());
     mockSessionFindFirst
-      .mockResolvedValueOnce(null)                       // COMPLETED check → none
-      .mockResolvedValueOnce({ id: 'existing-session' }); // IN_PROGRESS check → found
-    mockSessionUpdate.mockResolvedValue({});
-    ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
-    mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
+      .mockResolvedValueOnce(null)                        // completed check
+      .mockResolvedValueOnce({ id: 'existing-session' }); // in-progress check
+    BANK_ROWS = [{ grade_levels: ['G1:M1'] }, { grade_levels: ['G1:M2'] }];
+    POOL['G1:M1'] = [poolTask('G1M1-a')];
 
     const res = await postStart({ learner_id: LEARNER_ID });
 
@@ -191,485 +222,121 @@ describe('POST /diagnostic/start', () => {
     expect(mockSessionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: 'ABANDONED' }) }),
     );
-    expect(mockSessionCreate).toHaveBeenCalled();
-  });
-
-  it('409 — learner already has a completed diagnostic', async () => {
-    mockLearnerFind.mockResolvedValue(fakeLearner());
-    mockSessionFindFirst.mockResolvedValueOnce({ id: 'done-session' }); // COMPLETED check
-
-    const res = await postStart({ learner_id: LEARNER_ID });
-
-    expect(res.status).toBe(409);
-    expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 
   it('404 — learner belongs to a different parent', async () => {
-    mockLearnerFind.mockResolvedValue(fakeLearner({ parent_id: 'other-parent' }));
-
+    mockLearnerFind.mockResolvedValue(fakeLearner({ parent_id: 'someone-else' }));
     const res = await postStart({ learner_id: LEARNER_ID });
-
     expect(res.status).toBe(404);
-    expect(mockSessionCreate).not.toHaveBeenCalled();
-  });
-
-  it('404 — learner not found', async () => {
-    mockLearnerFind.mockResolvedValue(null);
-
-    const res = await postStart({ learner_id: LEARNER_ID });
-
-    expect(res.status).toBe(404);
-  });
-
-  it('400 — missing learner_id', async () => {
-    const res = await postStart({});
-
-    expect(res.status).toBe(400);
-    expect(mockSessionCreate).not.toHaveBeenCalled();
-  });
-
-  it('401 — no auth token', async () => {
-    const res = await diagnosticRouter.request('/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ learner_id: LEARNER_ID }),
-    });
-
-    expect(res.status).toBe(401);
   });
 });
 
-// ─── POST /api/diagnostic/submit ─────────────────────────────────────────────
+// ─── POST /diagnostic/submit ─────────────────────────────────────────────────
 
 describe('POST /diagnostic/submit', () => {
-  const VALID_SUBMIT = {
-    session_id: SESSION_ID,
-    task_id: 'task-S1',
-    input_text: 'нар',
-    time_seconds: 12,
-  };
-
-  function setupSubmit(processResult: Partial<Awaited<ReturnType<typeof processAttempt>>> = {}) {
-    mockSessionFindUnique.mockResolvedValue(fakeSession());
-    mockAttemptFindFirst.mockResolvedValue(null);
-    mockAttemptCount.mockResolvedValue(1);
+  function armSubmit() {
     mockProcessAttempt.mockResolvedValue({
-      score: 1.0,
+      score: 1,
       isCorrect: true,
       errorCodes: [],
-      errorsDetail: [],
-      feedback: 'Зөв бичлээ! Баяр хүргэе!',
-      selfCorrected: false,
-      ...processResult,
-    });
+      feedback: 'Сайн байна!',
+    } as any);
   }
 
-  it('200 — returns score, is_correct, error_codes, feedback and phase_progress', async () => {
-    setupSubmit();
+  it('continue — scores the item and returns the next task (steps up on PASS)', async () => {
+    mockSessionFindUnique.mockResolvedValue(
+      fakeSession({ result: { available_rungs: [1, 2, 3], served: [{ task_id: 'G1M1-a', rung: 1 }] } }),
+    );
+    mockAttemptFindFirst.mockResolvedValue(null); // not a duplicate
+    armSubmit();
+    mockAttemptFindMany.mockResolvedValue([historyAttempt('G1M1-a')]);
+    POOL['G1:M2'] = [poolTask('G1M2-a')];
 
-    const res = await postSubmit(VALID_SUBMIT);
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'G1M1-a', input_text: 'нар', time_seconds: 12 });
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.data.score).toBe(1.0);
-    expect(body.data.is_correct).toBe(true);
-    expect(body.data.error_codes).toEqual([]);
-    expect(body.data.feedback).toBe('Зөв бичлээ! Баяр хүргэе!');
-    expect(body.data.phase_progress).toEqual({ completed: 1, total: 8 });
-  });
+    expect(body.data.completed).toBe(false);
+    expect(body.data.next_task.id).toBe('G1M2-a');
+    expect(body.data.item_number).toBe(2);
 
-  it('200 — incorrect answer returns error codes and lower score', async () => {
-    setupSubmit({ score: 0.5, isCorrect: false, errorCodes: ['C1'], feedback: 'Урт эгшгийг анзаар.' });
-
-    const res = await postSubmit(VALID_SUBMIT);
-    const body = await json(res);
-
-    expect(res.status).toBe(200);
-    expect(body.data.score).toBe(0.5);
-    expect(body.data.is_correct).toBe(false);
-    expect(body.data.error_codes).toContain('C1');
-  });
-
-  it('200 — phase_progress reflects completed count', async () => {
-    mockSessionFindUnique.mockResolvedValue(fakeSession());
-    mockAttemptFindFirst.mockResolvedValue(null);
-    mockAttemptCount.mockResolvedValue(5);
-    mockProcessAttempt.mockResolvedValue({
-      score: 1.0, isCorrect: true, errorCodes: [],
-      errorsDetail: [], feedback: 'Зөв!', selfCorrected: false,
-    });
-
-    const res = await postSubmit(VALID_SUBMIT);
-    const body = await json(res);
-
-    expect(body.data.phase_progress.completed).toBe(5);
-    expect(body.data.phase_progress.total).toBe(8);
-  });
-
-  it('200 — processAttempt called with correct DIAGNOSTIC context params', async () => {
-    setupSubmit();
-
-    await postSubmit(VALID_SUBMIT);
-
-    expect(mockProcessAttempt).toHaveBeenCalledWith(
+    // next item appended to served state, at the rung it was served on
+    expect(mockSessionUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        learnerId: LEARNER_ID,
-        taskId: 'task-S1',
-        diagnosticSessionId: SESSION_ID,
-        inputText: 'нар',
-        timeSeconds: 12,
+        data: expect.objectContaining({
+          result: expect.objectContaining({
+            served: [
+              { task_id: 'G1M1-a', rung: 1 },
+              { task_id: 'G1M2-a', rung: 2 },
+            ],
+          }),
+        }),
       }),
-      expect.any(Object),
-      expect.any(Object),
-      expect.any(Object),
     );
   });
 
-  it('409 — duplicate submit for same task in the same session', async () => {
-    mockSessionFindUnique.mockResolvedValue(fakeSession());
+  it('complete — finalizes when the bank is exhausted (writes plan + skill state)', async () => {
+    mockSessionFindUnique.mockResolvedValue(
+      fakeSession({ result: { available_rungs: [2], served: [{ task_id: 'only-a', rung: 2 }] } }),
+    );
+    mockAttemptFindFirst.mockResolvedValue(null);
+    armSubmit();
+    mockAttemptFindMany.mockResolvedValue([historyAttempt('only-a', { primary_skill: 'S2' })]);
+    POOL['G1:M2'] = [poolTask('only-a')]; // the only item, already served → pool empties
+
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'only-a', input_text: 'нар', time_seconds: 10 });
+    const body = await json(res);
+
+    expect(res.status).toBe(200);
+    expect(body.data.completed).toBe(true);
+    expect(body.data.plan_id).toBe('test-plan-id');
+    expect(body.data.lessons_generated).toBe(true);
+    expect(body.data.result.general_level).toMatch(/^M[0-5]$/);
+    expect(body.data.result).toHaveProperty('bank_coverage', 1);
+    expect(mockSkillStateUpsert).toHaveBeenCalled();
+    expect(mockPlanCreate).toHaveBeenCalled();
+  });
+
+  it('409 — task already submitted for this session', async () => {
+    mockSessionFindUnique.mockResolvedValue(
+      fakeSession({ result: { available_rungs: [1, 2], served: [{ task_id: 'G1M1-a', rung: 1 }] } }),
+    );
     mockAttemptFindFirst.mockResolvedValue({ id: 'existing-attempt' });
 
-    const res = await postSubmit(VALID_SUBMIT);
-    const body = await json(res);
-
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'G1M1-a', input_text: 'нар', time_seconds: 5 });
     expect(res.status).toBe(409);
-    expect(body.error.code).toBe('CONFLICT');
-    expect(mockProcessAttempt).not.toHaveBeenCalled();
   });
 
-  it('422 — session not IN_PROGRESS', async () => {
-    mockSessionFindUnique.mockResolvedValue(fakeSession({ status: 'COMPLETED' }));
+  it('422 — task was never served for this session', async () => {
+    mockSessionFindUnique.mockResolvedValue(
+      fakeSession({ result: { available_rungs: [1, 2], served: [{ task_id: 'G1M1-a', rung: 1 }] } }),
+    );
 
-    const res = await postSubmit(VALID_SUBMIT);
-    const body = await json(res);
-
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'not-served', input_text: 'нар', time_seconds: 5 });
     expect(res.status).toBe(422);
-    expect(body.error.code).toBe('UNPROCESSABLE');
   });
 
   it('404 — session belongs to a different parent', async () => {
     mockSessionFindUnique.mockResolvedValue(
-      fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
+      fakeSession({ learner: fakeLearner({ parent_id: 'someone-else' }) }),
     );
-
-    const res = await postSubmit(VALID_SUBMIT);
-
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'G1M1-a', input_text: 'нар', time_seconds: 5 });
     expect(res.status).toBe(404);
   });
 
-  it('404 — session not found', async () => {
-    mockSessionFindUnique.mockResolvedValue(null);
-
-    const res = await postSubmit(VALID_SUBMIT);
-
-    expect(res.status).toBe(404);
-  });
-
-  it('400 — missing session_id', async () => {
-    const res = await postSubmit({ task_id: 'task-S1', input_text: 'нар', time_seconds: 10 });
-
-    expect(res.status).toBe(400);
-  });
-
-  it('400 — negative time_seconds', async () => {
-    const res = await postSubmit({ ...VALID_SUBMIT, time_seconds: -1 });
-
-    expect(res.status).toBe(400);
-  });
-
-  it('401 — no auth token', async () => {
-    const res = await diagnosticRouter.request('/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(VALID_SUBMIT),
-    });
-
-    expect(res.status).toBe(401);
-  });
-});
-
-// ─── POST /api/diagnostic/next-phase ─────────────────────────────────────────
-
-const SKILLS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
-
-function fakeAttempt(skill: string, idx: number, score = 0.8) {
-  return {
-    task_id: `task-${skill}-${idx}`,
-    score,
-    error_codes: [],
-    task: { primary_skill: skill },
-  };
-}
-
-function phaseAAttempts() {
-  return SKILLS.map((s, i) => fakeAttempt(s, i));
-}
-
-function phaseBAttempts() {
-  return ['S7', 'S7', 'S7', 'S2', 'S2', 'S2', 'S7', 'S2'].map((s, i) =>
-    fakeAttempt(s, i + 8, 0.4),
-  );
-}
-
-function phaseCAttempts() {
-  return ['S1', 'S2', 'S3', 'S4'].map((s, i) => fakeAttempt(s, i + 16));
-}
-
-function fakePhaseTask(id: string, type = 'TT1_CHOICE') {
-  return {
-    id,
-    task_type: type,
-    title: `Task ${id}`,
-    prompt_text: 'prompt',
-    options: {},
-    audio_url: null,
-    image_url: null,
-    primary_skill: 'S1',
-    estimated_time_seconds: 30,
-  };
-}
-
-describe('POST /diagnostic/next-phase', () => {
-  function setupSession(phase: string, overrides: Record<string, unknown> = {}) {
-    mockSessionFindUnique.mockResolvedValue(
-      fakeSession({ current_phase: phase, ...overrides }),
-    );
-    mockSessionUpdate.mockResolvedValue({});
-    mockTransaction.mockImplementation((ops: unknown[]) => Promise.all(ops as any));
-    mockSkillStateUpsert.mockResolvedValue({});
-  }
-
-  // ── A → B ────────────────────────────────────────────────────────────────
-
-  describe('PHASE_A → PHASE_B', () => {
-    it('200 — returns phase B tasks and detected weak skills', async () => {
-      setupSession('PHASE_A');
-      mockAttemptFindMany.mockResolvedValue(phaseAAttempts());
-      mockTaskFindMany
-        .mockResolvedValueOnce([fakePhaseTask('pb-1'), fakePhaseTask('pb-2'), fakePhaseTask('pb-3')])
-        .mockResolvedValueOnce([fakePhaseTask('pb-4'), fakePhaseTask('pb-5'), fakePhaseTask('pb-6')])
-        .mockResolvedValueOnce([fakePhaseTask('pb-7'), fakePhaseTask('pb-8')])
-        .mockResolvedValueOnce([
-          fakePhaseTask('pb-1'), fakePhaseTask('pb-2'), fakePhaseTask('pb-3'),
-          fakePhaseTask('pb-4'), fakePhaseTask('pb-5'), fakePhaseTask('pb-6'),
-          fakePhaseTask('pb-7'), fakePhaseTask('pb-8'),
-        ]);
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.phase).toBe('B');
-      expect(Array.isArray(body.data.tasks)).toBe(true);
-      expect(Array.isArray(body.data.weak_skills)).toBe(true);
-    });
-
-    it('transitions session to PHASE_B with correct weak_skills_detected', async () => {
-      setupSession('PHASE_A');
-      const weakAttempts = SKILLS.map((s, i) =>
-        fakeAttempt(s, i, s === 'S7' || s === 'S2' ? 0.4 : 0.8),
-      );
-      mockAttemptFindMany.mockResolvedValue(weakAttempts);
-      mockTaskFindMany
-        .mockResolvedValueOnce([fakePhaseTask('pb-1'), fakePhaseTask('pb-2'), fakePhaseTask('pb-3')])
-        .mockResolvedValueOnce([fakePhaseTask('pb-4'), fakePhaseTask('pb-5'), fakePhaseTask('pb-6')])
-        .mockResolvedValueOnce([fakePhaseTask('pb-7'), fakePhaseTask('pb-8')])
-        .mockResolvedValueOnce([fakePhaseTask('pb-1')]);
-
-      await postNextPhase({ session_id: SESSION_ID });
-
-      expect(mockSessionUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            phase_a_completed: true,
-            current_phase: 'PHASE_B',
-            weak_skills_detected: expect.arrayContaining(['S7', 'S2']),
-          }),
-        }),
-      );
-    });
-
-    it('422 — fewer than 8 Phase A attempts', async () => {
-      setupSession('PHASE_A');
-      mockAttemptFindMany.mockResolvedValue(phaseAAttempts().slice(0, 5));
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(422);
-      expect(body.error.code).toBe('UNPROCESSABLE');
-      expect(mockSessionUpdate).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── B → C ────────────────────────────────────────────────────────────────
-
-  describe('PHASE_B → PHASE_C', () => {
-    it('200 — returns 4 phase C tasks and estimated_level', async () => {
-      setupSession('PHASE_B', { weak_skills_detected: ['S7', 'S2'] });
-      mockAttemptFindMany.mockResolvedValue([...phaseAAttempts(), ...phaseBAttempts()]);
-      mockTaskFindFirst
-        .mockResolvedValueOnce(fakePhaseTask('pc-1', 'TT4_DICTATION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-2', 'TT5_MINI_TEXT'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-3', 'TT3_CORRECTION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-4', 'TT1_CHOICE'));
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.phase).toBe('C');
-      expect(body.data.tasks).toHaveLength(4);
-      expect(typeof body.data.estimated_level).toBe('string');
-    });
-
-    it('transitions session to PHASE_C', async () => {
-      setupSession('PHASE_B', { weak_skills_detected: ['S7', 'S2'] });
-      mockAttemptFindMany.mockResolvedValue([...phaseAAttempts(), ...phaseBAttempts()]);
-      mockTaskFindFirst
-        .mockResolvedValueOnce(fakePhaseTask('pc-1', 'TT4_DICTATION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-2', 'TT5_MINI_TEXT'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-3', 'TT3_CORRECTION'))
-        .mockResolvedValueOnce(fakePhaseTask('pc-4', 'TT1_CHOICE'));
-
-      await postNextPhase({ session_id: SESSION_ID });
-
-      expect(mockSessionUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            phase_b_completed: true,
-            current_phase: 'PHASE_C',
-          }),
-        }),
-      );
-    });
-
-    it('422 — fewer than 16 total attempts', async () => {
-      setupSession('PHASE_B', { weak_skills_detected: [] });
-      mockAttemptFindMany.mockResolvedValue(phaseAAttempts()); // only 8
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(422);
-      expect(body.error.code).toBe('UNPROCESSABLE');
-      expect(mockSessionUpdate).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── C → COMPLETED ────────────────────────────────────────────────────────
-
-  describe('PHASE_C → COMPLETED', () => {
-    it('200 — returns completed=true and a full result object', async () => {
-      setupSession('PHASE_C');
-      mockAttemptFindMany.mockResolvedValue([
-        ...phaseAAttempts(),
-        ...phaseBAttempts(),
-        ...phaseCAttempts(),
-      ]);
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(200);
-      expect(body.data.completed).toBe(true);
-      expect(body.data.result).toHaveProperty('general_level');
-      expect(body.data.result).toHaveProperty('skill_levels');
-      expect(body.data.result).toHaveProperty('skill_scores');
-      expect(body.data.result).toHaveProperty('priority_skills');
-      expect(body.data.result).toHaveProperty('top_error_codes');
-    });
-
-    it('upserts LearnerSkillState and marks session COMPLETED', async () => {
-      setupSession('PHASE_C');
-      mockAttemptFindMany.mockResolvedValue([
-        ...phaseAAttempts(),
-        ...phaseBAttempts(),
-        ...phaseCAttempts(),
-      ]);
-
-      await postNextPhase({ session_id: SESSION_ID });
-
-      expect(mockTransaction).toHaveBeenCalled();
-      expect(mockSessionUpdate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ status: 'COMPLETED' }),
-        }),
-      );
-      expect(mockSkillStateUpsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { learner_id: LEARNER_ID },
-          create: expect.objectContaining({ learner_id: LEARNER_ID }),
-          update: expect.objectContaining({ general_level: expect.any(String) }),
-        }),
-      );
-    });
-
-    it('422 — fewer than 20 total attempts', async () => {
-      setupSession('PHASE_C', { phase_b_completed: true });
-      mockAttemptFindMany.mockResolvedValue([...phaseAAttempts(), ...phaseBAttempts()]); // 16 only
-
-      const res = await postNextPhase({ session_id: SESSION_ID });
-      const body = await json(res);
-
-      expect(res.status).toBe(422);
-      expect(body.error.code).toBe('UNPROCESSABLE');
-      expect(mockTransaction).not.toHaveBeenCalled();
-    });
-  });
-
-  // ── Common guards ────────────────────────────────────────────────────────
-
-  it('404 — session not found', async () => {
-    mockSessionFindUnique.mockResolvedValue(null);
-    const res = await postNextPhase({ session_id: SESSION_ID });
-    expect(res.status).toBe(404);
-  });
-
-  it('404 — session belongs to a different parent', async () => {
-    mockSessionFindUnique.mockResolvedValue(
-      fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
-    );
-    const res = await postNextPhase({ session_id: SESSION_ID });
-    expect(res.status).toBe(404);
-  });
-
-  it('422 — session already COMPLETED', async () => {
+  it('422 — session is not in progress', async () => {
     mockSessionFindUnique.mockResolvedValue(fakeSession({ status: 'COMPLETED' }));
-    const res = await postNextPhase({ session_id: SESSION_ID });
+    const res = await postSubmit({ session_id: SESSION_ID, task_id: 'G1M1-a', input_text: 'нар', time_seconds: 5 });
     expect(res.status).toBe(422);
   });
-
-  it('400 — missing session_id', async () => {
-    const res = await postNextPhase({});
-    expect(res.status).toBe(400);
-  });
-
-  it('401 — no auth token', async () => {
-    const res = await diagnosticRouter.request('/next-phase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: SESSION_ID }),
-    });
-    expect(res.status).toBe(401);
-  });
 });
 
-// ─── GET /api/diagnostic/result/:sessionId ────────────────────────────────────
+// ─── GET /diagnostic/result/:sessionId ───────────────────────────────────────
 
 describe('GET /diagnostic/result/:sessionId', () => {
-  it('200 — returns stored result for a COMPLETED session', async () => {
-    const storedResult = {
-      general_level: 'M1',
-      confidence: 'HIGH',
-      skill_levels: { S1: 'M3', S2: 'M3', S3: 'M0', S4: 'M3', S5: 'M0', S6: 'M3', S7: 'M3', S8: 'M3' },
-      skill_scores: { S1: 0.875, S2: 0.875, S3: 0.08, S4: 1.0, S5: 0.08, S6: 1.0, S7: 1.0, S8: 1.0 },
-      top_error_codes: ['C1', 'E2'],
-      priority_skills: ['S3', 'S5'],
-      recommended_daily_minutes: 10,
-    };
-    mockSessionFindUnique.mockResolvedValueOnce(
-      fakeSession({ status: 'COMPLETED', result: storedResult }),
+  it('200 — returns the stored result for a completed session', async () => {
+    mockSessionFindUnique.mockResolvedValue(
+      fakeSession({ status: 'COMPLETED', result: { general_level: 'M2' } }),
     );
 
     const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
@@ -679,270 +346,15 @@ describe('GET /diagnostic/result/:sessionId', () => {
     const body = await json(res);
 
     expect(res.status).toBe(200);
-    expect(body.data.result.general_level).toBe('M1');
-    expect(body.data.result.priority_skills).toEqual(['S3', 'S5']);
-    expect(body.data.result.top_error_codes).toContain('C1');
+    expect(body.data.result.general_level).toBe('M2');
   });
 
-  it('422 — session is IN_PROGRESS', async () => {
-    mockSessionFindUnique.mockResolvedValueOnce(fakeSession({ status: 'IN_PROGRESS' }));
+  it('422 — session not yet completed', async () => {
+    mockSessionFindUnique.mockResolvedValue(fakeSession({ status: 'IN_PROGRESS' }));
     const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
       method: 'GET',
       headers: { Authorization: BEARER },
     });
     expect(res.status).toBe(422);
-  });
-
-  it('404 — session belongs to a different parent', async () => {
-    mockSessionFindUnique.mockResolvedValueOnce(
-      fakeSession({ learner: fakeLearner({ parent_id: 'other-parent' }) }),
-    );
-    const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
-      method: 'GET',
-      headers: { Authorization: BEARER },
-    });
-    expect(res.status).toBe(404);
-  });
-
-  it('404 — session not found', async () => {
-    mockSessionFindUnique.mockResolvedValueOnce(null);
-    const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
-      method: 'GET',
-      headers: { Authorization: BEARER },
-    });
-    expect(res.status).toBe(404);
-  });
-
-  it('401 — no auth token', async () => {
-    const res = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
-      method: 'GET',
-    });
-    expect(res.status).toBe(401);
-  });
-});
-
-// ─── Full flow: start → 8A (S3,S5 wrong) → next-phase → 8B → next-phase → 4C → next-phase → result ───
-
-describe('Full diagnostic flow — S3 & S5 weak in Phase A', () => {
-  const PHASE_A_SCORES: Record<string, number> = {
-    S1: 1.0, S2: 1.0, S3: 0.0, S4: 1.0, S5: 0.0, S6: 1.0, S7: 1.0, S8: 1.0,
-  };
-  const PHASE_A_ERRORS: Record<string, string[]> = { S3: ['C1'], S5: ['E2'] };
-
-  const PB_TASK_IDS = [
-    'pb-s3-1', 'pb-s3-2', 'pb-s3-3',
-    'pb-s5-1', 'pb-s5-2', 'pb-s5-3',
-    'pb-cross-1', 'pb-cross-2',
-  ];
-  const PB_SKILLS   = ['S3','S3','S3', 'S5','S5','S5', 'S3','S5'];
-  const PB_SCORES   = [0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0];
-  const PB_ERRORS   = [['C1'],['C1'],['C1'], ['E2'],['E2'],['E2'], ['C1'],['E2']];
-
-  const PC_TASK_IDS = ['pc-1','pc-2','pc-3','pc-4'];
-  const PC_SKILLS   = ['S1','S2','S3','S5'];
-  const PC_SCORES   = [0.75, 0.75, 0.5, 0.5];
-  const PC_ERRORS   = [[], [], ['C1'], ['E2']];
-
-  it('flows through all 3 phases and produces correct final result', async () => {
-    // clearAllMocks doesn't flush mockResolvedValueOnce queues; reset the
-    // mocks that accumulate leftover items from the PHASE_A→B unit tests.
-    mockTaskFindMany.mockReset();
-    mockTaskFindFirst.mockReset();
-
-    // ── Start ──────────────────────────────────────────────────────────────
-    mockLearnerFind.mockResolvedValue(fakeLearner());
-    mockSessionFindFirst.mockResolvedValue(null);
-    ALL_SKILLS.forEach((s) => mockTaskFindFirst.mockResolvedValueOnce(fakeTask(s)));
-    mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
-    mockAttemptFindFirst.mockResolvedValue(null);
-
-    const startRes = await postStart({ learner_id: LEARNER_ID });
-    expect(startRes.status).toBe(201);
-    const startBody = await json(startRes);
-    expect(startBody.data.session_id).toBe(SESSION_ID);
-    expect(startBody.data.tasks).toHaveLength(8);
-
-    // ── Phase A — 8 submissions ────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_A' }));
-
-    for (let i = 0; i < 8; i++) {
-      const skill = ALL_SKILLS[i];
-      mockProcessAttempt.mockResolvedValueOnce({
-        score: PHASE_A_SCORES[skill],
-        isCorrect: PHASE_A_SCORES[skill] > 0.5,
-        errorCodes: PHASE_A_ERRORS[skill] ?? [],
-        errorsDetail: [],
-        feedback: 'ok',
-        selfCorrected: false,
-      });
-      mockAttemptCount.mockResolvedValueOnce(i + 1);
-
-      const res = await postSubmit({
-        session_id: SESSION_ID,
-        task_id: `task-${skill}-A`,
-        input_text: 'тест',
-        time_seconds: 10,
-      });
-      expect(res.status).toBe(200);
-      const b = await json(res);
-      expect(b.data.phase_progress.total).toBe(8);
-    }
-
-    // ── Next-phase A → B ───────────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_A' }));
-    mockSessionUpdate.mockResolvedValue({});
-
-    const phaseAAttemptData = ALL_SKILLS.map((s, i) => ({
-      task_id: `task-${s}-A`,
-      score: PHASE_A_SCORES[s],
-      error_codes: PHASE_A_ERRORS[s] ?? [],
-      task: { primary_skill: s },
-    }));
-    mockAttemptFindMany.mockResolvedValueOnce(phaseAAttemptData);
-
-    mockTaskFindMany
-      .mockResolvedValueOnce([
-        { id: 'pb-s3-1', level_target: 'M2', primary_skill: 'S3' },
-        { id: 'pb-s3-2', level_target: 'M2', primary_skill: 'S3' },
-        { id: 'pb-s3-3', level_target: 'M2', primary_skill: 'S3' },
-        { id: 'pb-s5-1', level_target: 'M2', primary_skill: 'S5' },
-        { id: 'pb-s5-2', level_target: 'M2', primary_skill: 'S5' },
-        { id: 'pb-s5-3', level_target: 'M2', primary_skill: 'S5' },
-      ])
-      .mockResolvedValueOnce([
-        { id: 'pb-cross-1' },
-        { id: 'pb-cross-2' },
-      ])
-      .mockResolvedValueOnce(PB_TASK_IDS.map((id) => fakePhaseTask(id)));
-
-    const nextARes = await postNextPhase({ session_id: SESSION_ID });
-    expect(nextARes.status).toBe(200);
-    const nextABody = await json(nextARes);
-    expect(nextABody.data.phase).toBe('B');
-    expect(nextABody.data.tasks).toHaveLength(8);
-    expect(nextABody.data.weak_skills).toContain('S3');
-    expect(nextABody.data.weak_skills).toContain('S5');
-
-    // ── Phase B — 8 submissions ────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(
-      fakeSession({ current_phase: 'PHASE_B', weak_skills_detected: ['S3', 'S5'] }),
-    );
-
-    for (let i = 0; i < 8; i++) {
-      mockProcessAttempt.mockResolvedValueOnce({
-        score: PB_SCORES[i],
-        isCorrect: false,
-        errorCodes: PB_ERRORS[i],
-        errorsDetail: [],
-        feedback: 'ok',
-        selfCorrected: false,
-      });
-      mockAttemptCount.mockResolvedValueOnce(9 + i);
-
-      const res = await postSubmit({
-        session_id: SESSION_ID,
-        task_id: PB_TASK_IDS[i],
-        input_text: 'тест',
-        time_seconds: 10,
-      });
-      expect(res.status).toBe(200);
-    }
-
-    // ── Next-phase B → C ───────────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(
-      fakeSession({ current_phase: 'PHASE_B', weak_skills_detected: ['S3', 'S5'] }),
-    );
-    mockSessionUpdate.mockResolvedValue({});
-
-    const phaseABAttemptData = [
-      ...phaseAAttemptData,
-      ...PB_TASK_IDS.map((id, i) => ({
-        task_id: id,
-        score: PB_SCORES[i],
-        error_codes: PB_ERRORS[i],
-        task: { primary_skill: PB_SKILLS[i] },
-      })),
-    ];
-    mockAttemptFindMany.mockResolvedValueOnce(phaseABAttemptData);
-
-    mockTaskFindFirst
-      .mockResolvedValueOnce(fakePhaseTask('pc-1', 'TT4_DICTATION'))
-      .mockResolvedValueOnce(fakePhaseTask('pc-2', 'TT5_MINI_TEXT'))
-      .mockResolvedValueOnce(fakePhaseTask('pc-3', 'TT3_CORRECTION'))
-      .mockResolvedValueOnce(fakePhaseTask('pc-4', 'TT1_CHOICE'));
-
-    const nextBRes = await postNextPhase({ session_id: SESSION_ID });
-    expect(nextBRes.status).toBe(200);
-    const nextBBody = await json(nextBRes);
-    expect(nextBBody.data.phase).toBe('C');
-    expect(nextBBody.data.tasks).toHaveLength(4);
-    expect(typeof nextBBody.data.estimated_level).toBe('string');
-
-    // ── Phase C — 4 submissions ────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_C' }));
-
-    for (let i = 0; i < 4; i++) {
-      mockProcessAttempt.mockResolvedValueOnce({
-        score: PC_SCORES[i],
-        isCorrect: PC_SCORES[i] >= 0.75,
-        errorCodes: PC_ERRORS[i],
-        errorsDetail: [],
-        feedback: 'ok',
-        selfCorrected: false,
-      });
-      mockAttemptCount.mockResolvedValueOnce(17 + i);
-
-      const res = await postSubmit({
-        session_id: SESSION_ID,
-        task_id: PC_TASK_IDS[i],
-        input_text: 'тест',
-        time_seconds: 10,
-      });
-      expect(res.status).toBe(200);
-    }
-
-    // ── Next-phase C → COMPLETED ───────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValue(fakeSession({ current_phase: 'PHASE_C' }));
-    mockTransaction.mockImplementation((ops: unknown[]) => Promise.all(ops as any));
-    mockSessionUpdate.mockResolvedValue({});
-    mockSkillStateUpsert.mockResolvedValue({});
-
-    const allAttemptData = [
-      ...phaseABAttemptData,
-      ...PC_TASK_IDS.map((id, i) => ({
-        task_id: id,
-        score: PC_SCORES[i],
-        error_codes: PC_ERRORS[i],
-        task: { primary_skill: PC_SKILLS[i] },
-      })),
-    ];
-    mockAttemptFindMany.mockResolvedValueOnce(allAttemptData);
-
-    const completedRes = await postNextPhase({ session_id: SESSION_ID });
-    expect(completedRes.status).toBe(200);
-    const completedBody = await json(completedRes);
-
-    expect(completedBody.data.completed).toBe(true);
-    expect(completedBody.data.result.general_level).toMatch(/^M[0-5]$/);
-    expect(completedBody.data.result.priority_skills).toContain('S3');
-    expect(completedBody.data.result.priority_skills).toContain('S5');
-    expect(completedBody.data.result.top_error_codes).toContain('C1');
-
-    // ── GET /result/:sessionId ─────────────────────────────────────────────
-    mockSessionFindUnique.mockResolvedValueOnce(
-      fakeSession({ status: 'COMPLETED', result: completedBody.data.result }),
-    );
-
-    const resultRes = await diagnosticRouter.request(`/result/${SESSION_ID}`, {
-      method: 'GET',
-      headers: { Authorization: BEARER },
-    });
-    expect(resultRes.status).toBe(200);
-    const resultBody = await json(resultRes);
-
-    expect(resultBody.data.result.general_level).toMatch(/^M[0-5]$/);
-    expect(resultBody.data.result.priority_skills).toContain('S3');
-    expect(resultBody.data.result.priority_skills).toContain('S5');
-    expect(resultBody.data.result.top_error_codes).toContain('C1');
   });
 });

@@ -28,4 +28,10 @@ export const ERRORS = {
 
   RATE_LIMITED: (c: Context, message = 'Хэт олон оролдлого хийсэн. Хэсэг хүлээгээд дахин оролдоно уу.') =>
     fail(c, 'RATE_LIMITED', message, undefined, 429),
+
+  SERVICE_UNAVAILABLE: (c: Context, message: string) =>
+    fail(c, 'SERVICE_UNAVAILABLE', message, undefined, 503),
+
+  INTERNAL: (c: Context, message: string) =>
+    fail(c, 'INTERNAL', message, undefined, 500),
 };

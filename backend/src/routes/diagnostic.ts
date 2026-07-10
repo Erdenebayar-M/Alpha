@@ -3,20 +3,105 @@ import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { startDiagnosticSchema, submitDiagnosticSchema, nextPhaseSchema } from '@app/shared';
+import { startDiagnosticSchema, submitDiagnosticSchema } from '@app/shared';
 import { processAttempt } from '../lib/error-engine/attempt-processor';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
-import type { ErrorCode } from '../../generated/prisma';
-import { selectPhaseB, calculateFinalResult } from '../lib/engines/diagnostic-branching';
-import type { PhaseAAttempt, DiagnosticAttempt } from '../lib/engines/diagnostic-branching';
+import type { ErrorCode, PrismaClient } from '../../generated/prisma';
+import { calculateFinalResult } from '../lib/engines/diagnostic-branching';
+import type { DiagnosticAttempt } from '../lib/engines/diagnostic-branching';
+import {
+  DEFAULT_CONFIG,
+  planNextRung,
+  orderRungsByPreference,
+  selectNextItem,
+  shouldStop,
+  estimateLevel,
+  type ServedItem,
+  type CandidateTask,
+} from '../lib/engines/diagnostic-adaptive';
 import { generatePlanLessons } from '../lib/engines/plan-generator';
+import { buildSkillColumns } from '../lib/skill-state';
+import { TASK_SELECT } from '../lib/task-select';
 
 const diagnostic = new Hono<AuthEnv>();
 
 diagnostic.use('/*', withAuth);
 
-const ALL_SKILLS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'] as const;
-const PHASE_TOTALS = { PHASE_A: 8, PHASE_B: 8, PHASE_C: 4 } as const;
+
+// ─── Session climb state (persisted in DiagnosticSession.result JSON) ─────────
+
+interface ServedRef {
+  task_id: string;
+  rung: number; // M-index the item was served AT
+}
+
+interface ClimbMeta {
+  available_rungs: number[]; // rungs the active bank has for this learner's grade
+  served: ServedRef[]; // items handed out, in order
+}
+
+// ─── Bank helpers (the only DB-touching diagnostic selection logic) ──────────
+
+/** Distinct M-rungs (0..5) the active bank has for this grade. */
+async function availableRungsForGrade(grade: number, db: PrismaClient): Promise<number[]> {
+  const gradeCode = `G${grade}`;
+  const tasks = await db.task.findMany({
+    where: { is_active: true, grade_band: { has: gradeCode } },
+    select: { grade_levels: true },
+  });
+  const set = new Set<number>();
+  for (const t of tasks) {
+    for (const cell of t.grade_levels) {
+      const [g, m] = cell.split(':');
+      if (g === gradeCode && /^M[0-5]$/.test(m)) set.add(Number(m.slice(1)));
+    }
+  }
+  return [...set].sort((a, b) => a - b);
+}
+
+/** Un-served candidate tasks tagged for exactly G{grade}:M{rung}. */
+async function poolAtRung(
+  grade: number,
+  rung: number,
+  seenIds: string[],
+  db: PrismaClient,
+): Promise<CandidateTask[]> {
+  const cell = `G${grade}:M${rung}`;
+  const tasks = await db.task.findMany({
+    where: { is_active: true, grade_levels: { has: cell }, id: { notIn: seenIds } },
+    select: { id: true, primary_skill: true, task_type: true, difficulty: true },
+  });
+  return tasks.map((t) => ({
+    id: t.id,
+    primary_skill: t.primary_skill,
+    task_type: t.task_type,
+    difficulty: t.difficulty,
+  }));
+}
+
+/**
+ * Pick the next item: walk rungs nearest-to-target (widening for a thin bank),
+ * returning the first non-empty pool's selection. Null → the bank is exhausted.
+ */
+async function pickNextItem(
+  grade: number,
+  target: number,
+  availableRungs: number[],
+  seenIds: string[],
+  history: ServedItem[],
+  db: PrismaClient,
+): Promise<{ id: string; rung: number } | null> {
+  for (const rung of orderRungsByPreference(target, availableRungs)) {
+    const pool = await poolAtRung(grade, rung, seenIds, db);
+    const chosen = selectNextItem(pool, history, DEFAULT_CONFIG);
+    if (chosen) return { id: chosen.id, rung };
+  }
+  return null;
+}
+
+function fetchTask(taskId: string) {
+  return prisma.task.findUnique({ where: { id: taskId }, select: TASK_SELECT });
+}
 
 // ─── POST /api/diagnostic/start ──────────────────────────────────────────────
 
@@ -44,6 +129,7 @@ diagnostic.post('/start', async (c) => {
 
   const existing = await prisma.diagnosticSession.findFirst({
     where: { learner_id, status: 'IN_PROGRESS' },
+    select: { id: true },
   });
   if (existing) {
     await prisma.diagnosticSession.update({
@@ -52,44 +138,35 @@ diagnostic.post('/start', async (c) => {
     });
   }
 
-  const gradeCode = `G${learner.grade}`;
+  const availableRungs = await availableRungsForGrade(learner.grade, prisma);
+  if (availableRungs.length === 0) {
+    return ERRORS.UNPROCESSABLE(c, 'No diagnostic content is available for this grade yet');
+  }
 
-  const taskResults = await Promise.all(
-    ALL_SKILLS.map((skill) =>
-      prisma.task.findFirst({
-        where: {
-          primary_skill: skill as any,
-          grade_band: { has: gradeCode },
-        },
-        orderBy: { difficulty: 'asc' },
-        select: {
-          id: true,
-          task_type: true,
-          prompt_text: true,
-          options: true,
-          audio_url: true,
-          image_url: true,
-          primary_skill: true,
-          estimated_time_seconds: true,
-        },
-      }),
-    ),
-  );
+  // First item = the warm-up rung (empty history → planNextRung returns warmup).
+  const target = planNextRung([], DEFAULT_CONFIG);
+  const first = await pickNextItem(learner.grade, target, availableRungs, [], [], prisma);
+  if (!first) {
+    return ERRORS.UNPROCESSABLE(c, 'No diagnostic content is available for this grade yet');
+  }
 
-  const tasks = taskResults.filter((t): t is NonNullable<typeof t> => t !== null);
+  const meta: ClimbMeta = {
+    available_rungs: availableRungs,
+    served: [{ task_id: first.id, rung: first.rung }],
+  };
 
   const session = await prisma.diagnosticSession.create({
     data: {
       learner_id,
       status: 'IN_PROGRESS',
-      current_phase: 'PHASE_A',
       weak_skills_detected: [],
-      result: { _counts: { a: tasks.length, b: 0 } },
+      result: meta as any,
     },
     select: { id: true },
   });
 
-  return ok(c, { session_id: session.id, phase: 'A', tasks, total_phases: 3 }, undefined, 201);
+  const task = await fetchTask(first.id);
+  return ok(c, { session_id: session.id, task, item_number: 1 }, undefined, 201);
 });
 
 // ─── POST /api/diagnostic/submit ─────────────────────────────────────────────
@@ -114,6 +191,13 @@ diagnostic.post('/submit', async (c) => {
     return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
   }
 
+  const meta = (session.result as unknown as ClimbMeta | null) ?? { available_rungs: [], served: [] };
+
+  // The submitted task must be one we served, and not already answered.
+  const servedRef = meta.served.find((s) => s.task_id === task_id);
+  if (!servedRef) {
+    return ERRORS.UNPROCESSABLE(c, 'Task was not served for this session');
+  }
   const duplicate = await prisma.attempt.findFirst({
     where: { diagnostic_session_id: session_id, task_id },
     select: { id: true },
@@ -125,7 +209,6 @@ diagnostic.post('/submit', async (c) => {
   const taskRepo: TaskRepository = {
     findById: (id) => prisma.task.findUnique({ where: { id } }) as any,
   };
-
   const attemptRepo: AttemptRepository = {
     create: (data) =>
       prisma.attempt.create({
@@ -143,7 +226,6 @@ diagnostic.post('/submit', async (c) => {
         select: { id: true },
       }),
   };
-
   const errorLogRepo: ErrorLogRepository = {
     createMany: async ({ attemptId, errors }) => {
       if (errors.length === 0) return;
@@ -161,7 +243,7 @@ diagnostic.post('/submit', async (c) => {
     },
   };
 
-  const result = await processAttempt(
+  const attemptResult = await processAttempt(
     {
       learnerId: session.learner_id,
       taskId: task_id,
@@ -174,285 +256,155 @@ diagnostic.post('/submit', async (c) => {
     errorLogRepo,
   );
 
-  const completedCount = await prisma.attempt.count({
-    where: { diagnostic_session_id: session_id },
-  });
-
-  const phaseTotal = PHASE_TOTALS[session.current_phase];
-
-  const sessionMeta = (session.result as Record<string, any> | null) ?? {};
-  const phaseOffset =
-    session.current_phase === 'PHASE_A' ? 0 :
-    session.current_phase === 'PHASE_B' ? (sessionMeta._counts?.a ?? 8) :
-    (sessionMeta._counts?.a ?? 8) + (sessionMeta._counts?.b ?? (session.phase_b_completed ? 8 : 0));
-
-  return ok(c, {
-    score: result.score,
-    is_correct: result.isCorrect,
-    error_codes: result.errorCodes,
-    feedback: result.feedback,
-    phase_progress: {
-      completed: Math.min(completedCount - phaseOffset, phaseTotal),
-      total: phaseTotal,
-    },
-  });
-});
-
-// ─── POST /api/diagnostic/next-phase ─────────────────────────────────────────
-
-const TASK_SELECT = {
-  id: true,
-  task_type: true,
-  prompt_text: true,
-  options: true,
-  audio_url: true,
-  image_url: true,
-  primary_skill: true,
-  estimated_time_seconds: true,
-} as const;
-
-diagnostic.post('/next-phase', async (c) => {
-  const body = await c.req.json<unknown>().catch(() => null);
-  const parsed = nextPhaseSchema.safeParse(body);
-  if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
-  }
-
-  const { session_id } = parsed.data;
-  const parent_id = c.get('parent_id');
-
-  const session = await prisma.diagnosticSession.findUnique({
-    where: { id: session_id },
-    include: { learner: true },
-  });
-  if (!session) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
-  if (session.learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Diagnostic session not found');
-  if (session.status !== 'IN_PROGRESS') {
-    return ERRORS.UNPROCESSABLE(c, 'Session is not in progress');
-  }
-
+  // Rebuild the served-item history (now including the attempt just created).
   const attempts = await prisma.attempt.findMany({
     where: { diagnostic_session_id: session_id },
     select: {
       task_id: true,
       score: true,
+      time_seconds: true,
       error_codes: true,
-      task: { select: { primary_skill: true } },
+      task: { select: { primary_skill: true, estimated_time_seconds: true } },
     },
     orderBy: { created_at: 'asc' },
   });
 
-  // ── PHASE_A → PHASE_B ────────────────────────────────────────────────────
+  const rungByTask = new Map(meta.served.map((s) => [s.task_id, s.rung]));
+  const history: ServedItem[] = attempts.map((a) => ({
+    task_id: a.task_id,
+    rung: rungByTask.get(a.task_id) ?? meta.available_rungs[0] ?? 0,
+    primary_skill: a.task.primary_skill,
+    score: a.score,
+    error_codes: a.error_codes,
+    time_seconds: a.time_seconds,
+    estimated_time_seconds: a.task.estimated_time_seconds,
+  }));
 
-  if (session.current_phase === 'PHASE_A') {
-    const meta = (session.result as Record<string, any> | null) ?? {};
-    const phaseAExpected: number = meta._counts?.a ?? 8;
+  const base = {
+    score: attemptResult.score,
+    is_correct: attemptResult.isCorrect,
+    error_codes: attemptResult.errorCodes,
+    feedback: attemptResult.feedback,
+  };
 
-    if (attempts.length < phaseAExpected) {
-      return ERRORS.UNPROCESSABLE(
-        c,
-        `Phase A is not complete: ${attempts.length} of ${phaseAExpected} tasks submitted`,
-      );
-    }
-
-    const phaseAAttempts: PhaseAAttempt[] = attempts.slice(0, phaseAExpected).map((a) => ({
-      task_id: a.task_id,
-      primary_skill: a.task.primary_skill,
-      score: a.score,
-      error_codes: a.error_codes,
-    }));
-
-    const { weakSkills, phaseBTaskIds } = await selectPhaseB(phaseAAttempts, prisma, session.learner.grade);
-
-    const tasks = await prisma.task.findMany({
-      where: { id: { in: phaseBTaskIds } },
-      select: TASK_SELECT,
-    });
-
-    await prisma.diagnosticSession.update({
-      where: { id: session_id },
-      data: {
-        phase_a_completed: true,
-        current_phase: 'PHASE_B',
-        weak_skills_detected: weakSkills,
-        result: { ...meta, _counts: { a: phaseAExpected, b: tasks.length } },
-      },
-    });
-
-    return ok(c, { phase: 'B', tasks, weak_skills: weakSkills });
-  }
-
-  // ── PHASE_B → PHASE_C ────────────────────────────────────────────────────
-
-  if (session.current_phase === 'PHASE_B') {
-    const meta = (session.result as Record<string, any> | null) ?? {};
-    const phaseACount: number = meta._counts?.a ?? 8;
-    const phaseBCount: number = meta._counts?.b ?? 8;
-    const phaseABExpected = phaseACount + phaseBCount;
-
-    if (attempts.length < phaseABExpected) {
-      return ERRORS.UNPROCESSABLE(
-        c,
-        `Phase B is not complete: ${attempts.length - phaseACount} of ${phaseBCount} tasks submitted`,
-      );
-    }
-
-    const phaseABAttempts: DiagnosticAttempt[] = attempts.slice(0, phaseABExpected).map((a) => ({
-      task_id: a.task_id,
-      primary_skill: a.task.primary_skill,
-      score: a.score,
-      error_codes: a.error_codes,
-    }));
-
-    const partial = calculateFinalResult(phaseABAttempts, session.learner.grade);
-    const estimated_level = partial.general_level;
+  // Continue unless the climb says stop; when continuing, try to serve an item.
+  const stop = shouldStop(history, DEFAULT_CONFIG, meta.available_rungs);
+  let next: { id: string; rung: number } | null = null;
+  if (!stop.stop) {
+    const target = planNextRung(history, DEFAULT_CONFIG);
     const seenIds = attempts.map((a) => a.task_id);
-    const gradeCodeC = `G${session.learner.grade}`;
+    next = await pickNextItem(session.learner.grade, target, meta.available_rungs, seenIds, history, prisma);
+  }
 
-    const [mixedDictation, sentenceDictation, correction, boundary] = await Promise.all([
-      prisma.task.findFirst({
-        where: { task_type: { in: ['TT_7_1', 'TT_7_3'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
-        orderBy: { difficulty: 'asc' },
-        select: TASK_SELECT,
-      }),
-      prisma.task.findFirst({
-        where: { task_type: { in: ['TT_7_4', 'TT_7_6'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
-        orderBy: { difficulty: 'asc' },
-        select: TASK_SELECT,
-      }),
-      prisma.task.findFirst({
-        where: { task_type: { in: ['TT_8_1', 'TT_8_2', 'TT_8_3', 'TT_8_4'] as any[] }, id: { notIn: seenIds }, grade_band: { has: gradeCodeC } },
-        orderBy: { difficulty: 'asc' },
-        select: TASK_SELECT,
-      }),
-      prisma.task.findFirst({
-        where: { id: { notIn: seenIds }, difficulty: { gte: 3 }, grade_band: { has: gradeCodeC } },
-        orderBy: { difficulty: 'desc' },
-        select: TASK_SELECT,
-      }),
-    ]);
-
-    const tasks = [mixedDictation, sentenceDictation, correction, boundary].filter(
-      (t): t is NonNullable<typeof t> => t !== null,
-    );
-
+  if (!stop.stop && next) {
+    const newMeta: ClimbMeta = {
+      ...meta,
+      served: [...meta.served, { task_id: next.id, rung: next.rung }],
+    };
     await prisma.diagnosticSession.update({
       where: { id: session_id },
+      data: { result: newMeta as any },
+    });
+    const nextTask = await fetchTask(next.id);
+    return ok(c, {
+      ...base,
+      completed: false,
+      next_task: nextTask,
+      item_number: history.length + 1,
+    });
+  }
+
+  // ── Finalize (climb stopped, or the bank is exhausted) ────────────────────
+
+  const diagAttempts: DiagnosticAttempt[] = history.map((h) => ({
+    task_id: h.task_id,
+    primary_skill: h.primary_skill,
+    score: h.score,
+    error_codes: h.error_codes,
+  }));
+
+  const skillPart = calculateFinalResult(diagAttempts, session.learner.grade);
+  const levelEst = estimateLevel(history, meta.available_rungs, DEFAULT_CONFIG);
+
+  // general_level now comes from the adaptive climb; skills/errors from skillPart.
+  const finalResult = {
+    general_level: levelEst.level,
+    level_confidence: levelEst.confidence,
+    bank_coverage: levelEst.bank_coverage,
+    capped_by_bank: levelEst.capped_by_bank,
+    confidence: skillPart.confidence,
+    skill_levels: skillPart.skill_levels,
+    skill_scores: skillPart.skill_scores,
+    skill_confidence: skillPart.skill_confidence,
+    top_error_codes: skillPart.top_error_codes,
+    priority_skills: skillPart.priority_skills,
+    recommended_daily_minutes: skillPart.recommended_daily_minutes,
+  };
+
+  const avgScore = Object.values(skillPart.skill_scores).reduce((a, b) => a + b, 0) / 8;
+  const template = avgScore < 0.4 ? 'INTENSIVE' : avgScore < 0.7 ? 'BALANCED' : 'STABILIZATION';
+
+  const skillStateData = {
+    general_level: finalResult.general_level,
+    ...buildSkillColumns(skillPart),
+    top_error_codes: skillPart.top_error_codes,
+    weak_skills: skillPart.priority_skills,
+    preferred_session_length: skillPart.recommended_daily_minutes,
+  } as any;
+
+  const [, , newPlan] = (await prisma.$transaction([
+    prisma.diagnosticSession.update({
+      where: { id: session_id },
       data: {
-        phase_b_completed: true,
-        current_phase: 'PHASE_C',
-        result: { ...meta, _counts: { ...meta._counts, c: tasks.length } },
+        status: 'COMPLETED',
+        result: finalResult as any,
+        weak_skills_detected: skillPart.priority_skills,
+        completed_at: new Date(),
       },
-    });
+    }),
+    prisma.learnerSkillState.upsert({
+      where: { learner_id: session.learner_id },
+      create: {
+        learner_id: session.learner_id,
+        ...skillStateData,
+        recent_error_codes: [],
+        recent_task_ids: [],
+      },
+      update: skillStateData,
+    }),
+    prisma.plan.create({
+      data: {
+        learner_id: session.learner_id,
+        template: template as any,
+        status: 'ACTIVE',
+        priority_skills: skillPart.priority_skills,
+        target_errors: skillPart.top_error_codes,
+        daily_minutes: skillPart.recommended_daily_minutes,
+        duration_days: 14,
+        source: 'DIAGNOSTIC',
+      },
+      select: { id: true },
+    }),
+  ])) as any;
 
-    return ok(c, { phase: 'C', tasks, estimated_level });
-  }
-
-  // ── PHASE_C → COMPLETED ──────────────────────────────────────────────────
-
-  if (session.current_phase === 'PHASE_C') {
-    const meta = (session.result as Record<string, any> | null) ?? {};
-    const phaseACount: number = meta._counts?.a ?? 8;
-    const phaseBCount: number = meta._counts?.b ?? (session.phase_b_completed ? 8 : 0);
-    const phaseCCount: number = meta._counts?.c ?? 4;
-    const phaseOffset = phaseACount + phaseBCount;
-    const expectedTotal = phaseOffset + phaseCCount;
-
-    if (attempts.length < expectedTotal) {
-      return ERRORS.UNPROCESSABLE(
-        c,
-        `Phase C is not complete: ${attempts.length - phaseOffset} of ${phaseCCount} tasks submitted`,
-      );
-    }
-
-    const allAttempts: DiagnosticAttempt[] = attempts.slice(0, expectedTotal).map((a) => ({
-      task_id: a.task_id,
-      primary_skill: a.task.primary_skill,
-      score: a.score,
-      error_codes: a.error_codes,
+  // Completion (session + skill state + plan) is already committed above; lesson
+  // generation failing must not fail the request, but must be surfaced so the
+  // client knows the plan may have zero lessons.
+  let lessons_generated = true;
+  await generatePlanLessons(newPlan.id, prisma).catch((err) => {
+    lessons_generated = false;
+    const reqId = (c.get('requestId') as string | undefined) ?? null;
+    console.error(JSON.stringify({
+      ts: new Date().toISOString(),
+      request_id: reqId,
+      method: c.req.method,
+      path: c.req.path,
+      error: `generatePlanLessons failed (non-fatal) for plan ${newPlan.id}: ${err instanceof Error ? err.message : String(err)}`,
+      stack: err instanceof Error ? err.stack : undefined,
     }));
+  });
 
-    const finalResult = calculateFinalResult(allAttempts, session.learner.grade);
-
-    const avgScore =
-      Object.values(finalResult.skill_scores).reduce((a, b) => a + b, 0) / 8;
-    const template =
-      avgScore < 0.4 ? 'INTENSIVE' : avgScore < 0.7 ? 'BALANCED' : 'STABILIZATION';
-
-    const sc = finalResult.skill_confidence;
-    const skillStateData = {
-      general_level: finalResult.general_level as any,
-      s1_score: finalResult.skill_scores['S1'],
-      s2_score: finalResult.skill_scores['S2'],
-      s3_score: finalResult.skill_scores['S3'],
-      s4_score: finalResult.skill_scores['S4'],
-      s5_score: finalResult.skill_scores['S5'],
-      s6_score: finalResult.skill_scores['S6'],
-      s7_score: finalResult.skill_scores['S7'],
-      s8_score: finalResult.skill_scores['S8'],
-      s1_level: finalResult.skill_levels['S1'] as any,
-      s2_level: finalResult.skill_levels['S2'] as any,
-      s3_level: finalResult.skill_levels['S3'] as any,
-      s4_level: finalResult.skill_levels['S4'] as any,
-      s5_level: finalResult.skill_levels['S5'] as any,
-      s6_level: finalResult.skill_levels['S6'] as any,
-      s7_level: finalResult.skill_levels['S7'] as any,
-      s8_level: finalResult.skill_levels['S8'] as any,
-      s1_confidence: (sc['S1'] ?? 'LOW') as any,
-      s2_confidence: (sc['S2'] ?? 'LOW') as any,
-      s3_confidence: (sc['S3'] ?? 'LOW') as any,
-      s4_confidence: (sc['S4'] ?? 'LOW') as any,
-      s5_confidence: (sc['S5'] ?? 'LOW') as any,
-      s6_confidence: (sc['S6'] ?? 'LOW') as any,
-      s7_confidence: (sc['S7'] ?? 'LOW') as any,
-      s8_confidence: (sc['S8'] ?? 'LOW') as any,
-      top_error_codes: finalResult.top_error_codes,
-      weak_skills: finalResult.priority_skills,
-      preferred_session_length: finalResult.recommended_daily_minutes,
-    };
-
-    const [, , newPlan] = await prisma.$transaction([
-      prisma.diagnosticSession.update({
-        where: { id: session_id },
-        data: {
-          status: 'COMPLETED',
-          result: finalResult as any,
-          completed_at: new Date(),
-        },
-      }),
-      prisma.learnerSkillState.upsert({
-        where: { learner_id: session.learner_id },
-        create: {
-          learner_id: session.learner_id,
-          ...skillStateData,
-          recent_error_codes: [],
-          recent_task_ids: [],
-        },
-        update: skillStateData,
-      }),
-      prisma.plan.create({
-        data: {
-          learner_id: session.learner_id,
-          template: template as any,
-          status: 'ACTIVE',
-          priority_skills: finalResult.priority_skills,
-          target_errors: finalResult.top_error_codes,
-          daily_minutes: finalResult.recommended_daily_minutes,
-          duration_days: 14,
-          source: 'DIAGNOSTIC',
-        },
-        select: { id: true },
-      }),
-    ]) as any;
-
-    await generatePlanLessons(newPlan.id, prisma).catch((err) => {
-      console.error('generatePlanLessons failed (non-fatal):', err);
-    });
-
-    return ok(c, { completed: true, result: finalResult, plan_id: newPlan.id });
-  }
-
-  return ERRORS.UNPROCESSABLE(c, 'Session is in an unexpected phase state');
+  return ok(c, { ...base, completed: true, result: finalResult, plan_id: newPlan.id, lessons_generated });
 });
 
 // ─── GET /api/diagnostic/result/:sessionId ───────────────────────────────────

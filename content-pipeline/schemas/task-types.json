@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "description": "Canonical catalogue of the 37 v3 task types from Дасгалын_төрлүүд_каталог_v3.xlsx. Drives content-pipeline LLM generator.",
+  "version": 3,
+  "description": "Canonical catalogue of the 43 v3 task types (TT_1_1-TT_8_4) from Дасгалын_төрлүүд_каталог_v3.xlsx. Drives content-pipeline LLM generator.",
   "task_types": [
     {
       "task_type": "TT_1_1",

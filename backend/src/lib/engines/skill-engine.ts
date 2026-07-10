@@ -13,7 +13,7 @@
  *   - current_streak / longest_streak : daily streak
  */
 
-import type { PrismaClient } from '../../../generated/prisma';
+import type { PrismaClient, Prisma } from '../../../generated/prisma';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@ export interface SkillUpdateInput {
  */
 export async function updateSkillState(
   input: SkillUpdateInput,
-  db: PrismaClient,
+  db: PrismaClient | Prisma.TransactionClient,
 ): Promise<void> {
   const now = input.attemptedAt ?? new Date();
   const n = skillNum(input.primarySkill);

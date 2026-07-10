@@ -1,7 +1,7 @@
 /**
  * Unit tests for the admin word-bank routes:
  *   GET /api/admin/content/words          (list + grade_band filter)
- *   GET /api/admin/content/words/facets   (grade facet via unnest)
+ *   GET /api/admin/content/words/facets   (grade facet flattened from grade_band)
  *
  * Key invariant under test: the grade filter uses grade_band containment
  * ({ grade_band: { has: 'G1' } }) rather than integer equality. This means
@@ -47,7 +47,6 @@ jest.mock('../../lib/db/client', () => ({
       findUnique: jest.fn(),
       update:     jest.fn(),
     },
-    $queryRaw:    jest.fn(),
     $transaction: jest.fn(),
   },
 }));
@@ -69,7 +68,6 @@ const mockFindMany   = prisma.word.findMany   as jest.MockedFunction<any>;
 const mockCount      = prisma.word.count      as jest.MockedFunction<any>;
 const mockFindUnique = prisma.word.findUnique as jest.MockedFunction<any>;
 const mockUpdate     = prisma.word.update     as jest.MockedFunction<any>;
-const mockQueryRaw   = prisma.$queryRaw       as jest.MockedFunction<any>;
 const mockTx         = prisma.$transaction    as jest.MockedFunction<any>;
 
 const BEARER = 'Bearer test-admin-secret-that-is-32chars-ok';
@@ -177,27 +175,31 @@ describe('GET /words — grade_band filter', () => {
   });
 });
 
-// ─── GET /words/facets — grades from unnest(grade_band) ──────────────────────
+// ─── GET /words/facets — grades flattened from grade_band ────────────────────
 
 describe('GET /words/facets — grade facet uses grade_band', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockQueryRaw.mockResolvedValue([{ grade: 'G1' }, { grade: 'G2' }]);
-    mockFindMany.mockResolvedValue([]);
+    // Promise.all call order: grade_band select, categories, app_levels.
+    mockFindMany
+      .mockResolvedValueOnce([{ grade_band: ['G1'] }, { grade_band: ['G2'] }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
   });
 
-  it('returns grades sourced from $queryRaw unnest', async () => {
+  it('returns grades flattened from grade_band', async () => {
     const res = await get('/words/facets');
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body.data.grades).toEqual(['G1', 'G2']);
-    expect(mockQueryRaw).toHaveBeenCalled();
   });
 
   it('includes G1 and G2 when a multi-grade word is present in the DB', async () => {
-    // Simulates a DB with one word whose grade_band = ['G1','G2']:
-    // the unnest returns two rows, one per grade.
-    mockQueryRaw.mockResolvedValue([{ grade: 'G1' }, { grade: 'G2' }]);
+    mockFindMany
+      .mockReset()
+      .mockResolvedValueOnce([{ grade_band: ['G1', 'G2'] }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
     const res = await get('/words/facets');
     const body = (await res.json()) as any;
     expect(body.data.grades).toContain('G1');

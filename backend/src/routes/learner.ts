@@ -5,6 +5,7 @@ import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { createLearnerSchema } from '@app/shared';
+import { pickSkillColumns } from '../lib/skill-state';
 
 const learner = new Hono<AuthEnv>();
 
@@ -79,22 +80,7 @@ learner.get('/', async (c) => {
         skill_state: s
           ? {
               general_level: s.general_level,
-              s1_score: s.s1_score,
-              s2_score: s.s2_score,
-              s3_score: s.s3_score,
-              s4_score: s.s4_score,
-              s5_score: s.s5_score,
-              s6_score: s.s6_score,
-              s7_score: s.s7_score,
-              s8_score: s.s8_score,
-              s1_level: s.s1_level,
-              s2_level: s.s2_level,
-              s3_level: s.s3_level,
-              s4_level: s.s4_level,
-              s5_level: s.s5_level,
-              s6_level: s.s6_level,
-              s7_level: s.s7_level,
-              s8_level: s.s8_level,
+              ...pickSkillColumns(s),
               top_error_codes: s.top_error_codes,
               weak_skills: s.weak_skills,
               current_streak: s.current_streak,
@@ -136,22 +122,7 @@ learner.get('/:id', async (c) => {
     skill_state: s
       ? {
           general_level: s.general_level,
-          s1_score: s.s1_score,
-          s2_score: s.s2_score,
-          s3_score: s.s3_score,
-          s4_score: s.s4_score,
-          s5_score: s.s5_score,
-          s6_score: s.s6_score,
-          s7_score: s.s7_score,
-          s8_score: s.s8_score,
-          s1_level: s.s1_level,
-          s2_level: s.s2_level,
-          s3_level: s.s3_level,
-          s4_level: s.s4_level,
-          s5_level: s.s5_level,
-          s6_level: s.s6_level,
-          s7_level: s.s7_level,
-          s8_level: s.s8_level,
+          ...pickSkillColumns(s),
           top_error_codes: s.top_error_codes,
           weak_skills: s.weak_skills,
           current_streak: s.current_streak,
