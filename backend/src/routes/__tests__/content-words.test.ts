@@ -335,13 +335,15 @@ describe('PATCH /words/:id', () => {
 // ─── DELETE /words/:id (soft-delete) ─────────────────────────────────────────
 
 describe('DELETE /words/:id', () => {
+  const mockUpdateMany = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
     mockFindUnique.mockResolvedValue(EXISTING_WORD);
     mockTx.mockImplementation((fn: (tx: any) => Promise<unknown>) =>
-      fn({ word: { update: mockUpdate } }),
+      fn({ word: { update: mockUpdate, updateMany: mockUpdateMany } }),
     );
     mockUpdate.mockResolvedValue({ ...EXISTING_WORD, is_active: false });
+    mockUpdateMany.mockResolvedValue({ count: 3 });
   });
 
   it('returns 404 when word does not exist', async () => {
@@ -360,6 +362,87 @@ describe('DELETE /words/:id', () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ data: { is_active: false } }),
     );
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('mode=detach unlinks the forms (root_word_id → null)', async () => {
+    const res = await del('/words/WG1-TEST-0001?mode=detach');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.mode).toBe('detach');
+    expect(body.data.forms_detached).toBe(3);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { root_word_id: 'WG1-TEST-0001' }, data: { root_word_id: null } }),
+    );
+  });
+
+  it('mode=cascade deactivates the forms too', async () => {
+    const res = await del('/words/WG1-TEST-0001?mode=cascade');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.forms_deactivated).toBe(3);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { root_word_id: 'WG1-TEST-0001' }, data: { is_active: false } }),
+    );
+  });
+
+  it('rejects an invalid mode', async () => {
+    const res = await del('/words/WG1-TEST-0001?mode=bogus');
+    expect(res.status).toBe(400);
+  });
+});
+
+// ─── POST /words/:id/connect ──────────────────────────────────────────────────
+
+describe('POST /words/:id/connect', () => {
+  const mockUpdateMany = jest.fn();
+  const mockFindFirst = jest.fn();
+  const mockCreate = jest.fn();
+
+  function connect(id: string, body: unknown) {
+    return contentRouter.request(`/words/${id}/connect`, {
+      method: 'POST',
+      headers: { Authorization: BEARER, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindUnique.mockResolvedValue(EXISTING_WORD); // word being connected (word: 'тест')
+    mockTx.mockImplementation((fn: (tx: any) => Promise<unknown>) =>
+      fn({ word: { update: mockUpdate, updateMany: mockUpdateMany, findFirst: mockFindFirst, create: mockCreate } }),
+    );
+    mockUpdate.mockResolvedValue({});
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+  });
+
+  it('links to an existing root', async () => {
+    mockFindFirst.mockResolvedValue({ id: 'WG9-ROOT', word: 'авах' });
+    const res = await connect('WG1-TEST-0001', { root: 'авах' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.root_id).toBe('WG9-ROOT');
+    expect(body.data.root_created).toBe(false);
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'WG1-TEST-0001' }, data: expect.objectContaining({ root_word_id: 'WG9-ROOT' }) }),
+    );
+  });
+
+  it('creates a new root when none exists', async () => {
+    mockFindFirst.mockResolvedValue(null);
+    mockCreate.mockResolvedValue({ id: 'WLEM-C-abcd1234', word: 'явах' });
+    const res = await connect('WG1-TEST-0001', { root: 'явах' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.root_created).toBe(true);
+    expect(mockCreate).toHaveBeenCalled();
+  });
+
+  it('rejects connecting a word to itself', async () => {
+    const res = await connect('WG1-TEST-0001', { root: 'тест' });
+    expect(res.status).toBe(400);
   });
 });
 

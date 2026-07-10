@@ -36,6 +36,7 @@ import {
   hasVowel,
 } from '../lib/word-bank/import';
 import { deriveCapability } from '../lib/word-bank/derive-capability';
+import { syllabify } from '../lib/error-engine/mongolian-utils';
 
 // Verbatim from populateWordCapability.ts — keep in sync.
 const IMAGEABLE_MEANING = 'бодит/зурагтай холбож болно'.normalize('NFC');
@@ -1257,8 +1258,12 @@ content.get('/words', async (c) => {
       orderBy: { word: 'asc' },
       skip: (page - 1) * per_page,
       take: per_page,
-      // Each root's linked inflected forms (e.g. ах → ахтайгаа) for the admin UI.
-      include: { forms: { select: { id: true, word: true }, orderBy: { word: 'asc' } } },
+      // Each root's linked inflected forms (e.g. ах → ахтайгаа) + this row's own
+      // root (non-null only when the row is itself a form) for the admin UI.
+      include: {
+        forms: { select: { id: true, word: true }, orderBy: { word: 'asc' } },
+        root_word: { select: { id: true, word: true } },
+      },
     }),
     prisma.word.count({ where }),
   ]);
@@ -1448,17 +1453,105 @@ content.patch('/words/:id', async (c) => {
 });
 
 // ─── DELETE /api/admin/content/words/:id — soft-delete (sets is_active=false) ─
+// Always soft (rows are never removed). ?mode controls what happens to a root's
+// linked inflected forms:
+//   solo    (default) — deactivate just this row (a form, or a childless root).
+//   detach  — deactivate the root AND unlink its forms (root_word_id → null), so
+//             the forms survive as active standalone words.
+//   cascade — deactivate the root AND every one of its forms.
+const deleteWordQuerySchema = z.object({
+  mode: z.enum(['solo', 'detach', 'cascade']).default('solo'),
+});
 
 content.delete('/words/:id', async (c) => {
   const id = c.req.param('id');
+  const parsed = deleteWordQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
+  }
+  const { mode } = parsed.data;
+
   const word = await prisma.word.findUnique({ where: { id } });
   if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
 
+  let detached = 0;
+  let cascaded = 0;
   await prisma.$transaction(async (tx) => {
     await tx.word.update({ where: { id }, data: { is_active: false } });
+    if (mode === 'detach') {
+      const r = await tx.word.updateMany({ where: { root_word_id: id }, data: { root_word_id: null } });
+      detached = r.count;
+    } else if (mode === 'cascade') {
+      const r = await tx.word.updateMany({ where: { root_word_id: id }, data: { is_active: false } });
+      cascaded = r.count;
+    }
   });
 
-  return ok(c, { action: 'deactivated', id });
+  return ok(c, { action: 'deactivated', id, mode, forms_detached: detached, forms_deactivated: cascaded });
+});
+
+// ─── POST /api/admin/content/words/:id/connect — link a word to a root ────────
+// Body { root }: the dictionary-form word to attach this row to. If a root row
+// with that word already exists it is reused; otherwise a new root row is
+// created (metadata inherited from this word). If the word being connected has
+// its own forms they are re-pointed to the root so the tree stays one level deep.
+const connectWordSchema = z.object({ root: z.string().min(1) });
+
+content.post('/words/:id/connect', async (c) => {
+  const id = c.req.param('id');
+  const raw = await c.req.json().catch(() => null);
+  const parsed = connectWordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+  const rootWord = parsed.data.root.trim();
+
+  if (!isAllMongolian(rootWord) || !hasVowel(rootWord)) {
+    return ERRORS.VALIDATION_ERROR(c, 'root must be a Mongolian word with at least one vowel');
+  }
+
+  const word = await prisma.word.findUnique({ where: { id } });
+  if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
+  if (word.word === rootWord) {
+    return ERRORS.VALIDATION_ERROR(c, 'A word cannot be its own root');
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Reuse an existing root row for this word, else create one.
+    let root = await tx.word.findFirst({ where: { word: rootWord, root_word_id: null } });
+    let created = false;
+    if (!root) {
+      const newId = `WLEM-C-${crypto.randomBytes(4).toString('hex')}`;
+      root = await tx.word.create({
+        data: {
+          id: newId,
+          word: rootWord,
+          category: word.category,
+          grade_band: word.grade_band,
+          grade: word.grade,
+          char_count: [...rootWord].length,
+          syllable_count: syllabify(rootWord).length,
+          skill_tags: [], error_tags: [], image_ok: false, audio_ok: false, distractors: [],
+          part_of_speech: word.part_of_speech,
+        },
+      });
+      created = true;
+    }
+    // Re-point this word's own forms up to the new root (keep the tree 1-level).
+    await tx.word.updateMany({ where: { root_word_id: id }, data: { root_word_id: root.id } });
+    // Link this word under the root (and clear its capability so a form is not eligible).
+    await tx.word.update({
+      where: { id },
+      data: {
+        root_word_id: root.id,
+        skills_possible: [], errors_possible: [], task_types_possible: [],
+        primary_feature: null, primary_skill: null,
+      },
+    });
+    return { rootId: root.id, rootWord: root.word, created };
+  });
+
+  return ok(c, { action: 'connected', id, root_id: result.rootId, root_word: result.rootWord, root_created: result.created });
 });
 
 export default content;
