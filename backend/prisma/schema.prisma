@@ -453,6 +453,7 @@ model Task {
   feedback_correct       String?
   feedback_wrong         String?
   is_diagnostic          Boolean    @default(false)
+  is_active              Boolean    @default(true)
   source                 TaskSource @default(HUMAN)
   created_at             DateTime   @default(now())
 
