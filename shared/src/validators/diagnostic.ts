@@ -30,11 +30,16 @@ export interface DiagnosticTask {
   id: string;
   task_type: string;
   prompt_text: string;
+  correct_answer: string;
+  interaction_form: string | null;
   options: unknown; // JSONB; structure varies by task_type
   audio_url: string | null;
   image_url: string | null;
   primary_skill: string;
   estimated_time_seconds: number;
+  feedback_text: string | null;
+  feedback_correct: string | null;
+  feedback_wrong: string | null;
 }
 
 /** Final diagnostic result. `general_level` now comes from the adaptive climb. */

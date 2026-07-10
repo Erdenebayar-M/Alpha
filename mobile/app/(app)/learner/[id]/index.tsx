@@ -14,8 +14,15 @@ export default function LearnerHomeScreen() {
     <View style={styles.container}>
       <Text style={styles.greeting}>{name ?? 'Welcome'}</Text>
 
-      <Pressable style={styles.button} onPress={() => router.push(`/learner/${id}/lesson`)}>
-        <Text style={styles.buttonText}>Start today&apos;s lesson</Text>
+      <Pressable style={styles.button} onPress={() => router.push(`/learner/${id}/diagnostic`)}>
+        <Text style={styles.buttonText}>Start diagnostic</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.button, styles.secondaryButton]}
+        onPress={() => router.push(`/learner/${id}/lesson`)}
+      >
+        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Start today&apos;s lesson</Text>
       </Pressable>
 
       <Pressable

@@ -43,7 +43,9 @@ export default function LessonScreen() {
         await submitAttempt.mutateAsync({
           lesson_id: data.lesson.id,
           task_id: currentTask.id,
-          input_text: isCorrect ? currentTask.correct_answer : '',
+          // The backend requires a non-empty input_text; '✗' never matches a
+          // correct_answer, so a wrong answer is still scored wrong server-side.
+          input_text: isCorrect ? currentTask.correct_answer : '✗',
           time_seconds: Math.round((Date.now() - taskStartedAt) / 1000),
         });
       } catch {

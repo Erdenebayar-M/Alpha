@@ -13,8 +13,9 @@ const taskTypeMap: Record<string, string> = {
   TT_1_3: 'match_pairs',
   TT_3_3: 'match_pairs',
   TT_5_3: 'match_pairs',
-  // Sentence-starts-with-a-capital: pick the correctly-cased first word (placeholder code).
-  TT_7_1: 'sentence_capital',
+  // Copy-the-word / transcribe: the child retypes the shown word (options.text_to_copy,
+  // no choices). The real G1 bank tags these TT_7_1; the text_input renderer fits.
+  TT_7_1: 'text_input',
   // Place-the-correct-punctuation: pick the sentence's end mark (. / ? / !) (placeholder code).
   TT_8_1: 'punctuation_choice',
   // Drag the end mark into the gap after the word that ends each sentence (placeholder code).
@@ -28,4 +29,27 @@ const taskTypeMap: Record<string, string> = {
 
 export function getInteractionForm(taskType: string): string {
   return taskTypeMap[taskType] ?? 'fallback';
+}
+
+/**
+ * Last-resort resolver: infer a renderer key from the task's options shape when
+ * neither the task's own interaction_form nor the task_type map yields a usable
+ * renderer. This keeps the diagnostic/lesson from freezing on the dead-end
+ * Fallback renderer for any task whose options we recognise (the backend serves
+ * interaction_form = null today, and may later send raw enum values that aren't
+ * registry keys). Returns null when the shape is unrecognised.
+ */
+export function inferInteractionForm(options: unknown): string | null {
+  if (!options || typeof options !== 'object') return null;
+  const o = options as Record<string, unknown>;
+
+  if (Array.isArray(o.tiles) && Array.isArray(o.correct_order)) return 'assemble_word';
+  if (Array.isArray(o.pairs)) return 'match_pairs';
+  if (o.punctuation && typeof o.punctuation === 'object') {
+    const p = o.punctuation as Record<string, unknown>;
+    return Array.isArray(p.gap_positions) ? 'comma_place' : 'punctuation_place';
+  }
+  if (typeof o.text_to_copy === 'string') return 'text_input';
+  if (Array.isArray(o.choices) && o.choices.length > 0) return 'multiple_choice';
+  return null;
 }
