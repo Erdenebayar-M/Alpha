@@ -9,10 +9,10 @@ import * as path from "path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
   PrismaClient,
-  TaskType,
   SkillCode,
   LessonSlot,
 } from "../generated/prisma";
+import { taskTypeSchema } from "@app/shared";
 
 const isDryRun = process.argv.includes("--dry-run");
 
@@ -100,8 +100,16 @@ async function main() {
   const validatedVariants = loadValidatedTasks();
 
   for (const v of validatedVariants) {
+    const parsedType = taskTypeSchema.safeParse(v.task_type);
+    if (!parsedType.success) {
+      console.error(
+        `ValidatedTask ${v.id}: unknown task_type '${v.task_type}' — skipped`,
+      );
+      taskErrored++;
+      continue;
+    }
     const data = {
-      task_type: v.task_type as TaskType,
+      task_type: parsedType.data,
       prompt_text: v.prompt_text,
       correct_answer: v.correct_answer,
       options: v.options,

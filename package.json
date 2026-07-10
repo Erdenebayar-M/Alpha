@@ -15,7 +15,7 @@
     "pipeline:generate": "npx tsx content-pipeline/scripts/llmGenerate.ts",
     "pipeline:review": "npx tsx content-pipeline/scripts/llmReview.ts",
     "pipeline:clear-tasks": "npx tsx content-pipeline/scripts/clearTasks.ts",
-    "pipeline:import": "npx tsx content-pipeline/scripts/importValidated.ts",
+    "pipeline:import": "npx tsx content-pipeline/scripts/importDrafts.ts",
     "pipeline:tts": "npx tsx content-pipeline/scripts/generateTts.ts",
     "pipeline:images": "npx tsx content-pipeline/scripts/generateImages.ts",
     "pipeline:upload-audio": "npx tsx content-pipeline/scripts/uploadAudioToR2.ts",

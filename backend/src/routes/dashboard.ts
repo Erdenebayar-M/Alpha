@@ -19,11 +19,32 @@ dashboard.get('/skills', async (c) => {
   const { learner_id } = parsedQuery.data;
   const parent_id = c.get('parent_id');
 
-  const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
+  const learner = await prisma.learner.findUnique({
+    where: { id: learner_id },
+    select: { parent_id: true },
+  });
   if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Learner not found');
 
-  const state = await prisma.learnerSkillState.findUnique({ where: { learner_id } });
+  const state = await prisma.learnerSkillState.findUnique({
+    where: { learner_id },
+    select: {
+      general_level: true,
+      s1_score: true, s1_level: true, s1_confidence: true,
+      s2_score: true, s2_level: true, s2_confidence: true,
+      s3_score: true, s3_level: true, s3_confidence: true,
+      s4_score: true, s4_level: true, s4_confidence: true,
+      s5_score: true, s5_level: true, s5_confidence: true,
+      s6_score: true, s6_level: true, s6_confidence: true,
+      s7_score: true, s7_level: true, s7_confidence: true,
+      s8_score: true, s8_level: true, s8_confidence: true,
+      weak_skills: true,
+      top_error_codes: true,
+      current_streak: true,
+      longest_streak: true,
+      updated_at: true,
+    },
+  });
   if (!state) return ERRORS.NOT_FOUND(c, 'Skill state not found');
 
   return ok(c, { skills: state });
@@ -39,9 +60,12 @@ dashboard.get('/progress', async (c) => {
   const { learner_id } = parsedQuery.data;
   const parent_id = c.get('parent_id');
 
-  const learner = await prisma.learner.findUnique({ where: { id: learner_id } });
+  const learner = await prisma.learner.findUnique({
+    where: { id: learner_id },
+    select: { parent_id: true },
+  });
   if (!learner) return ERRORS.NOT_FOUND(c, 'Learner not found');
-  if (learner.parent_id !== parent_id) return ERRORS.FORBIDDEN(c);
+  if (learner.parent_id !== parent_id) return ERRORS.NOT_FOUND(c, 'Learner not found');
 
   const state = await prisma.learnerSkillState.findUnique({
     where: { learner_id },

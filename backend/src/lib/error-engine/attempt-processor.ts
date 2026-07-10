@@ -223,6 +223,26 @@ export async function processAttempt(
     const diff = checkAnswer(expected, input.inputText, taskType);
     errors = diff.isCorrect ? [] : classifyWordErrors(diff, expected, input.inputText, { taskType });
 
+  } else if (taskType === 'TT_5_2' || taskType === 'TT_7_5') {
+    // sentenceFillOptions: context is a full sentence, not a single word with a
+    // blank_position, so this must be checked before FILL_TYPES.has() below
+    // (FILL_TYPES includes TT_5_2/TT_7_5 for answer-checker's own grouping, but
+    // the word-level blank-reconstruction path there is wrong for these two).
+    const opts = options as unknown as SentenceFillOptions;
+    const expected = opts.blank_answer ?? task.correct_answer;
+    const diff = checkAnswer(expected, input.inputText, taskType);
+    errors = diff.isCorrect ? [] : classifyWordErrors(diff, expected, input.inputText, { taskType });
+    if (!diff.isCorrect && errors.length === 0) {
+      // Same empty-diff safety net as the word-level FILL branch below: the
+      // FILL-group whole-string wrongChar entry (single span, not per-char)
+      // often can't be pinned to a specific phonological code.
+      errors.push({
+        errorCode: 'B1', severity: 2, position: 0,
+        expectedChar: expected, actualChar: input.inputText, contextWord: expected,
+        message: `Буруу үг бичсэн: "${expected}" байх ёстой газар "${input.inputText}" бичсэн`,
+      });
+    }
+
   } else if (FILL_TYPES.has(taskType)) {
     const opts = options as unknown as FillOptions;
     const contextWord = opts.context_word ?? task.correct_answer;
@@ -230,15 +250,6 @@ export async function processAttempt(
     const pos = opts.blank_position ?? 0;
     const blankLen = blankAnswer.length; // may be >1 — multi-char blanks supported
     const fullActual = contextWord.slice(0, pos) + input.inputText + contextWord.slice(pos + blankLen);
-
-    // TT_5_2 / TT_7_5 are sentenceFillOptions (context is a sentence, no real
-    // blank_position) — they must NOT take the word-level DP path below.
-    // NOTE: their dedicated branch (`taskType === 'TT_5_2' || 'TT_7_5'` further
-    // down) is currently DEAD code because FILL_TYPES.has() matches them here
-    // first. That ordering bug is out of scope for this fix; this guard just
-    // keeps them on the legacy whole-string check so we don't deepen it.
-    // Follow-up: pull TT_5_2/TT_7_5 out of FILL_TYPES (or reorder the branches).
-    const isSentenceFill = taskType === 'TT_5_2' || taskType === 'TT_7_5';
 
     if (blankAnswer.toLowerCase() === input.inputText.toLowerCase()) {
       errors = [];
@@ -249,9 +260,7 @@ export async function processAttempt(
       // part differs) but at correct full-word positions, and the classifier
       // sees full-word context — so isReducedVowelPosition / isLongVowelPart
       // work, surfacing C1/C3/C4/D3/… instead of always collapsing to B1.
-      const diff = isSentenceFill
-        ? checkAnswer(contextWord, fullActual, taskType) // legacy bypass (unchanged)
-        : checkAnswer(contextWord, fullActual);          // word-level DP path
+      const diff = checkAnswer(contextWord, fullActual);
       errors = classifyWordErrors(diff, contextWord, fullActual, { taskType });
       if (errors.length === 0) {
         // Empty-diff safety net: a wrong blank the classifier can't pin to a
@@ -263,12 +272,6 @@ export async function processAttempt(
         });
       }
     }
-
-  } else if (taskType === 'TT_5_2' || taskType === 'TT_7_5') {
-    const opts = options as unknown as SentenceFillOptions;
-    const expected = opts.blank_answer ?? task.correct_answer;
-    const diff = checkAnswer(expected, input.inputText, taskType);
-    errors = diff.isCorrect ? [] : classifyWordErrors(diff, expected, input.inputText, { taskType });
 
   } else if (DICTATION_TYPES.has(taskType)) {
     const opts = options as unknown as DictationOptions;

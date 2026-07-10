@@ -3,6 +3,7 @@ import { withAdmin } from '../lib/auth/adminMiddleware';
 import { ok } from '../lib/response';
 import { ERRORS } from '../lib/errors';
 import { prisma } from '../lib/db/client';
+import { pickSkillColumns } from '../lib/skill-state';
 
 const adminLearners = new Hono();
 adminLearners.use('/*', withAdmin);
@@ -168,14 +169,7 @@ adminLearners.get('/:id', async (c) => {
     skill_state: s
       ? {
           general_level: s.general_level,
-          s1_score: s.s1_score, s2_score: s.s2_score, s3_score: s.s3_score, s4_score: s.s4_score,
-          s5_score: s.s5_score, s6_score: s.s6_score, s7_score: s.s7_score, s8_score: s.s8_score,
-          s1_level: s.s1_level, s2_level: s.s2_level, s3_level: s.s3_level, s4_level: s.s4_level,
-          s5_level: s.s5_level, s6_level: s.s6_level, s7_level: s.s7_level, s8_level: s.s8_level,
-          s1_confidence: s.s1_confidence, s2_confidence: s.s2_confidence,
-          s3_confidence: s.s3_confidence, s4_confidence: s.s4_confidence,
-          s5_confidence: s.s5_confidence, s6_confidence: s.s6_confidence,
-          s7_confidence: s.s7_confidence, s8_confidence: s.s8_confidence,
+          ...pickSkillColumns(s, { confidence: true }),
           top_error_codes: s.top_error_codes,
           weak_skills: s.weak_skills,
           recent_error_codes: s.recent_error_codes,

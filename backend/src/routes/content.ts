@@ -613,7 +613,7 @@ content.post('/generate-image', adminGenerateLimiter, async (c) => {
     return ok(c, { temp_id: tempId, base64: b64 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return c.json({ success: false, error: msg }, 500 as const);
+    return ERRORS.INTERNAL(c, msg);
   }
 });
 
@@ -627,7 +627,7 @@ const generateAudioSchema = z.object({
 
 content.post('/generate-audio', adminGenerateLimiter, async (c) => {
   if (!env.GEMINI_API_KEY) {
-    return c.json({ success: false, error: 'GEMINI_API_KEY not configured on server' }, 503 as const);
+    return ERRORS.SERVICE_UNAVAILABLE(c, 'GEMINI_API_KEY not configured on server');
   }
 
   const body   = await c.req.json().catch(() => null);
@@ -672,7 +672,7 @@ content.post('/generate-audio', adminGenerateLimiter, async (c) => {
     return ok(c, { temp_id: tempId, base64: wav.toString('base64') });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return c.json({ success: false, error: msg }, 500 as const);
+    return ERRORS.INTERNAL(c, msg);
   }
 });
 
@@ -889,7 +889,7 @@ const generateSchema = z.object({
 content.post('/generate', adminGenerateLimiter, async (c) => {
   const apiKey = env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return c.json({ success: false, error: 'OPENROUTER_API_KEY not configured on server' }, 503 as const);
+    return ERRORS.SERVICE_UNAVAILABLE(c, 'OPENROUTER_API_KEY not configured on server');
   }
 
   const body   = await c.req.json().catch(() => null);
@@ -1266,16 +1266,21 @@ content.get('/words', async (c) => {
 });
 
 // GET /api/admin/content/words/facets — distinct values for the filter dropdowns.
-// grades: unnests grade_band arrays so a word in ['G1','G2'] contributes to both buckets.
+// grades: flattens each word's grade_band array so a word in ['G1','G2'] contributes to both buckets.
 content.get('/words/facets', async (c) => {
-  const [gradeRows, categories, levels] = await Promise.all([
-    prisma.$queryRaw<{ grade: string }[]>`SELECT DISTINCT unnest(grade_band) AS grade FROM words WHERE cardinality(grade_band) > 0 ORDER BY grade`,
+  const [gradeBands, categories, levels] = await Promise.all([
+    prisma.word.findMany({ where: { grade_band: { isEmpty: false } }, select: { grade_band: true } }),
     prisma.word.findMany({ where: { category: { not: '' } }, distinct: ['category'], select: { category: true } }),
     prisma.word.findMany({ where: { app_level: { not: null } }, distinct: ['app_level'], select: { app_level: true } }),
   ]);
 
+  const grades = new Set<string>();
+  for (const { grade_band } of gradeBands) {
+    for (const g of grade_band) grades.add(g);
+  }
+
   return ok(c, {
-    grades: gradeRows.map((g) => g.grade),
+    grades: [...grades].sort(),
     categories: categories.map((c2) => c2.category).filter(Boolean).sort((a, b) => a.localeCompare(b, 'mn')),
     app_levels: levels.map((l) => l.app_level).filter((l): l is string => !!l).sort(),
   });

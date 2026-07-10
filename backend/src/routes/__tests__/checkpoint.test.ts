@@ -7,8 +7,8 @@ import checkpointRouter from '../checkpoint';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
-jest.mock('../../lib/db/client', () => ({
-  prisma: {
+jest.mock('../../lib/db/client', () => {
+  const prisma: Record<string, unknown> = {
     learner:           { findUnique: jest.fn() },
     checkpoint:        { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     task:              { findMany: jest.fn(), findUnique: jest.fn() },
@@ -16,8 +16,12 @@ jest.mock('../../lib/db/client', () => ({
     errorLog:          { createMany: jest.fn() },
     learnerSkillState: { findUnique: jest.fn(), update: jest.fn() },
     plan:              { update: jest.fn(), create: jest.fn() },
-  },
-}));
+  };
+  // Interactive-transaction mock: run the callback against the same model
+  // mocks used outside a transaction, so tests don't need a separate `tx` double.
+  prisma.$transaction = jest.fn((cb: (tx: unknown) => unknown) => cb(prisma));
+  return { prisma };
+});
 
 jest.mock('../../lib/auth/jwt', () => ({
   verifyToken: jest.fn(),

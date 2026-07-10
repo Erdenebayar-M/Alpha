@@ -20,22 +20,13 @@ import {
   type CandidateTask,
 } from '../lib/engines/diagnostic-adaptive';
 import { generatePlanLessons } from '../lib/engines/plan-generator';
+import { buildSkillColumns } from '../lib/skill-state';
+import { TASK_SELECT } from '../lib/task-select';
 
 const diagnostic = new Hono<AuthEnv>();
 
 diagnostic.use('/*', withAuth);
 
-// Fields the client renders for one item.
-const TASK_SELECT = {
-  id: true,
-  task_type: true,
-  prompt_text: true,
-  options: true,
-  audio_url: true,
-  image_url: true,
-  primary_skill: true,
-  estimated_time_seconds: true,
-} as const;
 
 // ─── Session climb state (persisted in DiagnosticSession.result JSON) ─────────
 
@@ -353,37 +344,13 @@ diagnostic.post('/submit', async (c) => {
   const avgScore = Object.values(skillPart.skill_scores).reduce((a, b) => a + b, 0) / 8;
   const template = avgScore < 0.4 ? 'INTENSIVE' : avgScore < 0.7 ? 'BALANCED' : 'STABILIZATION';
 
-  const sc = skillPart.skill_confidence;
   const skillStateData = {
-    general_level: finalResult.general_level as any,
-    s1_score: skillPart.skill_scores['S1'],
-    s2_score: skillPart.skill_scores['S2'],
-    s3_score: skillPart.skill_scores['S3'],
-    s4_score: skillPart.skill_scores['S4'],
-    s5_score: skillPart.skill_scores['S5'],
-    s6_score: skillPart.skill_scores['S6'],
-    s7_score: skillPart.skill_scores['S7'],
-    s8_score: skillPart.skill_scores['S8'],
-    s1_level: skillPart.skill_levels['S1'] as any,
-    s2_level: skillPart.skill_levels['S2'] as any,
-    s3_level: skillPart.skill_levels['S3'] as any,
-    s4_level: skillPart.skill_levels['S4'] as any,
-    s5_level: skillPart.skill_levels['S5'] as any,
-    s6_level: skillPart.skill_levels['S6'] as any,
-    s7_level: skillPart.skill_levels['S7'] as any,
-    s8_level: skillPart.skill_levels['S8'] as any,
-    s1_confidence: (sc['S1'] ?? 'LOW') as any,
-    s2_confidence: (sc['S2'] ?? 'LOW') as any,
-    s3_confidence: (sc['S3'] ?? 'LOW') as any,
-    s4_confidence: (sc['S4'] ?? 'LOW') as any,
-    s5_confidence: (sc['S5'] ?? 'LOW') as any,
-    s6_confidence: (sc['S6'] ?? 'LOW') as any,
-    s7_confidence: (sc['S7'] ?? 'LOW') as any,
-    s8_confidence: (sc['S8'] ?? 'LOW') as any,
+    general_level: finalResult.general_level,
+    ...buildSkillColumns(skillPart),
     top_error_codes: skillPart.top_error_codes,
     weak_skills: skillPart.priority_skills,
     preferred_session_length: skillPart.recommended_daily_minutes,
-  };
+  } as any;
 
   const [, , newPlan] = (await prisma.$transaction([
     prisma.diagnosticSession.update({

@@ -233,6 +233,38 @@ const SAMPLE_TASKS: Record<string, TaskRecord> = {
     error_targets: [],
   },
 
+  // TT_5_2 sentence-fill: correct_answer is the full sentence, but the graded
+  // blank is just "хэрэглэдэг" — options.blank_answer, distinct from
+  // correct_answer, so a test can tell whether routing reads the right field.
+  'SENT-5-2': {
+    id: 'SENT-5-2',
+    task_type: 'TT_5_2',
+    correct_answer: 'Би харандаа хэрэглэдэг.',
+    options: {
+      sentence_template: 'Би харандаа ___.',
+      blank_answer: 'хэрэглэдэг',
+      context_sentence: 'Би харандаа хэрэглэдэг.',
+    },
+    feedback_text: 'Нөхцлийг анзаар.',
+    primary_skill: 'S5',
+    error_targets: ['E4'],
+  },
+
+  // TT_7_5 sentence-fill (нөхөж бичих цээж бичиг): same shape as TT_5_2.
+  'SENT-7-5': {
+    id: 'SENT-7-5',
+    task_type: 'TT_7_5',
+    correct_answer: 'Тэр ном уншиж байна.',
+    options: {
+      sentence_template: 'Тэр ном ___ байна.',
+      blank_answer: 'уншиж',
+      context_sentence: 'Тэр ном уншиж байна.',
+    },
+    feedback_text: 'Дахин сонсоод бич.',
+    primary_skill: 'S7',
+    error_targets: ['B1'],
+  },
+
   // Word-level choice used to exercise the detect-all path: "сургуулиуд"
   // mistyped as "сргулд" yields 4 word-level errors (C1 + 3×B1).
   'G24-100': {
@@ -340,6 +372,38 @@ describe('Fill (TT_LETTER_FILL)', () => {
     expect(result.score).toBe(0.5);
     expect(result.isCorrect).toBe(false);
     expect(result.errorsDetail.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TT_5_2 / TT_7_5 — sentenceFillOptions (must route BEFORE FILL_TYPES, not
+// through the word-level blank-reconstruction path — see attempt-processor.ts)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('Sentence fill (TT_5_2 / TT_7_5)', () => {
+  it('TT_5_2 correct blank_answer "хэрэглэдэг" → score 1.0, no errors', async () => {
+    const result = await processAttempt(makeInput('SENT-5-2', 'хэрэглэдэг'), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+    expect(result.errorCodes).toHaveLength(0);
+  });
+
+  it('TT_5_2 wrong blank_answer → graded against options.blank_answer, not task.correct_answer', async () => {
+    const result = await processAttempt(makeInput('SENT-5-2', 'хэрэглэдэггүй'), mockTaskRepo);
+    expect(result.isCorrect).toBe(false);
+    expect(result.errorsDetail.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('TT_7_5 correct blank_answer "уншиж" → score 1.0, no errors', async () => {
+    const result = await processAttempt(makeInput('SENT-7-5', 'уншиж'), mockTaskRepo);
+    expect(result.score).toBe(1.0);
+    expect(result.isCorrect).toBe(true);
+    expect(result.errorCodes).toHaveLength(0);
+  });
+
+  it('TT_7_5 wrong blank_answer → not scored correct', async () => {
+    const result = await processAttempt(makeInput('SENT-7-5', 'бичиж'), mockTaskRepo);
+    expect(result.isCorrect).toBe(false);
   });
 });
 
