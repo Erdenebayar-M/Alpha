@@ -1,10 +1,11 @@
 import { mockLearners, mockLesson, mockParent, MOCK_TOKEN } from '@/src/lib/mockData';
 import { clearToken, getToken } from '@/src/lib/secureStore';
 
-// Flip to false once EXPO_PUBLIC_API_URL points at a deployed backend.
-const IS_MOCK = true;
-
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+
+// Live against the real backend whenever EXPO_PUBLIC_API_URL is set (see mobile/.env);
+// with no URL configured we fall back to the in-file mock so the app still runs offline.
+const IS_MOCK = !API_BASE_URL;
 const MOCK_LATENCY_MS = 400;
 
 interface SuccessEnvelope<T> {

@@ -51,34 +51,36 @@ export interface PunctuationOptions {
 }
 
 export interface Task {
+  // ── Fields the backend serves to the client (TASK_SELECT, shared across
+  // diagnostic / lesson / checkpoint). These are always present. ──────────────
   id: string;
-  task_id: string;
-  stage: string; // e.g. "STAGE2"
   task_type: string; // e.g. "TT_1_5" (one of ~43 codes)
   interaction_form: string | null; // preferred renderer key; may be null -> use taskTypeMap
   prompt_text: string; // "_" marks the blank in fill-in tasks
   correct_answer: string;
   options: TaskOptions;
-
   audio_url: string | null;
-  prompt_audio_url: string | null;
   image_url: string | null;
-
-  // skill / targeting metadata (display + analytics; app rarely branches on these)
   primary_skill: string | null;
-  secondary_skill: string | null;
-  level_target: string | null;
-  error_targets: string[];
-  grade_band: string[]; // ["G1"]
-  grade_levels: string[]; // ["G1:M3"]
-  difficulty: number;
   estimated_time_seconds: number;
-  lesson_slot_fit: string; // e.g. "WARM_UP"
 
   // feedback shown to the child
   feedback_text: string | null;
   feedback_correct: string | null;
   feedback_wrong: string | null;
 
-  is_diagnostic: boolean;
+  // ── Fields the backend does NOT send today (present only in mock data /
+  // future payloads). Optional so the real API response type-checks; renderers
+  // that read them already guard for absence. ────────────────────────────────
+  task_id?: string;
+  stage?: string; // e.g. "STAGE2"
+  prompt_audio_url?: string | null;
+  secondary_skill?: string | null;
+  level_target?: string | null;
+  error_targets?: string[];
+  grade_band?: string[]; // ["G1"]
+  grade_levels?: string[]; // ["G1:M3"]
+  difficulty?: number;
+  lesson_slot_fit?: string; // e.g. "WARM_UP"
+  is_diagnostic?: boolean;
 }
