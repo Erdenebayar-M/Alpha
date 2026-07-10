@@ -1229,6 +1229,7 @@ const wordsListQuerySchema = z.object({
   app_level: z.string().optional(),
   q:         z.string().optional(),
   active:    z.enum(['true', 'false', 'all']).default('true'),
+  has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
   page:      z.coerce.number().int().min(1).default(1),
   per_page:  z.coerce.number().int().min(1).max(200).default(50),
 });
@@ -1238,7 +1239,7 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, q, active, page, per_page } = parsed.data;
+  const { grade, category, app_level, q, active, has_forms, page, per_page } = parsed.data;
 
   const where = {
     root_word_id: null, // roots only — inflected-form rows are excluded from the word list
@@ -1247,6 +1248,7 @@ content.get('/words', async (c) => {
     ...(app_level ? { app_level } : {}),
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
+    ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
   };
 
   const [words, total] = await Promise.all([
@@ -1255,6 +1257,8 @@ content.get('/words', async (c) => {
       orderBy: { word: 'asc' },
       skip: (page - 1) * per_page,
       take: per_page,
+      // Each root's linked inflected forms (e.g. ах → ахтайгаа) for the admin UI.
+      include: { forms: { select: { id: true, word: true }, orderBy: { word: 'asc' } } },
     }),
     prisma.word.count({ where }),
   ]);
