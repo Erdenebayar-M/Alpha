@@ -191,13 +191,16 @@ export function resolveRung(target: number, availableRungs: number[]): number | 
  *   1. rich items (TT_7_* dictation / TT_8_* correction) — multi-skill signal
  *   2. least-tested primary_skill so far (coverage sweep)
  *   3. lowest difficulty (smooth within-rung climb)
- *   4. stable by id
+ *   4. uniformly at random among the items tied on the above — so two learners
+ *      who answer identically don't get an identical diagnostic
+ * `rng` is injectable for deterministic tests; production uses `Math.random`.
  * Returns null when the pool is empty (route treats this as `exhausted`).
  */
 export function selectNextItem(
   pool: CandidateTask[],
   history: ServedItem[],
   _config: ClimbConfig,
+  rng: () => number = Math.random,
 ): CandidateTask | null {
   if (pool.length === 0) return null;
 
@@ -208,14 +211,16 @@ export function selectNextItem(
 
   const skillCounts: Record<string, number> = {};
   for (const h of history) skillCounts[h.primary_skill] = (skillCounts[h.primary_skill] ?? 0) + 1;
+  const cov = (t: CandidateTask) => skillCounts[t.primary_skill] ?? 0;
 
-  return [...candidates].sort((a, b) => {
-    const covA = skillCounts[a.primary_skill] ?? 0;
-    const covB = skillCounts[b.primary_skill] ?? 0;
-    if (covA !== covB) return covA - covB;
-    if (a.difficulty !== b.difficulty) return a.difficulty - b.difficulty;
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-  })[0];
+  // Keep the pedagogical priorities (coverage, then difficulty), then break the
+  // final tie at random instead of by id, so the pick varies across learners.
+  const minCov = Math.min(...candidates.map(cov));
+  const leastTested = candidates.filter((t) => cov(t) === minCov);
+  const minDiff = Math.min(...leastTested.map((t) => t.difficulty));
+  const tied = leastTested.filter((t) => t.difficulty === minDiff);
+
+  return tied[Math.floor(rng() * tied.length)];
 }
 
 // ─── Stop rule ───────────────────────────────────────────────────────────────

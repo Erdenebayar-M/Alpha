@@ -117,6 +117,13 @@ describe('selectNextItem', () => {
     const pool = [cand('hard', { difficulty: 5 }), cand('easy', { difficulty: 1 })];
     expect(selectNextItem(pool, [], cfg)?.id).toBe('easy');
   });
+
+  test('breaks a full tie at random (rng), not by id', () => {
+    // Two candidates tie on rich/coverage/difficulty → only rng decides.
+    const pool = [cand('a'), cand('b')];
+    expect(selectNextItem(pool, [], cfg, () => 0)?.id).toBe('a');
+    expect(selectNextItem(pool, [], cfg, () => 0.99)?.id).toBe('b');
+  });
 });
 
 // ─── shouldStop ──────────────────────────────────────────────────────────────
