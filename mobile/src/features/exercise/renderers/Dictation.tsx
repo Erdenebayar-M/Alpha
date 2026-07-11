@@ -1,6 +1,6 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, type TextInput } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
@@ -9,6 +9,7 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
 
 /**
  * Dictation task (dictationOptions: TT_7_3 word / TT_7_4 sentence): the child hears
@@ -65,6 +66,8 @@ export default function Dictation({ task, onResult }: ExerciseRendererProps) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <Text style={styles.prompt}>{task.prompt_text}</Text>
+
         <Pressable onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
           <CharacterAvatar playing={status.playing} width={160} />
         </Pressable>
@@ -102,5 +105,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     paddingVertical: 10,
     gap: 10,
+  },
+  prompt: {
+    fontFamily: fonts.black,
+    fontSize: 16,
+    color: colors.textPrompt,
+    textAlign: 'center',
+    letterSpacing: -0.032,
   },
 });
