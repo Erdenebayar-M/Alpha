@@ -8,6 +8,11 @@ import { fonts } from '@/src/theme/typography';
 
 const FEEDBACK_DELAY_MS = 1200;
 
+// prompt_text is just the sentence itself for this task type (no separate instruction
+// field from the backend), so a static instruction line is hardcoded here, mirroring
+// the BUBBLE_LABEL pattern used by sibling renderers (FillBlank, SentenceCapital, ...).
+const INSTRUCTION_LABEL = 'Алдаатай бичсэн үгийг ол';
+
 /**
  * Tap-find-error task (tapFindErrorOptions: TT_8_1): a sentence is rendered as
  * tappable word chips; the child taps the word they think is wrong. Grading (local
@@ -50,6 +55,7 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <Text style={styles.instruction}>{INSTRUCTION_LABEL}</Text>
         <Text style={styles.prompt}>{task.prompt_text}</Text>
 
         <View style={styles.card}>
@@ -98,6 +104,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     gap: 24,
+  },
+  instruction: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+    letterSpacing: -0.028,
+    marginBottom: -12,
   },
   prompt: {
     fontFamily: fonts.black,
