@@ -14,7 +14,7 @@
     "import:wordbank": "ts-node prisma/importWordBank.ts",
     "import:wordbank:dry": "ts-node prisma/importWordBank.ts --dry-run",
     "db:migrate": "prisma migrate deploy",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node prisma/write-client-pkg.js",
     "db:studio": "prisma studio"
   },
   "prisma": {
