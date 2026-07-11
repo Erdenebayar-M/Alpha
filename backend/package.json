@@ -5,7 +5,7 @@
   "type": "commonjs",
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "start": "ts-node --transpile-only src/index.ts",
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "seed": "ts-node prisma/seed.ts",
