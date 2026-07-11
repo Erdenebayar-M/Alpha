@@ -83,7 +83,7 @@ app/                              # Expo Router routes ONLY (thin screens)
     index.tsx                     # learner picker + "add child" (home)
     learner/[id]/
       index.tsx                   # learner home / start today's lesson
-      diagnostic.tsx              # 3-phase diagnostic flow
+      diagnostic.tsx              # adaptive diagnostic loop (single stream)
       lesson.tsx                  # daily lesson runner
       checkpoint.tsx
       dashboard.tsx               # progress + skills (parent-facing)
@@ -193,7 +193,7 @@ Rendering notes:
 ### Endpoints the mobile app uses
 - **Auth:** `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`
 - **Learners:** `POST /learner`, `GET /learner`, `GET /learner/:id`
-- **Diagnostic:** `POST /diagnostic/start`, `POST /diagnostic/submit`, `POST /diagnostic/next-phase`, `GET /diagnostic/result/:sessionId`
+- **Diagnostic:** `POST /diagnostic/start`, `POST /diagnostic/submit`, `GET /diagnostic/result/:sessionId` (single adaptive loop — no `/next-phase`; `submit` returns the next task inline until `completed` is `true`)
 - **Lesson:** `GET /lesson/today`, `POST /lesson/attempt`, `POST /lesson/:id/complete`
 - **Plan:** `GET /plan/current`
 - **Checkpoint:** `GET /checkpoint`, `POST /checkpoint/submit`
@@ -207,9 +207,12 @@ Rendering notes:
 
 1. **Parent onboarding:** register → login → land on learner picker.
 2. **Add child:** `POST /learner`; a parent may have several. Selecting one sets the *active learner* (zustand).
-3. **Diagnostic (first time per learner):** `start` → render returned tasks through the
-   ExerciseEngine → `submit` each attempt → `next-phase` between A/B/C → show `result`.
-   Phases: A baseline (8) → B adaptive drill (8) → C boundary+template (4).
+3. **Diagnostic (first time per learner):** `start` returns the first task → render it
+   through the ExerciseEngine → `submit` each attempt; the server returns the **next task
+   inline** in the submit response until `completed` is `true`, then hands back the
+   `result`. It's a single adaptive stream — the client never asks for a phase or a next
+   task explicitly (no `/next-phase`). The backend may sequence difficulty internally; the
+   client neither knows nor cares.
 4. **Daily lesson:** `GET /lesson/today` → run its tasks through the same ExerciseEngine →
    `POST /lesson/attempt` per task → `POST /lesson/:id/complete` at the end → reward screen.
 5. **Checkpoint:** same pattern, its own endpoints.
@@ -265,7 +268,7 @@ the submit endpoint differs. Pass the submit handler in as a prop.
 5. **Full lesson loop.** attempt submission, instant feedback, complete + reward screen.
 6. **Remaining renderers.** FillBlank, AudioChoice, ImageMatch — one at a time, each added
    to the registry, no new screens.
-7. **Diagnostic flow.** 3 phases (A/B/C) reusing the ExerciseEngine.
+7. **Diagnostic flow.** Single adaptive loop (`start` → `submit` → next task inline until `completed`) reusing the ExerciseEngine.
 8. **Checkpoint.**
 9. **Dashboard** (parent-facing progress/skills).
 10. **Polish:** animations, audio, fonts, empty/error states, store assets.

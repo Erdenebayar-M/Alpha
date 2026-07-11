@@ -135,7 +135,7 @@ Defined in `prisma/schema.prisma`. Full 3-tier structure:
 - `Task`: 43 types (`TT_1_1`–`TT_8_4`), optional `InteractionForm` enum (CHOOSE/MATCH/FILL/ASSEMBLE/TRANSCRIBE/CORRECT/TAP)
 
 **Learning path**: `DiagnosticSession` → `Plan` → `Lesson` → `Checkpoint`
-- Diagnostic: 3-phase adaptive (PHASE_A: 8 tasks, PHASE_B: 8 adaptive, PHASE_C: 4 boundary)
+- Diagnostic: single-phase adaptive climb over M-rungs (0–5) — warm-up then climb from M2, 6–12 items, stops on bracketed/floor/ceiling/fatigue/cap/exhausted (`diagnostic-adaptive.ts`); level from `estimateLevel`, skills/errors from `calculateFinalResult`. Climb state lives in `DiagnosticSession.result` JSON. (Legacy `PHASE_A/B/C` enum + `current_phase`/`phase_*_completed` columns remain in `schema.prisma` but the live `/submit` flow never writes them.)
 - Plan: 7–14 day (`BALANCED/INTENSIVE/STABILIZATION`)
 - Checkpoint: decisions `CONTINUE_PLAN / NEW_PLAN / LEVEL_UP`
 
