@@ -1,27 +1,33 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 
+import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
-import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
+import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
-export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
-  const { width, height } = useWindowDimensions();
-  // Size the character off both axes so it never crowds a short screen (e.g. SE).
-  const avatarWidth = Math.max(120, Math.min(width * 0.44, height * 0.22, 186));
+/**
+ * Mini-text dictation task (miniTextOptions: TT_7_6): a short (2–5 sentence) audio
+ * passage; the child hears it (tap the character to replay) and types it all out.
+ * The backend splits input_text on sentence-ending punctuation and grades each
+ * sentence against `expected_answers`; local feedback compares the joined answer.
+ */
+export default function MiniText({ task, onResult }: ExerciseRendererProps) {
+  const inputRef = useRef<TextInput>(null);
+  const expectedAnswers = task.options.expected_answers;
+  const compareTo = expectedAnswers?.join(' ') ?? task.correct_answer;
 
-  // Picking a choice submits immediately (no submit button on this screen).
-  const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
+  const ex = useTextEntryExercise(task, onResult, { compareTo });
+
+  const audioUrl = task.prompt_audio_url ?? task.audio_url;
+  const player = useAudioPlayer(audioUrl);
   const status = useAudioPlayerStatus(player);
 
-  // Loop the prompt so it keeps playing while the child (or you) adjusts volume/speed.
   useEffect(() => {
     try {
       player.loop = true;
@@ -30,8 +36,11 @@ export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
     }
   }, [player]);
 
-  // Tap the character to toggle playback; the avatar animation is driven by
-  // status.playing, so it starts/stops together with the audio.
+  useEffect(() => {
+    const timer = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleToggleAudio = () => {
     try {
       if (status.playing) {
@@ -44,17 +53,23 @@ export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
     }
   };
 
+  const handleSubmit = () => {
+    Keyboard.dismiss();
+    ex.submit();
+  };
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.prompt}>{task.prompt_text}</Text>
 
         <Pressable onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
-          <CharacterAvatar playing={status.playing} width={avatarWidth} />
+          <CharacterAvatar playing={status.playing} width={150} />
         </Pressable>
 
         <AudioControls player={player} />
@@ -62,13 +77,15 @@ export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
         <FeedbackText>{ex.feedback}</FeedbackText>
       </ScrollView>
 
-      <ChoiceGrid
-        choices={ex.choices}
-        selectedIndex={ex.selectedIndex}
-        isAnswered={ex.isAnswered}
-        onSelect={ex.select}
+      <AnswerInput
+        ref={inputRef}
+        value={ex.value}
+        onChangeText={ex.setValue}
+        onSubmit={handleSubmit}
+        disabled={ex.isAnswered}
+        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -29,7 +29,7 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
   const [hasFinished, setHasFinished] = useState(false);
   const ex = useAssembleWord(task, onResult, { feedbackDelayMs: 1200 });
 
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);
 
   // Let the prompt END so the sprout can settle into its "done" pose (see FillBlank).

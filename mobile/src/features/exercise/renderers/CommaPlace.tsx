@@ -133,7 +133,7 @@ export default function CommaPlace({ task, onResult }: ExerciseRendererProps) {
     [gapAt, ex]
   );
 
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);
 
   // Non-looping so the prompt ends and the buddy stops talking on its own.

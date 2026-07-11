@@ -1,0 +1,133 @@
+import { useEffect, useMemo, useRef } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
+
+import AnswerInput from '@/src/features/exercise/components/AnswerInput';
+import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
+import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
+import { colors } from '@/src/theme/colors';
+import { fonts } from '@/src/theme/typography';
+
+/**
+ * Sentence-fill task (sentenceFillOptions: TT_5_2/7_5): a full sentence is shown with
+ * a "_" gap; the child types just the missing word, graded against `blank_answer`
+ * (the backend checks only that single word, not the whole sentence).
+ */
+export default function SentenceFill({ task, onResult }: ExerciseRendererProps) {
+  const inputRef = useRef<TextInput>(null);
+  const sentenceTemplate = task.options.sentence_template ?? task.prompt_text;
+  const blankAnswer = task.options.blank_answer ?? task.correct_answer;
+  const hint = task.options.hint;
+
+  const ex = useTextEntryExercise(task, onResult, { compareTo: blankAnswer });
+
+  useEffect(() => {
+    const timer = setTimeout(() => inputRef.current?.focus(), 350);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [prefix, suffix] = useMemo(() => {
+    const idx = sentenceTemplate.indexOf('_');
+    if (idx === -1) return [sentenceTemplate, ''];
+    return [sentenceTemplate.slice(0, idx), sentenceTemplate.slice(idx + 1)];
+  }, [sentenceTemplate]);
+
+  const handleSubmit = () => {
+    Keyboard.dismiss();
+    ex.submit();
+  };
+
+  return (
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.prompt}>{task.prompt_text}</Text>
+
+        <View style={styles.card}>
+          <Text style={styles.sentence}>
+            {prefix}
+            <Text style={[styles.blank, ex.value ? styles.blankFilled : null]}> {ex.value || '____'} </Text>
+            {suffix}
+          </Text>
+        </View>
+
+        {hint ? <Text style={styles.hint}>💡 {hint}</Text> : null}
+
+        <FeedbackText>{ex.feedback}</FeedbackText>
+      </ScrollView>
+
+      <AnswerInput
+        ref={inputRef}
+        value={ex.value}
+        onChangeText={ex.setValue}
+        onSubmit={handleSubmit}
+        disabled={ex.isAnswered}
+        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      />
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    backgroundColor: colors.background,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingVertical: 10,
+    gap: 16,
+  },
+  prompt: {
+    fontFamily: fonts.black,
+    fontSize: 16,
+    color: colors.textPrompt,
+    textAlign: 'center',
+    letterSpacing: -0.032,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  sentence: {
+    fontFamily: fonts.bold,
+    fontSize: 22,
+    color: colors.textChoice,
+    letterSpacing: -0.032,
+    textAlign: 'center',
+    lineHeight: 32,
+  },
+  blank: {
+    fontFamily: fonts.black,
+    color: colors.textMuted,
+    textDecorationLine: 'underline',
+  },
+  blankFilled: {
+    color: colors.choiceSelectedBorder,
+  },
+  hint: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+});
