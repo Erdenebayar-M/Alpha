@@ -102,7 +102,8 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
   );
 
   const [hasFinished, setHasFinished] = useState(false);
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const audioUrl = task.prompt_audio_url ?? task.audio_url;
+  const player = useAudioPlayer(audioUrl);
   const status = useAudioPlayerStatus(player);
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
   const autoplayed = useRef(false);
   useEffect(() => {
     if (autoplayed.current) return;
-    if (task.options.audio_trigger && task.prompt_audio_url) {
+    if (task.options.audio_trigger && audioUrl) {
       autoplayed.current = true;
       try {
         player.play();
@@ -126,7 +127,7 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
         // ignore playback errors (e.g. an unreachable mock URL)
       }
     }
-  }, [player, task.options.audio_trigger, task.prompt_audio_url]);
+  }, [player, task.options.audio_trigger, audioUrl]);
 
   useEffect(() => {
     if (status.didJustFinish) setHasFinished(true);

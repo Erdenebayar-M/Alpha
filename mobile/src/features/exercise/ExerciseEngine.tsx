@@ -7,7 +7,7 @@ import type { Task } from '@/src/features/exercise/types';
 
 interface ExerciseEngineProps {
   task: Task;
-  onResult: (isCorrect: boolean) => void;
+  onResult: (isCorrect: boolean, inputText: string) => void;
 }
 
 interface RendererBoundaryProps {

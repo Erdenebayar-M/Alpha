@@ -38,7 +38,7 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
 
   const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
 
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);
 
   // Non-looping so the prompt ends and the sprout stops talking on its own.

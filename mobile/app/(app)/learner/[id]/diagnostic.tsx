@@ -12,10 +12,6 @@ import type { Task } from '@/src/features/exercise/types';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
-// Wrong answers still need a non-empty input_text (backend requires min length 1);
-// this sentinel never matches a correct_answer, so the server scores it wrong.
-const WRONG_SENTINEL = '✗';
-
 type Phase =
   | { kind: 'loading' }
   | { kind: 'error'; message: string; canRetry: boolean }
@@ -51,7 +47,7 @@ export default function DiagnosticScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const handleResult = async (isCorrect: boolean) => {
+  const handleResult = async (isCorrect: boolean, inputText: string) => {
     if (phase.kind !== 'running') return;
     const { sessionId, task } = phase;
 
@@ -59,7 +55,10 @@ export default function DiagnosticScreen() {
       const res = await submitDiagnostic.mutateAsync({
         session_id: sessionId,
         task_id: task.id,
-        input_text: isCorrect ? task.correct_answer : WRONG_SENTINEL,
+        // The backend requires a non-empty input_text and re-scores/classifies errors
+        // from it server-side; renderers always produce a non-empty answer, but guard
+        // against a stray blank so submission never 400s.
+        input_text: inputText.length > 0 ? inputText : '✗',
         time_seconds: Math.round((Date.now() - taskStartedAt) / 1000),
       });
 

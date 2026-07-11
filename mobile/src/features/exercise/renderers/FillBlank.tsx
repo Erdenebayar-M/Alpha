@@ -29,7 +29,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const [hasFinished, setHasFinished] = useState(false);
   const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
 
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);
 
   // Unlike the looped audio screens, we need the prompt to END so the character can

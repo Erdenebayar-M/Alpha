@@ -33,6 +33,53 @@ export interface TaskOptions {
   // to fill slots in order — slot count is `correct_order.length`.
   tiles?: string[];
   correct_order?: string[];
+
+  // Fill-the-blank task (fillOptions: TT_2_1/2_4/3_2/4_3/4_4/5_5). `display_text` uses
+  // "_" as the blank marker; `blank_answer` is the letter(s) that belong there (this is
+  // what the child types and what input_text carries — NOT the reconstructed full word);
+  // `context_word` is the full correct word, for local feedback only.
+  display_text?: string;
+  blank_position?: number;
+  blank_answer?: string;
+  context_word?: string;
+
+  // Sentence-fill task (sentenceFillOptions: TT_5_2/7_5). `sentence_template` uses "_"
+  // for the blank; the child types just the missing word (`blank_answer`).
+  sentence_template?: string;
+  hint?: string;
+
+  // Correction/edit task (correctionOptions: TT_2_5/2_6/3_5/4_5/6_3/6_4/8_2). The child
+  // edits `incorrect_text` into `correct_text`.
+  incorrect_text?: string;
+  correct_text?: string;
+
+  // Dictation task (dictationOptions: TT_7_3/7_4). `audio_text` is the transcript (not
+  // played directly — audio comes from task.audio_url); `expected_answers` is one string
+  // per sentence, used for local feedback.
+  audio_text?: string;
+  word_count?: number;
+  expected_answers?: string[];
+  allow_partial?: boolean;
+
+  // Mini-text dictation (miniTextOptions: TT_7_6) — reuses audio_text/expected_answers above.
+  sentence_count?: number;
+
+  // Copy-the-text task (copyOptions: TT_7_1).
+  text_to_copy?: string;
+
+  // Visual-memory task (visualMemoryOptions: TT_7_2).
+  text_to_memorize?: string;
+  display_seconds?: number;
+
+  // Self-check task (selfCheckOptions: TT_8_4).
+  original_attempt?: string;
+  model_answer?: string;
+  comparison_mode?: 'side_by_side' | 'highlight_diff';
+
+  // Tap-find-error task (tapFindErrorOptions: TT_8_1). `sentence` is the full sentence
+  // shown; `error_word_index` is the 0-based index (split on whitespace) of the wrong word.
+  sentence?: string;
+  error_word_index?: number;
   // interaction-form-specific extras may appear here; keep this open/optional
 }
 

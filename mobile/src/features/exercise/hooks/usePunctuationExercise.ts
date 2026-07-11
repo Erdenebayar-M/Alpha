@@ -39,7 +39,7 @@ const EMPTY_OPTIONS: PunctuationOptions = { mark: '.', tokens: [], answer_gaps: 
  */
 export function usePunctuationExercise(
   task: Task,
-  onResult: (isCorrect: boolean) => void,
+  onResult: (isCorrect: boolean, inputText: string) => void,
   options: UsePunctuationExerciseOptions = {}
 ): PunctuationExercise {
   const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
@@ -90,7 +90,13 @@ export function usePunctuationExercise(
       sortedPlaced.every((gap, i) => gap === answerGaps[i]);
     setWasCorrect(correct);
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(correct), feedbackDelayMs);
+    // No backend option shape emits this task family yet (see PunctuationOptions in
+    // types.ts); a JSON array of the placed gap indices is the most useful best-effort
+    // encoding if it ever needs to reach a real endpoint.
+    timerRef.current = setTimeout(
+      () => onResult(correct, JSON.stringify(sortedPlaced)),
+      feedbackDelayMs
+    );
   }, [canSubmit, placed, answerGaps, onResult, feedbackDelayMs]);
 
   const feedback = useMemo(() => {

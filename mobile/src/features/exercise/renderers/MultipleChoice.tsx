@@ -8,7 +8,8 @@ import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 export default function MultipleChoice({ task, onResult }: ExerciseRendererProps) {
   // Picking a choice submits immediately (this legacy screen has no submit button).
   const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const audioUrl = task.prompt_audio_url ?? task.audio_url;
+  const player = useAudioPlayer(audioUrl);
 
   const handlePlayAudio = () => {
     try {
@@ -20,7 +21,7 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
 
   return (
     <View style={styles.container}>
-      {task.prompt_audio_url ? (
+      {audioUrl ? (
         <Pressable style={styles.audioButton} onPress={handlePlayAudio}>
           <Text style={styles.audioButtonText}>🔊 Listen</Text>
         </Pressable>

@@ -36,7 +36,7 @@ const DEFAULT_FEEDBACK_DELAY_MS = 1000;
  */
 export function useAssembleWord(
   task: Task,
-  onResult: (isCorrect: boolean) => void,
+  onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseAssembleWordOptions = {}
 ): AssembleWordExercise {
   const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
@@ -111,7 +111,9 @@ export function useAssembleWord(
     const correct = placed.join('') === correctOrder.join('');
     setWasCorrect(correct);
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(correct), feedbackDelayMs);
+    // The backend expects the tile sequence as a JSON string array (answer-checker's
+    // assembleWordDiff), not the joined word.
+    timerRef.current = setTimeout(() => onResult(correct, JSON.stringify(placed)), feedbackDelayMs);
   }, [canSubmit, slots, tiles, correctOrder, onResult, feedbackDelayMs]);
 
   const feedback = useMemo(() => {

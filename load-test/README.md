@@ -46,7 +46,7 @@ npx ts-node --project load-test/tsconfig.json load-test/harness.ts --users 500 -
 
 ## Journey types
 
-- **`full`** — register → learner → diagnostic (3 phases) → lesson (today) → dashboard → checkpoint
+- **`full`** — register → learner → diagnostic (single adaptive loop) → lesson (today) → dashboard → checkpoint
 - **`diagnostic`** — stops after diagnostic completes (faster; no plan/lesson needed)
 - **`lesson-loop`** — full diagnostic + one lesson cycle + dashboard (no checkpoint)
 
@@ -64,7 +64,6 @@ GET /api/dashboard/skills       47     0    19ms    55ms    82ms
 GET /api/lesson/today           47     0    44ms   108ms   195ms
 POST /api/auth/register        100     0   210ms   480ms   620ms
 POST /api/checkpoint/submit     12     0    88ms   195ms   220ms
-POST /api/diagnostic/next...    94     0    65ms   140ms   210ms
 POST /api/diagnostic/start      47     0    55ms   120ms   188ms
 POST /api/diagnostic/submit    376     0    31ms    72ms    95ms
 POST /api/learner               47     0    28ms    68ms    90ms
@@ -76,7 +75,7 @@ POST /api/lesson/attempt       235     0    42ms    95ms   140ms
 
 | Signal | Likely cause |
 |--------|-------------|
-| p95/p99 latency spikes on `diagnostic-start` or `next-phase` | Prisma connection pool exhaustion — add `?connection_limit=20` to `DATABASE_URL` and raise Postgres `max_connections` |
+| p95/p99 latency spikes on `diagnostic-start` or `diagnostic-submit` | Prisma connection pool exhaustion — add `?connection_limit=20` to `DATABASE_URL` and raise Postgres `max_connections` |
 | `500` errors | Usually a DB error; check backend logs |
 | `429` on register | All bots share `localhost` IP — start the backend with `RATE_LIMIT_DISABLED=true` |
 | Journey failures at `lesson-today` | Seed data may be missing — run `npm run seed` |

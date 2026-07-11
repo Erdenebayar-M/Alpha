@@ -1,30 +1,72 @@
-// Fallback map used only when a task's own interaction_form is null.
-// Seeded from the task_type codes present in mockData.ts.
+// Fallback map used only when a task's own interaction_form is null. Covers all 43
+// backend task_type codes (shared/src/validators/task.ts TASK_TYPE_OPTION_SHAPE) —
+// every code maps to a renderer whose registry key matches its actual options shape.
 const taskTypeMap: Record<string, string> = {
-  TT_1_5: 'multiple_choice',
-  TT_2_3: 'fill_blank',
-  TT_4_2: 'audio_choice',
-  // Placeholder codes — the real task_type -> interaction_form mapping is owned by
-  // the backend (AGENTS §14). Tasks carry interaction_form directly; this is fallback only.
-  TT_1_2: 'image_match',
+  // choiceOptions — purpose-built renderers where the interaction clearly fits...
   TT_1_1: 'letter_choice',
-  TT_5_1: 'text_input',
-  // Connect-two-columns matching tasks (backend uses matchPairsOptions for these).
+  TT_1_2: 'image_match',
+  TT_4_2: 'audio_choice',
+  TT_6_1: 'sentence_capital',
+  TT_6_2: 'punctuation_choice',
+  // ...the rest of choiceOptions fall back to the generic choice renderer.
+  TT_1_5: 'multiple_choice',
+  TT_2_3: 'multiple_choice',
+  TT_3_1: 'multiple_choice',
+  TT_3_4: 'multiple_choice',
+  TT_4_1: 'multiple_choice',
+  TT_5_1: 'multiple_choice',
+  TT_5_4: 'multiple_choice',
+  TT_5_6: 'multiple_choice',
+  TT_5_7: 'multiple_choice',
+  TT_7_7: 'multiple_choice',
+  TT_8_3: 'multiple_choice',
+
+  // matchPairsOptions — connect-two-columns matching.
   TT_1_3: 'match_pairs',
   TT_3_3: 'match_pairs',
   TT_5_3: 'match_pairs',
-  // Copy-the-word / transcribe: the child retypes the shown word (options.text_to_copy,
-  // no choices). The real G1 bank tags these TT_7_1; the text_input renderer fits.
-  TT_7_1: 'text_input',
-  // Place-the-correct-punctuation: pick the sentence's end mark (. / ? / !) (placeholder code).
-  TT_8_1: 'punctuation_choice',
-  // Drag the end mark into the gap after the word that ends each sentence (placeholder code).
-  TT_8_2: 'punctuation_place',
-  // Drag a comma into the dashed gaps between words within a sentence (placeholder code).
-  TT_8_3: 'comma_place',
-  // Assemble the word: tap scrambled letter tiles to fill the slots in order.
+
+  // assembleWordOptions — tap scrambled tiles to spell the word in order.
   TT_1_4: 'assemble_word',
   TT_2_2: 'assemble_word',
+
+  // fillOptions — type just the missing letter(s) into a word's blank.
+  TT_2_1: 'fill_letter',
+  TT_2_4: 'fill_letter',
+  TT_3_2: 'fill_letter',
+  TT_4_3: 'fill_letter',
+  TT_4_4: 'fill_letter',
+  TT_5_5: 'fill_letter',
+
+  // sentenceFillOptions — type just the missing word into a sentence's blank.
+  TT_5_2: 'sentence_fill',
+  TT_7_5: 'sentence_fill',
+
+  // correctionOptions — edit incorrect_text into correct_text.
+  TT_2_5: 'correction',
+  TT_2_6: 'correction',
+  TT_3_5: 'correction',
+  TT_4_5: 'correction',
+  TT_6_3: 'correction',
+  TT_6_4: 'correction',
+  TT_8_2: 'correction',
+
+  // copyOptions / visualMemoryOptions — retype a shown / memorized text.
+  TT_7_1: 'copy_text',
+  TT_7_2: 'visual_memory',
+
+  // dictationOptions — hear audio, type the word(s)/sentence.
+  TT_7_3: 'dictation',
+  TT_7_4: 'dictation',
+
+  // miniTextOptions — hear a short passage, type it all out.
+  TT_7_6: 'mini_text',
+
+  // tapFindErrorOptions — tap the wrong word in a sentence.
+  TT_8_1: 'tap_find_error',
+
+  // selfCheckOptions — compare an earlier attempt to the model answer, retype corrected.
+  TT_8_4: 'self_check',
 };
 
 export function getInteractionForm(taskType: string): string {
@@ -37,7 +79,8 @@ export function getInteractionForm(taskType: string): string {
  * renderer. This keeps the diagnostic/lesson from freezing on the dead-end
  * Fallback renderer for any task whose options we recognise (the backend serves
  * interaction_form = null today, and may later send raw enum values that aren't
- * registry keys). Returns null when the shape is unrecognised.
+ * registry keys). Returns null when the shape is unrecognised. Order matters: more
+ * specific/unique fields are checked before the generic `choices` fallback.
  */
 export function inferInteractionForm(options: unknown): string | null {
   if (!options || typeof options !== 'object') return null;
@@ -49,7 +92,16 @@ export function inferInteractionForm(options: unknown): string | null {
     const p = o.punctuation as Record<string, unknown>;
     return Array.isArray(p.gap_positions) ? 'comma_place' : 'punctuation_place';
   }
-  if (typeof o.text_to_copy === 'string') return 'text_input';
+  if (typeof o.sentence === 'string' && typeof o.error_word_index === 'number') return 'tap_find_error';
+  if (typeof o.original_attempt === 'string') return 'self_check';
+  if (typeof o.text_to_memorize === 'string') return 'visual_memory';
+  if (typeof o.text_to_copy === 'string') return 'copy_text';
+  if (typeof o.incorrect_text === 'string') return 'correction';
+  if (typeof o.sentence_template === 'string') return 'sentence_fill';
+  if (typeof o.display_text === 'string') return 'fill_letter';
+  if (Array.isArray(o.expected_answers)) {
+    return typeof o.sentence_count === 'number' ? 'mini_text' : 'dictation';
+  }
   if (Array.isArray(o.choices) && o.choices.length > 0) return 'multiple_choice';
   return null;
 }

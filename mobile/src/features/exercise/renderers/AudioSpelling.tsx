@@ -39,7 +39,7 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
   const [isAnswered, setIsAnswered] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const player = useAudioPlayer(task.prompt_audio_url);
+  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);
 
   // Loop the prompt so it keeps playing while the child adjusts volume/speed.
@@ -76,7 +76,8 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
     setIsAnswered(true);
     Keyboard.dismiss();
     const isCorrect = normalize(answer) === normalize(task.correct_answer);
-    setTimeout(() => onResult(isCorrect), FEEDBACK_DELAY_MS);
+    const submitted = answer.trim();
+    setTimeout(() => onResult(isCorrect, submitted), FEEDBACK_DELAY_MS);
   };
 
   const isCorrect = isAnswered && normalize(answer) === normalize(task.correct_answer);

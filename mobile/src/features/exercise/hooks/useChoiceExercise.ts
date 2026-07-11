@@ -37,7 +37,7 @@ const DEFAULT_FEEDBACK_DELAY_MS = 1000;
  */
 export function useChoiceExercise(
   task: Task,
-  onResult: (isCorrect: boolean) => void,
+  onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseChoiceExerciseOptions = {}
 ): ChoiceExercise {
   const { autoSubmit = false, feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
@@ -57,9 +57,9 @@ export function useChoiceExercise(
   );
 
   const commit = useCallback(
-    (isCorrect: boolean) => {
+    (isCorrect: boolean, text: string) => {
       setIsAnswered(true);
-      timerRef.current = setTimeout(() => onResult(isCorrect), feedbackDelayMs);
+      timerRef.current = setTimeout(() => onResult(isCorrect, text), feedbackDelayMs);
     },
     [onResult, feedbackDelayMs]
   );
@@ -68,7 +68,7 @@ export function useChoiceExercise(
     (index: number) => {
       if (isAnswered) return;
       setSelectedIndex(index);
-      if (autoSubmit) commit(choices[index]?.is_correct ?? false);
+      if (autoSubmit) commit(choices[index]?.is_correct ?? false, choices[index]?.text ?? '');
     },
     [isAnswered, autoSubmit, choices, commit]
   );
@@ -79,7 +79,7 @@ export function useChoiceExercise(
 
   const submit = useCallback(() => {
     if (isAnswered || selectedIndex === null) return;
-    commit(choices[selectedIndex]?.is_correct ?? false);
+    commit(choices[selectedIndex]?.is_correct ?? false, choices[selectedIndex]?.text ?? '');
   }, [isAnswered, selectedIndex, choices, commit]);
 
   const selectedChoice = selectedIndex !== null ? (choices[selectedIndex] ?? null) : null;

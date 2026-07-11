@@ -84,7 +84,7 @@ function shuffle<T>(items: T[]): T[] {
  */
 export function useMatchExercise(
   task: Task,
-  onResult: (isCorrect: boolean) => void,
+  onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseMatchExerciseOptions = {}
 ): MatchExercise {
   const { lockMode = 'any', feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
@@ -231,8 +231,23 @@ export function useMatchExercise(
   const submit = useCallback(() => {
     if (isAnswered || !isComplete) return;
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(allCorrect), feedbackDelayMs);
-  }, [isAnswered, isComplete, allCorrect, onResult, feedbackDelayMs]);
+    // The backend's matchPairsDiff expects a JSON array of the *canonical* pair texts
+    // the child connected: the image side's originating pair's `left`, and the word
+    // side's originating pair's `right` (not the shuffled item's own — possibly blank
+    // on the image side — `.text`).
+    const submittedPairs = Object.entries(links).map(([rightId, leftId]) => {
+      const rightItem = rightById[rightId];
+      const leftItem = leftById[leftId];
+      return {
+        left: pairs[leftItem?.pairId ?? -1]?.left ?? '',
+        right: pairs[rightItem?.pairId ?? -1]?.right ?? '',
+      };
+    });
+    timerRef.current = setTimeout(
+      () => onResult(allCorrect, JSON.stringify(submittedPairs)),
+      feedbackDelayMs
+    );
+  }, [isAnswered, isComplete, allCorrect, links, rightById, leftById, pairs, onResult, feedbackDelayMs]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;

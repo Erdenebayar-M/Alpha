@@ -8,14 +8,15 @@ import { randomParentName, randomLearnerName, randomGrade, randomDailyMinutes } 
 
 interface AuthData { token: string; id: string }
 interface LearnerData { id: string; variant: string }
-interface DiagnosticStartData { session_id: string; tasks: Task[] }
-interface DiagnosticSubmitData { score: number; phase_progress: { completed: number; total: number } }
-interface NextPhaseData {
-  completed?: boolean;
-  phase?: string;
-  tasks?: Task[];
-  plan_id?: string;
+interface DiagnosticStartData { session_id: string; task: Task; item_number: number }
+interface DiagnosticSubmitData {
+  score: number;
+  is_correct: boolean;
+  completed: boolean;
+  next_task?: Task;
+  item_number?: number;
   result?: unknown;
+  plan_id?: string;
 }
 interface PlanData { plan: { id: string; lessons: LessonRef[] } }
 interface LessonRef { id: string; day_number: number; status: string; scheduled_date: string }
@@ -100,72 +101,27 @@ export async function runBot(
 
     const learnerId = learner.id;
 
-    // 3. Diagnostic
+    // 3. Diagnostic — single adaptive loop: start yields the first task, each submit
+    // returns the next task inline until `completed` is true.
     const diagStart = await step('diagnostic-start', () =>
       client.post<DiagnosticStartData>('/api/diagnostic/start', { learner_id: learnerId }),
     );
     await think(cfg.thinkMs);
 
-    let sessionId = diagStart.session_id;
-    let currentTasks: Task[] = diagStart.tasks;
+    const sessionId = diagStart.session_id;
+    let currentTask: Task | null = diagStart.task;
 
-    // Phase A
-    for (const task of currentTasks) {
-      await step('diagnostic-submit', () =>
+    while (currentTask) {
+      const res = await step('diagnostic-submit', () =>
         client.post<DiagnosticSubmitData>('/api/diagnostic/submit', {
           session_id: sessionId,
-          task_id: task.id,
-          input_text: deriveAnswer(task, shouldBeCorrect(cfg.accuracy)),
+          task_id: currentTask!.id,
+          input_text: deriveAnswer(currentTask!, shouldBeCorrect(cfg.accuracy)),
           time_seconds: randomTime(),
         }),
       );
       await think(cfg.thinkMs);
-    }
-
-    // Phase B
-    const phaseB = await step('diagnostic-next-phase-B', () =>
-      client.post<NextPhaseData>('/api/diagnostic/next-phase', { session_id: sessionId }),
-    );
-    await think(cfg.thinkMs);
-
-    if (!phaseB.completed && phaseB.tasks) {
-      for (const task of phaseB.tasks) {
-        await step('diagnostic-submit', () =>
-          client.post<DiagnosticSubmitData>('/api/diagnostic/submit', {
-            session_id: sessionId,
-            task_id: task.id,
-            input_text: deriveAnswer(task, shouldBeCorrect(cfg.accuracy)),
-            time_seconds: randomTime(),
-          }),
-        );
-        await think(cfg.thinkMs);
-      }
-
-      // Phase C
-      const phaseC = await step('diagnostic-next-phase-C', () =>
-        client.post<NextPhaseData>('/api/diagnostic/next-phase', { session_id: sessionId }),
-      );
-      await think(cfg.thinkMs);
-
-      if (!phaseC.completed && phaseC.tasks) {
-        for (const task of phaseC.tasks) {
-          await step('diagnostic-submit', () =>
-            client.post<DiagnosticSubmitData>('/api/diagnostic/submit', {
-              session_id: sessionId,
-              task_id: task.id,
-              input_text: deriveAnswer(task, shouldBeCorrect(cfg.accuracy)),
-              time_seconds: randomTime(),
-            }),
-          );
-          await think(cfg.thinkMs);
-        }
-
-        // Complete diagnostic
-        await step('diagnostic-complete', () =>
-          client.post<NextPhaseData>('/api/diagnostic/next-phase', { session_id: sessionId }),
-        );
-        await think(cfg.thinkMs);
-      }
+      currentTask = res.completed ? null : res.next_task ?? null;
     }
 
     if (cfg.journey === 'diagnostic') {

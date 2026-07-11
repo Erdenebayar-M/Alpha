@@ -33,7 +33,7 @@ export default function LessonScreen() {
   const tasks = data?.lesson.tasks ?? [];
   const currentTask = tasks[taskIndex];
 
-  const handleResult = async (isCorrect: boolean) => {
+  const handleResult = async (isCorrect: boolean, inputText: string) => {
     if (isCorrect) {
       setCorrectCount((count) => count + 1);
     }
@@ -43,9 +43,9 @@ export default function LessonScreen() {
         await submitAttempt.mutateAsync({
           lesson_id: data.lesson.id,
           task_id: currentTask.id,
-          // The backend requires a non-empty input_text; '✗' never matches a
-          // correct_answer, so a wrong answer is still scored wrong server-side.
-          input_text: isCorrect ? currentTask.correct_answer : '✗',
+          // The backend requires a non-empty input_text and classifies errors from
+          // it server-side; guard against a stray blank so submission never 400s.
+          input_text: inputText.length > 0 ? inputText : '✗',
           time_seconds: Math.round((Date.now() - taskStartedAt) / 1000),
         });
       } catch {
