@@ -4,21 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/src/api/client';
 import type { SkillsState } from '@/src/api/dashboard';
-import { useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
+import { usePlan, useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
+import { isDone, SKILL_LABELS, skillLabel, templateLabel } from '@/src/features/plan/planFormat';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
-
-// Short parent-facing labels for the eight orthography skills (S1..S8).
-const SKILL_LABELS: Record<number, string> = {
-  1: 'Үсэг таних',
-  2: 'Эгшгийн зохицол',
-  3: 'Гийгүүлэгч',
-  4: 'Сонсох бичих',
-  5: 'Үг зөв бичих',
-  6: 'Нөхөх / угсрах',
-  7: 'Том үсэг',
-  8: 'Цэг таслал',
-};
 
 function skillRows(skills: SkillsState) {
   return [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({
@@ -33,6 +22,7 @@ export default function DashboardScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const skillsQuery = useSkills(id);
   const progressQuery = useProgress(id);
+  const planQuery = usePlan(id);
 
   const notDiagnosedYet =
     skillsQuery.error instanceof ApiError && skillsQuery.error.status === 404;
@@ -70,6 +60,9 @@ export default function DashboardScreen() {
   const streak = progressQuery.data?.current_streak ?? skills.current_streak ?? 0;
   const longest = progressQuery.data?.longest_streak ?? skills.longest_streak ?? 0;
 
+  const plan = planQuery.data?.plan;
+  const planDone = plan ? plan.lessons.filter((l) => isDone(l.status)).length : 0;
+
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -91,6 +84,22 @@ export default function DashboardScreen() {
           </View>
         </View>
 
+        {/* Tappable summary → the full detailed plan screen. */}
+        {plan ? (
+          <Pressable style={styles.planCard} onPress={() => router.push(`/learner/${id}/plan`)}>
+            <View style={styles.planCardMain}>
+              <Text style={styles.planCardTitle}>Хичээлийн төлөвлөгөө</Text>
+              <View style={styles.planBadge}>
+                <Text style={styles.planBadgeText}>{templateLabel(plan.template)}</Text>
+              </View>
+              <Text style={styles.planCardSub}>
+                {planDone}/{plan.lessons.length} хичээл дууссан · дэлгэрэнгүйг харах
+              </Text>
+            </View>
+            <Text style={styles.planChevron}>›</Text>
+          </Pressable>
+        ) : null}
+
         <Text style={styles.sectionTitle}>Чадварууд</Text>
         {rows.map((row) => (
           <View key={row.n} style={styles.skillRow}>
@@ -105,11 +114,7 @@ export default function DashboardScreen() {
         {skills.weak_skills.length > 0 ? (
           <>
             <Text style={styles.sectionTitle}>Анхаарах чадвар</Text>
-            <Text style={styles.muted}>
-              {skills.weak_skills
-                .map((s) => SKILL_LABELS[Number(s.replace(/\D/g, ''))] ?? s)
-                .join(', ')}
-            </Text>
+            <Text style={styles.muted}>{skills.weak_skills.map(skillLabel).join(', ')}</Text>
           </>
         ) : null}
       </ScrollView>
@@ -192,6 +197,47 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontFamily: fonts.semibold,
     fontSize: 12,
+    color: colors.textMuted,
+  },
+  planCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.sheetBorder,
+    padding: 16,
+    gap: 12,
+  },
+  planCardMain: {
+    flex: 1,
+    gap: 6,
+    alignItems: 'flex-start',
+  },
+  planCardTitle: {
+    fontFamily: fonts.extrabold,
+    fontSize: 16,
+    color: colors.textNavy,
+  },
+  planBadge: {
+    backgroundColor: colors.progressTrack,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  planBadgeText: {
+    fontFamily: fonts.extrabold,
+    fontSize: 13,
+    color: colors.progressText,
+  },
+  planCardSub: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  planChevron: {
+    fontFamily: fonts.black,
+    fontSize: 30,
     color: colors.textMuted,
   },
   skillRow: {

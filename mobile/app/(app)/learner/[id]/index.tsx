@@ -27,6 +27,13 @@ export default function LearnerHomeScreen() {
 
       <Pressable
         style={[styles.button, styles.secondaryButton]}
+        onPress={() => router.push(`/learner/${id}/plan`)}
+      >
+        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Төлөвлөгөө</Text>
+      </Pressable>
+
+      <Pressable
+        style={[styles.button, styles.secondaryButton]}
         onPress={() => router.push(`/learner/${id}/dashboard`)}
       >
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>View progress</Text>
