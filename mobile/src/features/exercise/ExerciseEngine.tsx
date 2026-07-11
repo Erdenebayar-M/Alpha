@@ -1,8 +1,8 @@
-import { Component, type ReactNode } from 'react';
+import { Component, type ComponentType, type ReactNode } from 'react';
 
 import Fallback from '@/src/features/exercise/renderers/Fallback';
-import { registry } from '@/src/features/exercise/registry';
-import { getInteractionForm } from '@/src/features/exercise/taskTypeMap';
+import { registry, type ExerciseRendererProps } from '@/src/features/exercise/registry';
+import { getInteractionForm, inferInteractionForm } from '@/src/features/exercise/taskTypeMap';
 import type { Task } from '@/src/features/exercise/types';
 
 interface ExerciseEngineProps {
@@ -35,14 +35,24 @@ class RendererBoundary extends Component<RendererBoundaryProps, RendererBoundary
 }
 
 export default function ExerciseEngine({ task, onResult }: ExerciseEngineProps) {
-  let interactionForm = 'fallback';
+  let Renderer: ComponentType<ExerciseRendererProps> = Fallback;
   try {
-    interactionForm = task.interaction_form ?? getInteractionForm(task.task_type);
+    // Prefer the task's own interaction_form, then the task_type map. Either may
+    // resolve to a key that has no renderer (e.g. the backend serves a raw enum,
+    // or the type is unmapped and getInteractionForm returns 'fallback'); in that
+    // case infer a renderer from the options shape so a recognisable task still
+    // renders instead of hitting the dead-end Fallback (which never advances).
+    const primaryForm = task.interaction_form ?? getInteractionForm(task.task_type);
+    const primary = primaryForm !== 'fallback' ? registry[primaryForm] : undefined;
+    if (primary) {
+      Renderer = primary;
+    } else {
+      const inferred = inferInteractionForm(task.options);
+      Renderer = (inferred ? registry[inferred] : undefined) ?? Fallback;
+    }
   } catch {
-    interactionForm = 'fallback';
+    Renderer = Fallback;
   }
-
-  const Renderer = registry[interactionForm] ?? Fallback;
 
   return (
     <RendererBoundary key={task?.id} fallback={<Fallback task={task} onResult={onResult} />}>
