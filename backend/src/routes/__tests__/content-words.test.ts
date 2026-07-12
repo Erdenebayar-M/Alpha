@@ -219,6 +219,23 @@ describe('GET /words — grade_band filter', () => {
     const res = await get('/words?sort_by=not_a_column');
     expect(res.status).toBe(400);
   });
+
+  it('omits the needs_audio clause when absent', async () => {
+    const res = await get('/words');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).not.toHaveProperty('audio_ok');
+    expect(call.where).not.toHaveProperty('audio_url');
+  });
+
+  it('needs_audio=true filters to audio_ok words with no audio_url', async () => {
+    const res = await get('/words?needs_audio=true');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).toEqual(
+      expect.objectContaining({ audio_ok: true, audio_url: null }),
+    );
+  });
 });
 
 // ─── GET /words/facets — grades flattened from grade_band ────────────────────
@@ -519,6 +536,25 @@ describe('PATCH /words/:id', () => {
     expect(body.data.updated_fields).toContain('is_edited');
     const updateCall = mockUpdate.mock.calls[0][0];
     expect(updateCall.data.is_edited).toBe(true);
+  });
+
+  it('accepts a /content/ audio_url and persists it', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { audio_url: '/content/audio/test.m4a' });
+    expect(res.status).toBe(200);
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data.audio_url).toBe('/content/audio/test.m4a');
+  });
+
+  it('accepts audio_url: null to clear it', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { audio_url: null });
+    expect(res.status).toBe(200);
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data.audio_url).toBeNull();
+  });
+
+  it('rejects an audio_url outside the allowlist', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { audio_url: 'https://evil.example.com/x.mp3' });
+    expect(res.status).toBe(400);
   });
 
   it('a bare is_active toggle does NOT set is_edited', async () => {

@@ -1232,6 +1232,7 @@ const wordsListQuerySchema = z.object({
   active:    z.enum(['true', 'false', 'all']).default('true'),
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
   scope:     z.enum(['roots', 'all']).default('roots'), // 'all' → also include inflected-form rows, flattened into the same list
+  needs_audio: z.enum(['true']).optional(), // 'true' → only words flagged audio_ok with no audio_url yet
   sort_by:   z.enum([
     'word', 'category', 'app_level', 'part_of_speech', 'spelling_tag',
     'char_count', 'syllable_count',
@@ -1254,7 +1255,7 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, q, active, has_forms, scope, sort_by, sort_dir, page, per_page } = parsed.data;
+  const { grade, category, app_level, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
 
   const where = {
     ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
@@ -1264,6 +1265,7 @@ content.get('/words', async (c) => {
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
+    ...(needs_audio === 'true' ? { audio_ok: true, audio_url: null } : {}),
   };
 
   const orderBy = NULLABLE_SORT_FIELDS.has(sort_by)
@@ -1513,6 +1515,7 @@ const patchWordSchema = z.object({
   spelling_complexity: z.number().int().nullable().optional(),
   morph_complexity:    z.number().int().nullable().optional(),
   category:            z.string().optional(),
+  audio_url:           assetUrlSchema.nullable().optional(),
   is_active:           z.boolean().optional(),
 });
 

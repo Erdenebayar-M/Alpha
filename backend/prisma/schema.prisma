@@ -389,6 +389,7 @@ model Word {
   image_ok        Boolean
   image_url       String?
   audio_ok        Boolean
+  audio_url       String?
   image_prompt    String?
   audio_text      String?
   sample_sentence String?
