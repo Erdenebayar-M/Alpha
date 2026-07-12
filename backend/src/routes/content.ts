@@ -1261,7 +1261,7 @@ content.get('/words', async (c) => {
       // Each root's linked inflected forms (e.g. ах → ахтайгаа) + this row's own
       // root (non-null only when the row is itself a form) for the admin UI.
       include: {
-        forms: { select: { id: true, word: true }, orderBy: { word: 'asc' } },
+        forms: { where: { is_active: true }, select: { id: true, word: true }, orderBy: { word: 'asc' } },
         root_word: { select: { id: true, word: true } },
       },
     }),
