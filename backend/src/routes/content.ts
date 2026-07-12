@@ -1490,6 +1490,29 @@ content.delete('/words/:id', async (c) => {
   return ok(c, { action: 'deactivated', id, mode, forms_detached: detached, forms_deactivated: cascaded });
 });
 
+// ─── POST /api/admin/content/words/bulk-deactivate — soft-delete many at once ─
+// Body { ids }: deactivates exactly the given rows (is_active=false). No cascade/
+// detach — a selected root's forms are untouched unless their own id is included.
+const bulkDeactivateWordsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(500),
+});
+
+content.post('/words/bulk-deactivate', async (c) => {
+  const raw = await c.req.json().catch(() => null);
+  const parsed = bulkDeactivateWordsSchema.safeParse(raw);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+  const { ids } = parsed.data;
+
+  const { count } = await prisma.word.updateMany({
+    where: { id: { in: ids } },
+    data: { is_active: false },
+  });
+
+  return ok(c, { action: 'bulk_deactivated', requested: ids.length, deactivated: count });
+});
+
 // ─── POST /api/admin/content/words/:id/connect — link a word to a root ────────
 // Body { root }: the dictionary-form word to attach this row to. If a root row
 // with that word already exists it is reused; otherwise a new root row is

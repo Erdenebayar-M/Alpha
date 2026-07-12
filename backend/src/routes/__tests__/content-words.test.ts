@@ -46,6 +46,7 @@ jest.mock('../../lib/db/client', () => ({
       count:      jest.fn(),
       findUnique: jest.fn(),
       update:     jest.fn(),
+      updateMany: jest.fn(),
     },
     $transaction: jest.fn(),
   },
@@ -68,6 +69,7 @@ const mockFindMany   = prisma.word.findMany   as jest.MockedFunction<any>;
 const mockCount      = prisma.word.count      as jest.MockedFunction<any>;
 const mockFindUnique = prisma.word.findUnique as jest.MockedFunction<any>;
 const mockUpdate     = prisma.word.update     as jest.MockedFunction<any>;
+const mockUpdateMany = prisma.word.updateMany as jest.MockedFunction<any>;
 const mockTx         = prisma.$transaction    as jest.MockedFunction<any>;
 
 const BEARER = 'Bearer test-admin-secret-that-is-32chars-ok';
@@ -221,6 +223,14 @@ function del(path: string) {
   return contentRouter.request(path, {
     method: 'DELETE',
     headers: { Authorization: BEARER },
+  });
+}
+
+function post(path: string, body: unknown) {
+  return contentRouter.request(path, {
+    method: 'POST',
+    headers: { Authorization: BEARER, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
 }
 
@@ -388,6 +398,39 @@ describe('DELETE /words/:id', () => {
 
   it('rejects an invalid mode', async () => {
     const res = await del('/words/WG1-TEST-0001?mode=bogus');
+    expect(res.status).toBe(400);
+  });
+});
+
+// ─── POST /words/bulk-deactivate ───────────────────────────────────────────────
+
+describe('POST /words/bulk-deactivate', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUpdateMany.mockResolvedValue({ count: 2 });
+  });
+
+  it('deactivates exactly the given ids and nothing else', async () => {
+    const res = await post('/words/bulk-deactivate', { ids: ['WG1-TEST-0001', 'WG1-TEST-0002'] });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.action).toBe('bulk_deactivated');
+    expect(body.data.requested).toBe(2);
+    expect(body.data.deactivated).toBe(2);
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['WG1-TEST-0001', 'WG1-TEST-0002'] } },
+      data: { is_active: false },
+    });
+  });
+
+  it('rejects an empty ids array', async () => {
+    const res = await post('/words/bulk-deactivate', { ids: [] });
+    expect(res.status).toBe(400);
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a missing body', async () => {
+    const res = await post('/words/bulk-deactivate', {});
     expect(res.status).toBe(400);
   });
 });
