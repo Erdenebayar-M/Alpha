@@ -480,7 +480,7 @@
 
     "AssembleWordOptions": {
       "title": "AssembleWordOptions",
-      "description": "Tile-assembly tasks: learner arranges shuffled letter/syllable tiles into the correct word.\nUsed by: TT_ASSEMBLE_WORD",
+      "description": "Tile-assembly tasks: learner arranges shuffled single-letter tiles into the correct word (never syllable/multi-letter chunks).\nUsed by: TT_ASSEMBLE_WORD",
       "type": "object",
       "required": ["tiles", "correct_order"],
       "additionalProperties": false,

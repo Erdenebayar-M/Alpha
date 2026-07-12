@@ -440,9 +440,16 @@ function buildMatchPairs(spec: TaskSpec, v: Record<string, unknown>): TaskRecord
   };
 }
 
+// AssembleWordOptions must always be single-letter tiles — split any
+// multi-character tile the model emits (e.g. a syllable like "уу") into its
+// individual letters, regardless of prompt compliance.
+function splitToLetters(tiles: string[]): string[] {
+  return tiles.flatMap((tile) => Array.from(tile));
+}
+
 function buildAssembleWord(spec: TaskSpec, v: Record<string, unknown>): TaskRecord {
-  const tiles        = (v['tiles'] as string[]) ?? [];
-  const correctOrder = (v['correct_order'] as string[]) ?? tiles;
+  const tiles        = splitToLetters((v['tiles'] as string[]) ?? []);
+  const correctOrder = splitToLetters((v['correct_order'] as string[]) ?? (v['tiles'] as string[]) ?? []);
   const correctAnswer = (v['correct_answer'] as string) ?? correctOrder.join('');
   return {
     ...buildBase(spec, (v['prompt_text'] as string) ?? 'Үсгүүдийг зөв дараалалд угсраарай.', (v['feedback_text'] as string) ?? '', correctAnswer),
