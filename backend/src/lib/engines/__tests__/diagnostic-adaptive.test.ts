@@ -23,6 +23,7 @@ function item(rung: number, score: number, over: Partial<ServedItem> = {}): Serv
     error_codes: over.error_codes ?? [],
     time_seconds: over.time_seconds ?? 20,
     estimated_time_seconds: over.estimated_time_seconds ?? 30,
+    binary_scored: over.binary_scored ?? false,
   };
 }
 
@@ -42,12 +43,19 @@ function cand(id: string, over: Partial<CandidateTask> = {}): CandidateTask {
 // ─── verdictOf ───────────────────────────────────────────────────────────────
 
 describe('verdictOf', () => {
-  test('≥0.75 PASS, ≤0.25 FAIL, middle HOLD', () => {
+  test('graded: ≥0.75 PASS, ≤0.25 FAIL, middle HOLD', () => {
     expect(verdictOf(1, cfg)).toBe('PASS');
     expect(verdictOf(0.75, cfg)).toBe('PASS');
     expect(verdictOf(0.5, cfg)).toBe('HOLD');
     expect(verdictOf(0.25, cfg)).toBe('FAIL');
     expect(verdictOf(0, cfg)).toBe('FAIL');
+  });
+
+  test('binary: only a perfect answer PASSes; anything less is FAIL (no HOLD)', () => {
+    expect(verdictOf(1, cfg, true)).toBe('PASS');
+    expect(verdictOf(0.75, cfg, true)).toBe('FAIL'); // lenient "minor error" pass is gone
+    expect(verdictOf(0.5, cfg, true)).toBe('FAIL'); // a wrong MC/fill no longer HOLDs
+    expect(verdictOf(0.25, cfg, true)).toBe('FAIL');
   });
 });
 
@@ -75,6 +83,13 @@ describe('planNextRung', () => {
   test('single HOLD re-probes the same rung; second HOLD steps down', () => {
     expect(planNextRung([item(1, PASS), item(3, HOLD)], cfg)).toBe(3);
     expect(planNextRung([item(1, PASS), item(3, HOLD), item(3, HOLD)], cfg)).toBe(2);
+  });
+
+  test('binary wrong answer steps DOWN where a graded 0.5 would only HOLD', () => {
+    // A wrong multiple-choice at rung 3 (score 0.5) must descend, not linger.
+    expect(planNextRung([item(1, PASS), item(3, 0.5, { binary_scored: true })], cfg)).toBe(2);
+    // Contrast: the same 0.5 on a graded task re-probes the same rung.
+    expect(planNextRung([item(1, PASS), item(3, 0.5)], cfg)).toBe(3);
   });
 });
 
@@ -218,5 +233,15 @@ describe('estimateLevel', () => {
     const est = estimateLevel(h, fullBank, cfg);
     expect(est.level).toBe('M5');
     expect(est.capped_by_bank).toBe(false);
+  });
+
+  test('a single lucky PASS among HOLDs does not credit the rung (holds count)', () => {
+    // Rung 3: 1 PASS + 2 HOLD → pass-rate 1/3 < 0.5, so the level stays at the
+    // reliably-passed rung 2 instead of inflating to M3.
+    const h = [
+      item(1, PASS), item(2, PASS),
+      item(3, PASS), item(3, HOLD), item(3, HOLD),
+    ];
+    expect(estimateLevel(h, fullBank, cfg).level).toBe('M2');
   });
 });

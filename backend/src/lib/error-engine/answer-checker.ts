@@ -490,6 +490,26 @@ export const MATCH_TYPES   = new Set(['TT_1_3','TT_3_3','TT_5_3']);
 export const ASSEMBLE_TYPES = new Set(['TT_1_4','TT_2_2']);
 export const TAP_TYPES      = new Set(['TT_8_1']);
 
+/**
+ * Task types scored all-or-nothing: a single correct selection (choice / match /
+ * assemble / tap) or a single-word blank. A wrong answer is a full miss, not a
+ * partial — so the adaptive diagnostic staircase must treat it as FAIL (step
+ * down), not as the lenient HOLD/0.75 that `calculateScore`'s error-count grading
+ * would otherwise produce. Sentence-level fills (TT_5_2 / TT_7_5) are genuinely
+ * graded and are deliberately excluded from FILL_TYPES' single-word members here.
+ */
+export const BINARY_SCORED_TYPES = new Set<string>([
+  ...CHOICE_TYPES,
+  ...MATCH_TYPES,
+  ...ASSEMBLE_TYPES,
+  ...TAP_TYPES,
+  'TT_2_1', 'TT_2_4', 'TT_3_2', 'TT_4_3', 'TT_4_4', 'TT_5_5', // single-word fills
+]);
+
+export function isBinaryScoredType(taskType: string): boolean {
+  return BINARY_SCORED_TYPES.has(taskType);
+}
+
 // ─── New interaction-form diff functions ─────────────────────────────────────
 
 /**
