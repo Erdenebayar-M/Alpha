@@ -1255,25 +1255,25 @@ content.get('/words', async (c) => {
   }
   const { grade, category, app_level, task_type, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
 
-  const where = {
+  const baseWhere = {
     ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
     ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
     ...(app_level ? { app_level } : {}),
-    ...(task_type ? { task_types_possible: { has: task_type } } : {}),
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
     ...(needs_audio === 'true' ? { audio_ok: true, audio_url: null } : {}),
   };
+  const where = task_type ? { ...baseWhere, task_types_possible: { has: task_type } } : baseWhere;
 
   const orderBy = NULLABLE_SORT_FIELDS.has(sort_by)
     ? { [sort_by]: { sort: sort_dir, nulls: 'last' as const } }
     : { [sort_by]: sort_dir };
 
-  const [words, total] = await Promise.all([
+  const query = (w: typeof where) => Promise.all([
     prisma.word.findMany({
-      where,
+      where: w,
       orderBy,
       skip: (page - 1) * per_page,
       take: per_page,
@@ -1284,8 +1284,18 @@ content.get('/words', async (c) => {
         root_word: { select: { id: true, word: true } },
       },
     }),
-    prisma.word.count({ where }),
+    prisma.word.count({ where: w }),
   ]);
+
+  let [words, total] = await query(where);
+
+  // task_types_possible is only ever populated for the ~17 codes
+  // populateWordCapability.ts derives (see derive-capability.ts's TTCode) —
+  // for every other task type the hard filter always returns empty. Fall
+  // back to the grade/skill-only filter rather than showing nothing.
+  if (task_type && total === 0) {
+    [words, total] = await query(baseWhere);
+  }
 
   return ok(c, {
     words,
