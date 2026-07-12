@@ -193,6 +193,32 @@ describe('GET /words — grade_band filter', () => {
     const call = mockFindMany.mock.calls[0][0];
     expect(call.where).not.toHaveProperty('root_word_id');
   });
+
+  it('defaults to sorting by word ascending', async () => {
+    const res = await get('/words');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.orderBy).toEqual({ word: 'asc' });
+  });
+
+  it('sorts by a non-nullable column and direction', async () => {
+    const res = await get('/words?sort_by=char_count&sort_dir=desc');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.orderBy).toEqual({ char_count: 'desc' });
+  });
+
+  it('sorts by a nullable column with nulls last', async () => {
+    const res = await get('/words?sort_by=app_level&sort_dir=desc');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.orderBy).toEqual({ app_level: { sort: 'desc', nulls: 'last' } });
+  });
+
+  it('rejects an unknown sort_by value', async () => {
+    const res = await get('/words?sort_by=not_a_column');
+    expect(res.status).toBe(400);
+  });
 });
 
 // ─── GET /words/facets — grades flattened from grade_band ────────────────────

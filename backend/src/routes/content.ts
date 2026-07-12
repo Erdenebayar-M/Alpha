@@ -1232,16 +1232,29 @@ const wordsListQuerySchema = z.object({
   active:    z.enum(['true', 'false', 'all']).default('true'),
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
   scope:     z.enum(['roots', 'all']).default('roots'), // 'all' → also include inflected-form rows, flattened into the same list
+  sort_by:   z.enum([
+    'word', 'category', 'app_level', 'part_of_speech', 'spelling_tag',
+    'char_count', 'syllable_count',
+    'meaning_complexity', 'spelling_complexity', 'morph_complexity',
+  ]).default('word'),
+  sort_dir:  z.enum(['asc', 'desc']).default('asc'),
   page:      z.coerce.number().int().min(1).default(1),
   per_page:  z.coerce.number().int().min(1).max(200).default(50),
 });
+
+// Fields that can hold null — nulls always sort last regardless of direction,
+// so switching direction reorders the real values without shuffling blanks around.
+const NULLABLE_SORT_FIELDS = new Set([
+  'app_level', 'part_of_speech', 'spelling_tag',
+  'meaning_complexity', 'spelling_complexity', 'morph_complexity',
+]);
 
 content.get('/words', async (c) => {
   const parsed = wordsListQuerySchema.safeParse(c.req.query());
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, q, active, has_forms, scope, page, per_page } = parsed.data;
+  const { grade, category, app_level, q, active, has_forms, scope, sort_by, sort_dir, page, per_page } = parsed.data;
 
   const where = {
     ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
@@ -1253,10 +1266,14 @@ content.get('/words', async (c) => {
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
   };
 
+  const orderBy = NULLABLE_SORT_FIELDS.has(sort_by)
+    ? { [sort_by]: { sort: sort_dir, nulls: 'last' as const } }
+    : { [sort_by]: sort_dir };
+
   const [words, total] = await Promise.all([
     prisma.word.findMany({
       where,
-      orderBy: { word: 'asc' },
+      orderBy,
       skip: (page - 1) * per_page,
       take: per_page,
       // Each root's linked inflected forms (e.g. ах → ахтайгаа) + this row's own
