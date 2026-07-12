@@ -1225,6 +1225,7 @@ const wordsListQuerySchema = z.object({
   grade:     z.enum(['G1', 'G2', 'G3', 'G4']).optional(),
   category:  z.string().optional(),
   app_level: z.string().optional(),
+  task_type: z.string().optional(), // filters to words eligible for this task_type (task_types_possible)
   q:         z.string().optional(),
   active:    z.enum(['true', 'false', 'all']).default('true'),
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
@@ -1252,13 +1253,14 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
+  const { grade, category, app_level, task_type, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
 
   const where = {
     ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
     ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
     ...(app_level ? { app_level } : {}),
+    ...(task_type ? { task_types_possible: { has: task_type } } : {}),
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
