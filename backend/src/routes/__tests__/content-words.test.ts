@@ -265,6 +265,41 @@ describe('POST /words', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it('creates a word already linked to a root when root_id is given, with zeroed capability', async () => {
+    mockFindUnique.mockResolvedValue({ id: 'WG9-ROOT', word: 'унтах', root_word_id: null });
+    const res = await post('/words', { word: 'унтахаас', category: 'Амьтад', root_id: 'WG9-ROOT' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.root_id).toBe('WG9-ROOT');
+    expect(body.data.root_word).toBe('унтах');
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          root_word_id: 'WG9-ROOT',
+          skills_possible: [],
+          errors_possible: [],
+          task_types_possible: [],
+          primary_feature: null,
+          primary_skill: null,
+        }),
+      }),
+    );
+  });
+
+  it('rejects root_id that does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const res = await post('/words', { word: 'унтахаас', category: 'Амьтад', root_id: 'WG9-MISSING' });
+    expect(res.status).toBe(404);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects root_id that is itself a form, not a root', async () => {
+    mockFindUnique.mockResolvedValue({ id: 'WG9-FORM', word: 'унтахаас', root_word_id: 'WG9-ROOT' });
+    const res = await post('/words', { word: 'унтахгүй', category: 'Амьтад', root_id: 'WG9-FORM' });
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it('rejects a word with embedded space', async () => {
     const res = await post('/words', { word: 'муур сарлаг', category: 'Амьтад' });
     expect(res.status).toBe(400);

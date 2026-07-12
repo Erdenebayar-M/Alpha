@@ -1372,6 +1372,9 @@ content.post('/words/import', async (c) => {
 });
 
 // ─── POST /api/admin/content/words — create a new word ───────────────────────
+// Optional root_id creates the word already linked as a form of that root
+// (mirrors /connect's capability handling: a form's capability stays zeroed
+// out, not derived, since forms are excluded from exercise selection).
 const createWordSchema = z.object({
   word:                z.string().min(1),
   category:            z.string().min(1),
@@ -1384,6 +1387,7 @@ const createWordSchema = z.object({
   meaning_complexity:  z.number().int().nullable().optional(),
   spelling_complexity: z.number().int().nullable().optional(),
   morph_complexity:    z.number().int().nullable().optional(),
+  root_id:             z.string().min(1).optional(),
 });
 
 content.post('/words', async (c) => {
@@ -1410,11 +1414,23 @@ content.post('/words', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, `A word "${w}" already exists (id: ${dup.id})`);
   }
 
-  const cap = deriveCapability({
-    word: w,
-    part_of_speech: data.part_of_speech ?? '',
-    imageable: isImageable(data.meaning_type),
-  });
+  let root: { id: string; word: string } | null = null;
+  if (data.root_id) {
+    const rootRow = await prisma.word.findUnique({ where: { id: data.root_id } });
+    if (!rootRow) return ERRORS.NOT_FOUND(c, `Root word ${data.root_id} not found`);
+    if (rootRow.root_word_id) {
+      return ERRORS.VALIDATION_ERROR(c, 'root_id must refer to a root word, not a form');
+    }
+    root = { id: rootRow.id, word: rootRow.word };
+  }
+
+  const cap = root
+    ? null
+    : deriveCapability({
+        word: w,
+        part_of_speech: data.part_of_speech ?? '',
+        imageable: isImageable(data.meaning_type),
+      });
 
   const id = `WADM-${crypto.randomBytes(4).toString('hex')}`;
   const created = await prisma.word.create({
@@ -1434,16 +1450,30 @@ content.post('/words', async (c) => {
       meaning_complexity: data.meaning_complexity ?? null,
       spelling_complexity: data.spelling_complexity ?? null,
       morph_complexity: data.morph_complexity ?? null,
-      skills_possible: cap.skills_possible,
-      errors_possible: cap.errors_possible,
-      task_types_possible: cap.task_types_possible,
-      primary_feature: cap.primary_feature,
-      primary_skill: cap.primary_skill,
-      balarhai_unknown: cap.flags.balarhai_unknown,
+      root_word_id: root?.id ?? null,
+      ...(cap
+        ? {
+            skills_possible: cap.skills_possible,
+            errors_possible: cap.errors_possible,
+            task_types_possible: cap.task_types_possible,
+            primary_feature: cap.primary_feature,
+            primary_skill: cap.primary_skill,
+            balarhai_unknown: cap.flags.balarhai_unknown,
+          }
+        : {
+            skills_possible: [], errors_possible: [], task_types_possible: [],
+            primary_feature: null, primary_skill: null,
+          }),
     },
   });
 
-  return ok(c, { action: 'created', id: created.id, word: created.word });
+  return ok(c, {
+    action: 'created',
+    id: created.id,
+    word: created.word,
+    root_id: root?.id ?? null,
+    root_word: root?.word ?? null,
+  });
 });
 
 // ─── PATCH /api/admin/content/words/:id ──────────────────────────────────────
