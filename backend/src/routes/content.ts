@@ -1297,6 +1297,21 @@ content.get('/words/facets', async (c) => {
   });
 });
 
+// GET /api/admin/content/words/:id — single-word lookup (roots and forms alike),
+// used by the admin UI to fetch a form word's full record on demand for editing.
+content.get('/words/:id', async (c) => {
+  const id = c.req.param('id');
+  const word = await prisma.word.findUnique({
+    where: { id },
+    include: {
+      forms: { where: { is_active: true }, select: { id: true, word: true }, orderBy: { word: 'asc' } },
+      root_word: { select: { id: true, word: true } },
+    },
+  });
+  if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
+  return ok(c, { word });
+});
+
 // POST /api/admin/content/words/import — upload an xlsx; preview (default) or commit.
 // Commit replaces all words sharing the dataset id-prefix (e.g. WG1-*) with the parsed set.
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -1575,6 +1590,42 @@ content.post('/words/:id/connect', async (c) => {
   });
 
   return ok(c, { action: 'connected', id, root_id: result.rootId, root_word: result.rootWord, root_created: result.created });
+});
+
+// ─── POST /api/admin/content/words/:id/disconnect — unlink a form from its root ─
+// Sets root_word_id → null so this word stands alone again, and re-derives its
+// capability (skills/errors/task_types/primary_*) since a standalone word is
+// eligible for task generation, unlike a form (whose capability is zeroed out
+// by /connect above). Only this word is touched — the former root and any
+// sibling forms are untouched.
+content.post('/words/:id/disconnect', async (c) => {
+  const id = c.req.param('id');
+  const word = await prisma.word.findUnique({ where: { id } });
+  if (!word) return ERRORS.NOT_FOUND(c, `Word ${id} not found`);
+  if (!word.root_word_id) {
+    return ERRORS.VALIDATION_ERROR(c, 'Word is not linked to a root');
+  }
+
+  const cap = deriveCapability({
+    word: word.word,
+    part_of_speech: word.part_of_speech ?? '',
+    imageable: isImageable(word.meaning_type),
+  });
+
+  await prisma.word.update({
+    where: { id },
+    data: {
+      root_word_id: null,
+      skills_possible: cap.skills_possible,
+      errors_possible: cap.errors_possible,
+      task_types_possible: cap.task_types_possible,
+      primary_feature: cap.primary_feature,
+      primary_skill: cap.primary_skill,
+      balarhai_unknown: cap.flags.balarhai_unknown,
+    },
+  });
+
+  return ok(c, { action: 'disconnected', id });
 });
 
 export default content;

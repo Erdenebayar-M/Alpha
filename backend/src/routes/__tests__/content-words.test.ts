@@ -209,6 +209,28 @@ describe('GET /words/facets — grade facet uses grade_band', () => {
   });
 });
 
+// ─── GET /words/:id ───────────────────────────────────────────────────────────
+
+describe('GET /words/:id', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns 404 when word does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const res = await get('/words/WG1-TEST-0001');
+    expect(res.status).toBe(404);
+  });
+
+  it('returns the full word record by id', async () => {
+    mockFindUnique.mockResolvedValue(MULTI_GRADE_WORD);
+    const res = await get('/words/WG1-TEST-0001');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.word.id).toBe('WG1-TEST-0001');
+  });
+});
+
 // ─── PATCH /words/:id ─────────────────────────────────────────────────────────
 
 function patch(path: string, body: unknown) {
@@ -486,6 +508,49 @@ describe('POST /words/:id/connect', () => {
   it('rejects connecting a word to itself', async () => {
     const res = await connect('WG1-TEST-0001', { root: 'тест' });
     expect(res.status).toBe(400);
+  });
+});
+
+// ─── POST /words/:id/disconnect ────────────────────────────────────────────────
+
+describe('POST /words/:id/disconnect', () => {
+  const FORM_WORD = { ...EXISTING_WORD, root_word_id: 'WG9-ROOT' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns 404 when word does not exist', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const res = await post('/words/WG1-TEST-0001/disconnect', {});
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects a word that is not linked to a root', async () => {
+    mockFindUnique.mockResolvedValue(EXISTING_WORD); // no root_word_id
+    const res = await post('/words/WG1-TEST-0001/disconnect', {});
+    expect(res.status).toBe(400);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('unlinks the word and re-derives its capability', async () => {
+    mockFindUnique.mockResolvedValue(FORM_WORD);
+    mockUpdate.mockResolvedValue({ ...FORM_WORD, root_word_id: null });
+    const res = await post('/words/WG1-TEST-0001/disconnect', {});
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.action).toBe('disconnected');
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'WG1-TEST-0001' },
+        data: expect.objectContaining({
+          root_word_id: null,
+          skills_possible: expect.any(Array),
+          errors_possible: expect.any(Array),
+          task_types_possible: expect.any(Array),
+        }),
+      }),
+    );
   });
 });
 
