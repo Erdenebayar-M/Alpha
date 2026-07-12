@@ -24,6 +24,10 @@ export interface ServedItem {
   error_codes: string[];
   time_seconds: number;
   estimated_time_seconds: number;
+  // All-or-nothing task type (choice/match/assemble/tap/single-word fill). For
+  // these, a wrong answer is a full miss → FAIL; there is no meaningful HOLD or
+  // lenient 0.75 pass. Set from `isBinaryScoredType(task_type)` by the route.
+  binary_scored: boolean;
 }
 
 /** A candidate task the route fetched for the target rung (not yet served). */
@@ -82,7 +86,16 @@ const MAX_RUNG = 5;
 
 // ─── Verdict ─────────────────────────────────────────────────────────────────
 
-export function verdictOf(score: number, config: ClimbConfig): Verdict {
+export function verdictOf(
+  score: number,
+  config: ClimbConfig,
+  binaryScored = false,
+): Verdict {
+  // Binary items have no partial credit: a fully-correct answer (score 1) is the
+  // only PASS; anything less means the child couldn't do this rung → FAIL. This
+  // stops a wrong multiple-choice/fill from registering as a lenient HOLD/0.75
+  // and letting the climb ratchet upward on task type rather than ability.
+  if (binaryScored) return score >= 1 ? 'PASS' : 'FAIL';
   if (score >= config.passThreshold) return 'PASS';
   if (score <= config.failThreshold) return 'FAIL';
   return 'HOLD';
@@ -107,7 +120,7 @@ function tallyByRung(
   const byRung: Record<number, RungTally> = {};
   for (const item of history) {
     const t = (byRung[item.rung] ??= { pass: 0, fail: 0, hold: 0 });
-    const v = verdictOf(item.score, config);
+    const v = verdictOf(item.score, config, item.binary_scored);
     if (v === 'PASS') t.pass++;
     else if (v === 'FAIL') t.fail++;
     else t.hold++;
@@ -149,13 +162,13 @@ export function planNextRung(history: ServedItem[], config: ClimbConfig): number
   if (history.length === 1) return config.startRung;
 
   const last = history[history.length - 1];
-  const v = verdictOf(last.score, config);
+  const v = verdictOf(last.score, config, last.binary_scored);
   if (v === 'PASS') return clampRung(last.rung + 1);
   if (v === 'FAIL') return clampRung(last.rung - 1);
 
   // HOLD: re-probe the same rung once; a second HOLD at that rung → step down.
   const prev = history[history.length - 2];
-  if (prev && prev.rung === last.rung && verdictOf(prev.score, config) === 'HOLD') {
+  if (prev && prev.rung === last.rung && verdictOf(prev.score, config, prev.binary_scored) === 'HOLD') {
     return clampRung(last.rung - 1);
   }
   return last.rung;
@@ -229,7 +242,7 @@ function lastKAreFail(history: ServedItem[], config: ClimbConfig, k: number): bo
   if (history.length < k) return false;
   return history
     .slice(-k)
-    .every((h) => verdictOf(h.score, config) === 'FAIL');
+    .every((h) => verdictOf(h.score, config, h.binary_scored) === 'FAIL');
 }
 
 /**
@@ -265,7 +278,7 @@ export function shouldStop(
   // Ceiling: passed the top rung the bank has — nothing higher to probe.
   const topRung = Math.max(...availableRungs);
   const passedTop = history.some(
-    (h) => h.rung === topRung && verdictOf(h.score, config) === 'PASS',
+    (h) => h.rung === topRung && verdictOf(h.score, config, h.binary_scored) === 'PASS',
   );
   if (passedTop) return { stop: true, reason: 'ceiling' };
 
@@ -293,7 +306,12 @@ export function estimateLevel(
   for (let r = MIN_RUNG; r <= MAX_RUNG; r++) {
     const g = byRung[r];
     if (!g) continue;
-    const attempts = g.pass + g.fail;
+    // HOLDs count against the pass-rate (in the denominator): a rung is only
+    // "reliably passed" if passes are the majority of ALL attempts there. Without
+    // this, a single lucky PASS surrounded by borderline HOLDs read as 100% and
+    // inflated the level. (Binary items never HOLD, so this only tightens the
+    // graded rich items — dictation/sentence-fill — where HOLDs actually occur.)
+    const attempts = g.pass + g.fail + g.hold;
     if (g.pass >= 1 && attempts > 0 && g.pass / attempts >= 0.5) level = r;
   }
 

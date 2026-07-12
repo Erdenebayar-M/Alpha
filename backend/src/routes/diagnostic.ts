@@ -5,6 +5,7 @@ import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { startDiagnosticSchema, submitDiagnosticSchema } from '@app/shared';
 import { processAttempt } from '../lib/error-engine/attempt-processor';
+import { isBinaryScoredType } from '../lib/error-engine/answer-checker';
 import type { TaskRepository, AttemptRepository, ErrorLogRepository } from '../lib/error-engine/attempt-processor';
 import type { ErrorCode, PrismaClient } from '../../generated/prisma';
 import { calculateFinalResult } from '../lib/engines/diagnostic-branching';
@@ -264,7 +265,7 @@ diagnostic.post('/submit', async (c) => {
       score: true,
       time_seconds: true,
       error_codes: true,
-      task: { select: { primary_skill: true, estimated_time_seconds: true } },
+      task: { select: { primary_skill: true, estimated_time_seconds: true, task_type: true } },
     },
     orderBy: { created_at: 'asc' },
   });
@@ -278,6 +279,7 @@ diagnostic.post('/submit', async (c) => {
     error_codes: a.error_codes,
     time_seconds: a.time_seconds,
     estimated_time_seconds: a.task.estimated_time_seconds,
+    binary_scored: isBinaryScoredType(a.task.task_type),
   }));
 
   const base = {
