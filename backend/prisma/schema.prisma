@@ -417,6 +417,7 @@ model Word {
   primary_skill       String?               // skill implied by primary_feature (hint)
   balarhai_unknown    Boolean?              // балархай couldn't be resolved → review
   is_active           Boolean  @default(true)
+  is_edited           Boolean  @default(false) // set true once an admin PATCHes any content field (not just is_active)
 
   // Root ↔ inflected-form self-relation. root_word_id null = this row is a root
   // (lemma); non-null = an inflected surface form pointing at its root lemma

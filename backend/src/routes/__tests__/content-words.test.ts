@@ -179,6 +179,20 @@ describe('GET /words — grade_band filter', () => {
     const call = mockFindMany.mock.calls[0][0];
     expect(call.where).not.toHaveProperty('grade_band');
   });
+
+  it('defaults to roots-only (root_word_id: null)', async () => {
+    const res = await get('/words');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).toEqual(expect.objectContaining({ root_word_id: null }));
+  });
+
+  it('scope=all drops the root_word_id filter so forms are included too', async () => {
+    const res = await get('/words?scope=all');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).not.toHaveProperty('root_word_id');
+  });
 });
 
 // ─── GET /words/facets — grades flattened from grade_band ────────────────────
@@ -470,6 +484,24 @@ describe('PATCH /words/:id', () => {
     expect(res.status).toBe(200);
     const updateCall = mockUpdate.mock.calls[0][0];
     expect(updateCall.data.is_active).toBe(true);
+  });
+
+  it('a content-field edit sets is_edited: true', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { category: 'Амьтад' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.updated_fields).toContain('is_edited');
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data.is_edited).toBe(true);
+  });
+
+  it('a bare is_active toggle does NOT set is_edited', async () => {
+    const res = await patch('/words/WG1-TEST-0001', { is_active: false });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.updated_fields).not.toContain('is_edited');
+    const updateCall = mockUpdate.mock.calls[0][0];
+    expect(updateCall.data).not.toHaveProperty('is_edited');
   });
 });
 

@@ -1231,6 +1231,7 @@ const wordsListQuerySchema = z.object({
   q:         z.string().optional(),
   active:    z.enum(['true', 'false', 'all']).default('true'),
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
+  scope:     z.enum(['roots', 'all']).default('roots'), // 'all' → also include inflected-form rows, flattened into the same list
   page:      z.coerce.number().int().min(1).default(1),
   per_page:  z.coerce.number().int().min(1).max(200).default(50),
 });
@@ -1240,10 +1241,10 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, q, active, has_forms, page, per_page } = parsed.data;
+  const { grade, category, app_level, q, active, has_forms, scope, page, per_page } = parsed.data;
 
   const where = {
-    root_word_id: null, // roots only — inflected-form rows are excluded from the word list
+    ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
     ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
     ...(app_level ? { app_level } : {}),
@@ -1562,8 +1563,15 @@ content.patch('/words/:id', async (c) => {
     };
   }
 
+  // Only content edits mark the word as edited — a bare is_active toggle
+  // (deactivate/reactivate) is a status change, not a content edit.
+  const isContentEdit = Object.keys(updates).some((k) => k !== 'is_active');
+
   await prisma.$transaction(async (tx) => {
-    await tx.word.update({ where: { id }, data: { ...updates, ...derivedUpdates } });
+    await tx.word.update({
+      where: { id },
+      data: { ...updates, ...derivedUpdates, ...(isContentEdit ? { is_edited: true } : {}) },
+    });
   });
 
   const updatedFields = [
@@ -1571,6 +1579,7 @@ content.patch('/words/:id', async (c) => {
     ...(needsRederive
       ? ['skills_possible', 'errors_possible', 'task_types_possible', 'primary_feature', 'primary_skill', 'balarhai_unknown']
       : []),
+    ...(isContentEdit ? ['is_edited'] : []),
   ];
 
   return ok(c, { action: 'updated', id, updated_fields: updatedFields, rederived: needsRederive });
