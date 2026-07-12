@@ -567,7 +567,7 @@ function sleep(ms: number): Promise<void> {
 
 export interface GenerateTarget {
   grade: number;
-  level?: string; // M0–M5; undefined = any level
+  levels?: string[]; // M0–M5, one or more; undefined/empty = any level
 }
 
 export interface GenerateOptions {
@@ -600,7 +600,7 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
     return { passed, rejected, cost: 0 };
   }
 
-  // Select target words from DB
+  // Select target words from DB — fresh salt each call so repeated runs vary
   const tier = tierFor(spec.task_type);
   const dbWords = await selectTargetWords(
     db,
@@ -609,15 +609,16 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
       skill: spec.primary_skill,
       errorTargets: spec.error_targets,
       grade: target.grade,
-      level: target.level,
+      levels: target.levels,
     },
     maxItems,
   );
 
   if (dbWords.length === 0) {
+    const levelsLabel = target.levels && target.levels.length > 0 ? target.levels.join(',') : 'any';
     return {
       passed: [],
-      rejected: [{ _skip: true, reason: `no eligible words in DB for grade=${target.grade} level=${target.level ?? 'any'} task=${spec.task_type}` }],
+      rejected: [{ _skip: true, reason: `no eligible words in DB for grade=${target.grade} level=${levelsLabel} task=${spec.task_type}` }],
       cost: 0,
     };
   }
@@ -638,7 +639,8 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
   const targetWordsList = formatTargetWords(dbWords);
   const fewShot        = loadFewShotExamples(spec.task_type);
   const fewShotBlock   = formatFewShotBlock(fewShot);
-  const userPrompt     = buildUserPrompt(spec, targetWordsList, fewShotBlock, dbWords.length, target.level);
+  const levelOverride  = target.levels && target.levels.length > 0 ? target.levels.join('/') : undefined;
+  const userPrompt     = buildUserPrompt(spec, targetWordsList, fewShotBlock, dbWords.length, levelOverride);
 
   let parsed: unknown = null;
   let totalTokensIn  = 0;
@@ -708,7 +710,9 @@ export async function generateForSpec(spec: TaskSpec, opts: GenerateOptions): Pr
       if (sourceWord.image_url) task['image_url'] = sourceWord.image_url;
     } else {
       // No matched word — still emit grade_levels from target
-      const gl = target.level ? `G${target.grade}:${target.level}` : `G${target.grade}`;
+      const gl = target.levels && target.levels.length === 1
+        ? `G${target.grade}:${target.levels[0]}`
+        : `G${target.grade}`;
       task['grade_levels'] = [gl];
       task['grade_band'] = [`G${target.grade}`];
     }

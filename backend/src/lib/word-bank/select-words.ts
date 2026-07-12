@@ -15,6 +15,7 @@
  *   Beyond this, log a warning and return whatever exists — never cross grades.
  */
 
+import { randomUUID } from 'crypto';
 import type { PrismaClient, Prisma } from '../../../generated/prisma';
 import { tierFor } from './task-tier';
 
@@ -27,7 +28,7 @@ export interface SelectTarget {
   skill: string;
   errorTargets: string[];
   grade: number;
-  level?: string; // M0–M5; undefined = any level
+  levels?: string[]; // M0–M5, one or more; undefined/empty = any level
 }
 
 export interface TargetWord {
@@ -76,8 +77,10 @@ function baseWhere(grade: number, skill: string): WordWhereInput {
   };
 }
 
-function withLevel(where: WordWhereInput, level: string): WordWhereInput {
-  return { ...where, app_level: level };
+function withLevels(where: WordWhereInput, levels: string[]): WordWhereInput {
+  return levels.length === 1
+    ? { ...where, app_level: levels[0] }
+    : { ...where, app_level: { in: levels } };
 }
 
 function withTaskType(where: WordWhereInput, taskType: string): WordWhereInput {
@@ -112,7 +115,11 @@ const WORD_SELECT = {
 
 /**
  * Selects up to `count` eligible words for the given target, shuffled
- * deterministically (LCG seeded by taskType+grade+level).
+ * with an LCG seeded by taskType+grade+levels+salt.
+ *
+ * `seedSalt` defaults to a fresh random value per call, so repeated
+ * requests with identical targets draw a different word subset/order.
+ * Pass an explicit `seedSalt` for reproducible selection (e.g. tests).
  *
  * Falls back progressively:
  *   exact (grade+level+skill[+taskType]) → grade+skill → grade → []
@@ -123,11 +130,14 @@ export async function selectTargetWords(
   db: PrismaClient,
   target: SelectTarget,
   count: number,
+  seedSalt: string = randomUUID(),
 ): Promise<TargetWord[]> {
-  const { taskType, skill, errorTargets, grade, level } = target;
+  const { taskType, skill, errorTargets, grade, levels } = target;
+  const hasLevels = !!levels && levels.length > 0;
   const tier = tierFor(taskType);
   const isWord = tier === 'word';
-  const seedStr = `${taskType}:${grade}:${level ?? 'any'}`;
+  const levelsKey = hasLevels ? [...levels].sort().join(',') : 'any';
+  const seedStr = `${taskType}:${grade}:${levelsKey}:${seedSalt}`;
 
   async function query(where: WordWhereInput): Promise<TargetWord[]> {
     const rows = await db.word.findMany({ where, select: WORD_SELECT });
@@ -137,7 +147,7 @@ export async function selectTargetWords(
   // ── Tier-specific base filter ──
   function buildWhere(opts: { withLvl: boolean; withType: boolean }): WordWhereInput {
     let w: WordWhereInput = baseWhere(grade, skill);
-    if (opts.withLvl && level) w = withLevel(w, level);
+    if (opts.withLvl && hasLevels) w = withLevels(w, levels);
     if (opts.withType && isWord) w = withTaskType(w, taskType);
     if (needsBalarhaiWidening(errorTargets)) w = withBalarhaiWidening(w, errorTargets);
     return w;
@@ -146,9 +156,9 @@ export async function selectTargetWords(
   // Fallback ladder
   const ladderSteps: Array<{ label: string; where: WordWhereInput }> = [];
 
-  if (level) {
+  if (hasLevels) {
     ladderSteps.push({
-      label: `grade=${grade} level=${level} skill=${skill}${isWord ? ` type=${taskType}` : ''}`,
+      label: `grade=${grade} levels=${levelsKey} skill=${skill}${isWord ? ` type=${taskType}` : ''}`,
       where: buildWhere({ withLvl: true, withType: true }),
     });
     ladderSteps.push({

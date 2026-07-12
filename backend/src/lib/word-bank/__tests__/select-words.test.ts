@@ -44,8 +44,12 @@ const BASE_TARGET: SelectTarget = {
   skill: 'S2',
   errorTargets: ['B1'],
   grade: 1,
-  level: 'M1',
+  levels: ['M1'],
 };
+
+// Fixed salt so tests that care about determinism aren't at the mercy of
+// the function's own random default.
+const FIXED_SALT = 'test-salt';
 
 // ─── Word-anchored query shape ────────────────────────────────────────────────
 
@@ -74,24 +78,55 @@ describe('selectTargetWords — word-anchored tier (TT_2_1)', () => {
     expect(result).toHaveLength(3);
   });
 
-  it('result is a deterministic subset — same call returns same order', async () => {
+  it('uses an IN filter when multiple levels are selected', async () => {
+    const words = Array.from({ length: 3 }, () => makeWord());
+    const db = makeDb(words);
+
+    await selectTargetWords(db, { ...BASE_TARGET, levels: ['M0', 'M1', 'M2'] }, 3);
+
+    const where = capturedWhere(db);
+    expect(where).toMatchObject({ app_level: { in: ['M0', 'M1', 'M2'] } });
+  });
+
+  it('result is a deterministic subset given the same explicit seedSalt', async () => {
     const words = Array.from({ length: 10 }, (_, i) => makeWord({ id: `w-${i}`, word: `үг${i}` }));
+    const db1 = makeDb(words);
+    const db2 = makeDb(words);
+
+    const r1 = await selectTargetWords(db1, BASE_TARGET, 3, FIXED_SALT);
+    const r2 = await selectTargetWords(db2, BASE_TARGET, 3, FIXED_SALT);
+    expect(r1.map((w) => w.id)).toEqual(r2.map((w) => w.id));
+  });
+
+  it('different task type yields different shuffle order (same salt)', async () => {
+    const words = Array.from({ length: 10 }, (_, i) => makeWord({ id: `w-${i}` }));
+    const db1 = makeDb(words);
+    const db2 = makeDb(words);
+
+    const r1 = await selectTargetWords(db1, { ...BASE_TARGET, taskType: 'TT_2_1' }, 5, FIXED_SALT);
+    const r2 = await selectTargetWords(db2, { ...BASE_TARGET, taskType: 'TT_3_2' }, 5, FIXED_SALT);
+    // With 10 words shuffled differently, the full ordering should differ
+    expect(r1.map((w) => w.id)).not.toEqual(r2.map((w) => w.id));
+  });
+
+  it('defaults to a fresh random salt — repeated calls with identical target vary', async () => {
+    const words = Array.from({ length: 10 }, (_, i) => makeWord({ id: `w-${i}` }));
     const db1 = makeDb(words);
     const db2 = makeDb(words);
 
     const r1 = await selectTargetWords(db1, BASE_TARGET, 3);
     const r2 = await selectTargetWords(db2, BASE_TARGET, 3);
-    expect(r1.map((w) => w.id)).toEqual(r2.map((w) => w.id));
+    // Astronomically unlikely to collide by chance with a 10-word pool
+    expect(r1.map((w) => w.id)).not.toEqual(r2.map((w) => w.id));
   });
 
-  it('different task type yields different shuffle order', async () => {
+  it('different explicit seedSalt yields different selection/order', async () => {
     const words = Array.from({ length: 10 }, (_, i) => makeWord({ id: `w-${i}` }));
     const db1 = makeDb(words);
     const db2 = makeDb(words);
 
-    const r1 = await selectTargetWords(db1, { ...BASE_TARGET, taskType: 'TT_2_1' }, 5);
-    const r2 = await selectTargetWords(db2, { ...BASE_TARGET, taskType: 'TT_3_2' }, 5);
-    // With 10 words shuffled differently, the full ordering should differ
+    const r1 = await selectTargetWords(db1, BASE_TARGET, 3, 'salt-a');
+    const r2 = await selectTargetWords(db2, BASE_TARGET, 3, 'salt-b');
     expect(r1.map((w) => w.id)).not.toEqual(r2.map((w) => w.id));
   });
 });
@@ -212,7 +247,7 @@ describe('selectTargetWords — fallback ladder', () => {
     const words = Array.from({ length: 3 }, () => makeWord());
     const db = makeDb(words);
 
-    await selectTargetWords(db, { ...BASE_TARGET, level: undefined }, 3);
+    await selectTargetWords(db, { ...BASE_TARGET, levels: undefined }, 3);
 
     const where = capturedWhere(db);
     expect(where).not.toHaveProperty('app_level');
@@ -249,7 +284,7 @@ describe('selectTargetWords — no level specified', () => {
     const words = Array.from({ length: 3 }, () => makeWord());
     const db = makeDb(words);
 
-    await selectTargetWords(db, { ...BASE_TARGET, level: undefined }, 3);
+    await selectTargetWords(db, { ...BASE_TARGET, levels: undefined }, 3);
 
     expect((db.word.findMany as jest.Mock)).toHaveBeenCalledTimes(1);
     const where = capturedWhere(db);
