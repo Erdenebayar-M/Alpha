@@ -1279,10 +1279,12 @@ content.get('/words', async (c) => {
 // grades: flattens each word's grade_band array so a word in ['G1','G2'] contributes to both buckets.
 content.get('/words/facets', async (c) => {
   // roots only — inflected-form rows are excluded from the facet buckets.
-  const [gradeBands, categories, levels] = await Promise.all([
+  const [gradeBands, categories, levels, partsOfSpeech, meaningTypes] = await Promise.all([
     prisma.word.findMany({ where: { grade_band: { isEmpty: false }, root_word_id: null }, select: { grade_band: true } }),
     prisma.word.findMany({ where: { category: { not: '' }, root_word_id: null }, distinct: ['category'], select: { category: true } }),
     prisma.word.findMany({ where: { app_level: { not: null }, root_word_id: null }, distinct: ['app_level'], select: { app_level: true } }),
+    prisma.word.findMany({ where: { part_of_speech: { not: null }, root_word_id: null }, distinct: ['part_of_speech'], select: { part_of_speech: true } }),
+    prisma.word.findMany({ where: { meaning_type: { not: null }, root_word_id: null }, distinct: ['meaning_type'], select: { meaning_type: true } }),
   ]);
 
   const grades = new Set<string>();
@@ -1294,6 +1296,8 @@ content.get('/words/facets', async (c) => {
     grades: [...grades].sort(),
     categories: categories.map((c2) => c2.category).filter(Boolean).sort((a, b) => a.localeCompare(b, 'mn')),
     app_levels: levels.map((l) => l.app_level).filter((l): l is string => !!l).sort(),
+    part_of_speech: partsOfSpeech.map((p) => p.part_of_speech).filter((p): p is string => !!p).sort((a, b) => a.localeCompare(b, 'mn')),
+    meaning_type: meaningTypes.map((m) => m.meaning_type).filter((m): m is string => !!m).sort((a, b) => a.localeCompare(b, 'mn')),
   });
 });
 

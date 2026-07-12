@@ -182,9 +182,11 @@ describe('GET /words — grade_band filter', () => {
 describe('GET /words/facets — grade facet uses grade_band', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Promise.all call order: grade_band select, categories, app_levels.
+    // Promise.all call order: grade_band select, categories, app_levels, part_of_speech, meaning_type.
     mockFindMany
       .mockResolvedValueOnce([{ grade_band: ['G1'] }, { grade_band: ['G2'] }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
   });
@@ -201,11 +203,28 @@ describe('GET /words/facets — grade facet uses grade_band', () => {
       .mockReset()
       .mockResolvedValueOnce([{ grade_band: ['G1', 'G2'] }])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
     const res = await get('/words/facets');
     const body = (await res.json()) as any;
     expect(body.data.grades).toContain('G1');
     expect(body.data.grades).toContain('G2');
+  });
+
+  it('returns distinct part_of_speech and meaning_type values', async () => {
+    mockFindMany
+      .mockReset()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ part_of_speech: 'нэр үг' }, { part_of_speech: 'үйл үг' }])
+      .mockResolvedValueOnce([{ meaning_type: 'бодит/зурагтай холбож болно' }]);
+    const res = await get('/words/facets');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.part_of_speech).toEqual(['нэр үг', 'үйл үг']);
+    expect(body.data.meaning_type).toEqual(['бодит/зурагтай холбож болно']);
   });
 });
 
