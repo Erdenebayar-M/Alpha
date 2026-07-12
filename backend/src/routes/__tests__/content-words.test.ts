@@ -45,8 +45,10 @@ jest.mock('../../lib/db/client', () => ({
       findMany:   jest.fn(),
       count:      jest.fn(),
       findUnique: jest.fn(),
+      findFirst:  jest.fn(),
       update:     jest.fn(),
       updateMany: jest.fn(),
+      create:     jest.fn(),
     },
     $transaction: jest.fn(),
   },
@@ -68,8 +70,10 @@ import contentRouter from '../content';
 const mockFindMany   = prisma.word.findMany   as jest.MockedFunction<any>;
 const mockCount      = prisma.word.count      as jest.MockedFunction<any>;
 const mockFindUnique = prisma.word.findUnique as jest.MockedFunction<any>;
+const mockFindFirst  = prisma.word.findFirst  as jest.MockedFunction<any>;
 const mockUpdate     = prisma.word.update     as jest.MockedFunction<any>;
 const mockUpdateMany = prisma.word.updateMany as jest.MockedFunction<any>;
+const mockCreate     = prisma.word.create     as jest.MockedFunction<any>;
 const mockTx         = prisma.$transaction    as jest.MockedFunction<any>;
 
 const BEARER = 'Bearer test-admin-secret-that-is-32chars-ok';
@@ -225,6 +229,57 @@ describe('GET /words/facets — grade facet uses grade_band', () => {
     const body = (await res.json()) as any;
     expect(body.data.part_of_speech).toEqual(['нэр үг', 'үйл үг']);
     expect(body.data.meaning_type).toEqual(['бодит/зурагтай холбож болно']);
+  });
+});
+
+// ─── POST /words — create ──────────────────────────────────────────────────────
+
+describe('POST /words', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindFirst.mockResolvedValue(null); // no existing duplicate by default
+    mockCreate.mockImplementation((args: any) => Promise.resolve({ id: args.data.id, word: args.data.word }));
+  });
+
+  it('creates a word with derived char_count/syllable_count and capability', async () => {
+    const res = await post('/words', { word: 'явах', category: 'Үйл ажиллагаа' });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as any;
+    expect(body.data.action).toBe('created');
+    expect(body.data.word).toBe('явах');
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          word: 'явах',
+          category: 'Үйл ажиллагаа',
+          char_count: 4,
+          skills_possible: expect.any(Array),
+        }),
+      }),
+    );
+  });
+
+  it('rejects a missing word', async () => {
+    const res = await post('/words', { category: 'Амьтад' });
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a word with embedded space', async () => {
+    const res = await post('/words', { word: 'муур сарлаг', category: 'Амьтад' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects non-Mongolian characters', async () => {
+    const res = await post('/words', { word: 'cat', category: 'Амьтад' });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects when an active root with the same word already exists', async () => {
+    mockFindFirst.mockResolvedValue({ id: 'WG1-TEST-0001', word: 'явах' });
+    const res = await post('/words', { word: 'явах', category: 'Амьтад' });
+    expect(res.status).toBe(400);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });
 

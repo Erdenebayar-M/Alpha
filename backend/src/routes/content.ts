@@ -1371,6 +1371,81 @@ content.post('/words/import', async (c) => {
   return ok(c, { committed: true, grade, prefix, summary, imported: records.length });
 });
 
+// ─── POST /api/admin/content/words — create a new word ───────────────────────
+const createWordSchema = z.object({
+  word:                z.string().min(1),
+  category:            z.string().min(1),
+  part_of_speech:      z.string().nullable().optional(),
+  meaning_type:        z.string().nullable().optional(),
+  spelling_tag:        z.string().nullable().optional(),
+  suggested_exercises: z.string().nullable().optional(),
+  app_level:           z.string().nullable().optional(),
+  grade_band:          z.array(z.string()).optional(),
+  meaning_complexity:  z.number().int().nullable().optional(),
+  spelling_complexity: z.number().int().nullable().optional(),
+  morph_complexity:    z.number().int().nullable().optional(),
+});
+
+content.post('/words', async (c) => {
+  const raw = await c.req.json().catch(() => null);
+  const parsed = createWordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+  const data = parsed.data;
+  const w = data.word.trim();
+
+  if (/\s/.test(w)) {
+    return ERRORS.VALIDATION_ERROR(c, 'word must be a single token (no spaces or whitespace)');
+  }
+  if (!isAllMongolian(w)) {
+    return ERRORS.VALIDATION_ERROR(c, 'word must contain only Mongolian Cyrillic characters');
+  }
+  if (!hasVowel(w)) {
+    return ERRORS.VALIDATION_ERROR(c, 'word must contain at least one vowel');
+  }
+
+  const dup = await prisma.word.findFirst({ where: { word: w, root_word_id: null, is_active: true } });
+  if (dup) {
+    return ERRORS.VALIDATION_ERROR(c, `A word "${w}" already exists (id: ${dup.id})`);
+  }
+
+  const cap = deriveCapability({
+    word: w,
+    part_of_speech: data.part_of_speech ?? '',
+    imageable: isImageable(data.meaning_type),
+  });
+
+  const id = `WADM-${crypto.randomBytes(4).toString('hex')}`;
+  const created = await prisma.word.create({
+    data: {
+      id,
+      word: w,
+      category: data.category,
+      grade_band: data.grade_band ?? [],
+      char_count: [...w].length,
+      syllable_count: syllabify(w).length,
+      skill_tags: [], error_tags: [], image_ok: false, audio_ok: false, distractors: [],
+      app_level: data.app_level ?? null,
+      spelling_tag: data.spelling_tag ?? null,
+      suggested_exercises: data.suggested_exercises ?? null,
+      part_of_speech: data.part_of_speech ?? null,
+      meaning_type: data.meaning_type ?? null,
+      meaning_complexity: data.meaning_complexity ?? null,
+      spelling_complexity: data.spelling_complexity ?? null,
+      morph_complexity: data.morph_complexity ?? null,
+      skills_possible: cap.skills_possible,
+      errors_possible: cap.errors_possible,
+      task_types_possible: cap.task_types_possible,
+      primary_feature: cap.primary_feature,
+      primary_skill: cap.primary_skill,
+      balarhai_unknown: cap.flags.balarhai_unknown,
+    },
+  });
+
+  return ok(c, { action: 'created', id: created.id, word: created.word });
+});
+
 // ─── PATCH /api/admin/content/words/:id ──────────────────────────────────────
 
 const WORD_DERIVED_FIELDS = new Set([
