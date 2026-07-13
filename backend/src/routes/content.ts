@@ -11,6 +11,7 @@ import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { env } from '../config/env';
 import { r2Enabled, r2Upload, r2Move } from '../lib/r2';
+import { sniffContentType, isIosPlayableAudio, EXT_FOR_TYPE } from '../lib/media-type';
 import { prisma } from '../lib/db/client';
 import {
   DraftStage,
@@ -779,6 +780,106 @@ content.post('/accept-audio', async (c) => {
   return ok(c, { action: 'audio_accepted', variant_id, slot, [field]: audioUrl });
 });
 
+// ─── POST /api/admin/content/upload-audio ─────────────────────────────────────
+// Accepts a re-recorded audio file (multipart), sniffs its real container from
+// the magic bytes, rejects anything iOS cannot decode (WebM/Ogg/Opus), then
+// stores it to R2 with the correct Content-Type and points the task at it.
+// This is the supported path for human-recorded audio — the TTS endpoints do not
+// accept uploaded bytes.
+
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB
+
+const uploadAudioFieldsSchema = z.object({
+  variant_id: z.string().min(1),
+  slot:       z.enum(['dictation', 'prompt']),
+  stage:      z.enum(ASSET_STAGES).default('stage2'),
+});
+
+content.post('/upload-audio', async (c) => {
+  const form = await c.req.parseBody().catch(() => null);
+  if (!form) {
+    return ERRORS.VALIDATION_ERROR(c, 'Expected multipart/form-data body');
+  }
+
+  const parsed = uploadAudioFieldsSchema.safeParse({
+    variant_id: form['variant_id'],
+    slot:       form['slot'],
+    stage:      form['stage'] ?? undefined,
+  });
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid fields', parsed.error.flatten().fieldErrors);
+  }
+  const { variant_id, slot, stage } = parsed.data;
+
+  const file = form['file'];
+  if (!(file instanceof File)) {
+    return ERRORS.VALIDATION_ERROR(c, 'Missing "file" upload field');
+  }
+  if (file.size === 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'Uploaded file is empty');
+  }
+  if (file.size > MAX_AUDIO_BYTES) {
+    return ERRORS.VALIDATION_ERROR(c, `File exceeds ${MAX_AUDIO_BYTES} byte limit`);
+  }
+
+  const buf = Buffer.from(await file.arrayBuffer());
+  const sniffed = sniffContentType(buf);
+
+  // Guard on the actual bytes, not the filename or the browser-declared type.
+  if (!sniffed || !sniffed.startsWith('audio/')) {
+    return ERRORS.VALIDATION_ERROR(
+      c,
+      'Unrecognized audio format. Upload m4a/AAC, WAV, or MP3.',
+    );
+  }
+  if (!isIosPlayableAudio(sniffed)) {
+    return ERRORS.VALIDATION_ERROR(
+      c,
+      `Audio is ${sniffed}, which iOS cannot play. Re-record and upload m4a/AAC, WAV, or MP3.`,
+    );
+  }
+
+  // Task (live) has only audio_url; prompt-slot audio lives on TaskDraft only.
+  const field = slot === 'dictation' ? 'audio_url' : 'prompt_audio_url';
+  if (stage === 'validated' && field === 'prompt_audio_url') {
+    return ERRORS.VALIDATION_ERROR(
+      c,
+      'Live tasks have no prompt audio slot; use slot="dictation" for validated tasks.',
+    );
+  }
+
+  const ext      = EXT_FOR_TYPE[sniffed];
+  const prefix   = slot === 'dictation' ? 'dict_' : 'prompt_';
+  const filename = `${prefix}${variant_id}.${ext}`;
+  let audioUrl: string;
+
+  if (r2Enabled()) {
+    audioUrl = await r2Upload(`audio/${filename}`, buf, sniffed);
+  } else {
+    const destPath = path.join(AUD_DIR, filename);
+    fs.mkdirSync(AUD_DIR, { recursive: true });
+    fs.writeFileSync(destPath, buf);
+    audioUrl = `/content/audio/${filename}`;
+  }
+
+  if (stage === 'validated') {
+    const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { audio_url: audioUrl } });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Task ${variant_id} not found in live tasks`);
+    }
+  } else {
+    const updated = await prisma.taskDraft.updateMany({
+      where: { id: variant_id },
+      data:  { [field]: audioUrl },
+    });
+    if (!updated.count) {
+      return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found — audio saved but task not updated`);
+    }
+  }
+
+  return ok(c, { action: 'audio_uploaded', variant_id, slot, content_type: sniffed, [field]: audioUrl });
+});
+
 // ─── Asset URL allowlist ──────────────────────────────────────────────────────
 // Only allow relative /content/ paths (local serve) or the configured R2 CDN origin.
 // This prevents storing arbitrary URLs (including private IPs) in the database.
@@ -848,8 +949,17 @@ content.post('/update-audio', async (c) => {
   const { audio_url, variant_id, slot, stage } = parsed.data;
   const field = slot === 'dictation' ? 'audio_url' : 'prompt_audio_url';
 
+  // Live Task has only audio_url; prompt-slot audio exists on TaskDraft only.
+  // Writing prompt_audio_url to Task would reference a non-existent column.
+  if (stage === 'validated' && field === 'prompt_audio_url') {
+    return ERRORS.VALIDATION_ERROR(
+      c,
+      'Live tasks have no prompt audio slot; use slot="dictation" for validated tasks.',
+    );
+  }
+
   if (stage === 'validated') {
-    const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { [field]: audio_url } });
+    const updated = await prisma.task.updateMany({ where: { id: variant_id }, data: { audio_url } });
     if (!updated.count) {
       return ERRORS.NOT_FOUND(c, `Task ${variant_id} not found in live tasks`);
     }

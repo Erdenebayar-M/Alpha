@@ -5,6 +5,7 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { env } from '../config/env';
+import { sniffContentType } from './media-type';
 
 function makeClient(): S3Client {
   const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY } = env;
@@ -37,8 +38,27 @@ export async function r2Upload(
   contentType: string,
 ): Promise<string> {
   const bucket = env.R2_BUCKET_NAME!;
+
+  // Trust the bytes, not the caller: an external tool once uploaded WebM/Opus
+  // labelled as .m4a/audio/wav, which iOS could not decode. Sniff the magic
+  // bytes and override the declared ContentType when they disagree, so no object
+  // in the bucket can be mislabelled through this path.
+  const sniffed = sniffContentType(body);
+  let effectiveType = contentType;
+  if (sniffed && sniffed !== contentType) {
+    console.warn(
+      JSON.stringify({
+        event: 'r2_content_type_corrected',
+        key,
+        declared: contentType,
+        detected: sniffed,
+      }),
+    );
+    effectiveType = sniffed;
+  }
+
   await makeClient().send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: effectiveType }),
   );
   return `${env.R2_PUBLIC_URL}/${key}`;
 }
