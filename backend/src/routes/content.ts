@@ -1227,6 +1227,8 @@ const wordsListQuerySchema = z.object({
   app_level: z.string().optional(),
   task_type: z.string().optional(), // filters to words eligible for this task_type (task_types_possible)
   skill:     z.string().optional(), // filters to words eligible for this skill (skills_possible) — also used as a fallback tier when task_type matches nothing
+  secondary_skill: z.string().optional(), // matched alongside skill against skills_possible (hasSome)
+  difficulty: z.coerce.number().int().min(1).max(5).optional(), // approximated against spelling_complexity with a ±1 band
   q:         z.string().optional(),
   active:    z.enum(['true', 'false', 'all']).default('true'),
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
@@ -1254,19 +1256,53 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, task_type, skill, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
+  const { grade, category, app_level, task_type, skill, secondary_skill, difficulty, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
 
+  // Always-on constraints — never relaxed.
   const baseWhere = {
     ...(scope === 'roots' ? { root_word_id: null } : {}), // roots only, unless scope=all also includes inflected-form rows
     ...(grade ? { grade_band: { has: grade } } : {}),
     ...(category ? { category } : {}),
-    ...(app_level ? { app_level } : {}),
     ...(q ? { word: { contains: q, mode: 'insensitive' as const } } : {}),
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
     ...(needs_audio === 'true' ? { audio_ok: true, audio_url: null } : {}),
   };
-  const withTaskType = task_type ? { ...baseWhere, task_types_possible: { has: task_type } } : baseWhere;
+
+  // Optional preference clauses, each dropped in turn by the relaxation ladder
+  // below. task_types_possible is only ever populated for the ~17 codes
+  // populateWordCapability.ts derives (see derive-capability.ts's TTCode), and
+  // spelling_complexity/app_level are null on legacy rows — so any of these can
+  // zero out a match. Rather than showing nothing, we relax from tightest to
+  // loosest until something matches.
+  const skillsWanted = [skill, secondary_skill].filter((s): s is string => !!s);
+  const taskTypeWhere = task_type ? { task_types_possible: { has: task_type } } : {};
+  const skillWhere = skillsWanted.length ? { skills_possible: { hasSome: skillsWanted } } : {};
+  const levelWhere = app_level ? { app_level } : {};
+  const difficultyWhere = difficulty
+    ? { spelling_complexity: { gte: difficulty - 1, lte: difficulty + 1 } }
+    : {};
+
+  // Tightest → loosest, dropping one constraint per step (difficulty is the
+  // fuzziest signal so it goes first). total reflects the FULL match count at
+  // whichever tier lands, so paging stays stable within a tier.
+  const tierClauses = [
+    { ...taskTypeWhere, ...skillWhere, ...levelWhere, ...difficultyWhere },
+    { ...taskTypeWhere, ...skillWhere, ...levelWhere },
+    { ...skillWhere, ...levelWhere },
+    { ...levelWhere },
+    {},
+  ];
+  // Collapse consecutive-identical tiers (when a constraint is absent so a step
+  // drops nothing) to avoid re-running the same query.
+  const tiers: (typeof baseWhere)[] = [];
+  let prevKey = '';
+  for (const clause of tierClauses) {
+    const where = { ...baseWhere, ...clause };
+    const key = JSON.stringify(where);
+    if (key !== prevKey) tiers.push(where);
+    prevKey = key;
+  }
 
   const orderBy = NULLABLE_SORT_FIELDS.has(sort_by)
     ? { [sort_by]: { sort: sort_dir, nulls: 'last' as const } }
@@ -1288,20 +1324,11 @@ content.get('/words', async (c) => {
     prisma.word.count({ where: w }),
   ]);
 
-  let [words, total] = await query(withTaskType);
-
-  // task_types_possible is only ever populated for the ~17 codes
-  // populateWordCapability.ts derives (see derive-capability.ts's TTCode) —
-  // for every other task type the hard filter always returns empty. Fall
-  // back progressively: task_type → skill → grade-only, rather than showing
-  // nothing (total reflects the FULL match count, so this is stable across
-  // pages — a caller paging through results won't flip between tiers).
-  if (task_type && total === 0) {
-    const withSkill = skill ? { ...baseWhere, skills_possible: { has: skill } } : baseWhere;
-    [words, total] = await query(withSkill);
-    if (skill && total === 0) {
-      [words, total] = await query(baseWhere);
-    }
+  let words: Awaited<ReturnType<typeof query>>[0] = [];
+  let total = 0;
+  for (const where of tiers) {
+    [words, total] = await query(where);
+    if (total > 0) break;
   }
 
   return ok(c, {
