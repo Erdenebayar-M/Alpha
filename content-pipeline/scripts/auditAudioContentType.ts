@@ -64,7 +64,9 @@ function extOf(url: string): string {
 }
 
 async function main(): Promise<void> {
-  const { PrismaClient } = await import('../../backend/generated/prisma');
+  // Prisma 7.x generates client.ts (no index.ts); import the explicit entry so
+  // tsx's ESM resolver can find it.
+  const { PrismaClient } = await import('../../backend/generated/prisma/client');
   const { PrismaPg } = await import('@prisma/adapter-pg');
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   const prisma = new PrismaClient({ adapter });
