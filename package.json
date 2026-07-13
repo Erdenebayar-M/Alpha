@@ -18,6 +18,7 @@
     "pipeline:import": "npx tsx content-pipeline/scripts/importDrafts.ts",
     "pipeline:tts": "npx tsx content-pipeline/scripts/generateTts.ts",
     "pipeline:images": "npx tsx content-pipeline/scripts/generateImages.ts",
+    "pipeline:audit-audio": "npx tsx content-pipeline/scripts/auditAudioContentType.ts",
     "pipeline:upload-audio": "npx tsx content-pipeline/scripts/uploadAudioToR2.ts",
     "pipeline:upload-images": "npx tsx content-pipeline/scripts/uploadImagesToR2.ts"
   }
