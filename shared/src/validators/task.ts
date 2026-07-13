@@ -206,11 +206,42 @@ export const taskFieldsSchema = z.object({
   image_url: z.string().nullable().optional(),
 });
 
+/**
+ * Every grade in `gradeBand` must have a valid, matching `grade_levels` cell.
+ * Returns [] when consistent, otherwise a list of human-readable error strings.
+ * Shared by the Zod `refineGradeLevels` refinement (create/pipeline paths) and
+ * the live-task PATCH route, which edits `grade_levels` outside the content schema.
+ */
+export function validateGradeLevels(gradeBand: string[], gradeLevels: unknown): string[] {
+  const errors: string[] = [];
+  if (!Array.isArray(gradeLevels) || gradeLevels.length === 0) {
+    errors.push('grade_levels must be a non-empty array');
+    return errors;
+  }
+  for (const cell of gradeLevels) {
+    if (typeof cell !== 'string' || !GRADE_LEVEL_RE.test(cell)) {
+      errors.push(`Invalid grade_levels cell: ${String(cell)} (must match G[1-4]:M[0-5])`);
+    }
+  }
+  const gradePrefixes = new Set(
+    gradeLevels.filter((c): c is string => typeof c === 'string').map((c) => c.split(':')[0]),
+  );
+  for (const g of gradeBand) {
+    if (!gradePrefixes.has(g)) {
+      errors.push(`Grade ${g} is in grade_band but has no entry in grade_levels`);
+    }
+  }
+  return errors;
+}
+
 /** Every grade in grade_band must appear in at least one grade_levels cell. */
 function refineGradeLevels(
   val: { grade_band: string[]; grade_levels: string[] },
   ctx: z.RefinementCtx,
 ): void {
+  // The content schema already enforces per-cell format + non-empty via
+  // gradeLevelSchema/.min(1); here we only surface the cross-field coverage gap
+  // (a grade_band grade with no matching cell) to preserve the original messages.
   const gradePrefixes = new Set(val.grade_levels.map((c) => c.split(':')[0]));
   for (const g of val.grade_band) {
     if (!gradePrefixes.has(g)) {

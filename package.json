@@ -19,6 +19,9 @@
     "pipeline:tts": "npx tsx content-pipeline/scripts/generateTts.ts",
     "pipeline:images": "npx tsx content-pipeline/scripts/generateImages.ts",
     "pipeline:audit-audio": "npx tsx content-pipeline/scripts/auditAudioContentType.ts",
+    "pipeline:audit-grade-levels": "npx tsx content-pipeline/scripts/auditGradeLevels.ts",
+    "pipeline:repair-grade-levels": "npx tsx content-pipeline/scripts/repairGradeLevels.ts",
+    "pipeline:verify-diagnostic-grades": "npx tsx content-pipeline/scripts/verifyDiagnosticGrades.ts",
     "pipeline:upload-audio": "npx tsx content-pipeline/scripts/uploadAudioToR2.ts",
     "pipeline:upload-images": "npx tsx content-pipeline/scripts/uploadImagesToR2.ts"
   }

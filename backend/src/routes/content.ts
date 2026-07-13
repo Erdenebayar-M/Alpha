@@ -24,6 +24,8 @@ import {
 import {
   createTaskSchema as sharedCreateTaskSchema,
   type CreateTaskInput,
+  validateGradeLevels,
+  gradeCodeSchema,
 } from '@app/shared';
 import { generateForSpec, TASK_SPECS, AVAILABLE_TASK_IDS } from '../lib/pipeline/generator';
 import { reviewTaskDraft, AIReviewResult } from '../lib/pipeline/aiReviewer';
@@ -228,6 +230,7 @@ content.post('/tasks', async (c) => {
       level_target:           d.level_target,
       error_targets:          d.error_targets,
       grade_band:             d.grade_band,
+      grade_levels:           d.grade_levels,
       difficulty:             d.difficulty,
       estimated_time_seconds: d.estimated_time_seconds,
       lesson_slot_fit:        lessonSlot,
@@ -498,6 +501,25 @@ content.post('/edit', async (c) => {
   const draft = await prisma.taskDraft.findUnique({ where: { id: variant_id } });
   if (!draft) {
     return ERRORS.NOT_FOUND(c, `Variant ${variant_id} not found`);
+  }
+
+  // Unlike live-tasks, a draft's grade_band is NOT immutable — so grade_levels
+  // must be checked against whichever grade_band applies AFTER this edit, not
+  // just the stored one. Only runs when the edit actually touches either field.
+  if ('grade_band' in safeUpdates || 'grade_levels' in safeUpdates) {
+    let mergedGradeBand: string[] = draft.grade_band;
+    if ('grade_band' in safeUpdates) {
+      const parsedBand = z.array(gradeCodeSchema).min(1).safeParse(safeUpdates.grade_band);
+      if (!parsedBand.success) {
+        return ERRORS.VALIDATION_ERROR(c, 'Invalid grade_band update', parsedBand.error.flatten().formErrors);
+      }
+      mergedGradeBand = parsedBand.data;
+    }
+    const mergedGradeLevels = 'grade_levels' in safeUpdates ? safeUpdates.grade_levels : draft.grade_levels;
+    const errors = validateGradeLevels(mergedGradeBand, mergedGradeLevels);
+    if (errors.length > 0) {
+      return ERRORS.VALIDATION_ERROR(c, 'Invalid grade_band/grade_levels update', { grade_levels: errors });
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -1248,6 +1270,16 @@ content.patch('/live-tasks/:id', async (c) => {
   }
   if (Object.keys(safeUpdates).length === 0) {
     return ERRORS.VALIDATION_ERROR(c, 'No editable fields in updates');
+  }
+
+  // grade_band is immutable, so it's always the frozen source of truth here —
+  // an edit that drops a grade's grade_levels cell would make the task
+  // invisible to the diagnostic pool query without this check.
+  if ('grade_levels' in safeUpdates) {
+    const errors = validateGradeLevels(task.grade_band, safeUpdates.grade_levels);
+    if (errors.length > 0) {
+      return ERRORS.VALIDATION_ERROR(c, 'Invalid grade_levels update', { grade_levels: errors });
+    }
   }
 
   await prisma.$transaction(async (tx) => {
