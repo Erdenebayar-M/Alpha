@@ -6,8 +6,12 @@ import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
 interface LetterTileBarProps {
-  tiles: TaskChoice[];
-  selectedIndex: number | null;
+  /** Plain letters, or choice objects when the payload carries `options.choices`. */
+  tiles: (TaskChoice | string)[];
+  /** Single-blank tasks: the one highlighted tile. Omit when using `usedTiles`. */
+  selectedIndex?: number | null;
+  /** Multi-blank tasks: parallel to `tiles`, a placed tile fades out and goes inert. */
+  usedTiles?: boolean[];
   isAnswered: boolean;
   onSelect: (index: number) => void;
   onBackspace: () => void;
@@ -17,10 +21,16 @@ interface LetterTileBarProps {
  * Bottom answer sheet for fill-in-the-blank letter tasks: a row of tappable letter
  * tiles plus a backspace key. Shares ChoiceGrid's sheet chrome so the fill-letter
  * screen speaks the same visual language as the choice/text screens.
+ *
+ * Two selection models share the chrome. Pass `selectedIndex` for a single blank —
+ * the chosen tile fills blue and backspace clears it. Pass `usedTiles` when the word
+ * has several blanks — each placed tile is *consumed* (faded, inert) and backspace
+ * pulls the last one back out.
  */
 export default function LetterTileBar({
   tiles,
-  selectedIndex,
+  selectedIndex = null,
+  usedTiles,
   isAnswered,
   onSelect,
   onBackspace,
@@ -30,32 +40,38 @@ export default function LetterTileBar({
   const sheetPadding = compact ? 20 : 28;
   const tileMinHeight = Math.max(58, Math.min(height * 0.09, 72));
   const fontSize = compact ? 22 : 26;
+  const hasBackspaceTarget = usedTiles ? usedTiles.some(Boolean) : selectedIndex !== null;
 
   return (
     <View style={[styles.sheet, { padding: sheetPadding, borderRadius: compact ? 36 : 46 }]}>
       <View style={styles.row}>
         {tiles.map((tile, index) => {
+          const label = typeof tile === 'string' ? tile : tile.text;
           const isSelected = selectedIndex === index;
+          const isUsed = usedTiles?.[index] ?? false;
+          const isInert = isAnswered || isUsed;
           return (
             <Pressable
-              key={`${tile.text}-${index}`}
+              key={`${label}-${index}`}
               style={({ pressed }) => [
                 styles.tile,
                 { minHeight: tileMinHeight },
                 isSelected && styles.tileSelected,
-                pressed && !isAnswered && styles.tilePressed,
+                isUsed && styles.tileUsed,
+                pressed && !isInert && styles.tilePressed,
               ]}
               onPress={() => onSelect(index)}
-              disabled={isAnswered}
+              disabled={isInert}
               accessibilityRole="button"
-              accessibilityLabel={tile.text}
+              accessibilityLabel={label}
+              accessibilityState={{ disabled: isInert }}
             >
               <Text
                 style={[styles.tileText, { fontSize }, isSelected && styles.tileTextSelected]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {tile.text}
+                {label}
               </Text>
             </Pressable>
           );
@@ -68,11 +84,11 @@ export default function LetterTileBar({
             pressed && !isAnswered && styles.tilePressed,
           ]}
           onPress={onBackspace}
-          disabled={isAnswered || selectedIndex === null}
+          disabled={isAnswered || !hasBackspaceTarget}
           accessibilityRole="button"
           accessibilityLabel="Устгах"
         >
-          <BackspaceIcon size={26} color={selectedIndex === null ? colors.textMuted : colors.textChoice} />
+          <BackspaceIcon size={26} color={hasBackspaceTarget ? colors.textChoice : colors.textMuted} />
         </Pressable>
       </View>
     </View>
@@ -118,6 +134,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 9,
+  },
+  tileUsed: {
+    opacity: 0.45,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   tilePressed: {
     transform: [{ scale: 0.97 }],

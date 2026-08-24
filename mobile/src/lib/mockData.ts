@@ -13,6 +13,7 @@ const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly
 const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbrush.png')).uri;
 const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')).uri;
 const childWalkingUri = Image.resolveAssetSource(require('@/assets/images/child-walking.png')).uri;
+const schoolUri = Image.resolveAssetSource(require('@/assets/images/school.png')).uri;
 
 // Figma-accurate pictures for the assemble-the-word mock tasks. In production each word
 // carries its own image_url from the backend; these just exercise the renderer's image
@@ -607,6 +608,39 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-17',
+    task_id: 'TASK-MOCK-017',
+    stage: 'STAGE2',
+    task_type: 'TT_2_1',
+    interaction_form: null,
+    prompt_text: 'Үгийг нөхөөрэй',
+    correct_answer: 'Сургууль',
+    // Three missing letters ("уу" + the final "ь"), so the bank holds exactly у/у/ь
+    // shuffled — fillOptions carries no distractors.
+    options: {
+      display_text: 'Сург__л_',
+      blank_position: 4,
+      blank_answer: 'ууь',
+      context_word: 'Сургууль',
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: schoolUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 35,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв нөхлөө.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -883,15 +917,18 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // Order: audio_choice, image_match, text_input, fill_blank lead; then letter_choice,
-  // match_pairs, sentence_capital, punctuation_choice, punctuation_place, comma_place;
-  // then the five assemble-the-word screens (сав → чацаргана, short → long); dictation
-  // and mini_text close it out unchanged. multiple_choice, fill_letter, sentence_fill,
-  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled from
-  // this walkthrough while those pages get rebuilt from Figma — the
-  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of those
-  // types still render normally.
+  // The newest screen leads so it's seen first: mock-task-17, the picture
+  // fill-the-letters task (fill_letter_tiles). Then: audio_choice, image_match,
+  // text_input, fill_blank; then letter_choice, match_pairs, sentence_capital,
+  // punctuation_choice, punctuation_place, comma_place; then the five
+  // assemble-the-word screens (сав → чацаргана, short → long); dictation and
+  // mini_text close it out unchanged. multiple_choice, fill_letter, sentence_fill,
+  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled
+  // from this walkthrough while those pages get rebuilt from Figma — the
+  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of
+  // those types still render normally.
   tasks: [
+    mockTasks[16],
     mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[1],
     mockTasks[5], mockTasks[6], mockTasks[7], mockTasks[8], mockTasks[9], mockTasks[10],
     mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15],
