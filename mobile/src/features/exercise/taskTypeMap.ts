@@ -10,9 +10,9 @@ const taskTypeMap: Record<string, string> = {
   TT_6_2: 'punctuation_choice',
   // choiceOptions, audio variant — hear the word, pick the correctly spelled one.
   TT_1_5: 'audio_word_choice',
+  TT_3_1: 'audio_word_choice',
   // ...the rest of choiceOptions fall back to the generic choice renderer.
   TT_2_3: 'multiple_choice',
-  TT_3_1: 'multiple_choice',
   TT_3_4: 'multiple_choice',
   TT_4_1: 'multiple_choice',
   TT_5_1: 'multiple_choice',

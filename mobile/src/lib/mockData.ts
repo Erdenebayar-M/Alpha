@@ -676,6 +676,40 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-19',
+    task_id: 'TASK-MOCK-027',
+    stage: 'STAGE1',
+    task_type: 'TT_3_1',
+    interaction_form: null,
+    prompt_text: 'Сонсоод зөв бичигдсэн үгийг сонгоорой',
+    correct_answer: 'Даалуу',
+    // Long/short-vowel distractors: "Далуу" (short а + long уу) and "Даалу" (long аа
+    // + short у) against the correct "Даалуу" (long аа + long уу).
+    options: {
+      choices: [
+        { text: 'Даалуу', is_correct: true },
+        { text: 'Далуу', is_correct: false },
+        { text: 'Даалу', is_correct: false },
+      ],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: null,
+    primary_skill: 'VOWEL_LENGTH',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 1,
+    estimated_time_seconds: 20,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гайхалтай!',
+    feedback_wrong: 'Дахин оролдоцгооё.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -952,10 +986,11 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-1, the audio
-  // similar-word-choice task (audio_word_choice), then mock-task-18, the audio
-  // fill-the-letters task (audio_fill_letter_tiles), then mock-task-17, its picture
-  // sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
+  // The newest screen leads so it's seen first: mock-task-19, the audio
+  // long/short-vowel-choice task (TT_3_1, audio_word_choice), then mock-task-1, the
+  // audio similar-word-choice task (TT_1_5, same renderer), then mock-task-18, the
+  // audio fill-the-letters task (audio_fill_letter_tiles), then mock-task-17, its
+  // picture sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
   // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
   // punctuation_place, comma_place; then the five assemble-the-word screens
   // (сав → чацаргана, short → long); dictation and mini_text close it out unchanged.
@@ -964,6 +999,7 @@ export const mockLesson: MockLesson = {
   // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
   // tasks of those types still render normally.
   tasks: [
+    mockTasks[18],
     mockTasks[0],
     mockTasks[17],
     mockTasks[16],
