@@ -32,9 +32,10 @@ const taskTypeMap: Record<string, string> = {
 
   // fillOptions, picture variant — tap letters from a bank into the word's blanks.
   TT_2_1: 'fill_letter_tiles',
+  // fillOptions, audio variant — hear the word, tap letters into its blanks.
+  TT_2_4: 'audio_fill_letter_tiles',
 
   // fillOptions — type just the missing letter(s) into a word's blank.
-  TT_2_4: 'fill_letter',
   TT_3_2: 'fill_letter',
   TT_4_3: 'fill_letter',
   TT_4_4: 'fill_letter',

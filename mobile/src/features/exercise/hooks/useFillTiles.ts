@@ -41,10 +41,11 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 /**
- * Answer machinery for the picture fill-the-letters task (TT_2_1, "Зураг харж дутуу
- * үсэг нөхөх"): the word is shown with "_" gaps and the child taps letter tiles to
- * fill them left to right. The bank holds exactly the letters of `blank_answer`
- * shuffled — `fillOptions` carries no distractors — so slot count === letter count.
+ * Answer machinery for fill-the-letters tasks (TT_2_1 "Зураг харж дутуу үсэг нөхөх" and
+ * TT_2_4 "Үгийг сонсоод дутуу үсгийг нөхөх"): the word is shown with "_" gaps and the
+ * child taps letter tiles to fill them left to right. The bank holds the letters of
+ * `blank_answer` plus any `options.distractors`, shuffled together — so the tile count
+ * can exceed the blank count (slot count === letter count, independent of bank size).
  *
  * Slots hold tile *indices* rather than letters so a repeated letter (e.g. the two
  * "у" of "Сургууль") is tracked unambiguously, mirroring useAssembleWord. Grading is
@@ -67,7 +68,16 @@ export function useFillTiles(
     return Array.from(answer.normalize('NFC').toLowerCase().trim());
   }, [task.options.blank_answer, task.correct_answer]);
 
-  const tiles = useMemo(() => shuffle(letters), [letters]);
+  // The bank the child picks from: the answer letters plus any distractors, so the
+  // tile count can exceed slotCount (e.g. the TT_2_4 design ships 4 tiles for 3 blanks).
+  const bankLetters = useMemo(() => {
+    const distractors = (task.options.distractors ?? []).map((d) =>
+      d.normalize('NFC').toLowerCase().trim()
+    );
+    return [...letters, ...distractors];
+  }, [letters, task.options.distractors]);
+
+  const tiles = useMemo(() => shuffle(bankLetters), [bankLetters]);
   const slotCount = letters.length;
 
   const [slots, setSlots] = useState<(number | null)[]>(() =>

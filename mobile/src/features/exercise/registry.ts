@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import AssembleWord from '@/src/features/exercise/renderers/AssembleWord';
 import AudioChoice from '@/src/features/exercise/renderers/AudioChoice';
+import AudioFillLetterTiles from '@/src/features/exercise/renderers/AudioFillLetterTiles';
 import AudioSpelling from '@/src/features/exercise/renderers/AudioSpelling';
 import CommaPlace from '@/src/features/exercise/renderers/CommaPlace';
 import Correction from '@/src/features/exercise/renderers/Correction';
@@ -38,6 +39,7 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   multiple_choice: MultipleChoice,
   fill_blank: FillBlank,
   audio_choice: AudioChoice,
+  audio_fill_letter_tiles: AudioFillLetterTiles,
   image_match: ImageMatch,
   text_input: AudioSpelling,
   letter_choice: LetterChoice,
