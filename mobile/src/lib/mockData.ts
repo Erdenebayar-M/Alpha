@@ -1,5 +1,8 @@
 import { Image } from 'react-native';
 
+import type { DiagnosticResult } from '@/src/api/diagnostic';
+import type { ProgressState, SkillsState } from '@/src/api/dashboard';
+import type { Plan } from '@/src/api/plan';
 import type { Task } from '@/src/features/exercise/types';
 
 // Bundled demo picture for the image-match task. In production image_url is a
@@ -12,14 +15,14 @@ const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')
 const childWalkingUri = Image.resolveAssetSource(require('@/assets/images/child-walking.png')).uri;
 const schoolUri = Image.resolveAssetSource(require('@/assets/images/school.png')).uri;
 
-// Placeholder pictures for the assemble-the-word mock tasks. In production each word
+// Figma-accurate pictures for the assemble-the-word mock tasks. In production each word
 // carries its own image_url from the backend; these just exercise the renderer's image
-// card locally (сав/талх/чанах/хутгах/чацаргана have no bundled art yet).
-const savUri = summerUri;
-const talhUri = paintbrushUri;
-const chanahUri = childWalkingUri;
-const hutgahUri = toothbrushUri;
-const chatsarganaUri = butterflyUri;
+// card locally.
+const savUri = Image.resolveAssetSource(require('@/assets/images/sav.png')).uri;
+const talhUri = Image.resolveAssetSource(require('@/assets/images/talh.png')).uri;
+const chanahUri = Image.resolveAssetSource(require('@/assets/images/chanah.png')).uri;
+const hutgahUri = Image.resolveAssetSource(require('@/assets/images/hutgah.png')).uri;
+const chatsarganaUri = Image.resolveAssetSource(require('@/assets/images/chatsargana.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -640,16 +643,391 @@ export const mockTasks: Task[] = [
   },
 ];
 
+// --- Renderer-coverage fixtures: one Task per interaction_form that has no example
+// above (fill_letter, sentence_fill, correction, copy_text, visual_memory, dictation,
+// mini_text, tap_find_error, self_check). Appended to mockLesson.tasks below so tapping
+// through "Start today's lesson" exercises every registry key at least once.
+export const mockExtraTasks: Task[] = [
+  {
+    id: 'mock-task-extra-1',
+    task_id: 'TASK-MOCK-017',
+    stage: 'STAGE1',
+    task_type: 'TT_2_1',
+    interaction_form: 'fill_letter',
+    prompt_text: 'Дутуу үсгийг олж бичээрэй.',
+    correct_answer: 'э',
+    options: {
+      display_text: 'Дэвт_р',
+      blank_answer: 'э',
+      context_word: 'Дэвтэр',
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 1,
+    estimated_time_seconds: 20,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Зөв бичлээ!',
+    feedback_wrong: 'Дахин анхаараад бичээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-2',
+    task_id: 'TASK-MOCK-018',
+    stage: 'STAGE1',
+    task_type: 'TT_5_2',
+    interaction_form: 'sentence_fill',
+    prompt_text: 'Дутуу үгийг олж бичээрэй.',
+    correct_answer: 'ном',
+    options: {
+      sentence_template: 'Би өнөөдөр _ уншлаа.',
+      blank_answer: 'ном',
+      hint: 'Юу уншсан бэ?',
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Гайхалтай!',
+    feedback_wrong: 'Өгүүлбэрийг дахин уншаад бичээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-3',
+    task_id: 'TASK-MOCK-019',
+    stage: 'STAGE1',
+    task_type: 'TT_2_5',
+    interaction_form: 'correction',
+    prompt_text: 'Алдаатай бичсэн үгийг засаарай.',
+    correct_answer: 'дэвтэр',
+    options: {
+      incorrect_text: 'дэфтэр',
+      correct_text: 'дэвтэр',
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: ['CONSONANT_SPELLING'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 2,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Зөв заслаа!',
+    feedback_wrong: 'Үгийг дахин нягтлаад засаарай.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-4',
+    task_id: 'TASK-MOCK-020',
+    stage: 'STAGE1',
+    task_type: 'TT_7_1',
+    interaction_form: 'copy_text',
+    prompt_text: 'Доорх өгүүлбэрийг хуулж бичээрэй.',
+    correct_answer: 'Нар шарж байна.',
+    options: {
+      text_to_copy: 'Нар шарж байна.',
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'HANDWRITING',
+    secondary_skill: null,
+    level_target: 'G1:M1',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M1'],
+    difficulty: 1,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё хууллаа!',
+    feedback_wrong: 'Үсэг бүрийг анхааралтай хараад хуулаарай.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-5',
+    task_id: 'TASK-MOCK-021',
+    stage: 'STAGE1',
+    task_type: 'TT_7_2',
+    interaction_form: 'visual_memory',
+    prompt_text: 'Доорх өгүүлбэрийг цээжлээд дараа нь бичээрэй.',
+    correct_answer: 'Улаан гэрэлтэй машин',
+    options: {
+      text_to_memorize: 'Улаан гэрэлтэй машин',
+      display_seconds: 5,
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Санаж бичлээ!',
+    feedback_wrong: 'Дахин цээжлээд оролдоорой.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-6',
+    task_id: 'TASK-MOCK-022',
+    stage: 'STAGE1',
+    task_type: 'TT_7_3',
+    interaction_form: 'dictation',
+    prompt_text: 'Сонсоод бичээрэй.',
+    correct_answer: 'Гэр бүл',
+    options: {
+      audio_trigger: true,
+      audio_text: 'Гэр бүл',
+      expected_answers: ['Гэр бүл'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Зөв сонсож бичлээ!',
+    feedback_wrong: 'Дахин сонсоод бичээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-7',
+    task_id: 'TASK-MOCK-023',
+    stage: 'STAGE1',
+    task_type: 'TT_7_6',
+    interaction_form: 'mini_text',
+    prompt_text: 'Сонссон өгүүлбэрүүдээ бичээрэй.',
+    correct_answer: 'Өнөөдөр сайхан өдөр байна. Бид цэцэрлэгт хүрээлэнд явлаа.',
+    options: {
+      audio_trigger: true,
+      audio_text: 'Өнөөдөр сайхан өдөр байна. Бид цэцэрлэгт хүрээлэнд явлаа.',
+      expected_answers: ['Өнөөдөр сайхан өдөр байна.', 'Бид цэцэрлэгт хүрээлэнд явлаа.'],
+      sentence_count: 2,
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 3,
+    estimated_time_seconds: 40,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Бүгдийг зөв бичлээ!',
+    feedback_wrong: 'Дахин сонсоод бичээрэй.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-8',
+    task_id: 'TASK-MOCK-024',
+    stage: 'STAGE1',
+    task_type: 'TT_8_1',
+    interaction_form: 'tap_find_error',
+    prompt_text: 'Алдаатай бичсэн үгэн дээр дараарай.',
+    correct_answer: 'алим',
+    options: {
+      sentence: 'Ээж зах дээрээс алимж авчирлаа.',
+      error_word_index: 3,
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Зөв олллоо!',
+    feedback_wrong: 'Дахин анхааралтай хараарай.',
+    is_diagnostic: false,
+  },
+  {
+    id: 'mock-task-extra-9',
+    task_id: 'TASK-MOCK-025',
+    stage: 'STAGE1',
+    task_type: 'TT_8_4',
+    interaction_form: 'self_check',
+    prompt_text: 'Загвар хариулттай харьцуулаад засаж бичээрэй.',
+    correct_answer: 'Би талх идсэн.',
+    options: {
+      original_attempt: 'би талх идсэн',
+      model_answer: 'Би талх идсэн.',
+    },
+    audio_url: null,
+    prompt_audio_url: null,
+    image_url: null,
+    primary_skill: 'CAPITALIZATION',
+    secondary_skill: 'PUNCTUATION',
+    level_target: 'G1:M3',
+    error_targets: ['SENTENCE_CAPITAL'],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'CORE',
+    feedback_text: null,
+    feedback_correct: 'Сайн заслаа!',
+    feedback_wrong: 'Загвар хариулттай дахин харьцуулаарай.',
+    is_diagnostic: false,
+  },
+];
+
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
   // The newest screen leads so it's seen first: mock-task-17, the picture
-  // fill-the-letters task (fill_letter_tiles). Then the five assemble-the-word screens
-  // (mock-task-12..16: сав → чацаргана, short → long), comma_place, punctuation_place,
-  // punctuation_choice, sentence_capital, and the rest.
+  // fill-the-letters task (fill_letter_tiles). Then: audio_choice, image_match,
+  // text_input, fill_blank; then letter_choice, match_pairs, sentence_capital,
+  // punctuation_choice, punctuation_place, comma_place; then the five
+  // assemble-the-word screens (сав → чацаргана, short → long); dictation and
+  // mini_text close it out unchanged. multiple_choice, fill_letter, sentence_fill,
+  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled
+  // from this walkthrough while those pages get rebuilt from Figma — the
+  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of
+  // those types still render normally.
   tasks: [
     mockTasks[16],
+    mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[1],
+    mockTasks[5], mockTasks[6], mockTasks[7], mockTasks[8], mockTasks[9], mockTasks[10],
     mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15],
-    mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6],
-    mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1],
+    mockExtraTasks[5], mockExtraTasks[6],
+  ],
+};
+
+// --- Static walkthrough fixtures: diagnostic, dashboard skills/progress, plan ---
+// These back the mock /diagnostic, /dashboard, and /plan endpoints (see client.ts)
+// so every screen renders with fixed, Figma-accurate data instead of 404ing before
+// a real backend exists. Reusing five of the interaction forms above (multiple_choice,
+// fill_blank, audio_choice, image_match, letter_choice) so the diagnostic loop exercises
+// a mix of renderers.
+export const mockDiagnosticTasks: Task[] = [mockTasks[0], mockTasks[1], mockTasks[2], mockTasks[3], mockTasks[5]].map(
+  (task, i) => ({
+    ...task,
+    id: `mock-diag-task-${i + 1}`,
+    task_id: `TASK-DIAG-${String(i + 1).padStart(3, '0')}`,
+    is_diagnostic: true,
+  }),
+);
+
+export const mockDiagnosticResult: DiagnosticResult = {
+  general_level: 'M2',
+  level_confidence: 'MEDIUM',
+  bank_coverage: 0.82,
+  capped_by_bank: false,
+  confidence: 'MEDIUM',
+  skill_levels: { S1: 'M2', S2: 'M2', S3: 'M1', S4: 'M2', S5: 'M1', S6: 'M2', S7: 'M3', S8: 'M2' },
+  skill_scores: { S1: 0.72, S2: 0.68, S3: 0.51, S4: 0.65, S5: 0.48, S6: 0.7, S7: 0.8, S8: 0.6 },
+  skill_confidence: {
+    S1: 'MEDIUM', S2: 'MEDIUM', S3: 'LOW', S4: 'MEDIUM',
+    S5: 'LOW', S6: 'MEDIUM', S7: 'HIGH', S8: 'MEDIUM',
+  },
+  top_error_codes: ['VOWEL_CONFUSION', 'SENTENCE_CAPITAL'],
+  priority_skills: ['S3', 'S5'],
+  recommended_daily_minutes: 10,
+};
+
+export const mockSkills: SkillsState = {
+  general_level: 'M2',
+  s1_score: 0.72, s1_level: 'M2', s1_confidence: 'MEDIUM',
+  s2_score: 0.68, s2_level: 'M2', s2_confidence: 'MEDIUM',
+  s3_score: 0.51, s3_level: 'M1', s3_confidence: 'LOW',
+  s4_score: 0.65, s4_level: 'M2', s4_confidence: 'MEDIUM',
+  s5_score: 0.48, s5_level: 'M1', s5_confidence: 'LOW',
+  s6_score: 0.7, s6_level: 'M2', s6_confidence: 'MEDIUM',
+  s7_score: 0.8, s7_level: 'M3', s7_confidence: 'HIGH',
+  s8_score: 0.6, s8_level: 'M2', s8_confidence: 'MEDIUM',
+  weak_skills: ['S3', 'S5'],
+  top_error_codes: ['VOWEL_CONFUSION', 'SENTENCE_CAPITAL'],
+  current_streak: 4,
+  longest_streak: 9,
+  updated_at: new Date().toISOString(),
+};
+
+export const mockProgress: ProgressState = {
+  current_streak: 4,
+  longest_streak: 9,
+  recent_lessons: [
+    { id: 'mock-lesson-log-3', day_number: 3, accuracy: 0.9, completed_at: new Date(Date.now() - 1 * 86400000).toISOString() },
+    { id: 'mock-lesson-log-2', day_number: 2, accuracy: 0.8, completed_at: new Date(Date.now() - 2 * 86400000).toISOString() },
+    { id: 'mock-lesson-log-1', day_number: 1, accuracy: 0.7, completed_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+  ],
+};
+
+const today = Date.now();
+const dayIso = (offset: number) => new Date(today + offset * 86400000).toISOString();
+const PLAN_SKILL_CYCLE = ['S3', 'S5', 'S1', 'S2', 'S4', 'S6', 'S7', 'S8'];
+
+export const mockPlan: Plan = {
+  id: 'mock-plan-1',
+  template: 'BALANCED',
+  status: 'ACTIVE',
+  priority_skills: ['S3', 'S5'],
+  target_errors: ['VOWEL_CONFUSION', 'SENTENCE_CAPITAL'],
+  daily_minutes: 10,
+  duration_days: 14,
+  source: 'DIAGNOSTIC',
+  started_at: dayIso(-3),
+  ended_at: null,
+  lessons: Array.from({ length: 14 }, (_, i) => {
+    const dayNumber = i + 1;
+    // First 3 days completed, day 4 in progress, the rest still pending.
+    const status = dayNumber <= 3 ? 'COMPLETED' : dayNumber === 4 ? 'IN_PROGRESS' : 'PENDING';
+    const totalTasks = 6;
+    const completedTasks = status === 'COMPLETED' ? totalTasks : status === 'IN_PROGRESS' ? 3 : 0;
+    return {
+      id: `mock-plan-lesson-${dayNumber}`,
+      day_number: dayNumber,
+      status,
+      scheduled_date: dayIso(dayNumber - 4),
+      primary_skill: PLAN_SKILL_CYCLE[i % PLAN_SKILL_CYCLE.length],
+      total_tasks: totalTasks,
+      completed_tasks: completedTasks,
+    };
+  }),
+  checkpoints: [
+    { id: 'mock-plan-checkpoint-1', scheduled_date: dayIso(3), status: 'PASSED' },
+    { id: 'mock-plan-checkpoint-2', scheduled_date: dayIso(10), status: 'SCHEDULED' },
   ],
 };
