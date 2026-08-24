@@ -67,18 +67,18 @@ export const mockTasks: Task[] = [
     task_id: 'TASK-MOCK-001',
     stage: 'STAGE1',
     task_type: 'TT_1_5',
-    interaction_form: 'multiple_choice',
-    prompt_text: 'Зөв бичигдсэн үгийг сонгоно уу.',
-    correct_answer: 'өвөл',
+    interaction_form: null,
+    prompt_text: 'Сонсоод зөв үгийг сонгоорой',
+    correct_answer: 'Савар',
     options: {
       choices: [
-        { text: 'өвөл', is_correct: true },
-        { text: 'эвэл', is_correct: false },
-        { text: 'өвол', is_correct: false },
+        { text: 'Шавар', is_correct: false },
+        { text: 'Савар', is_correct: true },
+        { text: 'Жавар', is_correct: false },
       ],
     },
     audio_url: null,
-    prompt_audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
     image_url: null,
     primary_skill: 'VOWEL_HARMONY',
     secondary_skill: null,
@@ -952,17 +952,19 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-18, the audio
+  // The newest screen leads so it's seen first: mock-task-1, the audio
+  // similar-word-choice task (audio_word_choice), then mock-task-18, the audio
   // fill-the-letters task (audio_fill_letter_tiles), then mock-task-17, its picture
   // sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
   // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
   // punctuation_place, comma_place; then the five assemble-the-word screens
   // (сав → чацаргана, short → long); dictation and mini_text close it out unchanged.
-  // multiple_choice, fill_letter, sentence_fill, correction, copy_text, visual_memory,
-  // tap_find_error, and self_check are pulled from this walkthrough while those pages
-  // get rebuilt from Figma — the renderers/registry/taskTypeMap entries are untouched,
-  // so real backend tasks of those types still render normally.
+  // fill_letter, sentence_fill, correction, copy_text, visual_memory, tap_find_error,
+  // and self_check are pulled from this walkthrough while those pages get rebuilt from
+  // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
+  // tasks of those types still render normally.
   tasks: [
+    mockTasks[0],
     mockTasks[17],
     mockTasks[16],
     mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[1],
