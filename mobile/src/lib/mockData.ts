@@ -67,18 +67,18 @@ export const mockTasks: Task[] = [
     task_id: 'TASK-MOCK-001',
     stage: 'STAGE1',
     task_type: 'TT_1_5',
-    interaction_form: 'multiple_choice',
-    prompt_text: 'Зөв бичигдсэн үгийг сонгоно уу.',
-    correct_answer: 'өвөл',
+    interaction_form: null,
+    prompt_text: 'Сонсоод зөв үгийг сонгоорой',
+    correct_answer: 'Савар',
     options: {
       choices: [
-        { text: 'өвөл', is_correct: true },
-        { text: 'эвэл', is_correct: false },
-        { text: 'өвол', is_correct: false },
+        { text: 'Шавар', is_correct: false },
+        { text: 'Савар', is_correct: true },
+        { text: 'Жавар', is_correct: false },
       ],
     },
     audio_url: null,
-    prompt_audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
     image_url: null,
     primary_skill: 'VOWEL_HARMONY',
     secondary_skill: null,
@@ -641,6 +641,41 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-18',
+    task_id: 'TASK-MOCK-026',
+    stage: 'STAGE2',
+    task_type: 'TT_2_4',
+    interaction_form: null,
+    prompt_text: 'Үгийг сонсоод дутуу үсгийг нөхөөрэй',
+    correct_answer: 'Сургууль',
+    // Same word as mock-task-17, but heard rather than shown as a picture: three
+    // missing letters ("уу" + the final "ь") plus one distractor tile ("й"), matching
+    // the Figma bank of у/ь/й/у for the 3-blank word.
+    options: {
+      display_text: 'Сург__л_',
+      blank_position: 4,
+      blank_answer: 'ууь',
+      distractors: ['й'],
+      context_word: 'Сургууль',
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 35,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв нөхлөө.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -917,17 +952,20 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-17, the picture
-  // fill-the-letters task (fill_letter_tiles). Then: audio_choice, image_match,
-  // text_input, fill_blank; then letter_choice, match_pairs, sentence_capital,
-  // punctuation_choice, punctuation_place, comma_place; then the five
-  // assemble-the-word screens (сав → чацаргана, short → long); dictation and
-  // mini_text close it out unchanged. multiple_choice, fill_letter, sentence_fill,
-  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled
-  // from this walkthrough while those pages get rebuilt from Figma — the
-  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of
-  // those types still render normally.
+  // The newest screen leads so it's seen first: mock-task-1, the audio
+  // similar-word-choice task (audio_word_choice), then mock-task-18, the audio
+  // fill-the-letters task (audio_fill_letter_tiles), then mock-task-17, its picture
+  // sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
+  // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
+  // punctuation_place, comma_place; then the five assemble-the-word screens
+  // (сав → чацаргана, short → long); dictation and mini_text close it out unchanged.
+  // fill_letter, sentence_fill, correction, copy_text, visual_memory, tap_find_error,
+  // and self_check are pulled from this walkthrough while those pages get rebuilt from
+  // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
+  // tasks of those types still render normally.
   tasks: [
+    mockTasks[0],
+    mockTasks[17],
     mockTasks[16],
     mockTasks[2], mockTasks[3], mockTasks[4], mockTasks[1],
     mockTasks[5], mockTasks[6], mockTasks[7], mockTasks[8], mockTasks[9], mockTasks[10],

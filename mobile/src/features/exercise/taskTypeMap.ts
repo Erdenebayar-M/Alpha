@@ -8,8 +8,9 @@ const taskTypeMap: Record<string, string> = {
   TT_4_2: 'audio_choice',
   TT_6_1: 'sentence_capital',
   TT_6_2: 'punctuation_choice',
+  // choiceOptions, audio variant — hear the word, pick the correctly spelled one.
+  TT_1_5: 'audio_word_choice',
   // ...the rest of choiceOptions fall back to the generic choice renderer.
-  TT_1_5: 'multiple_choice',
   TT_2_3: 'multiple_choice',
   TT_3_1: 'multiple_choice',
   TT_3_4: 'multiple_choice',
@@ -32,9 +33,10 @@ const taskTypeMap: Record<string, string> = {
 
   // fillOptions, picture variant — tap letters from a bank into the word's blanks.
   TT_2_1: 'fill_letter_tiles',
+  // fillOptions, audio variant — hear the word, tap letters into its blanks.
+  TT_2_4: 'audio_fill_letter_tiles',
 
   // fillOptions — type just the missing letter(s) into a word's blank.
-  TT_2_4: 'fill_letter',
   TT_3_2: 'fill_letter',
   TT_4_3: 'fill_letter',
   TT_4_4: 'fill_letter',
