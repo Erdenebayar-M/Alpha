@@ -30,8 +30,10 @@ const taskTypeMap: Record<string, string> = {
   TT_1_4: 'assemble_word',
   TT_2_2: 'assemble_word',
 
+  // fillOptions, picture variant — tap letters from a bank into the word's blanks.
+  TT_2_1: 'fill_letter_tiles',
+
   // fillOptions — type just the missing letter(s) into a word's blank.
-  TT_2_1: 'fill_letter',
   TT_2_4: 'fill_letter',
   TT_3_2: 'fill_letter',
   TT_4_3: 'fill_letter',

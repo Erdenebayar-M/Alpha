@@ -10,6 +10,7 @@ import Dictation from '@/src/features/exercise/renderers/Dictation';
 import Fallback from '@/src/features/exercise/renderers/Fallback';
 import FillBlank from '@/src/features/exercise/renderers/FillBlank';
 import FillLetter from '@/src/features/exercise/renderers/FillLetter';
+import FillLetterTiles from '@/src/features/exercise/renderers/FillLetterTiles';
 import ImageMatch from '@/src/features/exercise/renderers/ImageMatch';
 import LetterChoice from '@/src/features/exercise/renderers/LetterChoice';
 import MatchPairs from '@/src/features/exercise/renderers/MatchPairs';
@@ -47,6 +48,7 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   comma_place: CommaPlace,
   assemble_word: AssembleWord,
   fill_letter: FillLetter,
+  fill_letter_tiles: FillLetterTiles,
   correction: Correction,
   sentence_fill: SentenceFill,
   dictation: Dictation,

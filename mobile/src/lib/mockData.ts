@@ -10,6 +10,7 @@ const butterflyUri = Image.resolveAssetSource(require('@/assets/images/butterfly
 const paintbrushUri = Image.resolveAssetSource(require('@/assets/images/paintbrush.png')).uri;
 const summerUri = Image.resolveAssetSource(require('@/assets/images/summer.png')).uri;
 const childWalkingUri = Image.resolveAssetSource(require('@/assets/images/child-walking.png')).uri;
+const schoolUri = Image.resolveAssetSource(require('@/assets/images/school.png')).uri;
 
 // Placeholder pictures for the assemble-the-word mock tasks. In production each word
 // carries its own image_url from the backend; these just exercise the renderer's image
@@ -604,14 +605,49 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-17',
+    task_id: 'TASK-MOCK-017',
+    stage: 'STAGE2',
+    task_type: 'TT_2_1',
+    interaction_form: null,
+    prompt_text: 'Үгийг нөхөөрэй',
+    correct_answer: 'Сургууль',
+    // Three missing letters ("уу" + the final "ь"), so the bank holds exactly у/у/ь
+    // shuffled — fillOptions carries no distractors.
+    options: {
+      display_text: 'Сург__л_',
+      blank_position: 4,
+      blank_answer: 'ууь',
+      context_word: 'Сургууль',
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: schoolUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 2,
+    estimated_time_seconds: 35,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв нөхлөө.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The five new assemble-the-word screens (mock-task-12..16: сав → чацаргана, short →
-  // long) lead so they're seen first; then comma_place, punctuation_place,
+  // The newest screen leads so it's seen first: mock-task-17, the picture
+  // fill-the-letters task (fill_letter_tiles). Then the five assemble-the-word screens
+  // (mock-task-12..16: сав → чацаргана, short → long), comma_place, punctuation_place,
   // punctuation_choice, sentence_capital, and the rest.
   tasks: [
+    mockTasks[16],
     mockTasks[11], mockTasks[12], mockTasks[13], mockTasks[14], mockTasks[15],
     mockTasks[10], mockTasks[9], mockTasks[8], mockTasks[7], mockTasks[6],
     mockTasks[5], mockTasks[2], mockTasks[3], mockTasks[0], mockTasks[4], mockTasks[1],

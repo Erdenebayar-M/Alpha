@@ -5,6 +5,8 @@ export const colors = {
   card: '#FFFFFF',
   sheet: '#FFFFFF',
   sheetBorder: '#E8EEF7',
+  // Hairline rule under a task's character/prompt row (Figma "Line 20").
+  divider: '#EAEAEA',
 
   // Text
   textNavy: '#30374A',
