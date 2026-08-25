@@ -27,6 +27,8 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-preset-expo": "~57.0.1",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.1",
     "react-native-svg-transformer": "^1.5.3",
     "typescript": "~6.0.3"
   },
@@ -39,7 +41,8 @@
     "build:ios": "eas build --platform ios --profile preview",
     "build:android:prod": "eas build --platform android --profile production",
     "build:ios:prod": "eas build --platform ios --profile production",
-    "submit:ios": "eas submit --platform ios --profile production"
+    "submit:ios": "eas submit --platform ios --profile production",
+    "lint": "expo lint"
   },
   "private": true
 }

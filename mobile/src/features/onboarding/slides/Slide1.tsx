@@ -38,6 +38,7 @@ import {
   SLIDE1_LAYERS,
   WAVE_KEYFRAMES,
   WAVE_LAYER,
+  WAVE_REPEAT_COUNT,
   WAVE_START,
   boardScale,
 } from '@/src/features/onboarding/motion';
@@ -103,9 +104,10 @@ function ScaledBoard({ art, scale }: { art: CharacterArt; scale: number }) {
 }
 
 /**
- * The pink mascot's hand. It enters with everything else, then keeps waving —
- * Figma's rotate track swings twice between 1000ms and 1900ms and we loop exactly
- * that segment, so the screen never goes completely still.
+ * The pink mascot's hand. It enters with everything else, then waves —
+ * Figma's rotate track swings twice between 1000ms and 1900ms and we loop that segment
+ * `WAVE_REPEAT_COUNT` times (~2.7s), then let it settle at its resting angle rather than
+ * wave forever.
  */
 function WavingHand({ play, scale }: { play: boolean; scale: number }) {
   const opacity = useSharedValue(0);
@@ -123,8 +125,9 @@ function WavingHand({ play, scale }: { play: boolean; scale: number }) {
     const swings = WAVE_KEYFRAMES.slice(1).map((frame) =>
       withTiming(frame.deg, { duration: frame.duration, easing: Easing.inOut(Easing.ease) })
     );
-    // The last keyframe returns to the first, so the sequence loops seamlessly.
-    rotate.value = withDelay(WAVE_START, withRepeat(withSequence(...swings), -1, false));
+    // The last keyframe returns to the first, so repeated cycles loop seamlessly and
+    // the hand is already at rest when the repeats run out.
+    rotate.value = withDelay(WAVE_START, withRepeat(withSequence(...swings), WAVE_REPEAT_COUNT, false));
   }, [play, opacity, rotate]);
 
   const style = useAnimatedStyle(() => ({

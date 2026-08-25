@@ -1,4 +1,14 @@
-import { mockLearners, mockLesson, mockParent, MOCK_TOKEN } from '@/src/lib/mockData';
+import {
+  mockDiagnosticResult,
+  mockDiagnosticTasks,
+  mockLearners,
+  mockLesson,
+  mockParent,
+  mockPlan,
+  mockProgress,
+  mockSkills,
+  MOCK_TOKEN,
+} from '@/src/lib/mockData';
 import { clearToken, getToken } from '@/src/lib/secureStore';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -7,6 +17,9 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 // with no URL configured we fall back to the in-file mock so the app still runs offline.
 const IS_MOCK = !API_BASE_URL;
 const MOCK_LATENCY_MS = 400;
+
+// Tracks each mock diagnostic session's progress through mockDiagnosticTasks.
+const mockDiagnosticSessions = new Map<string, number>();
 
 interface SuccessEnvelope<T> {
   success: true;
@@ -199,6 +212,82 @@ async function mockFetch<T>(
         } as T,
       },
     };
+  }
+
+  if (path === '/diagnostic/start' && method === 'POST') {
+    const sessionId = `mock-diag-session-${Date.now()}`;
+    mockDiagnosticSessions.set(sessionId, 0);
+    return {
+      status: 200,
+      json: {
+        success: true,
+        data: { session_id: sessionId, task: mockDiagnosticTasks[0], item_number: 1 } as T,
+      },
+    };
+  }
+
+  if (path === '/diagnostic/submit' && method === 'POST') {
+    const sessionId = body.session_id as string;
+    const taskId = body.task_id as string;
+    const inputText = typeof body.input_text === 'string' ? body.input_text : '';
+    const index = mockDiagnosticSessions.get(sessionId) ?? 0;
+    const task = mockDiagnosticTasks.find((t) => t.id === taskId) ?? mockDiagnosticTasks[index];
+    const isCorrect = task ? inputText.trim() === task.correct_answer : false;
+    const nextIndex = index + 1;
+
+    if (nextIndex < mockDiagnosticTasks.length) {
+      mockDiagnosticSessions.set(sessionId, nextIndex);
+      return {
+        status: 200,
+        json: {
+          success: true,
+          data: {
+            completed: false,
+            score: isCorrect ? 1 : 0,
+            is_correct: isCorrect,
+            error_codes: [],
+            feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
+            next_task: mockDiagnosticTasks[nextIndex],
+            item_number: nextIndex + 1,
+          } as T,
+        },
+      };
+    }
+
+    mockDiagnosticSessions.delete(sessionId);
+    return {
+      status: 200,
+      json: {
+        success: true,
+        data: {
+          completed: true,
+          score: isCorrect ? 1 : 0,
+          is_correct: isCorrect,
+          error_codes: [],
+          feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
+          result: mockDiagnosticResult,
+          plan_id: mockPlan.id,
+          lessons_generated: true,
+        } as T,
+      },
+    };
+  }
+
+  const diagnosticResultMatch = /^\/diagnostic\/result\/(.+)$/.exec(path);
+  if (diagnosticResultMatch && method === 'GET') {
+    return { status: 200, json: { success: true, data: { result: mockDiagnosticResult } as T } };
+  }
+
+  if (path.startsWith('/dashboard/skills') && method === 'GET') {
+    return { status: 200, json: { success: true, data: { skills: mockSkills } as T } };
+  }
+
+  if (path.startsWith('/dashboard/progress') && method === 'GET') {
+    return { status: 200, json: { success: true, data: mockProgress as T } };
+  }
+
+  if (path.startsWith('/plan/current') && method === 'GET') {
+    return { status: 200, json: { success: true, data: { plan: mockPlan } as T } };
   }
 
   return {

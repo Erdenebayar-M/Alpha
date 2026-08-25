@@ -336,5 +336,12 @@ export const WAVE_KEYFRAMES = [
 /** When the hand starts waving (ms from slide activation). */
 export const WAVE_START = 1000;
 
+/**
+ * How many times the wave cycle (900ms: 300+200+200+200ms swings) repeats before the
+ * hand settles at its resting angle and stays there, instead of waving forever.
+ * 3 reps ≈ 2.7s.
+ */
+export const WAVE_REPEAT_COUNT = 3;
+
 /** Page indicator: fades in last, over the tail of the character entrance. */
 export const PAGE_DOTS_MOTION = { delay: 800, duration: 600 } as const;

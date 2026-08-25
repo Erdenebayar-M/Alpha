@@ -1,4 +1,5 @@
 import type { Inset, Leaf, Size } from '@/src/features/onboarding/FigmaBoard';
+import { withBlink } from '@/src/features/onboarding/idleLoops';
 
 // Pink mascot ("pinky_mountain_default_no_legs_editable")
 import PinkArmFull from '@/assets/onboarding/slide1/pink/arm-line-full.svg';
@@ -7,8 +8,8 @@ import PinkBody from '@/assets/onboarding/slide1/pink/body.svg';
 import PinkBrow from '@/assets/onboarding/slide1/pink/brow.svg';
 import PinkEdge1 from '@/assets/onboarding/slide1/pink/edge1.svg';
 import PinkEdge2 from '@/assets/onboarding/slide1/pink/edge2.svg';
-import PinkEyeLeft from '@/assets/onboarding/slide1/pink/eye-left.svg';
-import PinkEyeRight from '@/assets/onboarding/slide1/pink/eye-right.svg';
+import PinkEyeLeftArt from '@/assets/onboarding/slide1/pink/eye-left.svg';
+import PinkEyeRightArt from '@/assets/onboarding/slide1/pink/eye-right.svg';
 import PinkFlowerHead from '@/assets/onboarding/slide1/pink/flower-head.svg';
 import PinkHair from '@/assets/onboarding/slide1/pink/hair.svg';
 import PinkLandscape from '@/assets/onboarding/slide1/pink/landscape.svg';
@@ -22,7 +23,7 @@ import GreenBlush from '@/assets/onboarding/slide1/green/blush.svg';
 import GreenBody1 from '@/assets/onboarding/slide1/green/body1.svg';
 import GreenBody2 from '@/assets/onboarding/slide1/green/body2.svg';
 import GreenBrow from '@/assets/onboarding/slide1/green/brow.svg';
-import GreenFace from '@/assets/onboarding/slide1/green/face.svg';
+import GreenFaceArt from '@/assets/onboarding/slide1/green/face.svg';
 import GreenHair from '@/assets/onboarding/slide1/green/hair.svg';
 import GreenHand1 from '@/assets/onboarding/slide1/green/hand1.svg';
 import GreenHand2 from '@/assets/onboarding/slide1/green/hand2.svg';
@@ -39,8 +40,8 @@ import YellowBodyHi from '@/assets/onboarding/slide1/yellow/body-hi.svg';
 import YellowBody from '@/assets/onboarding/slide1/yellow/body.svg';
 import YellowBrowLeft from '@/assets/onboarding/slide1/yellow/brow-left.svg';
 import YellowBrowRight from '@/assets/onboarding/slide1/yellow/brow-right.svg';
-import YellowEyeLeft from '@/assets/onboarding/slide1/yellow/eye-left.svg';
-import YellowEyeRight from '@/assets/onboarding/slide1/yellow/eye-right.svg';
+import YellowEyeLeftArt from '@/assets/onboarding/slide1/yellow/eye-left.svg';
+import YellowEyeRightArt from '@/assets/onboarding/slide1/yellow/eye-right.svg';
 import YellowHandFull from '@/assets/onboarding/slide1/yellow/hand-full.svg';
 import YellowHill1 from '@/assets/onboarding/slide1/yellow/hill1.svg';
 import YellowHill2 from '@/assets/onboarding/slide1/yellow/hill2.svg';
@@ -56,6 +57,15 @@ import YellowYellowFlower from '@/assets/onboarding/slide1/yellow/yellow-flower.
 // The pink mascot's waving hand — its own animated layer, so its own board.
 import PinkHandFull from '@/assets/onboarding/slide1/hand/full.svg';
 
+// Wrapped once at module scope so every render reuses the same component identity —
+// rebuilding these per render would restart the blink loop on every re-render of the
+// carousel. Each mascot's `holdMs` is staggered so the three don't blink in lockstep.
+const PinkEyeLeft = withBlink(PinkEyeLeftArt, 2400);
+const PinkEyeRight = withBlink(PinkEyeRightArt, 2400);
+const GreenFace = withBlink(GreenFaceArt, 3100);
+const YellowEyeLeft = withBlink(YellowEyeLeftArt, 3800);
+const YellowEyeRight = withBlink(YellowEyeRightArt, 3800);
+
 /**
  * Each mascot is a Figma sub-frame, transcribed leaf by leaf. Every `inset`,
  * `hypot`, `expand` and `rotate` below is copied straight from the design context
@@ -68,6 +78,14 @@ import PinkHandFull from '@/assets/onboarding/slide1/hand/full.svg';
 export interface CharacterArt {
   size: Size;
   leaves: readonly Leaf[];
+  /**
+   * Breathe the whole board on a persistent wrapper (`AvatarBubble` via
+   * `useBreatheStyle`) rather than inside any one leaf. Set it on every variant of a
+   * character that can be swapped in place: the loop then lives on a view that survives
+   * the swap, so the breathing never restarts mid-breath. Slide 1's mascots don't use
+   * it — they're rendered by `Slide1.tsx`, not `AvatarBubble`.
+   */
+  breathe?: boolean;
 }
 
 // ---------------------------------------------------------------------------
