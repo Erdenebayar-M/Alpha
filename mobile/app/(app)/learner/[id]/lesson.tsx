@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import LessonHeader from '@/src/components/LessonHeader';
 import ExerciseEngine from '@/src/features/exercise/ExerciseEngine';
+import OnboardingCarousel from '@/src/features/onboarding/OnboardingCarousel';
 import { useCompleteLesson, useGetTodayLesson, useSubmitAttempt } from '@/src/features/lesson/useLesson';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -25,6 +26,9 @@ export default function LessonScreen() {
   const [correctCount, setCorrectCount] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [taskStartedAt, setTaskStartedAt] = useState(() => Date.now());
+  // The onboarding carousel opens today's lesson. It renders ahead of the loading
+  // and error branches so its entrance plays while /lesson/today is still in flight.
+  const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
     setTaskStartedAt(Date.now());
@@ -67,6 +71,10 @@ export default function LessonScreen() {
       setTaskIndex(nextIndex);
     }
   };
+
+  if (showIntro) {
+    return <OnboardingCarousel onDone={() => setShowIntro(false)} />;
+  }
 
   if (isLoading) {
     return (

@@ -50,6 +50,18 @@ export const colors = {
   pillTextInactive: 'rgba(48, 55, 74, 0.4)',
   pillActiveBg: 'rgba(109, 99, 255, 0.14)',
 
+  // Onboarding carousel (Figma 163:1739 / 142:1677 / 142:1839).
+  // Slide 1 is a vertical gradient; slides 2-3 sit on the existing `primaryBlue`.
+  onboardingGradientTop: '#0B4DFF',
+  onboardingGradientBottom: '#052ED6',
+  // Brand yellow: the active page-indicator pill and the highlighted word runs.
+  brandYellow: '#FBDA2D',
+  // Spent page-indicator dots.
+  dotInactive: '#BDC8F4',
+  // Highlighted word runs on the message slides, sampled from the Figma renders.
+  brandYellowBright: '#FEF60D',
+  brandGold: '#FCD974',
+
   // Listening sound-wave bars (inner -> outer)
   wave: ['#a59ff1', '#5088ee', '#c2d6f8', '#ffe4f5'],
 } as const;
