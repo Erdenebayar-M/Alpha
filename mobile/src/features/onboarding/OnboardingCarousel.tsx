@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import PageDots from '@/src/features/onboarding/PageDots';
-import { DESIGN } from '@/src/features/onboarding/motion';
+import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
 import Slide1 from '@/src/features/onboarding/slides/Slide1';
 import Slide2 from '@/src/features/onboarding/slides/Slide2';
 import Slide3 from '@/src/features/onboarding/slides/Slide3';
@@ -51,8 +51,9 @@ export default function OnboardingCarousel({ onDone }: { onDone: () => void }) {
   // Highest slide reached: an entrance plays once, so swiping back never replays it.
   const [furthest, setFurthest] = useState(0);
 
-  // Size the board off both axes so it never overflows a short screen (AGENTS.md §12).
-  const scale = Math.min(width / DESIGN.width, height / DESIGN.height);
+  // The page indicator is a carousel-level overlay shared by all three slides, so it
+  // scales off the common 390x844 board rather than either slide's own frame.
+  const dotsScale = boardScale(DESIGN, width, height);
 
   const goTo = useCallback(
     (next: number) => {
@@ -85,29 +86,30 @@ export default function OnboardingCarousel({ onDone }: { onDone: () => void }) {
         bounces={false}
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleMomentumEnd}
-        // Swiping past the last slide finishes, matching the tap-through affordance.
-        onScrollEndDrag={(event) => {
-          if (event.nativeEvent.contentOffset.x > (SLIDES.length - 1) * width + width * 0.15) onDone();
-        }}
       >
         {SLIDES.map((Slide, i) => (
           <Pressable
             key={i}
-            style={{ width, height }}
+            // Slide 1's art deliberately overruns its 395px board on both sides,
+            // so each page has to clip or it bleeds into its neighbour.
+            style={{ width, height, overflow: 'hidden' }}
             onPress={() => goTo(i + 1)}
             accessibilityRole="button"
             accessibilityLabel="Үргэлжлүүлэх"
           >
             {i === 0 ? <GradientBackground /> : null}
             <View style={styles.centre}>
-              <Slide play={i <= furthest} scale={scale} />
+              <Slide play={i <= furthest} width={width} height={height} />
             </View>
           </Pressable>
         ))}
       </ScrollView>
 
-      <View style={[styles.dots, { bottom: Math.max(insets.bottom, 12) + 24 }]} pointerEvents="none">
-        <PageDots count={SLIDES.length} index={index} scale={scale} />
+      <View
+        style={[styles.dots, { bottom: Math.max(90 * dotsScale, insets.bottom + 12) }]}
+        pointerEvents="none"
+      >
+        <PageDots count={SLIDES.length} index={index} scale={dotsScale} />
       </View>
     </View>
   );

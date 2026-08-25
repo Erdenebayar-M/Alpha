@@ -45,6 +45,13 @@ export interface Leaf {
   size?: Size;
   /** Degrees. Applied about the layer's centre, as Figma does. */
   rotate?: number;
+  /**
+   * Degrees. Figma emits this alongside `rotate` on almost every `hypot`-sized leaf
+   * (its plugin's way of expressing a precisely rotated rect via CSS) — it is not
+   * decorative, dropping it visibly shears the shape. Applied after `rotate`, before
+   * any flip, matching Tailwind's fixed transform-function order.
+   */
+  skewX?: number;
   flipX?: boolean;
   flipY?: boolean;
   /** Nested board — a Figma sub-frame with its own coordinate space. */
@@ -65,7 +72,7 @@ function boxFromInset(parent: Size, [t, r, b, l]: Inset): Box {
 }
 
 /** Figma's `hypot(<a>cqw, <b>cqh)`: a rotated box's side length in the container's units. */
-function hypotSize(container: Size, [cqw, cqh]: [number, number]): number {
+export function hypotSize(container: Size, [cqw, cqh]: [number, number]): number {
   return Math.hypot((cqw / 100) * container.width, (cqh / 100) * container.height);
 }
 
@@ -99,6 +106,7 @@ function BoardLeaf({ parent, leaf }: { parent: Size; leaf: Leaf }) {
 
   const transform = [
     ...(leaf.rotate ? [{ rotate: `${leaf.rotate}deg` }] : []),
+    ...(leaf.skewX ? [{ skewX: `${leaf.skewX}deg` }] : []),
     ...(leaf.flipX ? [{ scaleX: -1 }] : []),
     ...(leaf.flipY ? [{ scaleY: -1 }] : []),
   ];

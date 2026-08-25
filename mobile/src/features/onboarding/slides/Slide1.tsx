@@ -33,12 +33,13 @@ import AnimatedLayer from '@/src/features/onboarding/AnimatedLayer';
 import { GREEN, PINK, WAVING_HAND, YELLOW, type CharacterArt } from '@/src/features/onboarding/characters';
 import FigmaBoard from '@/src/features/onboarding/FigmaBoard';
 import {
-  DESIGN,
+  DESIGN_SLIDE1,
   EASE_OUT_EXPO,
   SLIDE1_LAYERS,
   WAVE_KEYFRAMES,
   WAVE_LAYER,
   WAVE_START,
+  boardScale,
 } from '@/src/features/onboarding/motion';
 
 /**
@@ -150,27 +151,37 @@ function WavingHand({ play, scale }: { play: boolean; scale: number }) {
   );
 }
 
-export default function Slide1({ play, scale }: { play: boolean; scale: number }) {
+/**
+ * Splits at the boundary Figma's own paint order puts `<WavingHand>` at — right
+ * after `wordmark`, before `green`. See the comment on `SLIDE1_LAYERS` in motion.ts.
+ */
+const WAVING_HAND_INDEX = SLIDE1_LAYERS.findIndex((layer) => layer.key === 'green');
+
+function renderLayer(layer: (typeof SLIDE1_LAYERS)[number], play: boolean, scale: number) {
+  const character = CHARACTER_ART[layer.key];
+  return (
+    <AnimatedLayer key={layer.key} spec={layer} play={play} scale={scale}>
+      {character ? (
+        <ScaledBoard art={character} scale={scale} />
+      ) : layer.key === 'wordmark' ? (
+        <Wordmark scale={scale} />
+      ) : (
+        SIMPLE_ART[layer.key]
+      )}
+    </AnimatedLayer>
+  );
+}
+
+export default function Slide1({ play, width, height }: { play: boolean; width: number; height: number }) {
+  const scale = boardScale(DESIGN_SLIDE1, width, height);
   return (
     <View
       pointerEvents="none"
-      style={{ width: DESIGN.width * scale, height: DESIGN.height * scale }}
+      style={{ width: DESIGN_SLIDE1.width * scale, height: DESIGN_SLIDE1.height * scale }}
     >
-      {SLIDE1_LAYERS.map((layer) => {
-        const character = CHARACTER_ART[layer.key];
-        return (
-          <AnimatedLayer key={layer.key} spec={layer} play={play} scale={scale}>
-            {character ? (
-              <ScaledBoard art={character} scale={scale} />
-            ) : layer.key === 'wordmark' ? (
-              <Wordmark scale={scale} />
-            ) : (
-              SIMPLE_ART[layer.key]
-            )}
-          </AnimatedLayer>
-        );
-      })}
+      {SLIDE1_LAYERS.slice(0, WAVING_HAND_INDEX).map((layer) => renderLayer(layer, play, scale))}
       <WavingHand play={play} scale={scale} />
+      {SLIDE1_LAYERS.slice(WAVING_HAND_INDEX).map((layer) => renderLayer(layer, play, scale))}
     </View>
   );
 }

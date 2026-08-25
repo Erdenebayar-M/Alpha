@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -70,10 +70,13 @@ export default function AnimatedLayer({ spec, play, scale, children }: AnimatedL
     ],
   }));
 
-  // Rotation/mirroring baked into the Figma layer sits under the animated transform,
-  // so an animated rotate composes on top of the resting angle rather than replacing it.
+  // Rotation/skew/mirroring baked into the Figma layer sits under the animated
+  // transform, so an animated rotate composes on top of the resting angle rather
+  // than replacing it. Order matches Tailwind's fixed canonical composition
+  // (rotate -> skewX -> scale), same convention as FigmaBoard.tsx.
   const staticTransform = [
     ...(spec.staticRotate ? [{ rotate: `${spec.staticRotate}deg` }] : []),
+    ...(spec.staticSkewX ? [{ skewX: `${spec.staticSkewX}deg` }] : []),
     ...(spec.flipY ? [{ scaleY: -1 }] : []),
   ];
 
@@ -91,8 +94,19 @@ export default function AnimatedLayer({ spec, play, scale, children }: AnimatedL
         animatedStyle,
       ]}
     >
-      <Animated.View style={[styles.fill, staticTransform.length > 0 && { transform: staticTransform }]}>
-        {children}
+      <Animated.View
+        style={[
+          spec.artSize ? styles.centre : styles.fill,
+          staticTransform.length > 0 && { transform: staticTransform },
+        ]}
+      >
+        {spec.artSize ? (
+          <View style={{ width: spec.artSize.width * scale, height: spec.artSize.height * scale }}>
+            {children}
+          </View>
+        ) : (
+          children
+        )}
       </Animated.View>
     </Animated.View>
   );
@@ -101,4 +115,8 @@ export default function AnimatedLayer({ spec, play, scale, children }: AnimatedL
 const styles = StyleSheet.create({
   layer: { position: 'absolute' },
   fill: { width: '100%', height: '100%' },
+  // Figma's `flex items-center justify-center`: an explicitly-sized child is
+  // centred in the layout box rather than stretched to fill it (matches the
+  // `hypot`/`size` centring convention in FigmaBoard.tsx).
+  centre: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
 });

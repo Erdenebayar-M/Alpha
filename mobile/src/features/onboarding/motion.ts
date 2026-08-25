@@ -99,11 +99,38 @@ export interface LayerSpec {
   tracks: Track[];
   /** Static rotation baked into the Figma layer, in degrees. Applied under any animated rotate. */
   staticRotate?: number;
+  /** Static skew, Figma's `skew-x-[Ndeg]` on the same wrapper as `staticRotate`. */
+  staticSkewX?: number;
   /** Static horizontal/vertical mirror baked into the Figma layer. */
   flipY?: boolean;
+  /**
+   * The art's true size, for layers where Figma centres it at natural size inside
+   * `rect` (`flex items-center justify-center`) rather than stretching to fill it —
+   * stretching a long thin stroke to a differently-proportioned box badly distorts
+   * its reach and shape. Omit when `rect` already equals the art's natural size.
+   */
+  artSize?: Board;
 }
 
-export const DESIGN = { width: 390, height: 844 } as const;
+export interface Board {
+  width: number;
+  height: number;
+}
+
+/** Slides 2 and 3's frame — the design's canonical 390x844 iPhone board. */
+export const DESIGN: Board = { width: 390, height: 844 } as const;
+
+/**
+ * Slide 1's own frame is 395x852 (get_metadata(163:1739)), not the 390x844 used
+ * elsewhere — every rect in SLIDE1_LAYERS below is absolute px in *this* space.
+ * Scaling slide 1 against DESIGN instead renders it ~1.3% too large.
+ */
+export const DESIGN_SLIDE1: Board = { width: 395, height: 852 } as const;
+
+/** Size a board off both axes so it never overflows a short screen (AGENTS.md §12). */
+export function boardScale(board: Board, width: number, height: number): number {
+  return Math.min(width / board.width, height / board.height);
+}
 
 const fade = (delay: number, duration: number): Track => ({
   prop: 'opacity',
@@ -114,7 +141,13 @@ const fade = (delay: number, duration: number): Track => ({
 });
 
 /**
- * Slide 1, in Figma paint order (first entry paints furthest back).
+ * Slide 1, in Figma paint order (first entry paints furthest back) — confirmed
+ * against a full-slide `get_design_context` on 163:1739, which lists every
+ * top-level layer as one ordered sibling list. `wavingHand` (163:1934) is not a
+ * member: it needs its own looping animation rather than a one-shot entrance, so
+ * `Slide1.tsx` splices the bespoke `<WavingHand>` component in between the
+ * `wordmark` and `green` entries below to preserve this exact order.
+ *
  * Every `rect` is derived from the node's own box in the design context; every
  * `track` is a transcription of that node's keyframes, percentages converted to
  * ms against the 3000ms cohort.
@@ -142,23 +175,13 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
     ],
   },
   {
-    key: 'swooshTop',
-    rect: { left: 264.72, top: 232.75, width: 115.216, height: 81.67 },
-    staticRotate: -20.93,
-    tracks: [fade(500, 600)],
-  },
-  {
-    key: 'swooshRight',
-    rect: { left: 319, top: 488, width: 77.407, height: 113.508 },
-    staticRotate: -73.33,
-    tracks: [fade(600, 600)],
-  },
-  {
-    key: 'swooshLeft',
-    rect: { left: 22, top: 520.83, width: 71.624, height: 67.275 },
-    staticRotate: -142.79,
-    flipY: true,
-    tracks: [fade(700, 600)],
+    key: 'pink',
+    rect: { left: -23.99, top: 322.04, width: 265.209, height: 242.637 },
+    tracks: [
+      fade(400, 300),
+      { prop: 'translateY', from: 40, delay: 400, duration: 700, curve: 'springB' },
+      { prop: 'scale', from: 0, delay: 400, duration: 700, curve: 'springB' },
+    ],
   },
   {
     key: 'wordmark',
@@ -169,24 +192,7 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
       { prop: 'scale', from: 0.8, delay: 100, duration: 600, curve: 'springB' },
     ],
   },
-  {
-    key: 'headline',
-    rect: { left: 38, top: 120, width: 209.2, height: 133 },
-    tracks: [
-      fade(250, 420),
-      { prop: 'translateY', from: 30, delay: 250, duration: 700, curve: 'expo' },
-      { prop: 'scale', from: 0.9, delay: 250, duration: 600, curve: 'springB' },
-    ],
-  },
-  {
-    key: 'pink',
-    rect: { left: -23.99, top: 322.04, width: 265.209, height: 242.637 },
-    tracks: [
-      fade(400, 300),
-      { prop: 'translateY', from: 40, delay: 400, duration: 700, curve: 'springB' },
-      { prop: 'scale', from: 0, delay: 400, duration: 700, curve: 'springB' },
-    ],
-  },
+  // <WavingHand> renders here in Slide1.tsx — see the comment above.
   {
     key: 'green',
     rect: { left: 183.6, top: 272.4, width: 220.6, height: 292.8 },
@@ -207,6 +213,18 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
     ],
   },
   {
+    // Figma names this asset "star2" (169:2419) but it paints before the node it
+    // names "star1" — the `key` here tracks this file's rect, not Figma's asset name.
+    key: 'star2',
+    rect: { left: 339.2, top: 192.13, width: 28.933, height: 30.191 },
+    artSize: { width: 26.545, height: 27.932 },
+    tracks: [
+      fade(850, 250),
+      { prop: 'scale', from: 0, delay: 850, duration: 500, curve: 'springB' },
+      { prop: 'rotate', from: -95.1, to: -5.12, delay: 850, duration: 550, curve: 'springB' },
+    ],
+  },
+  {
     key: 'star1',
     rect: { left: 284, top: 146, width: 38.163, height: 37.848 },
     tracks: [
@@ -216,30 +234,52 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
     ],
   },
   {
-    key: 'star2',
-    rect: { left: 339.2, top: 192.13, width: 28.933, height: 30.191 },
-    tracks: [
-      fade(850, 250),
-      { prop: 'scale', from: 0, delay: 850, duration: 500, curve: 'springB' },
-      { prop: 'rotate', from: -95.1, to: -5.12, delay: 850, duration: 550, curve: 'springB' },
-    ],
-  },
-  {
     key: 'sparkleLeft',
     rect: { left: 24, top: 352, width: 21.585, height: 21.244 },
+    artSize: { width: 20.387, height: 20.977 },
+    staticSkewX: 2.55,
     tracks: [fade(750, 200), { prop: 'scale', from: 0, delay: 750, duration: 400, curve: 'springB' }],
   },
   {
     key: 'sparkleBottomRight',
     rect: { left: 328.07, top: 598.93, width: 25.384, height: 26.139 },
+    artSize: { width: 19.426, height: 18.886 },
     staticRotate: 19.92,
+    staticSkewX: 2.55,
     tracks: [fade(950, 200), { prop: 'scale', from: 0, delay: 950, duration: 400, curve: 'springB' }],
   },
   {
     key: 'sparkleBottomLeft',
     rect: { left: 86.17, top: 586.37, width: 21.051, height: 21.403 },
+    artSize: { width: 18.118, height: 17.718 },
     staticRotate: 3.86,
+    staticSkewX: 2.55,
     tracks: [fade(1050, 200), { prop: 'scale', from: 0, delay: 1050, duration: 400, curve: 'springB' }],
+  },
+  {
+    key: 'swooshRight',
+    rect: { left: 319, top: 488, width: 77.407, height: 113.508 },
+    artSize: { width: 107.581, height: 53.7801 },
+    staticRotate: -73.33,
+    tracks: [fade(600, 600)],
+  },
+  {
+    key: 'swooshLeft',
+    rect: { left: 22, top: 520.83, width: 71.624, height: 67.275 },
+    artSize: { width: 64.9082, height: 42.2239 },
+    staticRotate: -142.79,
+    flipY: true,
+    tracks: [fade(700, 600)],
+  },
+  {
+    key: 'dotRight',
+    rect: { left: 356, top: 597, width: 4, height: 5 },
+    tracks: [fade(1000, 150), { prop: 'scale', from: 0, delay: 1000, duration: 300, curve: 'springB' }],
+  },
+  {
+    key: 'dotLeft',
+    rect: { left: 74, top: 581, width: 4, height: 5 },
+    tracks: [fade(1100, 150), { prop: 'scale', from: 0, delay: 1100, duration: 300, curve: 'springB' }],
   },
   {
     key: 'miniStar1',
@@ -252,21 +292,30 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
     tracks: [fade(1000, 200), { prop: 'scale', from: 0, delay: 1000, duration: 400, curve: 'springB' }],
   },
   {
-    key: 'dotRight',
-    rect: { left: 356, top: 597, width: 4, height: 5 },
-    tracks: [fade(1000, 150), { prop: 'scale', from: 0, delay: 1000, duration: 300, curve: 'springB' }],
+    key: 'swooshTop',
+    rect: { left: 264.72, top: 232.75, width: 115.216, height: 81.67 },
+    artSize: { width: 109.32, height: 51.1561 },
+    staticRotate: -20.93,
+    tracks: [fade(500, 600)],
   },
   {
-    key: 'dotLeft',
-    rect: { left: 74, top: 581, width: 4, height: 5 },
-    tracks: [fade(1100, 150), { prop: 'scale', from: 0, delay: 1100, duration: 300, curve: 'springB' }],
+    key: 'headline',
+    rect: { left: 38, top: 120, width: 209.2, height: 133 },
+    tracks: [
+      fade(250, 420),
+      { prop: 'translateY', from: 30, delay: 250, duration: 700, curve: 'expo' },
+      { prop: 'scale', from: 0.9, delay: 250, duration: 600, curve: 'springB' },
+    ],
   },
 ];
 
 /** The waving hand sits on the pink character and has its own rotate choreography. */
 export const WAVE_LAYER = {
   key: 'wavingHand',
-  rect: { left: 85.11, top: 496.98, width: 25.867, height: 30.03 },
+  // Centred on the hand's measured ink bounds in the full-slide render — the
+  // flattened SVG asset's bbox is the bled visual extent, not the nominal
+  // (pre-bleed) layout box the old rect described. See characters.tsx.
+  rect: { left: 81, top: 495.5, width: 45, height: 48 },
   fadeDelay: 800,
   fadeDuration: 300,
 } as const;

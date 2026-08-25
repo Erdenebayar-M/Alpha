@@ -1,7 +1,7 @@
-import type { Leaf, Size } from '@/src/features/onboarding/FigmaBoard';
+import type { Inset, Leaf, Size } from '@/src/features/onboarding/FigmaBoard';
 
 // Pink mascot ("pinky_mountain_default_no_legs_editable")
-import PinkArm from '@/assets/onboarding/slide1/pink/arm-line.svg';
+import PinkArmFull from '@/assets/onboarding/slide1/pink/arm-line-full.svg';
 import PinkBlush from '@/assets/onboarding/slide1/pink/blush.svg';
 import PinkBody from '@/assets/onboarding/slide1/pink/body.svg';
 import PinkBrow from '@/assets/onboarding/slide1/pink/brow.svg';
@@ -41,10 +41,7 @@ import YellowBrowLeft from '@/assets/onboarding/slide1/yellow/brow-left.svg';
 import YellowBrowRight from '@/assets/onboarding/slide1/yellow/brow-right.svg';
 import YellowEyeLeft from '@/assets/onboarding/slide1/yellow/eye-left.svg';
 import YellowEyeRight from '@/assets/onboarding/slide1/yellow/eye-right.svg';
-import YellowHandA from '@/assets/onboarding/slide1/yellow/hand-a.svg';
-import YellowHandArm from '@/assets/onboarding/slide1/yellow/hand-arm.svg';
-import YellowHandB from '@/assets/onboarding/slide1/yellow/hand-b.svg';
-import YellowHandC from '@/assets/onboarding/slide1/yellow/hand-c.svg';
+import YellowHandFull from '@/assets/onboarding/slide1/yellow/hand-full.svg';
 import YellowHill1 from '@/assets/onboarding/slide1/yellow/hill1.svg';
 import YellowHill2 from '@/assets/onboarding/slide1/yellow/hill2.svg';
 import YellowMouthMask from '@/assets/onboarding/slide1/yellow/mouth-mask.svg';
@@ -57,10 +54,7 @@ import YellowWhiteFlower from '@/assets/onboarding/slide1/yellow/white-flower.sv
 import YellowYellowFlower from '@/assets/onboarding/slide1/yellow/yellow-flower.svg';
 
 // The pink mascot's waving hand — its own animated layer, so its own board.
-import HandA from '@/assets/onboarding/slide1/hand/a.svg';
-import HandArm from '@/assets/onboarding/slide1/hand/arm.svg';
-import HandB from '@/assets/onboarding/slide1/hand/b.svg';
-import HandC from '@/assets/onboarding/slide1/hand/c.svg';
+import PinkHandFull from '@/assets/onboarding/slide1/hand/full.svg';
 
 /**
  * Each mascot is a Figma sub-frame, transcribed leaf by leaf. Every `inset`,
@@ -89,11 +83,13 @@ const PINK_INNER: readonly Leaf[] = [
   {
     Art: PinkEyeLeft,
     box: { left: 83.35, top: 78.43, width: 19.196, height: 28.31 },
+    skewX: 0.19,
     expand: [-21.19, -19.19, -17.73, -30.95],
   },
   {
     Art: PinkEyeRight,
     box: { left: 109.73, top: 76.36, width: 22.709, height: 30.214 },
+    skewX: 0.3,
     expand: [-10.02, -5.94, -13.24, -14.41],
   },
   { Art: PinkBlush, inset: [54.46, 32.52, 42.02, 32.72], expand: [-63.32, -5.3, -63.3, -5.3] },
@@ -102,12 +98,14 @@ const PINK_INNER: readonly Leaf[] = [
     inset: [56.37, 42.7, 17.7, 33.69],
     hypot: { width: [90.3685, 16.5663], height: [-20.2895, 83.2949] },
     rotate: 10.46,
+    skewX: -3.14,
   },
   {
     Art: PinkBrow,
     inset: [56.66, 44.36, 34.71, 44.81],
     hypot: { width: [85.6785, -12.982], height: [6.56559, 59.4006] },
     rotate: -7.25,
+    skewX: 0.24,
   },
   {
     // The flower is its own 68x112 frame, counter-rotated against the body's tilt.
@@ -142,11 +140,13 @@ export const PINK: CharacterArt = {
       board: { width: 217.182, height: 179.699, leaves: PINK_INNER },
     },
     {
-      Art: PinkArm,
-      inset: [56.31, 79.9, 38.66, 4.51],
-      hypot: { width: [85.9535, -44.2257], height: [14.0465, 55.7743] },
-      rotate: -19.71,
-      expand: [-3.93, -1.78, -3.93, -1.78],
+      // Figma's own flattened export (164:2133) used verbatim — the hypot +
+      // rotate + skew + expand reconstruction here was unreliable, same as
+      // both hand rigs: the computed art size (~37x10) didn't match the raw
+      // asset's natural size (58.25x27.43) at all. Box is centred on the
+      // loop's measured ink bounds in the full-slide render.
+      Art: PinkArmFull,
+      box: { left: 50, top: 154, width: 50, height: 43 },
     },
   ],
 };
@@ -155,11 +155,20 @@ export const PINK: CharacterArt = {
 // Green — the tallest, arms raised. Both hands share one sub-frame shape.
 // ---------------------------------------------------------------------------
 
-/** Both of green's hands are the same Figma component, mirrored. */
-const greenHand = (Hand: Leaf['Art'], Mitten: Leaf['Art'], size: Size): Size & { leaves: Leaf[] } => ({
+/**
+ * Both of green's hands are the same Figma component, mirrored — but the
+ * curved-hand-thin sub-leaf's bleed isn't perfectly symmetric after mirroring, so
+ * its `expand` differs slightly per hand and is passed in rather than hardcoded.
+ */
+const greenHand = (
+  Hand: Leaf['Art'],
+  Mitten: Leaf['Art'],
+  size: Size,
+  handExpand: Inset
+): Size & { leaves: Leaf[] } => ({
   ...size,
   leaves: [
-    { Art: Hand, inset: [0, 53.33, 41.11, 34.43], expand: [-6.91, -49.89, -6.91, -49.89] },
+    { Art: Hand, inset: [0, 53.33, 41.11, 34.43], expand: handExpand },
     {
       Art: Mitten,
       inset: [41.17, 13.96, 6.11, -2.97],
@@ -177,6 +186,7 @@ const GREEN_INNER: readonly Leaf[] = [
     inset: [12.63, 31.26, 40.42, 21.92],
     hypot: { width: [73.6612, 8.50399], height: [-13.7201, 86.5459] },
     rotate: 8.72,
+    skewX: 1.92,
     expand: [0, -7.8, 0, -7.61],
   },
   { Art: GreenLandscape, inset: [64.17, 18.99, 4.17, 18.99] },
@@ -185,7 +195,8 @@ const GREEN_INNER: readonly Leaf[] = [
     inset: [38.36, 1.01, 41.06, 67.65],
     hypot: { width: [-39.1272, -41.7586], height: [59.3387, -61.9615] },
     rotate: -136.18,
-    board: greenHand(GreenHand1, GreenMitten1, { width: 32.72, height: 49.09 }),
+    skewX: -2.99,
+    board: greenHand(GreenHand1, GreenMitten1, { width: 32.724, height: 49.079 }, [-6.91, -49.89, -6.91, -49.89]),
   },
   { Art: GreenArm, inset: [94.88, 9.53, 1.46, 8.4], expand: [-119.99, -7.7, -119.99, -7.7] },
   { Art: GreenFace, inset: [36.5, 34.15, 47.98, 35.28] },
@@ -200,20 +211,23 @@ const GREEN_INNER: readonly Leaf[] = [
     inset: [33.48, 65.28, 42.34, 4.05],
     hypot: { width: [61.5242, -22.5379], height: [-48.3381, -79.6832] },
     rotate: 155.89,
+    skewX: -2.31,
     flipX: true,
-    board: greenHand(GreenHand2, GreenMitten2, { width: 38.33, height: 59.17 }),
+    board: greenHand(GreenHand2, GreenMitten2, { width: 38.33, height: 59.17 }, [-5.9, -45.77, -5.9, -45.73]),
   },
   {
     Art: GreenBrow,
     inset: [34.93, 36.41, 62.49, 58.07],
     hypot: { width: [86.6056, 34.5362], height: [-12.3393, 53.6878] },
     rotate: 16.77,
+    skewX: -0.16,
   },
   {
     Art: GreenBlush,
     inset: [49.58, 29.71, 45.74, 30.49],
     hypot: { width: [99.9361, 26.9311], height: [-0.733363, 30.8459] },
     rotate: 4.55,
+    skewX: -0.04,
     expand: [-56.87, -5.24, -56.87, -5.24],
   },
   {
@@ -221,6 +235,7 @@ const GREEN_INNER: readonly Leaf[] = [
     box: { left: 124.75, top: 19.51, width: 15.547, height: 14.536 },
     size: { width: 13.422, height: 13.013 },
     rotate: -7.35,
+    skewX: 2.55,
     expand: [0.51, 0.61, 0.61, 0.61],
   },
   {
@@ -257,37 +272,6 @@ export const GREEN: CharacterArt = {
 // these boxes are the frame values less the group origin (117, 435.58).
 // ---------------------------------------------------------------------------
 
-const YELLOW_HAND: readonly Leaf[] = [
-  {
-    Art: YellowHandA,
-    inset: [15.16, 14.05, 66.06, 62.92],
-    hypot: { width: [85.9498, 16.4611], height: [-113.985, 87.1961] },
-    rotate: 21.68,
-    expand: [-54.06, -86.76, -60.16, -133.53],
-  },
-  {
-    Art: YellowHandB,
-    inset: [10.62, 47.69, 66.28, 30.61],
-    hypot: { width: [36.761, -9.69927], height: [27.848, 104.435] },
-    rotate: -11.85,
-    expand: [-42.07, -71.35, -49.17, -118.76],
-  },
-  {
-    Art: YellowHandC,
-    inset: [37.09, -0.02, 55.98, 77.36],
-    hypot: { width: [2.83492, 47.3166], height: [-90.9165, 7.49603] },
-    rotate: 85.04,
-    expand: [-62.52, -116.47, -73.92, -173.97],
-  },
-  {
-    Art: YellowHandArm,
-    inset: [39.74, 19.77, -51.76, -153.44],
-    hypot: { width: [10.513, 8.01671], height: [-146.884, 62.5652] },
-    rotate: 47.11,
-    expand: [-5.51, -59.42, -5.51, -59.43],
-  },
-];
-
 export const YELLOW: CharacterArt = {
   size: { width: 218.365, height: 179.612 },
   leaves: [
@@ -317,16 +301,18 @@ export const YELLOW: CharacterArt = {
     { Art: YellowEyeRight, box: { left: 94.185, top: 29.97, width: 34.047, height: 37.812 } },
     {
       Art: YellowBrowRight,
-      box: { left: 110.253, top: -3.705, width: 20.475, height: 8.44 },
+      box: { left: 110.253, top: -0.2, width: 20.475, height: 8.44 },
       hypot: { width: [94.8301, 39.7115], height: [-5.16988, 60.2885] },
       rotate: 9.69,
+      skewX: -2.18,
       expand: [-57.6, -35.11, -211.25, -35.11],
     },
     {
       Art: YellowBrowLeft,
-      box: { left: 59.709, top: -4.127, width: 19.617, height: 13.082 },
+      box: { left: 59.709, top: -0.6, width: 19.617, height: 13.082 },
       hypot: { width: [91.3967, -63.4637], height: [8.60333, 36.5363] },
       rotate: -24.66,
+      skewX: -5.05,
       expand: [-97.97, -34.98, -176.39, -34.98],
     },
     {
@@ -334,14 +320,20 @@ export const YELLOW: CharacterArt = {
       box: { left: 74.529, top: 72.592, width: 38.922, height: 23.801 },
       hypot: { width: [-98.9831, 3.07914], height: [-1.01693, -96.9209] },
       rotate: 178.92,
+      skewX: -0.1,
     },
     { Art: YellowMouthMask, box: { left: 74.529, top: 72.592, width: 38.922, height: 23.801 } },
     {
-      // Yellow's own small waving hand, off to the right.
-      box: { left: 188.8, top: 35.72, width: 29.565, height: 27.653 },
-      size: { width: 18.108, height: 23.908 },
-      rotate: -25.18,
-      board: { width: 18.108, height: 23.908, leaves: YELLOW_HAND },
+      // Yellow's own small waving hand, off to the right. Figma's own flattened
+      // export (163:1919) is used verbatim here instead of reassembling it from
+      // 4 rotated/skewed/expanded leaves — that reconstruction consistently
+      // merged the three fingers into a blob for reasons that resisted several
+      // rounds of debugging, while the flattened export is pixel-exact by
+      // construction. Box is centred on the hand's measured ink bounds in the
+      // full-slide render, since the export's bbox is the bled visual extent,
+      // not the nominal (pre-bleed) layout box.
+      Art: YellowHandFull,
+      box: { left: 176, top: 35.92, width: 40, height: 50 },
     },
   ],
 };
@@ -350,48 +342,13 @@ export const YELLOW: CharacterArt = {
 // Pink's waving hand — animated separately, so it is its own board.
 // ---------------------------------------------------------------------------
 
+// Figma's own flattened export (163:1934) is used verbatim, same rationale as
+// yellow's hand above — reassembling this from 4 rotated/skewed/expanded leaves
+// (plus the outer rotate/skew/flipY) consistently merged the fingers into a
+// blob. `size` is the export's own bled bounding box, not the nominal
+// (pre-bleed) layout box; `WAVE_LAYER.rect` in motion.ts is centred on the
+// hand's measured ink bounds in the full-slide render to match.
 export const WAVING_HAND: CharacterArt = {
-  size: { width: 25.867, height: 30.03 },
-  leaves: [
-    {
-      box: { left: 3.88, top: 2.02, width: 18.099, height: 25.991 },
-      size: { width: 12.345, height: 22.782 },
-      rotate: -160.37,
-      flipY: true,
-      board: {
-        width: 12.345,
-        height: 22.782,
-        leaves: [
-          {
-            Art: HandA,
-            inset: [7.29, 27.44, 63, 41.54],
-            hypot: { width: [56.4314, 9.55547], height: [-129.14, 87.2245] },
-            rotate: 29.85,
-            expand: [-38.3, -182.21, -38.3, -182.35],
-          },
-          {
-            Art: HandB,
-            inset: [3.41, 55.59, 67.78, 14.21],
-            hypot: { width: [42.9518, -8.8637], height: [30.8991, 92.1507] },
-            rotate: -14.87,
-            expand: [-34.09, -46.85, -38.51, -83.39],
-          },
-          {
-            Art: HandC,
-            inset: [34.01, 1.44, 60.78, 48.6],
-            hypot: { width: [0.738212, 21.9536], height: [-104.351, 15.3298] },
-            rotate: 86.45,
-            expand: [-40.58, -352.15, -40.67, -357.52],
-          },
-          {
-            Art: HandArm,
-            inset: [41.69, 49.72, -53.55, -244.94],
-            hypot: { width: [8.22429, 15.6274], height: [-112.472, 57.1628] },
-            rotate: 65.59,
-            expand: [-6.36, -41.3, -6.36, -41.3],
-          },
-        ],
-      },
-    },
-  ],
+  size: { width: 45, height: 48 },
+  leaves: [{ Art: PinkHandFull, box: { left: 0, top: 0, width: 45, height: 48 } }],
 };
