@@ -64,4 +64,21 @@ export const colors = {
 
   // Listening sound-wave bars (inner -> outer)
   wave: ['#a59ff1', '#5088ee', '#c2d6f8', '#ffe4f5'],
+
+  // Profile setup (gender/personal info/grade, Figma 804-8990 / 804-9634 / 804-9969 /
+  // 804-10250 / 804-10366 / 825-10618) — runs right after the onboarding carousel.
+  // The CTA is one gradient in both states — Figma draws the disabled variant as the
+  // same two stops at 20% alpha. SVG `stopColor` has no alpha channel (an `rgba()`
+  // string there silently renders fully opaque), so the fade lives in `stopOpacity`.
+  profileCtaStart: '#2356F8',
+  profileCtaEnd: '#2F5BE4',
+  // Same border accent in both the disabled and enabled button states.
+  profileCtaBorder: '#4F9EF5',
+  profileSelectedCheckBg: '#A4DC6A',
+  profileInputBorder: '#ECEEF5',
+  profileInputPlaceholder: 'rgba(8, 8, 7, 0.35)',
+  profileLabelText: 'rgba(8, 8, 7, 0.8)',
+  profileGradePillBg: '#FFFFFF',
+  profileGradePillSelectedBg: '#2F5BE4',
+  profileGradePillText: '#090909',
 } as const;
