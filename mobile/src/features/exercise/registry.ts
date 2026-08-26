@@ -24,6 +24,7 @@ import SelfCheck from '@/src/features/exercise/renderers/SelfCheck';
 import SentenceCapital from '@/src/features/exercise/renderers/SentenceCapital';
 import SentenceFill from '@/src/features/exercise/renderers/SentenceFill';
 import SentencePunctuation from '@/src/features/exercise/renderers/SentencePunctuation';
+import SyllableAssembleWord from '@/src/features/exercise/renderers/SyllableAssembleWord';
 import TapFindError from '@/src/features/exercise/renderers/TapFindError';
 import VisualMemory from '@/src/features/exercise/renderers/VisualMemory';
 import type { Task } from '@/src/features/exercise/types';
@@ -53,6 +54,7 @@ export const registry: Record<string, ComponentType<ExerciseRendererProps>> = {
   comma_place: CommaPlace,
   assemble_word: AssembleWord,
   audio_assemble_word: AudioAssembleWord,
+  syllable_assemble_word: SyllableAssembleWord,
   fill_letter: FillLetter,
   fill_letter_tiles: FillLetterTiles,
   correction: Correction,

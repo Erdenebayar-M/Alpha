@@ -58,3 +58,18 @@ export function BackspaceIcon({ size = 26, color = colors.textChoice }: IconProp
     </Svg>
   );
 }
+
+export function CheckIcon({ size = 14, color = colors.white }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 12.5l4.5 4.5L19 7"
+        stroke={color}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
