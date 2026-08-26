@@ -25,6 +25,8 @@ const hutgahUri = Image.resolveAssetSource(require('@/assets/images/hutgah.png')
 const chatsarganaUri = Image.resolveAssetSource(require('@/assets/images/chatsargana.png')).uri;
 // The syllable drag-and-drop assemble-word screen's picture (Figma "Үеэр үг бүтээх").
 const hoshigUri = Image.resolveAssetSource(require('@/assets/images/hoshig.png')).uri;
+// The picture letter-fill screen's grandmother picture (Figma "12. зураг хараад үг нөхөх").
+const ejeeUri = Image.resolveAssetSource(require('@/assets/images/ejee.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -779,6 +781,41 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үений дараалал буруу байна. Дахин оролдоорой.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-22',
+    task_id: 'TASK-MOCK-030',
+    stage: 'STAGE2',
+    task_type: 'TT_2_1',
+    interaction_form: null,
+    prompt_text: 'Дутуу үсгийг нөхөөрэй',
+    correct_answer: 'Эжээ',
+    // Two missing letters ("ж" and "э"), plus one distractor tile ("м") that's never
+    // used — matches the Figma bank of ж/э/м for this 2-blank word (12. зураг хараад
+    // үг нөхөх).
+    options: {
+      display_text: 'Э_э_',
+      blank_position: 1,
+      blank_answer: 'жэ',
+      distractors: ['м'],
+      context_word: 'Эжээ',
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: ejeeUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M2',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M2'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв нөхлөө.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -1055,25 +1092,30 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-21, the syllable drag-and-drop
-  // assemble-word screen (Figma "Үеэр үг бүтээх", interaction_form
-  // syllable_assemble_word — drag "Хө"/"шиг" chips from a tray into dashed slots, check
-  // via the checkbox, watch the slots merge into "Хөшиг"), then mock-task-20, the audio
-  // assemble-the-word task for "сав" (TT_2_2, audio_assemble_word — the audio sibling of
-  // assemble_word, no picture/no prompt bubble, dashed slots + a fixed-order tile bank),
-  // then mock-task-19, the audio long/short-vowel-choice task (TT_3_1,
-  // audio_word_choice), then mock-task-1, the audio similar-word-choice task (TT_1_5,
-  // same renderer), then mock-task-18, the audio fill-the-letters task with a
-  // partially-revealed word (same renderer, plus a distractor tile), then mock-task-17,
-  // its picture sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
-  // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
-  // punctuation_place, comma_place; then the five assemble-the-word screens (сав →
-  // чацаргана, short → long); dictation and mini_text close it out unchanged.
+  // The newest screen leads so it's seen first: mock-task-22, the picture letter-fill
+  // screen for "Эжээ" (TT_2_1, fill_letter_tiles, pixel-fixed against Figma's refined
+  // "12. зураг хараад үг нөхөх" — circular picture, 2 blanks + 1 distractor tile), then
+  // mock-task-21, the syllable drag-and-drop assemble-word screen (Figma "Үеэр үг
+  // бүтээх", interaction_form syllable_assemble_word — drag "Хө"/"шиг" chips from a
+  // tray into dashed slots, check via the checkbox, watch the slots merge into
+  // "Хөшиг"), then mock-task-20, the audio assemble-the-word task for "сав" (TT_2_2,
+  // audio_assemble_word — the audio sibling of assemble_word, no picture/no prompt
+  // bubble, dashed slots + a fixed-order tile bank), then mock-task-19, the audio
+  // long/short-vowel-choice task (TT_3_1, audio_word_choice), then mock-task-1, the
+  // audio similar-word-choice task (TT_1_5, same renderer), then mock-task-18, the
+  // audio fill-the-letters task with a partially-revealed word (same renderer, plus a
+  // distractor tile), then mock-task-17, its picture sibling (fill_letter_tiles, 3
+  // blanks, no distractor — exercises a different shape than mock-task-22). Then:
+  // audio_choice, image_match, text_input, fill_blank; then letter_choice, match_pairs,
+  // sentence_capital, punctuation_choice, punctuation_place, comma_place; then the five
+  // assemble-the-word screens (сав → чацаргана, short → long); dictation and mini_text
+  // close it out unchanged.
   // fill_letter, sentence_fill, correction, copy_text, visual_memory, tap_find_error, and
   // self_check are pulled from this walkthrough while those pages get rebuilt from
   // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
   // tasks of those types still render normally.
   tasks: [
+    mockTasks[21],
     mockTasks[20],
     mockTasks[19],
     mockTasks[18],

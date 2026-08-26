@@ -57,10 +57,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.064,
   },
   slot: {
-    width: 34,
-    height: 40,
+    width: 26,
+    height: 38,
     marginHorizontal: 3,
-    borderRadius: 6,
+    borderRadius: 4,
     backgroundColor: colors.white,
     borderBottomWidth: 3,
     borderBottomColor: '#DDE6F3',
