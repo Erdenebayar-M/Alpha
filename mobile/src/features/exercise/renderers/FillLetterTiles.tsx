@@ -15,7 +15,7 @@ import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
-const BUBBLE_LABEL = 'Үгийг нөхөөрэй';
+const BUBBLE_LABEL = 'Дутуу үсгийг нөхөөрэй';
 
 /**
  * Picture fill-the-letters task (TT_2_1, "Зураг харж дутуу үсэг нөхөх"): the child sees
@@ -28,6 +28,7 @@ const BUBBLE_LABEL = 'Үгийг нөхөөрэй';
 export default function FillLetterTiles({ task, onResult }: ExerciseRendererProps) {
   const { width, height } = useWindowDimensions();
   const avatarWidth = Math.max(88, Math.min(width * 0.26, height * 0.14, 120));
+  const pictureSize = Math.max(80, Math.min(width * 0.26, height * 0.14, 103));
 
   const [hasFinished, setHasFinished] = useState(false);
   const ex = useFillTiles(task, onResult);
@@ -96,7 +97,14 @@ export default function FillLetterTiles({ task, onResult }: ExerciseRendererProp
         {/* The picture beside its word, blanks and all. */}
         <View style={styles.wordRow}>
           {task.image_url ? (
-            <Image source={task.image_url} style={styles.wordImage} contentFit="contain" />
+            <Image
+              source={task.image_url}
+              style={[
+                styles.wordImage,
+                { width: pictureSize, height: pictureSize, borderRadius: pictureSize / 2 },
+              ]}
+              contentFit="contain"
+            />
           ) : null}
           <WordWithBlanks text={displayText} filled={ex.placed} />
         </View>
@@ -173,12 +181,9 @@ const styles = StyleSheet.create({
   wordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 15,
   },
   wordImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 20,
-    backgroundColor: colors.card,
+    backgroundColor: colors.white,
   },
 });
