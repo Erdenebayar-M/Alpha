@@ -28,8 +28,10 @@ const taskTypeMap: Record<string, string> = {
   TT_5_3: 'match_pairs',
 
   // assembleWordOptions — tap scrambled tiles to spell the word in order.
+  // TT_1_4 shows a picture (assemble_word); TT_2_2 hears the word instead
+  // (audio_assemble_word) — same split as fill-letters' TT_2_1/TT_2_4 pair below.
   TT_1_4: 'assemble_word',
-  TT_2_2: 'assemble_word',
+  TT_2_2: 'audio_assemble_word',
 
   // fillOptions, picture variant — tap letters from a bank into the word's blanks.
   TT_2_1: 'fill_letter_tiles',
