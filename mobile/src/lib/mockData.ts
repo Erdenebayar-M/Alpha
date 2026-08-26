@@ -710,6 +710,40 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Дахин оролдоцгооё.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-20',
+    task_id: 'TASK-MOCK-028',
+    stage: 'STAGE2',
+    task_type: 'TT_2_2',
+    interaction_form: null,
+    prompt_text: 'Авиаг сонсоод үсгийг зөв дараалалд тавиарай',
+    correct_answer: 'сав',
+    // Audio assemble-the-word (audio_assemble_word) — the same "сав" word/tiles as
+    // mock-task-12 (assemble_word, picture variant), but heard rather than shown as a
+    // picture: no image, no prompt bubble, just the character + volume/speed control
+    // and the dashed slots + floating tile bank. Tile order matches the Figma frame
+    // exactly (useAssembleWord doesn't shuffle).
+    options: {
+      tiles: ['В', 'С', 'А'],
+      correct_order: ['С', 'А', 'В'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+    image_url: null,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M3',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M3'],
+    difficulty: 1,
+    estimated_time_seconds: 30,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Гоё! Үгийг зөв бүтээлээ.',
+    feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -986,19 +1020,23 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-19, the audio
-  // long/short-vowel-choice task (TT_3_1, audio_word_choice), then mock-task-1, the
-  // audio similar-word-choice task (TT_1_5, same renderer), then mock-task-18, the
-  // audio fill-the-letters task (audio_fill_letter_tiles), then mock-task-17, its
-  // picture sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
-  // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
-  // punctuation_place, comma_place; then the five assemble-the-word screens
-  // (сав → чацаргана, short → long); dictation and mini_text close it out unchanged.
-  // fill_letter, sentence_fill, correction, copy_text, visual_memory, tap_find_error,
-  // and self_check are pulled from this walkthrough while those pages get rebuilt from
-  // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
-  // tasks of those types still render normally.
+  // The newest screen leads so it's seen first: mock-task-20, the audio assemble-the-word
+  // task for "сав" (TT_2_2, audio_assemble_word — the audio sibling of assemble_word,
+  // no picture/no prompt bubble, dashed slots + a fixed-order tile bank), then
+  // mock-task-19, the audio long/short-vowel-choice task (TT_3_1, audio_word_choice),
+  // then mock-task-1, the audio similar-word-choice task (TT_1_5, same renderer), then
+  // mock-task-18, the audio fill-the-letters task with a partially-revealed word (same
+  // renderer, plus a distractor tile), then mock-task-17, its picture sibling
+  // (fill_letter_tiles). Then: audio_choice, image_match, text_input, fill_blank; then
+  // letter_choice, match_pairs, sentence_capital, punctuation_choice, punctuation_place,
+  // comma_place; then the five assemble-the-word screens (сав → чацаргана, short → long);
+  // dictation and mini_text close it out unchanged. fill_letter, sentence_fill,
+  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled from
+  // this walkthrough while those pages get rebuilt from Figma — the
+  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of those
+  // types still render normally.
   tasks: [
+    mockTasks[19],
     mockTasks[18],
     mockTasks[0],
     mockTasks[17],
