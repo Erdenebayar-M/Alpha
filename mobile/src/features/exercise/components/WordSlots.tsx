@@ -17,6 +17,17 @@ interface WordSlotsProps {
   onClearSlot: (index: number) => void;
   /** Once answered the slots freeze (no more editing). */
   isAnswered: boolean;
+  /** Fixed slot size instead of the width-driven auto-fit (a drag-drop screen with a
+   *  small, known slot count wants Figma's exact 76x54 rather than the auto-shrink). */
+  slotWidth?: number;
+  slotHeight?: number;
+  /** Collects each slot's node for measureInWindow-based drop-target hit testing. */
+  slotRef?: (index: number, node: View | null) => void;
+  /** Highlights the slot a dragged tile currently hovers over. */
+  hoveredIndex?: number | null;
+  /** Empty slots render with no fill (Figma's drag-drop screen) instead of the
+   *  default white fill the tap-to-place screens use. Default false. */
+  transparentWhenEmpty?: boolean;
 }
 
 /**
@@ -24,26 +35,42 @@ interface WordSlotsProps {
  * the whole word on one line where possible (a 9-letter word still fits), then wrap.
  * A filled slot is tappable to clear its letter; empty slots are inert.
  */
-export default function WordSlots({ letters, onClearSlot, isAnswered }: WordSlotsProps) {
+export default function WordSlots({
+  letters,
+  onClearSlot,
+  isAnswered,
+  slotWidth,
+  slotHeight,
+  slotRef,
+  hoveredIndex = null,
+  transparentWhenEmpty = false,
+}: WordSlotsProps) {
   const { width } = useWindowDimensions();
   const count = Math.max(letters.length, 1);
   // Fit the row to the screen: (available width - inter-slot gaps) / count, clamped.
   const available = width - 32; // container horizontal padding (16 each side)
   const raw = Math.floor((available - GAP * (count - 1)) / count);
-  const slotSize = Math.max(MIN_SLOT, Math.min(MAX_SLOT, raw));
-  const fontSize = Math.round(slotSize * 0.5);
+  const autoSize = Math.max(MIN_SLOT, Math.min(MAX_SLOT, raw));
+  const w = slotWidth ?? autoSize;
+  const h = slotHeight ?? autoSize + 8;
+  const fontSize = Math.round(Math.min(w, h) * 0.5);
 
   return (
     <View style={styles.row}>
       {letters.map((letter, index) => {
         const filled = letter !== null;
+        const hovered = hoveredIndex === index;
         return (
           <Pressable
             key={index}
+            ref={slotRef ? (node) => slotRef(index, node) : undefined}
+            collapsable={slotRef ? false : undefined}
             style={({ pressed }) => [
               styles.slot,
-              { width: slotSize, height: slotSize + 8 },
+              transparentWhenEmpty && styles.slotTransparent,
+              { width: w, height: h },
               filled && styles.slotFilled,
+              hovered && !filled && styles.slotHovered,
               pressed && filled && !isAnswered && styles.slotPressed,
             ]}
             onPress={() => onClearSlot(index)}
@@ -76,7 +103,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  slotTransparent: {
+    backgroundColor: 'transparent',
+  },
   slotFilled: {
+    borderColor: colors.choiceSelectedBorder,
+    backgroundColor: colors.white,
+  },
+  slotHovered: {
     borderColor: colors.choiceSelectedBorder,
   },
   slotPressed: {

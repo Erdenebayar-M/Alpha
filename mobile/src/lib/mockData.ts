@@ -23,6 +23,8 @@ const talhUri = Image.resolveAssetSource(require('@/assets/images/talh.png')).ur
 const chanahUri = Image.resolveAssetSource(require('@/assets/images/chanah.png')).uri;
 const hutgahUri = Image.resolveAssetSource(require('@/assets/images/hutgah.png')).uri;
 const chatsarganaUri = Image.resolveAssetSource(require('@/assets/images/chatsargana.png')).uri;
+// The syllable drag-and-drop assemble-word screen's picture (Figma "Үеэр үг бүтээх").
+const hoshigUri = Image.resolveAssetSource(require('@/assets/images/hoshig.png')).uri;
 
 export interface MockParent {
   id: string;
@@ -744,6 +746,39 @@ export const mockTasks: Task[] = [
     feedback_wrong: 'Үсгүүд арай эндүүрчихлээ. Дахин оролдоод үзээрэй.',
     is_diagnostic: false,
   },
+  {
+    id: 'mock-task-21',
+    task_id: 'TASK-MOCK-029',
+    stage: 'STAGE1',
+    task_type: 'TT_1_4',
+    interaction_form: 'syllable_assemble_word',
+    prompt_text: 'Үеэр үг бүтээгээрэй',
+    correct_answer: 'Хөшиг',
+    // Syllable drag-and-drop assemble-word (Figma "Үеэр үг бүтээх"): the child drags
+    // "Хө"/"шиг" from the tray into the two dashed slots — "шөг" is a distractor tile
+    // never used by correct_order, exercising the same distractor handling the
+    // letter-based assemble screens already have.
+    options: {
+      tiles: ['Хө', 'шөг', 'шиг'],
+      correct_order: ['Хө', 'шиг'],
+    },
+    audio_url: null,
+    prompt_audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    image_url: hoshigUri,
+    primary_skill: 'SPELLING',
+    secondary_skill: null,
+    level_target: 'G1:M1',
+    error_targets: [],
+    grade_band: ['G1'],
+    grade_levels: ['G1:M1'],
+    difficulty: 1,
+    estimated_time_seconds: 25,
+    lesson_slot_fit: 'WARM_UP',
+    feedback_text: null,
+    feedback_correct: 'Сайн байна! Үгээ зөв бүтээлээ.',
+    feedback_wrong: 'Үений дараалал буруу байна. Дахин оролдоорой.',
+    is_diagnostic: false,
+  },
 ];
 
 // --- Renderer-coverage fixtures: one Task per interaction_form that has no example
@@ -1020,22 +1055,26 @@ export const mockExtraTasks: Task[] = [
 
 export const mockLesson: MockLesson = {
   id: 'mock-lesson-1',
-  // The newest screen leads so it's seen first: mock-task-20, the audio assemble-the-word
-  // task for "сав" (TT_2_2, audio_assemble_word — the audio sibling of assemble_word,
-  // no picture/no prompt bubble, dashed slots + a fixed-order tile bank), then
-  // mock-task-19, the audio long/short-vowel-choice task (TT_3_1, audio_word_choice),
-  // then mock-task-1, the audio similar-word-choice task (TT_1_5, same renderer), then
-  // mock-task-18, the audio fill-the-letters task with a partially-revealed word (same
-  // renderer, plus a distractor tile), then mock-task-17, its picture sibling
-  // (fill_letter_tiles). Then: audio_choice, image_match, text_input, fill_blank; then
-  // letter_choice, match_pairs, sentence_capital, punctuation_choice, punctuation_place,
-  // comma_place; then the five assemble-the-word screens (сав → чацаргана, short → long);
-  // dictation and mini_text close it out unchanged. fill_letter, sentence_fill,
-  // correction, copy_text, visual_memory, tap_find_error, and self_check are pulled from
-  // this walkthrough while those pages get rebuilt from Figma — the
-  // renderers/registry/taskTypeMap entries are untouched, so real backend tasks of those
-  // types still render normally.
+  // The newest screen leads so it's seen first: mock-task-21, the syllable drag-and-drop
+  // assemble-word screen (Figma "Үеэр үг бүтээх", interaction_form
+  // syllable_assemble_word — drag "Хө"/"шиг" chips from a tray into dashed slots, check
+  // via the checkbox, watch the slots merge into "Хөшиг"), then mock-task-20, the audio
+  // assemble-the-word task for "сав" (TT_2_2, audio_assemble_word — the audio sibling of
+  // assemble_word, no picture/no prompt bubble, dashed slots + a fixed-order tile bank),
+  // then mock-task-19, the audio long/short-vowel-choice task (TT_3_1,
+  // audio_word_choice), then mock-task-1, the audio similar-word-choice task (TT_1_5,
+  // same renderer), then mock-task-18, the audio fill-the-letters task with a
+  // partially-revealed word (same renderer, plus a distractor tile), then mock-task-17,
+  // its picture sibling (fill_letter_tiles). Then: audio_choice, image_match, text_input,
+  // fill_blank; then letter_choice, match_pairs, sentence_capital, punctuation_choice,
+  // punctuation_place, comma_place; then the five assemble-the-word screens (сав →
+  // чацаргана, short → long); dictation and mini_text close it out unchanged.
+  // fill_letter, sentence_fill, correction, copy_text, visual_memory, tap_find_error, and
+  // self_check are pulled from this walkthrough while those pages get rebuilt from
+  // Figma — the renderers/registry/taskTypeMap entries are untouched, so real backend
+  // tasks of those types still render normally.
   tasks: [
+    mockTasks[20],
     mockTasks[19],
     mockTasks[18],
     mockTasks[0],

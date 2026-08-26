@@ -5,6 +5,10 @@ import type { Task } from '@/src/features/exercise/types';
 export interface UseAssembleWordOptions {
   /** How long feedback stays on screen before onResult advances. Default 1000ms. */
   feedbackDelayMs?: number;
+  /** Whether clearing a slot re-packs the remaining letters left (the typing model
+   *  AssembleWord/AudioAssembleWord use). Set false for a drag-to-a-specific-slot
+   *  screen, where clearing slot N should only empty slot N. Default true. */
+  repackOnClear?: boolean;
 }
 
 export interface AssembleWordExercise {
@@ -20,7 +24,11 @@ export interface AssembleWordExercise {
   canSubmit: boolean;
   /** Drop a tile into the next empty slot (ignored if used or already answered). */
   place: (tileIndex: number) => void;
-  /** Clear the letter in a slot; remaining letters re-pack left (typing model). */
+  /** Drop a tile into a specific slot — moves the tile if it's already placed
+   *  elsewhere, and returns any tile currently occupying that slot to the pool. */
+  placeAt: (slotIndex: number, tileIndex: number) => void;
+  /** Clear the letter in a slot. With repackOnClear (default), remaining letters
+   *  re-pack left; otherwise only the given slot empties. */
   clearSlot: (slotIndex: number) => void;
   submit: () => void;
 }
@@ -29,17 +37,17 @@ const DEFAULT_FEEDBACK_DELAY_MS = 1000;
 
 /**
  * Answer machinery for the assemble-the-word task ("Үсгүүдийг зөв дараалалд оруулж
- * үг бүтээгээрэй"): the child taps scrambled letter tiles to fill a row of slots in
- * order. Slots hold tile *indices* (not letters) so duplicate letters and distractors
- * are tracked unambiguously. Grading is exact: the placed letter sequence must equal
- * `correct_order`. Mirrors usePunctuationExercise — renderers own only layout.
+ * үг бүтээгээрэй"): the child taps or drags scrambled tiles to fill a row of slots in
+ * order. Slots hold tile *indices* (not letters) so duplicate letters/syllables and
+ * distractors are tracked unambiguously. Grading is exact: the placed tile sequence
+ * must equal `correct_order`. Mirrors usePunctuationExercise — renderers own only layout.
  */
 export function useAssembleWord(
   task: Task,
   onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseAssembleWordOptions = {}
 ): AssembleWordExercise {
-  const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
+  const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS, repackOnClear = true } = options;
 
   const tiles = useMemo(() => task.options.tiles ?? [], [task.options.tiles]);
   const correctOrder = useMemo(
@@ -86,11 +94,31 @@ export function useAssembleWord(
     [isAnswered]
   );
 
+  const placeAt = useCallback(
+    (slotIndex: number, tileIndex: number) => {
+      if (isAnswered) return;
+      setSlots((prev) => {
+        if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+        const next = [...prev];
+        const previousSlot = next.indexOf(tileIndex);
+        if (previousSlot !== -1) next[previousSlot] = null; // moving an already-placed tile
+        next[slotIndex] = tileIndex;
+        return next;
+      });
+    },
+    [isAnswered]
+  );
+
   const clearSlot = useCallback(
     (slotIndex: number) => {
       if (isAnswered) return;
       setSlots((prev) => {
         if (prev[slotIndex] === null) return prev;
+        if (!repackOnClear) {
+          const next = [...prev];
+          next[slotIndex] = null;
+          return next;
+        }
         // Drop this slot's tile, then re-pack the rest left so there is never a gap.
         const remaining = prev.filter((_, i) => i !== slotIndex && prev[i] !== null);
         const next = Array<number | null>(prev.length).fill(null);
@@ -100,7 +128,7 @@ export function useAssembleWord(
         return next;
       });
     },
-    [isAnswered]
+    [isAnswered, repackOnClear]
   );
 
   const canSubmit = !isAnswered && slotCount > 0 && slots.every((s) => s !== null);
@@ -111,8 +139,6 @@ export function useAssembleWord(
     const correct = placed.join('') === correctOrder.join('');
     setWasCorrect(correct);
     setIsAnswered(true);
-    // The backend expects the tile sequence as a JSON string array (answer-checker's
-    // assembleWordDiff), not the joined word.
     timerRef.current = setTimeout(() => onResult(correct, JSON.stringify(placed)), feedbackDelayMs);
   }, [canSubmit, slots, tiles, correctOrder, onResult, feedbackDelayMs]);
 
@@ -129,6 +155,7 @@ export function useAssembleWord(
     feedback,
     canSubmit,
     place,
+    placeAt,
     clearSlot,
     submit,
   };
