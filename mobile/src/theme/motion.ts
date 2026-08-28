@@ -1,12 +1,18 @@
-// Shared press-feedback tuning for PressableScale, so every button in the app
-// bounces the same way (distinct from the onboarding-only slide choreography in
-// src/features/onboarding/motion.ts).
+import { Easing } from 'react-native-reanimated';
 
-/** How far a button shrinks on press-in. */
-export const PRESS_SCALE = 0.92;
+// Shared press-feedback tuning for PressableScale, so every button in the app presses
+// the same way: a firm, quick depress with no bounce or overshoot on release (distinct
+// from the onboarding-only slide choreography in src/features/onboarding/motion.ts).
 
-/** Snappy press-down — a spring here would feel laggy compared to the finger. */
-export const PRESS_DOWN_DURATION = 80;
+/** How far a button shrinks on press-in — shallow, so text stays crisp and the
+ *  button reads as depressed rather than squashed. */
+export const PRESS_SCALE = 0.98;
 
-/** Springy release — the kid-friendly "pop" back to full size, with a touch of overshoot. */
-export const PRESS_SCALE_SPRING = { damping: 10, stiffness: 300 } as const;
+/** Press-down must land under the finger, not after it. */
+export const PRESS_DOWN_DURATION = 60;
+
+/** Release settles straight back to 100% — never past it. A button, not a jelly. */
+export const PRESS_UP_DURATION = 120;
+
+/** Both directions: fast start, soft stop, zero overshoot. */
+export const PRESS_EASING = Easing.out(Easing.quad);
