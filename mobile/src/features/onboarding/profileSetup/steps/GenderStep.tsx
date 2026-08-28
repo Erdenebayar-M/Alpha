@@ -1,10 +1,11 @@
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
+import { EyeOpenProvider } from '@/src/features/onboarding/idleLoops';
 import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
 import AvatarBubble from '@/src/features/onboarding/profileSetup/components/AvatarBubble';
 import ProfileStepLayout from '@/src/features/onboarding/profileSetup/components/ProfileStepLayout';
-import { BOY_OPEN_EYES, type Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
+import { BOY_EYES_DRIVEN, type Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
 
 /**
  * Step 1 (Figma `804-8990` idle / `804-9634` selected): pick a gender.
@@ -12,11 +13,14 @@ import { BOY_OPEN_EYES, type Gender } from '@/src/features/onboarding/profileSet
  * Figma stacks the two 216x233 cells with no gap at all (their parent, 804:9166, is
  * exactly 216x466) — the separation you see comes from each cell's own trailing space.
  *
- * The boy's eyes open (the `BOY_OPEN_EYES` swap — see `genderCharacters.tsx`) the moment
- * he's selected here, alongside the usual green checkmark. This is the *only* step that
- * plays the opening; Personal Info and Grade use `BOY_OPEN_EYES_STEADY`, so he stays
- * open-eyed for the rest of the flow without replaying it. The girl doesn't need an
- * equivalent swap — her eyes are already open by design.
+ * The boy's eyes open when he's picked and shut again when the pick moves to the girl,
+ * alongside the green checkmark. He is rendered as `BOY_EYES_DRIVEN` throughout — the
+ * art never changes, only the `EyeOpenProvider` driver does, so both directions animate
+ * and neither pays for mounting a new character (see `genderCharacters.tsx`).
+ *
+ * This is the *only* step that plays the opening; Personal Info and Grade use
+ * `BOY_OPEN_EYES_STEADY`, so he stays open-eyed for the rest of the flow without
+ * replaying it. The girl needs no equivalent — her eyes are already open by design.
  */
 export default function GenderStep({
   gender,
@@ -65,8 +69,6 @@ function Option({
   scale: number;
   onPress: () => void;
 }) {
-  const openEyes = gender === 'boy' && selected;
-
   return (
     <PressableScale
       style={styles.option}
@@ -75,13 +77,18 @@ function Option({
       accessibilityLabel={label}
       accessibilityState={{ selected }}
     >
-      <AvatarBubble
-        gender={gender}
-        selected={selected}
-        scale={scale}
-        label={label}
-        characterOverride={openEyes ? BOY_OPEN_EYES : undefined}
-      />
+      {/* Wraps the bubble rather than living inside it: the driver reaches the eye leaves
+          through context, so `AvatarBubble` and `FigmaBoard` stay unaware of it, and the
+          girl — who has no driven eyes — simply ignores it. */}
+      <EyeOpenProvider open={selected}>
+        <AvatarBubble
+          gender={gender}
+          selected={selected}
+          scale={scale}
+          label={label}
+          characterOverride={gender === 'boy' ? BOY_EYES_DRIVEN : undefined}
+        />
+      </EyeOpenProvider>
     </PressableScale>
   );
 }

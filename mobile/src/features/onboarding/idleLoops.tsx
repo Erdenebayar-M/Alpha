@@ -1,6 +1,9 @@
-import { type FC, useEffect } from 'react';
+import { createContext, type FC, type ReactNode, useContext, useEffect } from 'react';
 import Animated, {
   Easing,
+  Extrapolation,
+  interpolate,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -31,7 +34,7 @@ const LOOP_EASE = Easing.inOut(Easing.ease);
  *
  * The eye art it squashes is ~22 board px tall, so this leaves a ~2.6 board px line,
  * which is about the stroke weight of the closed-eye arcs a character is drawn with.
- * That match is the whole trick behind `withReveal`'s cross-dissolve: measured at 0.02
+ * That match is the whole trick behind `withEyeOpen`'s cross-dissolve: measured at 0.02
  * the eye collapses below one screen pixel and disappears, and the character is briefly
  * left with a blank face between the arcs fading and the eye becoming visible.
  */
@@ -75,72 +78,136 @@ export function withBlink(Art: FC<SvgProps>, holdMs = 2600): FC<SvgProps> {
   return Blinking;
 }
 
+// ---------------------------------------------------------------------------
+// Eyes that open and shut on demand (`EyeOpenProvider` + `withEyeOpen`/`withEyeCover`).
+//
+// Used by the boy on the Gender step, whose eyes open when he's picked and shut again
+// when he's un-picked. Both directions are read off ONE shared driver rather than being
+// two one-shot animations fired on mount, for two reasons:
+//
+//  - Nothing mounts or unmounts when the selection changes. The previous version swapped
+//    the whole `CharacterArt` (a single flattened SVG -> a five-leaf board) at the moment
+//    of the tap, so five SVGs had to mount and paint *before* the opening could start —
+//    which is what made the open read as a stutter. Every leaf now lives for the whole
+//    step and only its transform changes, on the UI thread.
+//  - Closing is the same choreography backwards, for free, and it can be interrupted:
+//    tapping twice quickly retargets the driver from wherever it currently is instead of
+//    restarting from either end.
+// ---------------------------------------------------------------------------
+
+/** 0 = shut (drawn closed-eye art visible), 1 = open. Absent provider => open. */
+const EyeOpenContext = createContext<SharedValue<number> | null>(null);
+
+/** A wide-eyed pop on the way open; a softer, slightly slower settle on the way shut. */
+const EYE_OPEN_MS = 340;
+const EYE_CLOSE_MS = 260;
+
 /**
- * Like `withBlink`, but starts shut and opens once on mount before settling into the
- * same periodic blink — a "waking up" reveal for a character that's about to be shown
- * open-eyed for the first time, rather than one that's already been sitting there.
- *
- * Starts shut at `SHUT_SCALE_Y` rather than part-open, and holds there for `shutMs`
- * before opening. That hold is what lets the character's *drawn* closed-eye art
- * cross-dissolve out underneath (see `withFadeOut` and `BOY_OPEN_EYES` in
- * `profileSetup/genderCharacters.tsx`): while this leaf is squashed it is visually just a
- * dark horizontal line of about the arcs' own stroke weight, so the swap between the two
- * happens with nothing to see. Without the hold, the open eye is already part-grown by
- * the time the arcs fade and the substitution reads as a cut.
- *
- * The opening itself rides `EASE_SPRING_B` — the same spring (sampled from Figma's own
- * entrance data) every character/star/sparkle entrance in Slide 1 uses — rather than the
- * plain `LOOP_EASE` the periodic blink below still uses. A one-shot reveal reads as an
- * intentional motion, so it gets a bit of overshoot; the recurring blink is meant to be a
- * quick, near-instant snap regardless of how often it repeats, so it keeps `LOOP_EASE`.
- *
- * `fromX` (board px) lets the eye *travel* while it opens, for the case where its resting
- * position isn't where the closed art it replaces was drawn: it starts shifted by `fromX`
- * — on top of that art — and converges to its real box as it opens. Defaults to 0, i.e.
- * a purely vertical reveal.
+ * The cross-dissolve, expressed as three overlapping windows on the driver:
+ * the real eye fades in almost immediately, the drawn arcs fade out over the first
+ * third, and only then does the eye actually grow. So the arcs are still partly there
+ * while the eye is a shut slit of about their own stroke weight sitting on top of them —
+ * there is no frame with a bare face, and none with two distinguishable shapes. At the
+ * closed end the eye is fully transparent, so an unselected character is pixel-identical
+ * to its plain flattened art.
  */
-export function withReveal(
-  Art: FC<SvgProps>,
-  openMs = 320,
-  holdMs = 2400,
-  shutMs = 110,
-  fromX = 0
-): FC<SvgProps> {
-  function Revealing(props: SvgProps) {
-    const scaleY = useSharedValue(SHUT_SCALE_Y);
-    const shiftX = useSharedValue(fromX);
+const EYE_FADE_IN_AT = 0.12;
+const LID_FADE_OUT_AT = 0.35;
+const EYE_GROWS_FROM = 0.28;
+
+/**
+ * Drives every `withEyeOpen`/`withEyeCover` leaf below it. Wrap the character (or
+ * anything containing it — this crosses `AvatarBubble` and `FigmaBoard` untouched) and
+ * flip `open`.
+ */
+export function EyeOpenProvider({ open, children }: { open: boolean; children: ReactNode }) {
+  const value = useSharedValue(open ? 1 : 0);
+
+  useEffect(() => {
+    value.value = open
+      ? // `EASE_SPRING_B` — the sampled Figma spring every character entrance rides.
+        // Its 1.068 overshoot carries through the interpolations below as a small
+        // wide-eyed pop, which is what makes waking up read as a reaction to the tap.
+        withTiming(1, { duration: EYE_OPEN_MS, easing: EASE_SPRING_B })
+      : // Shutting gets no overshoot: eyelids don't bounce closed.
+        withTiming(0, { duration: EYE_CLOSE_MS, easing: Easing.inOut(Easing.ease) });
+  }, [open, value]);
+
+  return <EyeOpenContext.Provider value={value}>{children}</EyeOpenContext.Provider>;
+}
+
+function useEyeOpen(): SharedValue<number> {
+  // Hooks can't be conditional, so the fallback is always created; it's a constant 1, so
+  // a character used without a provider (Personal Info, Grade) just renders open-eyed.
+  const standalone = useSharedValue(1);
+  return useContext(EyeOpenContext) ?? standalone;
+}
+
+/**
+ * An eye leaf that follows the `EyeOpenProvider` driver — shut and invisible at 0, open
+ * and blinking at 1 — instead of blinking unconditionally like `withBlink`.
+ *
+ * `fromX` (board px) lets the eye *travel* as it opens, for the case where its resting
+ * position isn't where the closed art it replaces was drawn: at the shut end it sits
+ * shifted by `fromX`, on top of that art, and converges to its real box as it opens.
+ */
+export function withEyeOpen(Art: FC<SvgProps>, fromX = 0, blinkHoldMs = 2400): FC<SvgProps> {
+  function Eye(props: SvgProps) {
+    const open = useEyeOpen();
+    const blink = useSharedValue(1);
 
     useEffect(() => {
-      // Travels on the same clock as the opening: held at `fromX` through the shut-hold,
-      // then released alongside the scale. Board px — inside `FigmaBoard` one unit is one
-      // board px, since the board is laid out unscaled and scaled once by its parent.
-      shiftX.value = withSequence(
-        withTiming(fromX, { duration: shutMs, easing: LOOP_EASE }),
-        withTiming(0, { duration: openMs, easing: EASE_SPRING_B })
+      // Runs forever, but is scaled out of existence below while the eye is shut, so a
+      // closed-eyed character never twitches. Same squash and pace as `withBlink`.
+      blink.value = withRepeat(
+        withDelay(
+          blinkHoldMs,
+          withSequence(
+            withTiming(0.15, { duration: 70, easing: LOOP_EASE }),
+            withTiming(1, { duration: 120, easing: LOOP_EASE })
+          )
+        ),
+        -1,
+        false
       );
-      scaleY.value = withSequence(
-        // Hold shut while the drawn closed-eye arcs fade out over the top.
-        withTiming(SHUT_SCALE_Y, { duration: shutMs, easing: LOOP_EASE }),
-        withTiming(1, { duration: openMs, easing: EASE_SPRING_B }),
-        // `withDelay` goes *inside* `withRepeat`, exactly as in `withBlink` above, so
-        // `holdMs` is the gap between every blink rather than a one-off pause before an
-        // unbroken 190ms blink loop.
-        withRepeat(
-          withDelay(
-            holdMs,
-            withSequence(
-              withTiming(0.15, { duration: 70, easing: LOOP_EASE }),
-              withTiming(1, { duration: 120, easing: LOOP_EASE })
-            )
-          ),
-          -1,
-          false
-        )
-      );
-    }, [scaleY, shiftX]);
+    }, [blink]);
+
+    const style = useAnimatedStyle(() => {
+      const t = open.value;
+      // Three-point range so the driver's spring overshoot (it peaks at 1.068) carries
+      // into a small over-open that settles back, instead of being clamped flat at 1 —
+      // while the shut end stays pinned at the slit rather than extrapolating past it.
+      const lid = interpolate(t, [EYE_GROWS_FROM, 1, 1.07], [SHUT_SCALE_Y, 1, 1.06], Extrapolation.CLAMP);
+      const opened = Math.min(Math.max(t, 0), 1);
+      return {
+        opacity: interpolate(t, [0, EYE_FADE_IN_AT], [0, 1], Extrapolation.CLAMP),
+        transform: [
+          { translateX: interpolate(t, [EYE_GROWS_FROM, 1], [fromX, 0], Extrapolation.CLAMP) },
+          // Blinking only bites in proportion to how open the eye is.
+          { scaleY: lid * (1 - (1 - blink.value) * opened) },
+        ],
+      };
+    });
+
+    return (
+      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
+        <Art {...props} />
+      </Animated.View>
+    );
+  }
+  return Eye;
+}
+
+/**
+ * The counterpart leaf: a character's *drawn* closed-eye art (the arcs it ships with),
+ * fading out from under the opening eye and back in as it shuts.
+ */
+export function withEyeCover(Art: FC<SvgProps>): FC<SvgProps> {
+  function EyeCover(props: SvgProps) {
+    const open = useEyeOpen();
 
     const style = useAnimatedStyle(() => ({
-      transform: [{ translateX: shiftX.value }, { scaleY: scaleY.value }],
+      opacity: interpolate(open.value, [0, LID_FADE_OUT_AT], [1, 0], Extrapolation.CLAMP),
     }));
 
     return (
@@ -149,39 +216,7 @@ export function withReveal(
       </Animated.View>
     );
   }
-  return Revealing;
-}
-
-/**
- * Fades a leaf out once on mount and leaves it gone — the counterpart to `withReveal`.
- *
- * Exists so a character's *drawn* closed-eye art can retire under a real open eye that
- * is opening in the same moment, instead of being deleted in one frame. The default
- * timings put it fully gone at ~160ms, straddling the end of `withReveal`'s 110ms
- * shut-hold, so the arcs are still partly there as the eye starts to open and the two
- * genuinely dissolve into one another. See `BOY_OPEN_EYES` in
- * `profileSetup/genderCharacters.tsx`.
- */
-export function withFadeOut(Art: FC<SvgProps>, holdMs = 70, fadeMs = 90): FC<SvgProps> {
-  function FadingOut(props: SvgProps) {
-    const opacity = useSharedValue(1);
-
-    useEffect(() => {
-      opacity.value = withSequence(
-        withTiming(1, { duration: holdMs, easing: LOOP_EASE }),
-        withTiming(0, { duration: fadeMs, easing: LOOP_EASE })
-      );
-    }, [opacity]);
-
-    const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
-  }
-  return FadingOut;
+  return EyeCover;
 }
 
 /**
