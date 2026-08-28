@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
-import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
+import { boardScale, DESIGN, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
 import AgeWheel from '@/src/features/onboarding/profileSetup/components/AgeWheel';
 import AvatarBubble from '@/src/features/onboarding/profileSetup/components/AvatarBubble';
 import ProfileStepLayout from '@/src/features/onboarding/profileSetup/components/ProfileStepLayout';
@@ -49,11 +49,14 @@ export default function PersonalInfoStep({
   onContinue: () => void;
 }) {
   const { width, height } = useWindowDimensions();
-  const scale = boardScale(DESIGN, width, height);
+  // Frozen in lockstep with `ProfileStepLayout`'s own frozen scale (avoidsKeyboard),
+  // so the avatar/fields don't rescale when Android's keyboard resizes the window.
+  const stableHeight = useKeyboardStableHeight(height);
+  const scale = boardScale(DESIGN, width, stableHeight);
   const canContinue = surname.trim().length > 0 && givenName.trim().length > 0;
 
   return (
-    <ProfileStepLayout ctaDisabled={!canContinue} onContinue={onContinue}>
+    <ProfileStepLayout ctaDisabled={!canContinue} onContinue={onContinue} avoidsKeyboard>
       <AvatarBubble
         gender={gender}
         scale={scale}
