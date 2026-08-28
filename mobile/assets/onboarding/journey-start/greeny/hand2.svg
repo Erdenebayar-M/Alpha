@@ -1,12 +1,10 @@
-<svg width="21" height="43" viewBox="0 0 21 43" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_0_1)">
+<svg width="25" height="43" viewBox="-4 0 25 43" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="greeny" filter="url(#filter0_d_0_1)">
 <g id="greeny hand">
 <g id="Glow hand">
 <g id="mitten-hand">
 <path id="palm" d="M8.72994 17.1906C10.4329 18.8771 12.5668 23.7151 9.19371 26.3318C5.82063 28.9486 2.43937 27.1366 -0.288598 23.9859C-2.28987 19.9535 -3.15706 18.3578 -0.291371 16.3333C2.57432 14.3088 7.02698 15.5041 8.72994 17.1906Z" fill="#050505"/>
 <path id="finger-bump" d="M0.356468 17.688C1.31375 17.7111 2.70686 21.2972 2.10133 23.4194C1.12861 26.8285 0.984865 27.4114 -0.0818065 27.9129C-2.67461 28.9158 -3.58573 26.7276 -3.14548 23.7235C-2.70522 20.7194 -0.363885 17.5744 0.356468 17.688Z" fill="#050505"/>
-</g>
 </g>
 </g>
 </g>
@@ -22,8 +20,5 @@
 <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
 <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
 </filter>
-<clipPath id="clip0_0_1">
-<rect y="-222.873" width="390" height="844" rx="60" fill="white"/>
-</clipPath>
 </defs>
 </svg>
