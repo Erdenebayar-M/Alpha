@@ -102,17 +102,18 @@ export const PINKY: CharacterArt = {
 export const GREENY: CharacterArt = {
   size: { width: 202.415, height: 200.669 },
   leaves: [
-    // greenyBody's and greenyHand2's exported SVGs have path geometry that spills
-    // outside Figma's own declared canvas (blur bleed the export tool didn't account
-    // for) — their viewBox was widened by hand to enclose it (see the .svg files), so
-    // these boxes are shifted by that same delta to keep the art at its designed page
-    // position: body by (-48, 13), hand2 by (-4, 0).
-    { Art: greenyBody, box: { left: -6.79, top: 47.34, width: 110, height: 122 } },
-    { Art: greenyHair, box: { left: 36.275, top: 41.16, width: 50, height: 57 } },
-    { Art: greenyHand1, box: { left: 29.454, top: 136.241, width: 48, height: 40 } },
-    { Art: greenyHand2, box: { left: -16.206, top: 39.685, width: 25, height: 43 } },
-    { Art: greenyEye, box: { left: 14.212, top: 62.719, width: 46, height: 47 } },
-    { Art: greenySmile, box: { left: 1.311, top: 94.009, width: 20, height: 19 } },
+    // These boxes are template-matched against the Figma page render (not the
+    // per-node metadata, which disagreed with where the art actually falls) —
+    // see the journey-start-page plan notes for the matching method. greenyBody
+    // and greenyHand2 are legitimately clipped by the page frame's left edge in
+    // Figma itself (their own node screenshot renders clipped the same way), so
+    // their boxes are intentionally cut off at the board's left edge, not a bug.
+    { Art: greenyBody, box: { left: -9.73, top: 36.1, width: 81, height: 135 } },
+    { Art: greenyHair, box: { left: 11.27, top: 43.1, width: 50, height: 57 } },
+    { Art: greenyHand1, box: { left: 29.27, top: 109.1, width: 48, height: 40 } },
+    { Art: greenyHand2, box: { left: -9.73, top: 40.1, width: 21, height: 43 } },
+    { Art: greenyEye, box: { left: -1.73, top: 64.1, width: 46, height: 47 } },
+    { Art: greenySmile, box: { left: -1.73, top: 93.1, width: 20, height: 19 } },
   ],
 };
 
