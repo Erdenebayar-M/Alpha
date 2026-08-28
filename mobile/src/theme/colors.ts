@@ -81,4 +81,11 @@ export const colors = {
   profileGradePillBg: '#FFFFFF',
   profileGradePillSelectedBg: '#2F5BE4',
   profileGradePillText: '#090909',
+
+  // Journey start (Figma 204:11233) — runs after profile setup at the top of today's lesson.
+  journeyCtaStart: '#2F5BFF',
+  journeyCtaEnd: '#3361F4',
+  journeySubtitle: '#575050',
+  journeyDurationText: '#7A8797',
+  journeyDurationBg: 'rgba(241, 244, 248, 0.3)',
 } as const;
