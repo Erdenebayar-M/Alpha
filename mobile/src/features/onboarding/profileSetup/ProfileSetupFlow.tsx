@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { DEFAULT_AGE } from '@/src/features/onboarding/profileSetup/components/AgeWheel';
 import type { Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
@@ -37,33 +37,30 @@ export default function ProfileSetupFlow({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={styles.screen}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {step === 'gender' ? (
-          <GenderStep gender={gender} onSelect={setGender} onContinue={() => setStep('personalInfo')} />
-        ) : null}
+      {step === 'gender' ? (
+        <GenderStep gender={gender} onSelect={setGender} onContinue={() => setStep('personalInfo')} />
+      ) : null}
 
-        {step === 'personalInfo' && gender ? (
-          <PersonalInfoStep
-            gender={gender}
-            surname={surname}
-            givenName={givenName}
-            age={age}
-            onChangeSurname={setSurname}
-            onChangeGivenName={setGivenName}
-            onChangeAge={setAge}
-            onContinue={() => setStep('grade')}
-          />
-        ) : null}
+      {step === 'personalInfo' && gender ? (
+        <PersonalInfoStep
+          gender={gender}
+          surname={surname}
+          givenName={givenName}
+          age={age}
+          onChangeSurname={setSurname}
+          onChangeGivenName={setGivenName}
+          onChangeAge={setAge}
+          onContinue={() => setStep('grade')}
+        />
+      ) : null}
 
-        {step === 'grade' && gender ? (
-          <GradeStep gender={gender} grade={grade} onSelect={setGrade} onContinue={onDone} />
-        ) : null}
-      </KeyboardAvoidingView>
+      {step === 'grade' && gender ? (
+        <GradeStep gender={gender} grade={grade} onSelect={setGrade} onContinue={onDone} />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1 },
 });

@@ -1,8 +1,17 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
+import { boardScale, DESIGN, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
 import ContinueButton from '@/src/features/onboarding/profileSetup/components/ContinueButton';
 
 /**
@@ -26,35 +35,86 @@ export default function ProfileStepLayout({
   children,
   ctaDisabled,
   onContinue,
+  avoidsKeyboard,
 }: {
   children: ReactNode;
   ctaDisabled: boolean;
   onContinue: () => void;
+  /**
+   * Opt in for steps with text inputs (currently only `PersonalInfoStep`). Off by
+   * default so `GenderStep`/`GradeStep` — which never open a keyboard — keep their
+   * exact existing render path.
+   *
+   * When on: the CTA is prevented from rising with the keyboard (see `shrinkAmount`
+   * below), and `children` scroll inside a keyboard-avoiding region so the fields stay
+   * reachable instead of being hidden behind the keyboard.
+   */
+  avoidsKeyboard?: boolean;
 }) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const scale = boardScale(DESIGN, width, height);
+  // Always called (rules-of-hooks); only steps that opt in actually use its frozen
+  // value. Freezing height stops Android's keyboard-driven window resize (adjustResize)
+  // from rescaling the board — see `useKeyboardStableHeight`.
+  const stableHeight = useKeyboardStableHeight(height);
+  const scale = boardScale(DESIGN, width, avoidsKeyboard ? stableHeight : height);
+  // On Android, `root`'s real flex box still shrinks by this amount even though `scale`
+  // (and so the CTA's `bottom` value) is frozen — this cancels that drift so the CTA
+  // never visually moves. Always 0 on iOS, where nothing here shrinks `root` anymore.
+  const shrinkAmount = avoidsKeyboard ? Math.max(0, stableHeight - height) : 0;
+
+  const cta = (
+    <View
+      style={[
+        styles.cta,
+        {
+          bottom: Math.max(CTA_BOTTOM * scale, insets.bottom + 12),
+          paddingHorizontal: 24,
+          transform: [{ translateY: shrinkAmount }],
+        },
+      ]}
+    >
+      <ContinueButton disabled={ctaDisabled} onPress={onContinue} scale={scale} />
+    </View>
+  );
+
+  if (!avoidsKeyboard) {
+    return (
+      <View style={styles.root}>
+        <View style={[styles.column, { top: COLUMN_TOP * scale, width: COLUMN_WIDTH * scale }]}>
+          {children}
+        </View>
+        {cta}
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.root}>
-      <View style={[styles.column, { top: COLUMN_TOP * scale, width: COLUMN_WIDTH * scale }]}>
-        {children}
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.root}>
+        <KeyboardAvoidingView
+          style={[styles.keyboardColumn, { top: COLUMN_TOP * scale }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: (CTA_BOTTOM + 80) * scale }]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={{ width: COLUMN_WIDTH * scale, alignItems: 'center' }}>{children}</View>
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-      <View
-        style={[
-          styles.cta,
-          { bottom: Math.max(CTA_BOTTOM * scale, insets.bottom + 12), paddingHorizontal: 24 },
-        ]}
-      >
-        <ContinueButton disabled={ctaDisabled} onPress={onContinue} scale={scale} />
+        {cta}
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
   column: { position: 'absolute', alignSelf: 'center', alignItems: 'center' },
+  keyboardColumn: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  scrollContent: { alignItems: 'center', flexGrow: 1 },
   cta: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
 });

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Easing, type EasingFunction, type EasingFunctionFactory } from 'react-native-reanimated';
 
 /**
@@ -130,6 +131,21 @@ export const DESIGN_SLIDE1: Board = { width: 395, height: 852 } as const;
 /** Size a board off both axes so it never overflows a short screen (AGENTS.md §12). */
 export function boardScale(board: Board, width: number, height: number): number {
   return Math.min(width / board.width, height / board.height);
+}
+
+/**
+ * Freezes `useWindowDimensions().height` at its highest-seen value. The app is
+ * portrait-locked and single-Activity, so the only thing that legitimately shrinks a
+ * mounted screen's height is Android's keyboard-driven `adjustResize` softInputMode —
+ * ratcheting up-only cancels that out while self-healing the moment the screen is next
+ * measured at full size (keyboard closes, or the caller remounts on a step change).
+ * Not a general-purpose "ignore resizes" hook — don't reuse it somewhere a real
+ * rotation or window resize needs to be tracked.
+ */
+export function useKeyboardStableHeight(height: number): number {
+  const stableRef = useRef(height);
+  if (height > stableRef.current) stableRef.current = height;
+  return stableRef.current;
 }
 
 const fade = (delay: number, duration: number): Track => ({
