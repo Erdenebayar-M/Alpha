@@ -1,12 +1,6 @@
 import { useCallback, useRef } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  type ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { type NativeScrollEvent, type NativeSyntheticEvent, StyleSheet, Text, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -39,6 +33,11 @@ const PILL = { width: 216, height: 35 };
 const FONT = 17;
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
+// gesture-handler's ScrollView (not RN's) so this horizontal wheel arbitrates correctly
+// against the step's outer vertical scroller on real touch input, instead of losing the
+// gesture to it — plain RN nested ScrollViews of different orientation don't do this
+// reliably, especially on Android.
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 export const DEFAULT_AGE = 8;
 
@@ -90,7 +89,7 @@ export default function AgeWheel({
         { width: PILL.width * scale, height: PILL.height * scale, borderRadius: 24 * scale },
       ]}
     >
-      <Animated.ScrollView
+      <AnimatedScrollView
         ref={ref}
         onLayout={seed}
         horizontal
@@ -107,7 +106,7 @@ export default function AgeWheel({
         {AGES.map((age, index) => (
           <AgeItem key={age} age={age} index={index} progress={progress} width={step} scale={scale} />
         ))}
-      </Animated.ScrollView>
+      </AnimatedScrollView>
     </View>
   );
 }

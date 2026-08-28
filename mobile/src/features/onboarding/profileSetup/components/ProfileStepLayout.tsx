@@ -3,12 +3,12 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { boardScale, DESIGN, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
@@ -97,6 +97,8 @@ export default function ProfileStepLayout({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            // gesture-handler's ScrollView (not RN's) so this vertical scroller arbitrates
+            // correctly with AgeWheel's nested horizontal one on real touch input.
             contentContainerStyle={[styles.scrollContent, { paddingBottom: (CTA_BOTTOM + 80) * scale }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
