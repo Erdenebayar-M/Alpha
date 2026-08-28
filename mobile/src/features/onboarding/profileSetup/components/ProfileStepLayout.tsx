@@ -1,18 +1,19 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { boardScale, DESIGN, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
 import ContinueButton from '@/src/features/onboarding/profileSetup/components/ContinueButton';
+import { OuterScrollHandlerContext } from '@/src/features/onboarding/profileSetup/components/nestedScrollArbitration';
 
 /**
  * The skeleton every profile-setup step shares (Figma 804-8990 / 804-9969 / 804-10366):
@@ -62,6 +63,7 @@ export default function ProfileStepLayout({
   // (and so the CTA's `bottom` value) is frozen — this cancels that drift so the CTA
   // never visually moves. Always 0 on iOS, where nothing here shrinks `root` anymore.
   const shrinkAmount = avoidsKeyboard ? Math.max(0, stableHeight - height) : 0;
+  const outerScrollRef = useRef<ScrollView>(null);
 
   const cta = (
     <View
@@ -97,11 +99,16 @@ export default function ProfileStepLayout({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            ref={outerScrollRef}
+            // gesture-handler's ScrollView (not RN's) so this vertical scroller arbitrates
+            // correctly with AgeWheel's nested horizontal one on real touch input.
             contentContainerStyle={[styles.scrollContent, { paddingBottom: (CTA_BOTTOM + 80) * scale }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ width: COLUMN_WIDTH * scale, alignItems: 'center' }}>{children}</View>
+            <OuterScrollHandlerContext.Provider value={outerScrollRef}>
+              <View style={{ width: COLUMN_WIDTH * scale, alignItems: 'center' }}>{children}</View>
+            </OuterScrollHandlerContext.Provider>
           </ScrollView>
         </KeyboardAvoidingView>
 

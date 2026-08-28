@@ -1,12 +1,6 @@
 import { useCallback, useRef } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  type ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { type NativeScrollEvent, type NativeSyntheticEvent, StyleSheet, Text, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -14,6 +8,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 
+import { useOuterScrollHandler } from '@/src/features/onboarding/profileSetup/components/nestedScrollArbitration';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -39,6 +34,11 @@ const PILL = { width: 216, height: 35 };
 const FONT = 17;
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
+// gesture-handler's ScrollView (not RN's) so this horizontal wheel arbitrates correctly
+// against the step's outer vertical scroller on real touch input, instead of losing the
+// gesture to it — plain RN nested ScrollViews of different orientation don't do this
+// reliably, especially on Android.
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
 export const DEFAULT_AGE = 8;
 
@@ -59,6 +59,7 @@ export default function AgeWheel({
   const progress = useSharedValue(startIndex);
   const ref = useRef<ScrollView>(null);
   const seeded = useRef(false);
+  const outerScrollRef = useOuterScrollHandler();
 
   // `contentOffset` alone does not stick on an Animated.ScrollView, so the opening
   // position is applied once layout has given the row its real width.
@@ -90,10 +91,14 @@ export default function AgeWheel({
         { width: PILL.width * scale, height: PILL.height * scale, borderRadius: 24 * scale },
       ]}
     >
-      <Animated.ScrollView
+      <AnimatedScrollView
         ref={ref}
         onLayout={seed}
         horizontal
+        // Lets this scroller and ProfileStepLayout's outer vertical one recognize the
+        // gesture simultaneously, so native per-axis disambiguation decides instead of
+        // RNGH's default nested-handler arbitration starving this one outright.
+        simultaneousHandlers={outerScrollRef ?? undefined}
         showsHorizontalScrollIndicator={false}
         snapToInterval={step}
         decelerationRate="fast"
@@ -107,7 +112,7 @@ export default function AgeWheel({
         {AGES.map((age, index) => (
           <AgeItem key={age} age={age} index={index} progress={progress} width={step} scale={scale} />
         ))}
-      </Animated.ScrollView>
+      </AnimatedScrollView>
     </View>
   );
 }

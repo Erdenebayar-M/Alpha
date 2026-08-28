@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -24,7 +25,7 @@ export default function PrimaryPillButton({
   scale?: number;
 }) {
   return (
-    <Pressable
+    <PressableScale
       style={[
         styles.button,
         { width: WIDTH * scale, height: HEIGHT * scale, borderRadius: 32 * scale },
@@ -43,7 +44,7 @@ export default function PrimaryPillButton({
         <Rect width="100%" height="100%" rx={32 * scale} fill="url(#journeyCta)" />
       </Svg>
       <Text style={[styles.label, { fontSize: 17 * scale }]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
