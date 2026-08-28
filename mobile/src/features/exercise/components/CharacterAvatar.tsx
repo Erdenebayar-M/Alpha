@@ -14,12 +14,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, Ellipse, RadialGradient, Stop, SvgXml } from 'react-native-svg';
 
+import OrtoEyebrow from '@/assets/characters/eyebrow.svg';
 import { FACE_CLOSED, FACE_OPEN } from '@/src/features/exercise/components/faceSvg';
 import { colors } from '@/src/theme/colors';
 
 const body = require('@/assets/characters/body.png');
 const decorations = require('@/assets/characters/decorations.png');
-const eyebrow = require('@/assets/characters/eyebrow.png');
 
 // The character box aspect ratio, taken from the Figma "Sound component" (164.78 x 179).
 const ASPECT = 164.779 / 179;
@@ -34,7 +34,11 @@ const LAYERS: Record<'glow' | 'body' | 'decorations' | 'eyebrow' | 'face', Rect>
   // center; nudge it right so the globe centers under the face/earbuds.
   body: { left: 3.9, top: 0, width: 100, height: 100 },
   decorations: { left: 9.68, top: 28.46, width: 79.9, height: 30.17 },
-  eyebrow: { left: 21.5, top: 11.23, width: 49.76, height: 22.53 },
+  // The eyebrow's own box, not its drop-shadow's: the old rect (49.76 x 22.53) was the
+  // Figma filter box the flattened PNG was exported at (node I763:8687;335:2929). Solved
+  // by aligning the Figma render's brow against its pupils/smile, so the brow-to-eye gap
+  // matches the design — Figma's reported node box is ~2.4% larger than the path itself.
+  eyebrow: { left: 28.45, top: 17.18, width: 37.13, height: 11.12 },
   face: { left: 31.56, top: 30.16, width: 37.62, height: 24.77 },
 };
 
@@ -118,7 +122,9 @@ export default function CharacterAvatar({ playing, width = DEFAULT_AVATAR_WIDTH 
       <Animated.View style={[styles.fill, bobStyle]}>
         <Image source={body} style={rectStyle(LAYERS.body)} contentFit="contain" />
         <Image source={decorations} style={rectStyle(LAYERS.decorations)} contentFit="contain" />
-        <Image source={eyebrow} style={rectStyle(LAYERS.eyebrow)} contentFit="contain" />
+        <View style={rectStyle(LAYERS.eyebrow)}>
+          <OrtoEyebrow width="100%" height="100%" />
+        </View>
         <View style={rectStyle(LAYERS.face)}>
           <SvgXml xml={playing ? FACE_CLOSED : FACE_OPEN} width="100%" height="100%" />
         </View>
