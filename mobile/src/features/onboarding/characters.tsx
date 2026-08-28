@@ -54,8 +54,8 @@ import YellowStem from '@/assets/onboarding/slide1/yellow/stem.svg';
 import YellowWhiteFlower from '@/assets/onboarding/slide1/yellow/white-flower.svg';
 import YellowYellowFlower from '@/assets/onboarding/slide1/yellow/yellow-flower.svg';
 
-// The pink mascot's waving hand — its own animated layer, so its own board.
-import PinkHandFull from '@/assets/onboarding/slide1/hand/full.svg';
+// Yellow's waving left arm — its own animated layer, so its own board.
+import YellowArmFull from '@/assets/onboarding/slide1/hand/full.svg';
 
 // Wrapped once at module scope so every render reuses the same component identity —
 // rebuilding these per render would restart the blink loop on every re-render of the
@@ -357,16 +357,22 @@ export const YELLOW: CharacterArt = {
 };
 
 // ---------------------------------------------------------------------------
-// Pink's waving hand — animated separately, so it is its own board.
+// Yellow's waving left arm — animated separately, so it is its own board.
+//
+// This is yellow's arm, not pink's: the asset sits at slide (85, 473.5), against
+// yellow's body, mirroring the static right arm in `YELLOW` above. Figma's layer
+// naming (and this file, until now) attributed it to pink, whose own arm is the
+// separate `PinkArmFull` leaf further left.
 // ---------------------------------------------------------------------------
 
 // Figma's own flattened export (163:1934) is used verbatim, same rationale as
-// yellow's hand above — reassembling this from 4 rotated/skewed/expanded leaves
-// (plus the outer rotate/skew/flipY) consistently merged the fingers into a
-// blob. `size` is the export's own bled bounding box, not the nominal
-// (pre-bleed) layout box; `WAVE_LAYER.rect` in motion.ts is centred on the
-// hand's measured ink bounds in the full-slide render to match.
-export const WAVING_HAND: CharacterArt = {
+// yellow's right arm above — reassembling this from 4 rotated/skewed/expanded
+// leaves (plus the outer rotate/skew/flipY) consistently merged the fingers into
+// a blob. Note it is a whole arm, shoulder to fingers, not just a hand: the
+// shoulder stub ends at art (41.5, 47), which is what `WAVE_ORIGIN` pivots about.
+// `size` is the export's own bled bounding box, not the nominal (pre-bleed)
+// layout box; `WAVE_LAYER.rect` in motion.ts is placed to match.
+export const WAVING_ARM: CharacterArt = {
   size: { width: 45, height: 48 },
-  leaves: [{ Art: PinkHandFull, box: { left: 0, top: 0, width: 45, height: 48 } }],
+  leaves: [{ Art: YellowArmFull, box: { left: 0, top: 0, width: 45, height: 48 } }],
 };

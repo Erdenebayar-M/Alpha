@@ -30,7 +30,7 @@ import WordmarkName from '@/assets/onboarding/slide1/wordmark-name.svg';
 import WordmarkOrto from '@/assets/onboarding/slide1/wordmark-orto.svg';
 
 import AnimatedLayer from '@/src/features/onboarding/AnimatedLayer';
-import { GREEN, PINK, WAVING_HAND, YELLOW, type CharacterArt } from '@/src/features/onboarding/characters';
+import { GREEN, PINK, WAVING_ARM, YELLOW, type CharacterArt } from '@/src/features/onboarding/characters';
 import FigmaBoard from '@/src/features/onboarding/FigmaBoard';
 import {
   DESIGN_SLIDE1,
@@ -38,6 +38,7 @@ import {
   SLIDE1_LAYERS,
   WAVE_KEYFRAMES,
   WAVE_LAYER,
+  WAVE_ORIGIN,
   WAVE_REPEAT_COUNT,
   WAVE_START,
   boardScale,
@@ -104,12 +105,15 @@ function ScaledBoard({ art, scale }: { art: CharacterArt; scale: number }) {
 }
 
 /**
- * The pink mascot's hand. It enters with everything else, then waves —
- * Figma's rotate track swings twice between 1000ms and 1900ms and we loop that segment
- * `WAVE_REPEAT_COUNT` times (~2.7s), then let it settle at its resting angle rather than
- * wave forever.
+ * The yellow mascot's left arm (viewer's left). It enters with everything else, then
+ * waves — Figma's rotate track swings twice between 1000ms and 1900ms and we loop that
+ * segment `WAVE_REPEAT_COUNT` times (~2.7s), then let it settle at its resting angle
+ * rather than wave forever.
+ *
+ * The swing pivots at the shoulder (`WAVE_ORIGIN`), not the view's centre, so the end
+ * that meets the body stays put and only the hand travels.
  */
-function WavingHand({ play, scale }: { play: boolean; scale: number }) {
+function WavingArm({ play, scale }: { play: boolean; scale: number }) {
   const opacity = useSharedValue(0);
   // `as const` on the keyframes narrows to a literal, which would reject the swings.
   const rotate = useSharedValue<number>(WAVE_KEYFRAMES[0].deg);
@@ -146,19 +150,21 @@ function WavingHand({ play, scale }: { play: boolean; scale: number }) {
           width: WAVE_LAYER.rect.width * scale,
           height: WAVE_LAYER.rect.height * scale,
         },
+        // Static, so it sits on the style array rather than in the worklet above.
+        { transformOrigin: WAVE_ORIGIN },
         style,
       ]}
     >
-      <ScaledBoard art={WAVING_HAND} scale={scale} />
+      <ScaledBoard art={WAVING_ARM} scale={scale} />
     </Animated.View>
   );
 }
 
 /**
- * Splits at the boundary Figma's own paint order puts `<WavingHand>` at — right
+ * Splits at the boundary Figma's own paint order puts `<WavingArm>` at — right
  * after `wordmark`, before `green`. See the comment on `SLIDE1_LAYERS` in motion.ts.
  */
-const WAVING_HAND_INDEX = SLIDE1_LAYERS.findIndex((layer) => layer.key === 'green');
+const WAVING_ARM_INDEX = SLIDE1_LAYERS.findIndex((layer) => layer.key === 'green');
 
 function renderLayer(layer: (typeof SLIDE1_LAYERS)[number], play: boolean, scale: number) {
   const character = CHARACTER_ART[layer.key];
@@ -182,9 +188,9 @@ export default function Slide1({ play, width, height }: { play: boolean; width: 
       pointerEvents="none"
       style={{ width: DESIGN_SLIDE1.width * scale, height: DESIGN_SLIDE1.height * scale }}
     >
-      {SLIDE1_LAYERS.slice(0, WAVING_HAND_INDEX).map((layer) => renderLayer(layer, play, scale))}
-      <WavingHand play={play} scale={scale} />
-      {SLIDE1_LAYERS.slice(WAVING_HAND_INDEX).map((layer) => renderLayer(layer, play, scale))}
+      {SLIDE1_LAYERS.slice(0, WAVING_ARM_INDEX).map((layer) => renderLayer(layer, play, scale))}
+      <WavingArm play={play} scale={scale} />
+      {SLIDE1_LAYERS.slice(WAVING_ARM_INDEX).map((layer) => renderLayer(layer, play, scale))}
     </View>
   );
 }
