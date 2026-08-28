@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import type { SkillsState } from '@/src/api/dashboard';
 import { usePlan, useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
@@ -40,9 +41,9 @@ export default function DashboardScreen() {
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
         <Text style={styles.title}>Ахиц алга байна</Text>
         <Text style={styles.muted}>Эхлээд онош өгснөөр чадварын дүн энд харагдана.</Text>
-        <Pressable style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
+        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
           <Text style={styles.primaryButtonText}>Онош эхлүүлэх</Text>
-        </Pressable>
+        </PressableScale>
       </SafeAreaView>
     );
   }
@@ -86,7 +87,7 @@ export default function DashboardScreen() {
 
         {/* Tappable summary → the full detailed plan screen. */}
         {plan ? (
-          <Pressable style={styles.planCard} onPress={() => router.push(`/learner/${id}/plan`)}>
+          <PressableScale style={styles.planCard} onPress={() => router.push(`/learner/${id}/plan`)}>
             <View style={styles.planCardMain}>
               <Text style={styles.planCardTitle}>Хичээлийн төлөвлөгөө</Text>
               <View style={styles.planBadge}>
@@ -97,7 +98,7 @@ export default function DashboardScreen() {
               </Text>
             </View>
             <Text style={styles.planChevron}>›</Text>
-          </Pressable>
+          </PressableScale>
         ) : null}
 
         <Text style={styles.sectionTitle}>Чадварууд</Text>

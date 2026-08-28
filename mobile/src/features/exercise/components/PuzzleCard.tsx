@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import PressableScale from '@/src/components/PressableScale';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -92,11 +93,11 @@ export default function PuzzleCard({
 
   return (
     <Animated.View style={animStyle}>
-      <Pressable
+      <PressableScale
         onPress={onPress}
         disabled={disabled}
         accessibilityRole="button"
-        style={({ pressed }) => [
+        style={[
           styles.card,
           {
             width,
@@ -106,7 +107,6 @@ export default function PuzzleCard({
             borderColor,
             borderStyle: hovered ? 'dashed' : 'solid',
           },
-          pressed && !disabled ? styles.pressed : null,
         ]}
       >
         {isImage ? (
@@ -155,7 +155,7 @@ export default function PuzzleCard({
             ]}
           />
         )}
-      </Pressable>
+      </PressableScale>
     </Animated.View>
   );
 }
@@ -172,9 +172,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
-  },
-  pressed: {
-    transform: [{ scale: 0.97 }],
   },
   image: {
     backgroundColor: colors.white,

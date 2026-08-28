@@ -1,6 +1,7 @@
 import { useAudioPlayer } from 'expo-audio';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -22,9 +23,9 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
   return (
     <View style={styles.container}>
       {audioUrl ? (
-        <Pressable style={styles.audioButton} onPress={handlePlayAudio}>
+        <PressableScale style={styles.audioButton} onPress={handlePlayAudio}>
           <Text style={styles.audioButtonText}>🔊 Listen</Text>
-        </Pressable>
+        </PressableScale>
       ) : null}
 
       <Text style={styles.prompt}>{task.prompt_text}</Text>
@@ -33,7 +34,7 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
         {ex.choices.map((choice, index) => {
           const isSelected = ex.selectedIndex === index;
           return (
-            <Pressable
+            <PressableScale
               key={`${choice.text}-${index}`}
               style={[
                 styles.choiceButton,
@@ -45,7 +46,7 @@ export default function MultipleChoice({ task, onResult }: ExerciseRendererProps
               <Text style={[styles.choiceText, isSelected && styles.choiceTextSelected]}>
                 {choice.text}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

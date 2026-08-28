@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import ArrowIcon from '@/assets/onboarding/profile-setup/arrow.svg';
 import { colors } from '@/src/theme/colors';
 
@@ -31,7 +32,7 @@ export default function ContinueButton({
   const stopOpacity = disabled ? 0.2 : 1;
 
   return (
-    <Pressable
+    <PressableScale
       style={[
         styles.button,
         {
@@ -59,7 +60,7 @@ export default function ContinueButton({
       <View pointerEvents="none">
         <ArrowIcon width={ARROW.width * scale} height={ARROW.height * scale} />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { useActiveLearnerStore } from '@/src/store/activeLearner';
 
 export default function LearnerHomeScreen() {
@@ -14,30 +15,30 @@ export default function LearnerHomeScreen() {
     <View style={styles.container}>
       <Text style={styles.greeting}>{name ?? 'Welcome'}</Text>
 
-      <Pressable style={styles.button} onPress={() => router.push(`/learner/${id}/diagnostic`)}>
+      <PressableScale style={styles.button} onPress={() => router.push(`/learner/${id}/diagnostic`)}>
         <Text style={styles.buttonText}>Start diagnostic</Text>
-      </Pressable>
+      </PressableScale>
 
-      <Pressable
+      <PressableScale
         style={[styles.button, styles.secondaryButton]}
         onPress={() => router.push(`/learner/${id}/lesson`)}
       >
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>Start today&apos;s lesson</Text>
-      </Pressable>
+      </PressableScale>
 
-      <Pressable
+      <PressableScale
         style={[styles.button, styles.secondaryButton]}
         onPress={() => router.push(`/learner/${id}/plan`)}
       >
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>Төлөвлөгөө</Text>
-      </Pressable>
+      </PressableScale>
 
-      <Pressable
+      <PressableScale
         style={[styles.button, styles.secondaryButton]}
         onPress={() => router.push(`/learner/${id}/dashboard`)}
       >
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>View progress</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

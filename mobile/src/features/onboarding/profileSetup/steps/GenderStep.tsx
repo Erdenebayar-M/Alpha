@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
 import AvatarBubble from '@/src/features/onboarding/profileSetup/components/AvatarBubble';
 import ProfileStepLayout from '@/src/features/onboarding/profileSetup/components/ProfileStepLayout';
@@ -67,7 +68,7 @@ function Option({
   const openEyes = gender === 'boy' && selected;
 
   return (
-    <Pressable
+    <PressableScale
       style={styles.option}
       onPress={onPress}
       accessibilityRole="button"
@@ -81,7 +82,7 @@ function Option({
         label={label}
         characterOverride={openEyes ? BOY_OPEN_EYES : undefined}
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 

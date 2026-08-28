@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import LetterTileBar from '@/src/features/exercise/components/LetterTileBar';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
@@ -84,7 +85,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
         showsVerticalScrollIndicator={false}
       >
         {/* Character + speech bubble; tapping either plays the prompt audio. */}
-        <Pressable
+        <PressableScale
           style={styles.characterRow}
           onPress={handleToggleAudio}
           accessibilityRole="button"
@@ -96,7 +97,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
             <Text style={styles.bubbleText}>{BUBBLE_LABEL}</Text>
             <View style={styles.bubbleTail} />
           </View>
-        </Pressable>
+        </PressableScale>
 
         {/* Word with the picture and the fillable blank slot. */}
         <View style={styles.wordRow}>

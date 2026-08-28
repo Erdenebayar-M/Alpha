@@ -1,9 +1,10 @@
 import Slider from '@react-native-community/slider';
 import type { AudioPlayer } from 'expo-audio';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import { VOLUME_HIGH_SVG, VOLUME_MUTE_SVG } from '@/src/features/exercise/components/volumeIcons';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -52,14 +53,14 @@ export default function AudioControls({ player }: AudioControlsProps) {
         {TEMPO_OPTIONS.map((option) => {
           const isActive = rate === option;
           return (
-            <Pressable
+            <PressableScale
               key={option}
               style={[styles.pill, isActive && styles.pillActive]}
               hitSlop={8}
               onPress={() => handleRateSelect(option)}
             >
               <Text style={[styles.pillText, isActive && styles.pillTextActive]}>{option.toFixed(1)}</Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

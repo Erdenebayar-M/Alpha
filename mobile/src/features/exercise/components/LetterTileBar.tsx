@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { BackspaceIcon } from '@/src/features/exercise/components/icons';
 import type { TaskChoice } from '@/src/features/exercise/types';
 import { colors } from '@/src/theme/colors';
@@ -51,7 +52,7 @@ export default function LetterTileBar({
           const isUsed = usedTiles?.[index] ?? false;
           const isInert = isAnswered || isUsed;
           return (
-            <Pressable
+            <PressableScale
               key={`${label}-${index}`}
               style={({ pressed }) => [
                 styles.tile,
@@ -73,11 +74,11 @@ export default function LetterTileBar({
               >
                 {label}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
 
-        <Pressable
+        <PressableScale
           style={({ pressed }) => [
             styles.backspace,
             { minHeight: tileMinHeight },
@@ -89,7 +90,7 @@ export default function LetterTileBar({
           accessibilityLabel="Устгах"
         >
           <BackspaceIcon size={26} color={hasBackspaceTarget ? colors.textChoice : colors.textMuted} />
-        </Pressable>
+        </PressableScale>
       </View>
     </View>
   );
@@ -141,7 +142,6 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   tilePressed: {
-    transform: [{ scale: 0.97 }],
     opacity: 0.9,
   },
   tileText: {

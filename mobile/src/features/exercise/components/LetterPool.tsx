@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -38,7 +39,7 @@ export default function LetterPool({ tiles, usedTiles, onSelect, isAnswered }: L
       {tiles.map((letter, index) => {
         const used = usedTiles[index];
         return (
-          <Pressable
+          <PressableScale
             key={index}
             style={({ pressed }) => [
               styles.tile,
@@ -59,7 +60,7 @@ export default function LetterPool({ tiles, usedTiles, onSelect, isAnswered }: L
             >
               {letter}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>
@@ -91,7 +92,6 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   tilePressed: {
-    transform: [{ scale: 0.94 }],
     opacity: 0.9,
   },
   tileText: {

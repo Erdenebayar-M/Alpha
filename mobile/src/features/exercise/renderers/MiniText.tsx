@@ -1,7 +1,8 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
@@ -68,9 +69,9 @@ export default function MiniText({ task, onResult }: ExerciseRendererProps) {
       >
         <Text style={styles.prompt}>{task.prompt_text}</Text>
 
-        <Pressable onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
           <CharacterAvatar playing={status.playing} width={150} />
-        </Pressable>
+        </PressableScale>
 
         <AudioControls player={player} />
 

@@ -1,16 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { type NativeScrollEvent, type NativeSyntheticEvent, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import PageDots from '@/src/features/onboarding/PageDots';
 import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
 import Slide1 from '@/src/features/onboarding/slides/Slide1';
@@ -88,7 +81,7 @@ export default function OnboardingCarousel({ onDone }: { onDone: () => void }) {
         onMomentumScrollEnd={handleMomentumEnd}
       >
         {SLIDES.map((Slide, i) => (
-          <Pressable
+          <PressableScale
             key={i}
             // Slide 1's art deliberately overruns its 395px board on both sides,
             // so each page has to clip or it bleeds into its neighbour.
@@ -101,7 +94,7 @@ export default function OnboardingCarousel({ onDone }: { onDone: () => void }) {
             <View style={styles.centre}>
               <Slide play={i <= furthest} width={width} height={height} />
             </View>
-          </Pressable>
+          </PressableScale>
         ))}
       </ScrollView>
 

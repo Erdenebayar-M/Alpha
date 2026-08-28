@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import PressableScale from '@/src/components/PressableScale';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
 import { colors } from '@/src/theme/colors';
 
@@ -18,7 +19,7 @@ interface SpeakerButtonProps {
 export default function SpeakerButton({ playing, onPress, size = 48 }: SpeakerButtonProps) {
   const iconSize = Math.round(size * 0.5);
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       hitSlop={12}
       accessibilityRole="button"
@@ -35,7 +36,7 @@ export default function SpeakerButton({ playing, onPress, size = 48 }: SpeakerBu
         width={iconSize}
         height={iconSize}
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -49,7 +50,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryBlue,
   },
   pressed: {
-    transform: [{ scale: 0.92 }],
     opacity: 0.9,
   },
 });

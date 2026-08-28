@@ -1,16 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import { useAuth } from '@/src/features/auth/AuthContext';
 
@@ -70,7 +62,7 @@ export default function RegisterScreen() {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Pressable
+        <PressableScale
           style={[styles.button, isSubmitting && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={isSubmitting}
@@ -80,11 +72,11 @@ export default function RegisterScreen() {
           ) : (
             <Text style={styles.buttonText}>Create account</Text>
           )}
-        </Pressable>
+        </PressableScale>
 
-        <Pressable style={styles.linkButton} onPress={() => router.push('/login')}>
+        <PressableScale style={styles.linkButton} onPress={() => router.push('/login')}>
           <Text style={styles.linkText}>Already have an account? Log in</Text>
-        </Pressable>
+        </PressableScale>
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import type { TaskChoice } from '@/src/features/exercise/types';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -38,7 +39,7 @@ export default function ChoiceGrid({ choices, selectedIndex, isAnswered, onSelec
           if (index === hiddenIndex) return null;
           const isSelected = selectedIndex === index;
           return (
-            <Pressable
+            <PressableScale
               key={`${choice.text}-${index}`}
               style={({ pressed }) => [
                 styles.card,
@@ -57,7 +58,7 @@ export default function ChoiceGrid({ choices, selectedIndex, isAnswered, onSelec
               >
                 {choice.text}
               </Text>
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
     shadowRadius: 9,
   },
   cardPressed: {
-    transform: [{ scale: 0.97 }],
     opacity: 0.9,
   },
   text: {
