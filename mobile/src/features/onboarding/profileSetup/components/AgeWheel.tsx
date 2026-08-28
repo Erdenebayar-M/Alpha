@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 
+import { useOuterScrollHandler } from '@/src/features/onboarding/profileSetup/components/nestedScrollArbitration';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -58,6 +59,7 @@ export default function AgeWheel({
   const progress = useSharedValue(startIndex);
   const ref = useRef<ScrollView>(null);
   const seeded = useRef(false);
+  const outerScrollRef = useOuterScrollHandler();
 
   // `contentOffset` alone does not stick on an Animated.ScrollView, so the opening
   // position is applied once layout has given the row its real width.
@@ -93,6 +95,10 @@ export default function AgeWheel({
         ref={ref}
         onLayout={seed}
         horizontal
+        // Lets this scroller and ProfileStepLayout's outer vertical one recognize the
+        // gesture simultaneously, so native per-axis disambiguation decides instead of
+        // RNGH's default nested-handler arbitration starving this one outright.
+        simultaneousHandlers={outerScrollRef ?? undefined}
         showsHorizontalScrollIndicator={false}
         snapToInterval={step}
         decelerationRate="fast"
