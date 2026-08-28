@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { SvgProps } from 'react-native-svg';
 
-import { EASE_SPRING_B, WAVE_KEYFRAMES, WAVE_REPEAT_COUNT } from '@/src/features/onboarding/motion';
+import { EASE_SPRING_B, WAVE_KEYFRAMES, WAVE_ORIGIN, WAVE_REPEAT_COUNT } from '@/src/features/onboarding/motion';
 
 /**
  * Idle-loop animations shared by every onboarding character — the Slide 1 brand mascots
@@ -220,14 +220,24 @@ export function withEyeCover(Art: FC<SvgProps>): FC<SvgProps> {
 }
 
 /**
- * Swings a hand/arm leaf through `WAVE_KEYFRAMES` (the same bounded wave `WavingHand` in
+ * Swings a hand/arm leaf through `WAVE_KEYFRAMES` (the same bounded wave `WavingArm` in
  * `slides/Slide1.tsx` plays) a fixed number of times on mount, then settles at rest.
- * A second, independent implementation of the same swing data: `WavingHand` is a
+ * A second, independent implementation of the same swing data: `WavingArm` is a
  * separately positioned overlay keyed to a slide's own entrance choreography
  * (`WAVE_LAYER`'s fade-in delay), which doesn't apply to a leaf that's just part of a
  * character board with no entrance timeline of its own.
+ *
+ * `origin` is where the limb swings from, and it matters: the default is the leaf's
+ * centre, which for a whole-arm asset is mid-forearm, so the shoulder end swings out
+ * of the body as far as the hand does and the arm reads as detached. Pass the point
+ * where the art meets the body — `WAVE_ORIGIN` is slide 1's, for reference.
  */
-export function withWave(Art: FC<SvgProps>, startDelayMs = 200, repeatCount = WAVE_REPEAT_COUNT): FC<SvgProps> {
+export function withWave(
+  Art: FC<SvgProps>,
+  startDelayMs = 200,
+  repeatCount = WAVE_REPEAT_COUNT,
+  origin: string = WAVE_ORIGIN
+): FC<SvgProps> {
   function Waving(props: SvgProps) {
     const rotate = useSharedValue<number>(WAVE_KEYFRAMES[0].deg);
 
@@ -241,7 +251,7 @@ export function withWave(Art: FC<SvgProps>, startDelayMs = 200, repeatCount = WA
     const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${rotate.value}deg` }] }));
 
     return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
+      <Animated.View style={[{ width: '100%', height: '100%', transformOrigin: origin }, style]}>
         <Art {...props} />
       </Animated.View>
     );

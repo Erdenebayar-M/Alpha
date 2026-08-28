@@ -7,7 +7,7 @@ import { Easing, type EasingFunction, type EasingFunctionFactory } from 'react-n
  *
  * Figma loops that cohort forever; we play it once and hold, because every track
  * already settles on its final value and stays there — the loop is a preview
- * affordance, not part of the design. The waving hand is the one exception: it
+ * affordance, not part of the design. The waving arm is the one exception: it
  * keeps its wave as an idle (see WAVE_KEYFRAMES).
  */
 
@@ -325,27 +325,46 @@ export const SLIDE1_LAYERS: readonly LayerSpec[] = [
   },
 ];
 
-/** The waving hand sits on the pink character and has its own rotate choreography. */
+/**
+ * The waving arm — the yellow mascot's, on the viewer's left. (Figma's own layer
+ * naming and this file's earlier comments called it the pink mascot's hand; a
+ * composite of the real assets at their layer rects puts it squarely on yellow.)
+ * It has its own rotate choreography, so it lives outside the `YELLOW` board.
+ */
 export const WAVE_LAYER = {
   key: 'wavingHand',
-  // Centred on the hand's measured ink bounds in the full-slide render — the
-  // flattened SVG asset's bbox is the bled visual extent, not the nominal
-  // (pre-bleed) layout box the old rect described. See characters.tsx.
-  rect: { left: 81, top: 495.5, width: 45, height: 48 },
+  // Positioned so the *pivot* — not the box — lands where the arm meets the body:
+  // slide (126.5, 520.5), level with yellow's static right shoulder at (295.5, 520.5).
+  // The old rect sat ~18px lower and was centred on the box, back when the rotation
+  // pivoted about the box centre too. See `WAVE_ORIGIN` and characters.tsx.
+  rect: { left: 85, top: 473.5, width: 45, height: 48 },
   fadeDelay: 800,
   fadeDuration: 300,
 } as const;
 
 /**
+ * Where the arm swings from, as a fraction of `WAVE_LAYER.rect` — the shoulder stub
+ * at the asset's bottom-right, measured off its ink at art (41.5, 47) of 45x48.
+ *
+ * Without this the view rotates about its centre, i.e. mid-forearm, so the shoulder
+ * end swings out of the body as far as the fingers do and the arm reads as detached.
+ */
+export const WAVE_ORIGIN = '92% 98%';
+
+/**
  * Figma holds the hand at -0.191rad until 1000ms then swings it twice, landing back
  * at -0.191rad at 1900ms. Degrees, relative to the hand's resting angle, with the
  * leading hold dropped so the segment can loop cleanly as an idle.
+ *
+ * Scaled to 65% of Figma's 25deg range about the -10.94deg rest angle. Figma authored
+ * the swing against a mid-forearm pivot; from the shoulder (`WAVE_ORIGIN`) the radius
+ * to the fingertips more than doubles, so the raw range threw the whole arm around.
  */
 export const WAVE_KEYFRAMES = [
   { deg: -10.94, duration: 0 },
-  { deg: -25.96, duration: 300 },
-  { deg: -0.97, duration: 200 },
-  { deg: -22.98, duration: 200 },
+  { deg: -20.7, duration: 300 },
+  { deg: -4.46, duration: 200 },
+  { deg: -18.77, duration: 200 },
   { deg: -10.94, duration: 200 },
 ] as const;
 
