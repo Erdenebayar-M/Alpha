@@ -2,10 +2,10 @@ import type { CharacterArt } from '@/src/features/onboarding/characters';
 import type { Leaf } from '@/src/features/onboarding/FigmaBoard';
 import {
   withBlink,
-  withFadeOut,
+  withEyeCover,
+  withEyeOpen,
   withFloat,
   withPulse,
-  withReveal,
   withSmile,
 } from '@/src/features/onboarding/idleLoops';
 
@@ -22,7 +22,7 @@ import BoyArmRightArt from '@/assets/onboarding/gender/boy/arm-right.svg';
 import BoyBodyArt from '@/assets/onboarding/gender/boy/body.svg';
 // The `<g id="face">` half of that same split: the two black arcs `group.svg` draws for
 // his shut eyes, which `body.svg` omits. Kept as its own leaf purely so it can fade out
-// under the opening eyes instead of vanishing with the rest of the swap.
+// under the opening eyes, and back in as they shut again.
 import BoyClosedEyesArt from '@/assets/onboarding/gender/boy/closed-eyes.svg';
 
 // There is still no "open eyes" export of "07_shy" anywhere in the Figma file (checked
@@ -71,12 +71,12 @@ const BOARD = { width: 216, height: 209 } as const;
 // ---------------------------------------------------------------------------
 // Boy — a single flattened export (Figma "Group 22", 804:9588, which has no children).
 // There is no eye layer to blink and his eyes are already drawn as happy closed arcs,
-// so his idle is a whole-character breathe rather than a blink. Giving him a real blink
-// would need the designer to re-export him layered, the way the girl already is.
+// so his idle is a whole-character breathe rather than a blink. This is his plain
+// resting art, the `CHARACTERS` default; the two variants at the bottom of this file
+// rebuild the same character out of the split pieces so his eyes can move.
 //
-// The breathe is declared via `breathe` rather than wrapped around the `Art`, so it is
-// the *same* loop instance on the same wrapper that `BOY_OPEN_EYES` uses — that is what
-// keeps him breathing on unbroken phase across the selection swap.
+// The breathe is declared via `breathe` rather than wrapped around the `Art`, so every
+// variant shares one loop instance, on a wrapper (`AvatarBubble`) that outlives them all.
 // ---------------------------------------------------------------------------
 
 export const BOY: CharacterArt = {
@@ -192,17 +192,14 @@ export const CHARACTERS: Record<Gender, CharacterArt> = { boy: BOY, girl: GIRL }
 export const CIRCLE_LEFT: Record<Gender, number> = { boy: 23, girl: 27 };
 
 // ---------------------------------------------------------------------------
-// Boy, selected/open-eyes — built from the real "07_shy" body and both real arms
+// Boy with movable eyes — built from the real "07_shy" body and both real arms
 // (`body.svg`/`arm-right.svg`/`arm-left.svg`, split out of the same `group.svg` `BOY`
-// uses above), not a swapped-in different character. One shared `CharacterArt`, used
-// identically by both the Gender step (`GenderStep.tsx`, from the moment he's selected)
-// and Personal Info (`PersonalInfoStep.tsx`, arriving already selected) — both want the
-// same open-eyes-and-blink behaviour, so there's no reason to split it in two.
+// uses above), not a swapped-in different character.
 //
 // Both arms are completely static, exactly as designed — nothing in the source ever
 // animates on its own, and this character doesn't add motion that isn't there. Only the
 // eyes are foreign art (Yellow's, per the import comment above); everything else is
-// unmodified "07_shy". Grade keeps the plain closed-eye `BOY`.
+// unmodified "07_shy".
 // ---------------------------------------------------------------------------
 
 // Exactly the pace the pink mascot blinks at — `PinkEyeLeft`/`PinkEyeRight` in
@@ -246,37 +243,44 @@ const boyBoard = (leaves: readonly Leaf[]): CharacterArt => ({
   leaves: [{ box: { left: 47.999, top: 50.574, ...BODY_LOCAL }, board: { ...BODY_LOCAL, leaves } }],
 });
 
-const FadingClosedEyes = withFadeOut(BoyClosedEyesArt);
-const RevealBoyEyeLeft = withReveal(YellowEyeLeftArt, 320, BOY_BLINK_HOLD_MS, 110, -EYE_SLIDE_X);
-const RevealBoyEyeRight = withReveal(YellowEyeRightArt, 320, BOY_BLINK_HOLD_MS, 110, EYE_SLIDE_X);
+const DrivenClosedEyes = withEyeCover(BoyClosedEyesArt);
+const DrivenBoyEyeLeft = withEyeOpen(YellowEyeLeftArt, -EYE_SLIDE_X, BOY_BLINK_HOLD_MS);
+const DrivenBoyEyeRight = withEyeOpen(YellowEyeRightArt, EYE_SLIDE_X, BOY_BLINK_HOLD_MS);
 const BlinkBoyEyeLeft = withBlink(YellowEyeLeftArt, BOY_BLINK_HOLD_MS);
 const BlinkBoyEyeRight = withBlink(YellowEyeRightArt, BOY_BLINK_HOLD_MS);
 
 /**
- * The boy at the moment he's picked, on the Gender step only — his eyes open once, then
- * settle into the steady blink below.
+ * The boy on the Gender step, where he opens his eyes when picked and shuts them again
+ * when un-picked. He is rendered like this the *whole* time that step is on screen —
+ * selected or not — and an `EyeOpenProvider` above him (see `GenderStep.tsx`) decides
+ * which. Nothing mounts or unmounts on the tap, which is the point: the art used to be
+ * swapped wholesale at that moment and the five SVGs mounting under the animation made
+ * the opening stutter.
  *
- * The opening is a cross-dissolve, not a cut. `body.svg` has no eyes at all, so the shut
- * arcs are re-added here as their own `withFadeOut` leaf and retire (~160ms) while the
- * real eyes are still held shut by `withReveal`'s shut-hold (110ms). Squashed to
- * `SHUT_SCALE_Y` the eyes read as a dark line at y≈28 in board space, about the arcs'
- * own stroke weight, and `EYE_SLIDE_X` puts them on the arcs' x centres for the duration
- * of that hold — so there is no frame where the face is bare and none where arc and eye
- * are visible as two separate shapes. The eyes then converge to their real, narrower
- * spacing as they open.
+ * Shut, this is pixel-identical to the flattened `BOY` above — same pieces, same order,
+ * with the real eyes at opacity 0 behind the drawn arcs.
+ *
+ * Opening is a cross-dissolve, not a cut. `body.svg` has no eyes at all, so the drawn
+ * shut arcs are re-added here as their own leaf and fade out (`withEyeCover`) while the
+ * real eyes are still squashed to `SHUT_SCALE_Y` — at which they read as a dark line at
+ * y≈28 in board space, about the arcs' own stroke weight — with `EYE_SLIDE_X` holding
+ * them on the arcs' x centres until then. So there is no frame where the face is bare and
+ * none where arc and eye are visible as two separate shapes. The eyes then converge to
+ * their real, narrower spacing as they open, and run the whole thing backwards on
+ * deselect.
  */
-export const BOY_OPEN_EYES: CharacterArt = boyBoard([
+export const BOY_EYES_DRIVEN: CharacterArt = boyBoard([
   ...BOY_BODY_LEAVES,
-  { Art: FadingClosedEyes, box: FULL_BODY_BOX },
-  { Art: RevealBoyEyeLeft, box: EYE_LEFT_BOX },
-  { Art: RevealBoyEyeRight, box: EYE_RIGHT_BOX },
+  { Art: DrivenClosedEyes, box: FULL_BODY_BOX },
+  { Art: DrivenBoyEyeLeft, box: EYE_LEFT_BOX },
+  { Art: DrivenBoyEyeRight, box: EYE_RIGHT_BOX },
 ]);
 
 /**
  * The same open-eyed boy, already awake — Personal Info and Grade, which he always
- * reaches after being selected. Plain `withBlink` at pink's pace, no reveal and no shut
- * arcs, so the opening plays once where it means something (the tap) rather than
- * replaying on arrival at every later step.
+ * reaches after being selected. Plain `withBlink` at pink's pace, no driver and no shut
+ * arcs, so the opening plays where it means something (the tap on the Gender step)
+ * rather than replaying on arrival at every later step.
  */
 export const BOY_OPEN_EYES_STEADY: CharacterArt = boyBoard([
   ...BOY_BODY_LEAVES,

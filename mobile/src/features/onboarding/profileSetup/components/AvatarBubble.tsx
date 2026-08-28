@@ -1,9 +1,17 @@
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import type { CharacterArt } from '@/src/features/onboarding/characters';
 import FigmaBoard from '@/src/features/onboarding/FigmaBoard';
 import { useBreatheStyle } from '@/src/features/onboarding/idleLoops';
+import { EASE_SPRING_B } from '@/src/features/onboarding/motion';
 import { CHARACTERS, CIRCLE_LEFT, type Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -67,6 +75,7 @@ export default function AvatarBubble({
   // `characterOverride` changes — see `useBreatheStyle`. Hooks can't be conditional, so
   // it always runs and is only *applied* by characters that ask for it.
   const breatheStyle = useBreatheStyle();
+  const checkStyle = useCheckStyle(selected);
   // Centres a character whose board isn't the standard 216-wide "07_shy" frame — a no-op
   // for every character except an override with a differently sized board.
   const characterLeft = (CELL.width - art.size.width) / 2;
@@ -119,24 +128,48 @@ export default function AvatarBubble({
         <Text style={[styles.label, { top: LABEL_TOP * scale, fontSize: 14 * scale }]}>{label}</Text>
       ) : null}
 
-      {selected ? (
-        <View
-          style={[
-            styles.check,
-            {
-              left: CHECK.left * scale,
-              top: CHECK.top * scale,
-              width: CHECK.width * scale,
-              height: CHECK.height * scale,
-              borderRadius: (CHECK.height * scale) / 2,
-            },
-          ]}
-        >
-          <Text style={[styles.checkGlyph, { fontSize: 13 * scale }]}>✓</Text>
-        </View>
-      ) : null}
+      {/* Always mounted, scaled/faded by `useCheckStyle`, so it pops in and out with the
+          same tap that opens and shuts the character's eyes instead of cutting. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.check,
+          {
+            left: CHECK.left * scale,
+            top: CHECK.top * scale,
+            width: CHECK.width * scale,
+            height: CHECK.height * scale,
+            borderRadius: (CHECK.height * scale) / 2,
+          },
+          checkStyle,
+        ]}
+      >
+        <Text style={[styles.checkGlyph, { fontSize: 13 * scale }]}>✓</Text>
+      </Animated.View>
     </View>
   );
+}
+
+/**
+ * The green badge's in/out: a spring pop on select (`EASE_SPRING_B`, the same curve the
+ * eyes open on, so the two read as one reaction), a quicker plain fade on deselect.
+ * Opacity leads the scale in over the first 40% of the driver so it never appears as a
+ * visible dot before it has grown.
+ */
+function useCheckStyle(selected: boolean) {
+  const shown = useSharedValue(selected ? 1 : 0);
+
+  useEffect(() => {
+    shown.value = selected
+      ? withTiming(1, { duration: 320, easing: EASE_SPRING_B })
+      : withTiming(0, { duration: 170 });
+  }, [selected, shown]);
+
+  return useAnimatedStyle(() => ({
+    opacity: interpolate(shown.value, [0, 0.4], [0, 1], Extrapolation.CLAMP),
+    // Unclamped, so the spring's overshoot reads as a real pop rather than a flat stop.
+    transform: [{ scale: interpolate(shown.value, [0, 1], [0.4, 1]) }],
+  }));
 }
 
 const styles = StyleSheet.create({
