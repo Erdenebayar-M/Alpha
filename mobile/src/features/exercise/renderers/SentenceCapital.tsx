@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
+import PressableScale from '@/src/components/PressableScale';
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
@@ -76,7 +77,7 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
         showsVerticalScrollIndicator={false}
       >
         {/* Naran + speech bubble; tapping either plays the prompt audio. */}
-        <Pressable
+        <PressableScale
           style={styles.questionRow}
           onPress={handlePlay}
           accessibilityRole="button"
@@ -90,7 +91,7 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
               <SpeakerButton playing={status.playing} onPress={handlePlay} size={40} />
             </View>
           </View>
-        </Pressable>
+        </PressableScale>
 
         {/* White card: picture on top, sentence with the fillable word slot below. */}
         <View style={styles.card}>
@@ -101,7 +102,7 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
             {prefix ? <Text style={styles.sentenceText}>{prefix}</Text> : null}
             {filled ? (
               <Animated.View key="filled" entering={ZoomIn.duration(220)}>
-                <Pressable
+                <PressableScale
                   onPress={ex.clear}
                   disabled={ex.isAnswered}
                   style={styles.slotPill}
@@ -109,7 +110,7 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
                   accessibilityLabel={`${filled} — буцаах`}
                 >
                   <Text style={styles.slotPillText}>{filled}</Text>
-                </Pressable>
+                </PressableScale>
               </Animated.View>
             ) : (
               <View style={styles.slotEmpty}>

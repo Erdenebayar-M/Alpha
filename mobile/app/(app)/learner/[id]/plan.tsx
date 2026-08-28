@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import type { PlanLesson } from '@/src/api/plan';
 import { usePlan } from '@/src/features/dashboard/useDashboard';
@@ -36,9 +37,9 @@ export default function PlanScreen() {
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
         <Text style={styles.title}>Төлөвлөгөө алга</Text>
         <Text style={styles.muted}>Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана.</Text>
-        <Pressable style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
+        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
           <Text style={styles.primaryButtonText}>Онош эхлүүлэх</Text>
-        </Pressable>
+        </PressableScale>
       </SafeAreaView>
     );
   }
@@ -107,7 +108,7 @@ export default function PlanScreen() {
               ? Math.round((lesson.completed_tasks / lesson.total_tasks) * 100)
               : 0;
           return (
-            <Pressable
+            <PressableScale
               key={lesson.id}
               style={styles.lessonRow}
               onPress={() => setOpenLessonId(open ? null : lesson.id)}
@@ -148,7 +149,7 @@ export default function PlanScreen() {
                   </View>
                 </View>
               ) : null}
-            </Pressable>
+            </PressableScale>
           );
         })}
 

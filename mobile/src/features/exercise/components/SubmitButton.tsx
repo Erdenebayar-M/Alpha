@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ArrowRightIcon } from '@/src/features/exercise/components/icons';
 import { colors } from '@/src/theme/colors';
 
@@ -12,7 +13,7 @@ interface SubmitButtonProps {
  *  (FillBlank, LetterChoice): disabled → faint blue, enabled → primary blue. */
 export default function SubmitButton({ onPress, disabled }: SubmitButtonProps) {
   return (
-    <Pressable
+    <PressableScale
       style={[styles.submit, disabled ? styles.submitDisabled : styles.submitActive]}
       onPress={onPress}
       disabled={disabled}
@@ -20,7 +21,7 @@ export default function SubmitButton({ onPress, disabled }: SubmitButtonProps) {
       accessibilityLabel="Үргэлжлүүлэх"
     >
       <ArrowRightIcon size={28} color={colors.white} />
-    </Pressable>
+    </PressableScale>
   );
 }
 

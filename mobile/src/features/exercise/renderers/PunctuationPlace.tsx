@@ -1,8 +1,9 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
+import PressableScale from '@/src/components/PressableScale';
 import { BackspaceIcon } from '@/src/features/exercise/components/icons';
 import DraggableMark from '@/src/features/exercise/components/DraggableMark';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
@@ -134,7 +135,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
         scrollEnabled={!dragging}
       >
         {/* Naran + speech bubble; tapping either plays the prompt audio. */}
-        <Pressable
+        <PressableScale
           style={styles.questionRow}
           onPress={handlePlay}
           accessibilityRole="button"
@@ -148,7 +149,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
               <SpeakerButton playing={status.playing} onPress={handlePlay} size={40} />
             </View>
           </View>
-        </Pressable>
+        </PressableScale>
 
         {/* Sentence card: word chips wrap, each followed by a measurable gap slot that
             shows the placed mark (or the orange caret while a mark hovers over it). */}
@@ -195,14 +196,14 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
             />
           </View>
           {ex.placed.length > 0 && !ex.isAnswered ? (
-            <Pressable
+            <PressableScale
               onPress={ex.removeLast}
               style={styles.deleteTile}
               accessibilityRole="button"
               accessibilityLabel="Устгах"
             >
               <BackspaceIcon size={24} color={colors.textChoice} />
-            </Pressable>
+            </PressableScale>
           ) : null}
         </View>
 

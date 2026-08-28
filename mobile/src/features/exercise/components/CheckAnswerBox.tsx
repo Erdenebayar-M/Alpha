@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { CheckIcon } from '@/src/features/exercise/components/icons';
 import { colors } from '@/src/theme/colors';
 
@@ -23,7 +24,7 @@ interface CheckAnswerBoxProps {
  */
 export default function CheckAnswerBox({ checked, disabled, onPress }: CheckAnswerBoxProps) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={disabled}
       hitSlop={13}
@@ -41,7 +42,7 @@ export default function CheckAnswerBox({ checked, disabled, onPress }: CheckAnsw
       >
         {checked ? <CheckIcon size={12} color={colors.white} /> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

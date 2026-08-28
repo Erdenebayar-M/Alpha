@@ -1,17 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import type { Learner } from '@/src/api/learner';
 import { useCreateLearner, useGetLearners } from '@/src/features/learner/useLearners';
@@ -59,10 +50,10 @@ export default function HomeScreen() {
       {isError ? <Text style={styles.error}>Couldn&apos;t load children.</Text> : null}
 
       {data?.learners.map((learner) => (
-        <Pressable key={learner.id} style={styles.card} onPress={() => handleSelectLearner(learner)}>
+        <PressableScale key={learner.id} style={styles.card} onPress={() => handleSelectLearner(learner)}>
           <Text style={styles.cardName}>{learner.name}</Text>
           <Text style={styles.cardGrade}>Grade {learner.grade}</Text>
-        </Pressable>
+        </PressableScale>
       ))}
 
       {isFormOpen ? (
@@ -76,7 +67,7 @@ export default function HomeScreen() {
             />
             <View style={styles.gradeRow}>
               {GRADES.map((g) => (
-                <Pressable
+                <PressableScale
                   key={g}
                   style={[styles.gradeChip, grade === g && styles.gradeChipSelected]}
                   onPress={() => setGrade(g)}
@@ -84,13 +75,13 @@ export default function HomeScreen() {
                   <Text style={[styles.gradeChipText, grade === g && styles.gradeChipTextSelected]}>
                     {g}
                   </Text>
-                </Pressable>
+                </PressableScale>
               ))}
             </View>
 
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
-            <Pressable
+            <PressableScale
               style={[styles.button, createLearner.isPending && styles.buttonDisabled]}
               onPress={handleSubmit}
               disabled={createLearner.isPending}
@@ -100,16 +91,16 @@ export default function HomeScreen() {
               ) : (
                 <Text style={styles.buttonText}>Save</Text>
               )}
-            </Pressable>
-            <Pressable style={styles.linkButton} onPress={() => setIsFormOpen(false)}>
+            </PressableScale>
+            <PressableScale style={styles.linkButton} onPress={() => setIsFormOpen(false)}>
               <Text style={styles.linkText}>Cancel</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </KeyboardAvoidingView>
       ) : (
-        <Pressable style={styles.addButton} onPress={() => setIsFormOpen(true)}>
+        <PressableScale style={styles.addButton} onPress={() => setIsFormOpen(true)}>
           <Text style={styles.addButtonText}>+ Add child</Text>
-        </Pressable>
+        </PressableScale>
       )}
     </ScrollView>
   );

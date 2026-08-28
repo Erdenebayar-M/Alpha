@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
@@ -66,7 +67,7 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
               // child sees where it actually was (gentle failure, not just "wrong").
               const revealCorrect = isAnswered && !isCorrect && i === errorIndex;
               return (
-                <Pressable
+                <PressableScale
                   key={`${word}-${i}`}
                   onPress={() => handleTap(i)}
                   disabled={isAnswered}
@@ -77,7 +78,7 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
                   ]}
                 >
                   <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{word}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>

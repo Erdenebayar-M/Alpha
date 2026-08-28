@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import type { DiagnosticResult } from '@/src/api/diagnostic';
 import { useStartDiagnostic, useSubmitDiagnostic } from '@/src/features/diagnostic/useDiagnostic';
@@ -88,12 +89,12 @@ export default function DiagnosticScreen() {
     return (
       <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
         <Text style={styles.message}>{phase.message}</Text>
-        <Pressable style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
+        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
           <Text style={styles.primaryButtonText}>Ахиц харах</Text>
-        </Pressable>
-        <Pressable style={styles.linkButton} onPress={goBack}>
+        </PressableScale>
+        <PressableScale style={styles.linkButton} onPress={goBack}>
           <Text style={styles.linkText}>Буцах</Text>
-        </Pressable>
+        </PressableScale>
       </SafeAreaView>
     );
   }
@@ -112,9 +113,9 @@ export default function DiagnosticScreen() {
         <Text style={styles.message}>
           Өдрийн дасгал: ~{result.recommended_daily_minutes} мин
         </Text>
-        <Pressable style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
+        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
           <Text style={styles.primaryButtonText}>Ахиц харах</Text>
-        </Pressable>
+        </PressableScale>
       </SafeAreaView>
     );
   }
@@ -123,9 +124,9 @@ export default function DiagnosticScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} hitSlop={10} onPress={goBack} accessibilityLabel="Back">
+        <PressableScale style={styles.backButton} hitSlop={10} onPress={goBack} accessibilityLabel="Back">
           <ChevronLeftIcon />
-        </Pressable>
+        </PressableScale>
         <Text style={styles.itemCount}>Асуулт {phase.itemNumber}</Text>
         <View style={styles.backButton} />
       </View>

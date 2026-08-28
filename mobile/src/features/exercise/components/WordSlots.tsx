@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -61,7 +62,7 @@ export default function WordSlots({
         const filled = letter !== null;
         const hovered = hoveredIndex === index;
         return (
-          <Pressable
+          <PressableScale
             key={index}
             ref={slotRef ? (node) => slotRef(index, node) : undefined}
             collapsable={slotRef ? false : undefined}
@@ -79,7 +80,7 @@ export default function WordSlots({
             accessibilityLabel={filled ? `${letter}, устгах` : 'хоосон нүд'}
           >
             <Text style={[styles.slotText, { fontSize }]}>{letter ?? ''}</Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
     borderColor: colors.choiceSelectedBorder,
   },
   slotPressed: {
-    transform: [{ scale: 0.96 }],
     opacity: 0.85,
   },
   slotText: {

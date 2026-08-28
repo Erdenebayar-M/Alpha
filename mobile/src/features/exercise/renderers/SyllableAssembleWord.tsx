@@ -1,8 +1,9 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import CheckAnswerBox from '@/src/features/exercise/components/CheckAnswerBox';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import MergedWordPill from '@/src/features/exercise/components/MergedWordPill';
@@ -156,7 +157,7 @@ export default function SyllableAssembleWord({ task, onResult }: ExerciseRendere
         showsVerticalScrollIndicator={false}
         scrollEnabled={!dragging}
       >
-        <Pressable
+        <PressableScale
           style={styles.header}
           onPress={handleToggleAudio}
           accessibilityRole="button"
@@ -169,7 +170,7 @@ export default function SyllableAssembleWord({ task, onResult }: ExerciseRendere
             <SpeakerButton playing={status.playing} onPress={handleToggleAudio} size={44} />
             <SproutAvatar state={sproutState} width={avatarWidth} />
           </View>
-        </Pressable>
+        </PressableScale>
 
         {task.image_url ? (
           <View style={styles.imageCard}>

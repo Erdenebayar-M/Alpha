@@ -1,8 +1,9 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import LetterPool from '@/src/features/exercise/components/LetterPool';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
@@ -77,7 +78,7 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
         showsVerticalScrollIndicator={false}
       >
         {/* Prompt bubble + the sprout, whose speaker replays the prompt audio. */}
-        <Pressable
+        <PressableScale
           style={styles.header}
           onPress={handleToggleAudio}
           accessibilityRole="button"
@@ -90,7 +91,7 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
             <SpeakerButton playing={status.playing} onPress={handleToggleAudio} size={40} />
             <SproutAvatar state={sproutState} width={avatarWidth} />
           </View>
-        </Pressable>
+        </PressableScale>
 
         {/* The picture of the target word. */}
         {task.image_url ? (

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import { ChevronLeftIcon } from '@/src/features/exercise/components/icons';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -15,9 +16,9 @@ export default function LessonHeader({ current, total, onBack }: LessonHeaderPro
 
   return (
     <View style={styles.row}>
-      <Pressable style={styles.backButton} hitSlop={10} onPress={onBack} accessibilityLabel="Back">
+      <PressableScale style={styles.backButton} hitSlop={10} onPress={onBack} accessibilityLabel="Back">
         <ChevronLeftIcon />
-      </Pressable>
+      </PressableScale>
 
       <View style={styles.progress}>
         <Text style={styles.count}>

@@ -1,7 +1,8 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
@@ -62,9 +63,9 @@ export default function AudioAssembleWord({ task, onResult }: ExerciseRendererPr
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
           <CharacterAvatar playing={status.playing} width={avatarWidth} />
-        </Pressable>
+        </PressableScale>
 
         <AudioControls player={player} />
 

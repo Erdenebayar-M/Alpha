@@ -1,7 +1,8 @@
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import PressableScale from '@/src/components/PressableScale';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
@@ -53,9 +54,9 @@ export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
       >
         <Text style={styles.prompt}>{task.prompt_text}</Text>
 
-        <Pressable onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
           <CharacterAvatar playing={status.playing} width={avatarWidth} />
-        </Pressable>
+        </PressableScale>
 
         <AudioControls player={player} />
 
