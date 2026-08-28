@@ -1,6 +1,8 @@
 <svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="117.327" height="111.054" viewBox="0 0 117.327 111.054" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="body gradient circle" filter="url(#filter0_ii_0_379)">
+<g id="body gradient circle">
 <ellipse cx="58.6636" cy="55.5271" rx="58.6636" ry="55.5271" fill="url(#paint0_radial_0_379)"/>
+<ellipse cx="58.6636" cy="55.5271" rx="58.6636" ry="55.5271" fill="url(#innerShadowTop_0_379)"/>
+<ellipse cx="58.6636" cy="55.5271" rx="58.6636" ry="55.5271" fill="url(#innerShadowBottom_0_379)"/>
 </g>
 <defs>
 <filter id="filter0_ii_0_379" x="0" y="-8" width="117.327" height="127.054" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -24,5 +26,13 @@
 <stop offset="0.55" stop-color="#7DBEFF"/>
 <stop offset="1" stop-color="#4F9EF5"/>
 </radialGradient>
+<linearGradient id="innerShadowTop_0_379" x1="58.6636" y1="0" x2="58.6636" y2="32" gradientUnits="userSpaceOnUse">
+<stop stop-color="#2E75C8" stop-opacity="0.14"/>
+<stop offset="1" stop-color="#2E75C8" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="innerShadowBottom_0_379" x1="58.6636" y1="111.054" x2="58.6636" y2="81" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFFFFF" stop-opacity="0.18"/>
+<stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+</linearGradient>
 </defs>
 </svg>
