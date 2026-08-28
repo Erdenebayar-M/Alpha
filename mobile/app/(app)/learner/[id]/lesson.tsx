@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import LessonHeader from '@/src/components/LessonHeader';
 import ExerciseEngine from '@/src/features/exercise/ExerciseEngine';
+import JourneyStartScreen from '@/src/features/onboarding/journeyStart/JourneyStartScreen';
 import OnboardingCarousel from '@/src/features/onboarding/OnboardingCarousel';
 import ProfileSetupFlow from '@/src/features/onboarding/profileSetup/ProfileSetupFlow';
 import { useCompleteLesson, useGetTodayLesson, useSubmitAttempt } from '@/src/features/lesson/useLesson';
@@ -28,10 +29,12 @@ export default function LessonScreen() {
   const [isFinished, setIsFinished] = useState(false);
   const [taskStartedAt, setTaskStartedAt] = useState(() => Date.now());
   // The onboarding carousel opens today's lesson, followed by the gender/personal
-  // info/grade setup flow. Both render ahead of the loading and error branches so
-  // they play while /lesson/today is still in flight.
+  // info/grade setup flow, followed by the journey-start placement intro. All three
+  // render ahead of the loading and error branches so they play while /lesson/today
+  // is still in flight.
   const [showIntro, setShowIntro] = useState(true);
   const [showProfileSetup, setShowProfileSetup] = useState(true);
+  const [showJourneyStart, setShowJourneyStart] = useState(true);
 
   useEffect(() => {
     setTaskStartedAt(Date.now());
@@ -81,6 +84,10 @@ export default function LessonScreen() {
 
   if (showProfileSetup) {
     return <ProfileSetupFlow onDone={() => setShowProfileSetup(false)} />;
+  }
+
+  if (showJourneyStart) {
+    return <JourneyStartScreen onDone={() => setShowJourneyStart(false)} />;
   }
 
   if (isLoading) {
