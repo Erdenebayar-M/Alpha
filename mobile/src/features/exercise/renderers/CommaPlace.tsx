@@ -68,7 +68,7 @@ export default function CommaPlace({ task, onResult }: ExerciseRendererProps) {
   const buddyWidth = Math.max(84, Math.min(width * 0.24, 108));
   const compact = height < 720;
 
-  const ex = usePunctuationExercise(task, onResult, { feedbackDelayMs: 1200 });
+  const ex = usePunctuationExercise(task, onResult);
 
   // Which token boundaries carry a drop-ring. Fall back to every boundary so a task that
   // omits gap_positions still renders (PunctuationPlace-style all-gaps behaviour).

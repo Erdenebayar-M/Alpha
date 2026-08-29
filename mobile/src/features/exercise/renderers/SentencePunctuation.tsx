@@ -32,7 +32,7 @@ export default function SentencePunctuation({ task, onResult }: ExerciseRenderer
   const buddyWidth = Math.max(84, Math.min(width * 0.24, 108));
   const compact = height < 720;
 
-  const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
+  const ex = useChoiceExercise(task, onResult);
 
   const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);

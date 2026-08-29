@@ -6,11 +6,10 @@ import PressableScale from '@/src/components/PressableScale';
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
-
-const FEEDBACK_DELAY_MS = 1200;
 
 // Case/whitespace-insensitive compare so "Хурга " or "хурга" still count.
 const normalize = (value: string) => value.trim().toLowerCase();
@@ -67,7 +66,7 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
     Keyboard.dismiss();
     const isCorrect = normalize(answer) === normalize(task.correct_answer);
     const submitted = answer.trim();
-    setTimeout(() => onResult(isCorrect, submitted), FEEDBACK_DELAY_MS);
+    setTimeout(() => onResult(isCorrect, submitted), getFeedbackDelayMs(task, isCorrect));
   };
 
   const isCorrect = isAnswered && normalize(answer) === normalize(task.correct_answer);

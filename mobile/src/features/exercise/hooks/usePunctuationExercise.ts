@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { PunctuationOptions, Task } from '@/src/features/exercise/types';
-
-export interface UsePunctuationExerciseOptions {
-  /** How long feedback stays on screen before onResult advances. Default 1000ms. */
-  feedbackDelayMs?: number;
-}
 
 export interface PunctuationExercise {
   mark: string;
@@ -27,8 +23,6 @@ export interface PunctuationExercise {
   submit: () => void;
 }
 
-const DEFAULT_FEEDBACK_DELAY_MS = 1000;
-
 const EMPTY_OPTIONS: PunctuationOptions = { mark: '.', tokens: [], answer_gaps: [] };
 
 /**
@@ -39,11 +33,8 @@ const EMPTY_OPTIONS: PunctuationOptions = { mark: '.', tokens: [], answer_gaps: 
  */
 export function usePunctuationExercise(
   task: Task,
-  onResult: (isCorrect: boolean, inputText: string) => void,
-  options: UsePunctuationExerciseOptions = {}
+  onResult: (isCorrect: boolean, inputText: string) => void
 ): PunctuationExercise {
-  const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
-
   const punctuation = task.options.punctuation ?? EMPTY_OPTIONS;
   const { mark, tokens } = punctuation;
   // Stable, de-duplicated target set — sorted so grading is order-independent.
@@ -95,9 +86,9 @@ export function usePunctuationExercise(
     // encoding if it ever needs to reach a real endpoint.
     timerRef.current = setTimeout(
       () => onResult(correct, JSON.stringify(sortedPlaced)),
-      feedbackDelayMs
+      getFeedbackDelayMs(task, correct)
     );
-  }, [canSubmit, placed, answerGaps, onResult, feedbackDelayMs]);
+  }, [canSubmit, placed, answerGaps, onResult, task]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;

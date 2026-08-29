@@ -49,10 +49,7 @@ export default function SyllableAssembleWord({ task, onResult }: ExerciseRendere
   // Purely a display toggle over ex.slots, which merging never mutates — unmerging
   // always reveals exactly what was there before, tiles intact.
   const [merged, setMerged] = useState(false);
-  const ex = useAssembleWord(task, onResult, {
-    feedbackDelayMs: 1200,
-    repackOnClear: false,
-  });
+  const ex = useAssembleWord(task, onResult, { repackOnClear: false });
 
   const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);

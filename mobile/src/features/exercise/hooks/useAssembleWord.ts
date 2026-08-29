@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { Task } from '@/src/features/exercise/types';
 
 export interface UseAssembleWordOptions {
-  /** How long feedback stays on screen before onResult advances. Default 1000ms. */
-  feedbackDelayMs?: number;
   /** Whether clearing a slot re-packs the remaining letters left (the typing model
    *  AssembleWord/AudioAssembleWord use). Set false for a drag-to-a-specific-slot
    *  screen, where clearing slot N should only empty slot N. Default true. */
@@ -33,8 +32,6 @@ export interface AssembleWordExercise {
   submit: () => void;
 }
 
-const DEFAULT_FEEDBACK_DELAY_MS = 1000;
-
 /**
  * Answer machinery for the assemble-the-word task ("Үсгүүдийг зөв дараалалд оруулж
  * үг бүтээгээрэй"): the child taps or drags scrambled tiles to fill a row of slots in
@@ -47,7 +44,7 @@ export function useAssembleWord(
   onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseAssembleWordOptions = {}
 ): AssembleWordExercise {
-  const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS, repackOnClear = true } = options;
+  const { repackOnClear = true } = options;
 
   const tiles = useMemo(() => task.options.tiles ?? [], [task.options.tiles]);
   const correctOrder = useMemo(
@@ -139,8 +136,11 @@ export function useAssembleWord(
     const correct = placed.join('') === correctOrder.join('');
     setWasCorrect(correct);
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(correct, JSON.stringify(placed)), feedbackDelayMs);
-  }, [canSubmit, slots, tiles, correctOrder, onResult, feedbackDelayMs]);
+    timerRef.current = setTimeout(
+      () => onResult(correct, JSON.stringify(placed)),
+      getFeedbackDelayMs(task, correct)
+    );
+  }, [canSubmit, slots, tiles, correctOrder, onResult, task]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;

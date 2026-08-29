@@ -43,34 +43,28 @@ export default function LessonScreen() {
   const tasks = data?.lesson.tasks ?? [];
   const currentTask = tasks[taskIndex];
 
-  const handleResult = async (isCorrect: boolean, inputText: string) => {
+  const handleResult = (isCorrect: boolean, inputText: string) => {
     if (isCorrect) {
       setCorrectCount((count) => count + 1);
     }
 
     if (data?.lesson && currentTask) {
-      try {
-        await submitAttempt.mutateAsync({
-          lesson_id: data.lesson.id,
-          task_id: currentTask.id,
-          // The backend requires a non-empty input_text and classifies errors from
-          // it server-side; guard against a stray blank so submission never 400s.
-          input_text: inputText.length > 0 ? inputText : '✗',
-          time_seconds: Math.round((Date.now() - taskStartedAt) / 1000),
-        });
-      } catch {
-        // best-effort; local lesson progress still advances
-      }
+      // Fire-and-forget: the response isn't used for anything on screen, so don't
+      // block advancing to the next task on the round-trip.
+      submitAttempt.mutate({
+        lesson_id: data.lesson.id,
+        task_id: currentTask.id,
+        // The backend requires a non-empty input_text and classifies errors from
+        // it server-side; guard against a stray blank so submission never 400s.
+        input_text: inputText.length > 0 ? inputText : '✗',
+        time_seconds: Math.round((Date.now() - taskStartedAt) / 1000),
+      });
     }
 
     const nextIndex = taskIndex + 1;
     if (nextIndex >= tasks.length) {
       if (data?.lesson) {
-        try {
-          await completeLesson.mutateAsync(data.lesson.id);
-        } catch {
-          // best-effort
-        }
+        completeLesson.mutate(data.lesson.id);
       }
       setIsFinished(true);
     } else {

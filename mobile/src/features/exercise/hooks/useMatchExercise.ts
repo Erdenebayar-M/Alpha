@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { Task } from '@/src/features/exercise/types';
 
 /** A single tappable card in one of the two columns. `pairId` is the index of the
@@ -34,8 +35,6 @@ export type MatchLockMode =
 export interface UseMatchExerciseOptions {
   /** See MatchLockMode. Default 'any' (lock freely, grade at submit). */
   lockMode?: MatchLockMode;
-  /** How long feedback stays before onResult advances. Default 1200ms. */
-  feedbackDelayMs?: number;
 }
 
 export interface MatchExercise {
@@ -61,8 +60,6 @@ export interface MatchExercise {
   submit: () => void;
 }
 
-const DEFAULT_FEEDBACK_DELAY_MS = 1200;
-
 // Deterministic-per-mount shuffle: each column is scrambled once so the two
 // columns don't line up, but stays stable across re-renders (kept in useMemo).
 function shuffle<T>(items: T[]): T[] {
@@ -87,7 +84,7 @@ export function useMatchExercise(
   onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseMatchExerciseOptions = {}
 ): MatchExercise {
-  const { lockMode = 'any', feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
+  const { lockMode = 'any' } = options;
 
   const pairs = useMemo(() => task.options.pairs ?? [], [task.options.pairs]);
   const imageSide = task.options.image_side ?? 'none';
@@ -245,9 +242,9 @@ export function useMatchExercise(
     });
     timerRef.current = setTimeout(
       () => onResult(allCorrect, JSON.stringify(submittedPairs)),
-      feedbackDelayMs
+      getFeedbackDelayMs(task, allCorrect)
     );
-  }, [isAnswered, isComplete, allCorrect, links, rightById, leftById, pairs, onResult, feedbackDelayMs]);
+  }, [isAnswered, isComplete, allCorrect, links, rightById, leftById, pairs, onResult, task]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;

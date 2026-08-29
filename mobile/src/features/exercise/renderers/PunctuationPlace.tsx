@@ -43,7 +43,7 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
   const buddyWidth = Math.max(84, Math.min(width * 0.24, 108));
   const compact = height < 720;
 
-  const ex = usePunctuationExercise(task, onResult, { feedbackDelayMs: 1200 });
+  const ex = usePunctuationExercise(task, onResult);
 
   // Live refs + measured window frames for each gap (the drop targets).
   const gapRefs = useRef<Record<number, View | null>>({});

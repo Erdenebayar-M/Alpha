@@ -36,7 +36,7 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
   const handW = cardSize * 0.13;
   const handH = handW * 1.4;
 
-  const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
+  const ex = useChoiceExercise(task, onResult);
 
   const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { Task, TaskChoice } from '@/src/features/exercise/types';
 
 export interface UseChoiceExerciseOptions {
@@ -7,8 +8,6 @@ export interface UseChoiceExerciseOptions {
    *  onResult — for screens with no submit button (ImageMatch, AudioChoice). Submit
    *  -button screens (FillBlank, LetterChoice) leave this off and call submit(). */
   autoSubmit?: boolean;
-  /** How long feedback stays on screen before onResult advances. Default 1000ms. */
-  feedbackDelayMs?: number;
 }
 
 export interface ChoiceExercise {
@@ -27,8 +26,6 @@ export interface ChoiceExercise {
   submit: () => void;
 }
 
-const DEFAULT_FEEDBACK_DELAY_MS = 1000;
-
 /**
  * Shared answer machinery for every choice-based renderer: selection state, the
  * "answered" latch, correct/wrong feedback derivation, and the delayed onResult
@@ -40,7 +37,7 @@ export function useChoiceExercise(
   onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseChoiceExerciseOptions = {}
 ): ChoiceExercise {
-  const { autoSubmit = false, feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
+  const { autoSubmit = false } = options;
 
   const choices = useMemo(() => task.options.choices ?? [], [task.options.choices]);
 
@@ -59,9 +56,9 @@ export function useChoiceExercise(
   const commit = useCallback(
     (isCorrect: boolean, text: string) => {
       setIsAnswered(true);
-      timerRef.current = setTimeout(() => onResult(isCorrect, text), feedbackDelayMs);
+      timerRef.current = setTimeout(() => onResult(isCorrect, text), getFeedbackDelayMs(task, isCorrect));
     },
-    [onResult, feedbackDelayMs]
+    [onResult, task]
   );
 
   const select = useCallback(
