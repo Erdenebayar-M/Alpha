@@ -1,4 +1,3 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutAnimation, Platform, ScrollView, StyleSheet, Text, UIManager, useWindowDimensions, View } from 'react-native';
 
@@ -9,6 +8,7 @@ import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import { useMatchExercise } from '@/src/features/exercise/hooks/useMatchExercise';
+import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -101,18 +101,11 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
     [rowAt, ex]
   );
 
-  const [hasFinished, setHasFinished] = useState(false);
   const audioUrl = task.prompt_audio_url ?? task.audio_url;
-  const player = useAudioPlayer(audioUrl);
-  const status = useAudioPlayerStatus(player);
-
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
+  const { player, status, toggle: handlePlay } = useTaskAudio(audioUrl, {
+    loop: false,
+    replayFromStart: true,
+  });
 
   // Audio-first (AGENTS §5): when the task carries a prompt, auto-play it once on load
   // so Khishigee reads it aloud and visibly transitions idle → playing → done.
@@ -129,30 +122,12 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
     }
   }, [player, task.options.audio_trigger, audioUrl]);
 
-  useEffect(() => {
-    if (status.didJustFinish) setHasFinished(true);
-  }, [status.didJustFinish]);
-  useEffect(() => {
-    if (status.playing) setHasFinished(false);
-  }, [status.playing]);
+  const hasFinished = useAudioFinishedLatch(status);
 
   // Gentle reflow whenever the set of links changes.
   useEffect(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   }, [ex.linkedCount]);
-
-  const handlePlay = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
 
   // Character celebrates once everything is linked; otherwise tracks the audio.
   const complete = ex.linkedCount === ex.totalPairs && ex.totalPairs > 0;

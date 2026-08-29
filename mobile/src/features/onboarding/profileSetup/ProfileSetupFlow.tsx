@@ -6,26 +6,33 @@ import type { Gender } from '@/src/features/onboarding/profileSetup/genderCharac
 import GenderStep from '@/src/features/onboarding/profileSetup/steps/GenderStep';
 import GradeStep from '@/src/features/onboarding/profileSetup/steps/GradeStep';
 import PersonalInfoStep from '@/src/features/onboarding/profileSetup/steps/PersonalInfoStep';
+import { saveOnboardingProfile } from '@/src/lib/onboardingStore';
 import { colors } from '@/src/theme/colors';
 
 type Step = 'gender' | 'personalInfo' | 'grade';
 
 /**
  * Gender -> character -> personal info -> grade (Figma 804-8990 / 804-9634 / 804-9969 /
- * 804-10250 / 804-10366 / 825-10618). Runs right after `OnboardingCarousel` at the top
- * of today's lesson (`app/(app)/learner/[id]/lesson.tsx`).
+ * 804-10250 / 804-10366 / 825-10618). Runs right after `OnboardingCarousel` in the
+ * `app/(onboarding)/[id]` sequence.
  *
- * Same `{ onDone }` contract as `OnboardingCarousel`, and the same "one screen, internal
- * step state" shape — advanced by an explicit Continue tap per step rather than a swipe,
- * since none of these frames show a drag affordance. Everything collected here is local
- * state only: there is no backend field for gender/age yet, so nothing is submitted.
+ * Same `{ onDone }` contract as `OnboardingCarousel` plus a `learnerId` this flow needs
+ * to persist against, and the same "one screen, internal step state" shape — advanced by
+ * an explicit Continue tap per step rather than a swipe, since none of these frames show
+ * a drag affordance. On the final step the collected answers are saved locally via
+ * onboardingStore.ts (see its header for why: no backend field for gender/age exists yet).
  *
  * Deliberately NOT wrapped in a top-inset SafeAreaView: `ProfileStepLayout` places its
  * content at Figma's own frame coordinates, which are measured from the very top of the
  * screen and already account for the status bar. Insetting here would shift every step
  * down by the status-bar height. The layout clears the bottom inset itself.
  */
-export default function ProfileSetupFlow({ onDone }: { onDone: () => void }) {
+interface ProfileSetupFlowProps {
+  learnerId: string;
+  onDone: () => void;
+}
+
+export default function ProfileSetupFlow({ learnerId, onDone }: ProfileSetupFlowProps) {
   const [step, setStep] = useState<Step>('gender');
   const [gender, setGender] = useState<Gender | null>(null);
   const [surname, setSurname] = useState('');
@@ -34,6 +41,13 @@ export default function ProfileSetupFlow({ onDone }: { onDone: () => void }) {
   // than null — see `AgeWheel`.
   const [age, setAge] = useState<number>(DEFAULT_AGE);
   const [grade, setGrade] = useState<number | null>(null);
+
+  const handleGradeContinue = async () => {
+    if (gender && grade !== null) {
+      await saveOnboardingProfile(learnerId, { gender, surname, givenName, age, grade });
+    }
+    onDone();
+  };
 
   return (
     <View style={styles.screen}>
@@ -55,7 +69,7 @@ export default function ProfileSetupFlow({ onDone }: { onDone: () => void }) {
       ) : null}
 
       {step === 'grade' && gender ? (
-        <GradeStep gender={gender} grade={grade} onSelect={setGrade} onContinue={onDone} />
+        <GradeStep gender={gender} grade={grade} onSelect={setGrade} onContinue={handleGradeContinue} />
       ) : null}
     </View>
   );

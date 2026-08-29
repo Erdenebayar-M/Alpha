@@ -1,5 +1,3 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
@@ -8,6 +6,7 @@ import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar'
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -19,31 +18,7 @@ export default function AudioChoice({ task, onResult }: ExerciseRendererProps) {
 
   // Picking a choice submits immediately (no submit button on this screen).
   const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  // Loop the prompt so it keeps playing while the child (or you) adjusts volume/speed.
-  useEffect(() => {
-    try {
-      player.loop = true;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  // Tap the character to toggle playback; the avatar animation is driven by
-  // status.playing, so it starts/stops together with the audio.
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
+  const { player, status, toggle: handleToggleAudio } = useTaskAudio(task.prompt_audio_url ?? task.audio_url);
 
   return (
     <View style={styles.container}>

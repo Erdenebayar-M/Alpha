@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import * as authApi from '@/src/api/auth';
 import type { Parent } from '@/src/api/auth';
 import { clearToken, getToken, setToken as persistToken } from '@/src/lib/secureStore';
+import { onUnauthorized } from '@/src/lib/authEvents';
+import { queryClient } from '@/src/lib/queryClient';
 
 interface AuthContextValue {
   parent: Parent | null;
@@ -38,6 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  // A 401 from any request (client.ts) clears the token, but only this can
+  // clear the React state that (app)/_layout.tsx actually gates on — without
+  // it the app stays on an authenticated screen with an empty keychain,
+  // re-401ing on every subsequent request.
+  useEffect(() => {
+    return onUnauthorized(() => {
+      setParent(null);
+      queryClient.clear();
+    });
+  }, []);
+
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
     await persistToken(response.token);
@@ -58,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     await clearToken();
     setParent(null);
+    queryClient.clear();
   };
 
   const value = useMemo<AuthContextValue>(

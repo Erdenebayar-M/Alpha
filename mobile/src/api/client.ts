@@ -1,71 +1,56 @@
-import {
-  mockDiagnosticResult,
-  mockDiagnosticTasks,
-  mockLearners,
-  mockLesson,
-  mockParent,
-  mockPlan,
-  mockProgress,
-  mockSkills,
-  MOCK_TOKEN,
-} from '@/src/lib/mockData';
 import { clearToken, getToken } from '@/src/lib/secureStore';
+import { emitUnauthorized } from '@/src/lib/authEvents';
+import { ApiError, isEnvelope, type Envelope } from '@/src/api/envelope';
+import type { RequestOptions } from '@/src/api/mockClient';
+
+export { ApiError };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// Live against the real backend whenever EXPO_PUBLIC_API_URL is set (see mobile/.env);
-// with no URL configured we fall back to the in-file mock so the app still runs offline.
-const IS_MOCK = !API_BASE_URL;
-const MOCK_LATENCY_MS = 400;
+// Mock mode is a dev convenience only — it must never be reachable from a
+// release build, even if EXPO_PUBLIC_API_URL is somehow unset there (e.g. a
+// misconfigured EAS profile). See the module-load check below: a release
+// build with no configured API URL fails at startup instead of silently
+// falling back to a fake backend that accepts any password.
+const IS_MOCK = __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK === '1';
+const REQUEST_TIMEOUT_MS = 20_000;
 
-// Tracks each mock diagnostic session's progress through mockDiagnosticTasks.
-const mockDiagnosticSessions = new Map<string, number>();
-
-interface SuccessEnvelope<T> {
-  success: true;
-  data: T;
-}
-
-interface ErrorEnvelope {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-}
-
-type Envelope<T> = SuccessEnvelope<T> | ErrorEnvelope;
-
-export class ApiError extends Error {
-  code: string;
-  status: number;
-  details?: unknown;
-
-  constructor(code: string, message: string, status: number, details?: unknown) {
-    super(message);
-    this.name = 'ApiError';
-    this.code = code;
-    this.status = status;
-    this.details = details;
+// Fail at module load, not at the first tap — a release build with no
+// configured backend (or a plaintext one) must never quietly work.
+if (!__DEV__) {
+  if (!API_BASE_URL) {
+    throw new Error(
+      'EXPO_PUBLIC_API_URL is not set in this release build. Set it in the ' +
+        'EAS build profile (see eas.json) before shipping.',
+    );
   }
-}
-
-interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  body?: unknown;
+  if (!API_BASE_URL.startsWith('https://')) {
+    throw new Error(
+      `EXPO_PUBLIC_API_URL must use https:// in a release build (got "${API_BASE_URL}"); ` +
+        'a plaintext http:// origin would send auth tokens in cleartext.',
+    );
+  }
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const token = await getToken();
 
   const { status, json } = IS_MOCK
-    ? await mockFetch<T>(path, options, token)
+    ? await (await loadMockFetch())<T>(path, options, token)
     : await realFetch<T>(path, options, token);
 
   if (!json.success) {
     if (status === 401) {
       await clearToken();
+      emitUnauthorized();
+    }
+    if (status === 429) {
+      throw new ApiError(
+        json.error.code || 'RATE_LIMITED',
+        json.error.message || 'Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.',
+        status,
+        json.error.details,
+      );
     }
     throw new ApiError(json.error.code, json.error.message, status, json.error.details);
   }
@@ -73,228 +58,68 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return json.data;
 }
 
+// Dynamic import so the mock router (and the 1200+ line fixture file it
+// imports) is only ever pulled into memory when IS_MOCK is true, which is
+// itself gated behind __DEV__ above — this branch is unreachable in a
+// release build.
+async function loadMockFetch(): Promise<typeof import('@/src/api/mockClient').mockFetch> {
+  const mod = await import('@/src/api/mockClient');
+  return mod.mockFetch;
+}
+
 async function realFetch<T>(
   path: string,
   options: RequestOptions,
   token: string | null,
 ): Promise<{ status: number; json: Envelope<T> }> {
-  const response = await fetch(`${API_BASE_URL}/api${path}`, {
-    method: options.method ?? 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  if (!API_BASE_URL) {
+    throw new Error(
+      'EXPO_PUBLIC_API_URL is not set. The app has no backend to talk to — ' +
+        'set it in mobile/.env (dev) or the EAS build profile (release).',
+    );
+  }
 
-  const json = (await response.json()) as Envelope<T>;
-  return { status: response.status, json };
-}
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-async function mockFetch<T>(
-  path: string,
-  options: RequestOptions,
-  token: string | null,
-): Promise<{ status: number; json: Envelope<T> }> {
-  await new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
-
-  const method = options.method ?? 'GET';
-  const body = (options.body ?? {}) as Record<string, unknown>;
-
-  if (path === '/auth/register' && method === 'POST') {
-    return {
-      status: 201,
-      json: {
-        success: true,
-        data: {
-          id: mockParent.id,
-          email: body.email as string,
-          name: body.name as string,
-          token: MOCK_TOKEN,
-        } as T,
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api${path}`, {
+      method: options.method ?? 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-    };
-  }
-
-  if (path === '/auth/login' && method === 'POST') {
-    return {
-      status: 200,
-      json: {
-        success: true,
-        data: {
-          id: mockParent.id,
-          email: (body.email as string) ?? mockParent.email,
-          name: mockParent.name,
-          token: MOCK_TOKEN,
-        } as T,
-      },
-    };
-  }
-
-  if (path === '/auth/logout' && method === 'POST') {
-    return { status: 200, json: { success: true, data: { ok: true } as T } };
-  }
-
-  if (path === '/auth/me' && method === 'GET') {
-    if (!token) {
-      return {
-        status: 401,
-        json: {
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Missing auth token' },
-        },
-      };
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError('TIMEOUT', 'Сервертэй холбогдоход хэт удаж байна. Дахин оролдоно уу.', 0);
     }
-    return { status: 200, json: { success: true, data: mockParent as T } };
+    throw new ApiError('NETWORK_ERROR', 'Сүлжээний алдаа гарлаа. Холболтоо шалгана уу.', 0);
+  } finally {
+    clearTimeout(timeout);
   }
 
-  if (path === '/learner' && method === 'GET') {
-    return { status: 200, json: { success: true, data: { learners: mockLearners } as T } };
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new ApiError(
+      'INVALID_RESPONSE',
+      'Серверээс буруу хариу ирлээ. Дахин оролдоно уу.',
+      response.status,
+    );
   }
 
-  if (path === '/learner' && method === 'POST') {
-    const grade = Number(body.grade);
-    const newLearner = {
-      id: `mock-learner-${mockLearners.length + 1}`,
-      name: body.name as string,
-      grade,
-      variant: grade <= 2 ? 'A' : 'B',
-      daily_minutes: typeof body.daily_minutes === 'number' ? body.daily_minutes : 10,
-    } as const;
-    mockLearners.push(newLearner);
-    return { status: 201, json: { success: true, data: newLearner as T } };
+  if (!isEnvelope(body)) {
+    throw new ApiError(
+      'INVALID_RESPONSE',
+      'Серверээс буруу хариу ирлээ. Дахин оролдоно уу.',
+      response.status,
+    );
   }
 
-  const learnerDetailMatch = /^\/learner\/(.+)$/.exec(path);
-  if (learnerDetailMatch && method === 'GET') {
-    const found = mockLearners.find((learner) => learner.id === learnerDetailMatch[1]);
-    if (!found) {
-      return {
-        status: 404,
-        json: { success: false, error: { code: 'NOT_FOUND', message: 'Learner not found' } },
-      };
-    }
-    return { status: 200, json: { success: true, data: found as T } };
-  }
-
-  if (path.startsWith('/lesson/today') && method === 'GET') {
-    return { status: 200, json: { success: true, data: { lesson: mockLesson } as T } };
-  }
-
-  if (path === '/lesson/attempt' && method === 'POST') {
-    const taskId = body.task_id as string;
-    const inputText = typeof body.input_text === 'string' ? body.input_text : '';
-    const task = mockLesson.tasks.find((t) => t.id === taskId);
-    const isCorrect = task ? inputText.trim() === task.correct_answer : false;
-    return {
-      status: 200,
-      json: {
-        success: true,
-        data: {
-          score: isCorrect ? 1 : 0,
-          is_correct: isCorrect,
-          feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
-        } as T,
-      },
-    };
-  }
-
-  const lessonCompleteMatch = /^\/lesson\/(.+)\/complete$/.exec(path);
-  if (lessonCompleteMatch && method === 'POST') {
-    return {
-      status: 200,
-      json: {
-        success: true,
-        data: {
-          completed: true,
-          lesson_id: lessonCompleteMatch[1],
-          completed_at: new Date().toISOString(),
-        } as T,
-      },
-    };
-  }
-
-  if (path === '/diagnostic/start' && method === 'POST') {
-    const sessionId = `mock-diag-session-${Date.now()}`;
-    mockDiagnosticSessions.set(sessionId, 0);
-    return {
-      status: 200,
-      json: {
-        success: true,
-        data: { session_id: sessionId, task: mockDiagnosticTasks[0], item_number: 1 } as T,
-      },
-    };
-  }
-
-  if (path === '/diagnostic/submit' && method === 'POST') {
-    const sessionId = body.session_id as string;
-    const taskId = body.task_id as string;
-    const inputText = typeof body.input_text === 'string' ? body.input_text : '';
-    const index = mockDiagnosticSessions.get(sessionId) ?? 0;
-    const task = mockDiagnosticTasks.find((t) => t.id === taskId) ?? mockDiagnosticTasks[index];
-    const isCorrect = task ? inputText.trim() === task.correct_answer : false;
-    const nextIndex = index + 1;
-
-    if (nextIndex < mockDiagnosticTasks.length) {
-      mockDiagnosticSessions.set(sessionId, nextIndex);
-      return {
-        status: 200,
-        json: {
-          success: true,
-          data: {
-            completed: false,
-            score: isCorrect ? 1 : 0,
-            is_correct: isCorrect,
-            error_codes: [],
-            feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
-            next_task: mockDiagnosticTasks[nextIndex],
-            item_number: nextIndex + 1,
-          } as T,
-        },
-      };
-    }
-
-    mockDiagnosticSessions.delete(sessionId);
-    return {
-      status: 200,
-      json: {
-        success: true,
-        data: {
-          completed: true,
-          score: isCorrect ? 1 : 0,
-          is_correct: isCorrect,
-          error_codes: [],
-          feedback: task ? (isCorrect ? task.feedback_correct : task.feedback_wrong) : null,
-          result: mockDiagnosticResult,
-          plan_id: mockPlan.id,
-          lessons_generated: true,
-        } as T,
-      },
-    };
-  }
-
-  const diagnosticResultMatch = /^\/diagnostic\/result\/(.+)$/.exec(path);
-  if (diagnosticResultMatch && method === 'GET') {
-    return { status: 200, json: { success: true, data: { result: mockDiagnosticResult } as T } };
-  }
-
-  if (path.startsWith('/dashboard/skills') && method === 'GET') {
-    return { status: 200, json: { success: true, data: { skills: mockSkills } as T } };
-  }
-
-  if (path.startsWith('/dashboard/progress') && method === 'GET') {
-    return { status: 200, json: { success: true, data: mockProgress as T } };
-  }
-
-  if (path.startsWith('/plan/current') && method === 'GET') {
-    return { status: 200, json: { success: true, data: { plan: mockPlan } as T } };
-  }
-
-  return {
-    status: 404,
-    json: {
-      success: false,
-      error: { code: 'NOT_FOUND', message: `No mock handler for ${method} ${path}` },
-    },
-  };
+  return { status: response.status, json: body as Envelope<T> };
 }

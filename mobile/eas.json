@@ -12,11 +12,17 @@
       "ios": {
         "simulator": false
       },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://REPLACE_WITH_STAGING_API_URL"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://REPLACE_WITH_PRODUCTION_API_URL"
+      }
     }
   },
   "submit": {

@@ -15,8 +15,7 @@ import { colors } from '@/src/theme/colors';
  * The three-slide onboarding carousel (Figma 163:1739, 142:1677, 142:1839).
  *
  * Deliberately knows nothing about where it is mounted — it just reports `onDone`.
- * Today that is the top of today's lesson; when it becomes the app's launch screen
- * it can be dropped into an `app/(onboarding)` route unchanged.
+ * Runs first in the `app/(onboarding)/[id]` sequence.
  */
 
 const SLIDES = [Slide1, Slide2, Slide3];

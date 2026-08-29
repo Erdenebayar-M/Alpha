@@ -23,9 +23,12 @@ export interface TaskOptions {
   // Link behavior for matching tasks: 'any' locks every link and grades at submit
   // (default); 'correct-only' locks a link only when it's the right pair.
   match_lock_mode?: 'any' | 'correct-only';
-  // Place-the-punctuation-mark task (TT_8_2): the child drags `mark` into the gaps
+  // Place-the-punctuation-mark task: the child drags `mark` into the gaps
   // between/after `tokens` where a sentence ends. `answer_gaps` lists the correct
-  // "after tokens[i]" indices (e.g. [2, 6]).
+  // "after tokens[i]" indices (e.g. [2, 6]). NOTE: earlier comments here named this
+  // TT_8_2, but shared/src/validators/task.ts's TASK_TYPE_OPTION_SHAPE says TT_8_2 is
+  // correctionOptions — no backend task_type currently maps to this shape at all
+  // (see PunctuationPlace.tsx / CommaPlace.tsx header notes).
   punctuation?: PunctuationOptions;
   // Assemble-the-word task (TT_1_4 / TT_2_2), mirrors the backend `assembleWordOptions`
   // in @app/shared: `tiles` is the scrambled letter pool (word letters + a few
@@ -45,7 +48,10 @@ export interface TaskOptions {
 
   // Sentence-fill task (sentenceFillOptions: TT_5_2/7_5). `sentence_template` uses "_"
   // for the blank; the child types just the missing word (`blank_answer`).
+  // `context_sentence` is the full correct sentence — present in shared/ but not yet
+  // read by any renderer here; kept for parity with the backend shape.
   sentence_template?: string;
+  context_sentence?: string;
   hint?: string;
 
   // Correction/edit task (correctionOptions: TT_2_5/2_6/3_5/4_5/6_3/6_4/8_2). The child
@@ -90,10 +96,11 @@ export interface PunctuationOptions {
   mark: string;
   tokens: string[];
   answer_gaps: number[];
-  /** Boundaries that show a droppable gap (comma task, TT_8_3). A dashed circle renders
+  /** Boundaries that show a droppable gap (comma task). A dashed circle renders
    *  after `tokens[i]` for each `i` here, and `answer_gaps` is a subset (the rest are
    *  distractors the child must leave empty). Absent → PunctuationPlace behaviour, where
-   *  every token boundary is an (invisible) drop slot. */
+   *  every token boundary is an (invisible) drop slot. NOTE: not TT_8_3 — that code is
+   *  choiceOptions per shared/; see CommaPlace.tsx's header note. */
   gap_positions?: number[];
 }
 

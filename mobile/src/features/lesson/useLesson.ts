@@ -2,6 +2,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 
 import { completeLesson, getTodayLesson, submitAttempt, type SubmitAttemptInput } from '@/src/api/lesson';
 
+export type { SubmitAttemptInput };
+
 export function useGetTodayLesson(learnerId: string | undefined) {
   return useQuery({
     queryKey: ['lesson', 'today', learnerId],

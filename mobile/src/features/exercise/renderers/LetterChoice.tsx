@@ -1,6 +1,4 @@
 import { Image } from 'expo-image';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
@@ -9,6 +7,7 @@ import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingSprout from '@/src/features/exercise/components/TalkingSprout';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -38,30 +37,10 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
 
   const ex = useChoiceExercise(task, onResult);
 
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  // Non-looping so the prompt ends and the sprout stops talking on its own.
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  const handlePlay = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
+  const { status, toggle: handlePlay } = useTaskAudio(task.prompt_audio_url ?? task.audio_url, {
+    loop: false,
+    replayFromStart: true,
+  });
 
   return (
     <View style={styles.container}>

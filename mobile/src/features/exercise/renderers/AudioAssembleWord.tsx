@@ -1,5 +1,4 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
@@ -10,6 +9,7 @@ import LetterPool from '@/src/features/exercise/components/LetterPool';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 
@@ -27,29 +27,7 @@ export default function AudioAssembleWord({ task, onResult }: ExerciseRendererPr
 
   const ex = useAssembleWord(task, onResult);
 
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  // Loop the prompt so it keeps playing while the child adjusts volume/speed.
-  useEffect(() => {
-    try {
-      player.loop = true;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
+  const { player, status, toggle: handleToggleAudio } = useTaskAudio(task.prompt_audio_url ?? task.audio_url);
 
   const slotLetters = useMemo(
     () => ex.slots.map((tileIndex) => (tileIndex === null ? null : ex.tiles[tileIndex])),

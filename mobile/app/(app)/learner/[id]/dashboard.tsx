@@ -58,11 +58,17 @@ export default function DashboardScreen() {
 
   const skills = skillsQuery.data.skills;
   const rows = skillRows(skills);
-  const streak = progressQuery.data?.current_streak ?? skills.current_streak ?? 0;
-  const longest = progressQuery.data?.longest_streak ?? skills.longest_streak ?? 0;
+  // progress has its own endpoint but skills already carries the same two
+  // fields, so a failed progressQuery still shows a real number rather than
+  // a bare 0 — streakUnavailable only fires when *neither* source has it.
+  const streak = progressQuery.data?.current_streak ?? skills.current_streak;
+  const longest = progressQuery.data?.longest_streak ?? skills.longest_streak;
+  const streakUnavailable = progressQuery.isError && streak === undefined;
 
   const plan = planQuery.data?.plan;
   const planDone = plan ? plan.lessons.filter((l) => isDone(l.status)).length : 0;
+  const planFailed =
+    planQuery.isError && !(planQuery.error instanceof ApiError && planQuery.error.status === 404);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
@@ -76,14 +82,15 @@ export default function DashboardScreen() {
 
         <View style={styles.streakRow}>
           <View style={styles.streakBox}>
-            <Text style={styles.streakValue}>{streak}</Text>
+            <Text style={styles.streakValue}>{streakUnavailable ? '—' : (streak ?? 0)}</Text>
             <Text style={styles.streakLabel}>Өдрийн цуваа 🔥</Text>
           </View>
           <View style={styles.streakBox}>
-            <Text style={styles.streakValue}>{longest}</Text>
+            <Text style={styles.streakValue}>{streakUnavailable ? '—' : (longest ?? 0)}</Text>
             <Text style={styles.streakLabel}>Хамгийн урт</Text>
           </View>
         </View>
+        {streakUnavailable && <Text style={styles.inlineError}>Цуваа ачаалж чадсангүй.</Text>}
 
         {/* Tappable summary → the full detailed plan screen. */}
         {plan ? (
@@ -98,6 +105,10 @@ export default function DashboardScreen() {
               </Text>
             </View>
             <Text style={styles.planChevron}>›</Text>
+          </PressableScale>
+        ) : planFailed ? (
+          <PressableScale style={styles.planErrorCard} onPress={() => planQuery.refetch()}>
+            <Text style={styles.planCardSub}>Төлөвлөгөө ачаалж чадсангүй. Дахин оролдох</Text>
           </PressableScale>
         ) : null}
 
@@ -285,5 +296,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 17,
     color: colors.white,
+  },
+  inlineError: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: -4,
+  },
+  planErrorCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.sheetBorder,
+    padding: 16,
+    alignItems: 'center',
   },
 });

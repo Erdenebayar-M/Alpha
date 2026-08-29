@@ -88,10 +88,10 @@ const styles = StyleSheet.create({
   },
   fieldCorrect: {
     borderColor: colors.choiceSelectedBorder,
-    backgroundColor: '#EEF4FF',
+    backgroundColor: colors.feedbackCorrectFieldBg,
   },
   fieldWrong: {
-    borderColor: '#F0B4B4',
-    backgroundColor: '#FDF1F1',
+    borderColor: colors.feedbackWrongBorder,
+    backgroundColor: colors.feedbackWrongBg,
   },
 });

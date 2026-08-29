@@ -5,6 +5,7 @@ import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
+import { colors } from '@/src/theme/colors';
 
 export default function MultipleChoice({ task, onResult }: ExerciseRendererProps) {
   // Picking a choice submits immediately (this legacy screen has no submit button).
@@ -86,18 +87,18 @@ const styles = StyleSheet.create({
     minHeight: 64,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: colors.feedbackNeutralBorder,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
   choiceCorrect: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
+    backgroundColor: colors.feedbackCorrectBold,
+    borderColor: colors.feedbackCorrectBold,
   },
   choiceWrong: {
-    backgroundColor: '#dc2626',
-    borderColor: '#dc2626',
+    backgroundColor: colors.feedbackWrongBold,
+    borderColor: colors.feedbackWrongBold,
   },
   choiceText: {
     fontSize: 18,

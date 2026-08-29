@@ -1,5 +1,5 @@
 import AuthGate from '@/src/components/AuthGate';
 
-export default function AppLayout() {
+export default function OnboardingLayout() {
   return <AuthGate />;
 }
