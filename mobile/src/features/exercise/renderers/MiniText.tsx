@@ -1,4 +1,3 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEffect, useRef } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
 
@@ -8,6 +7,7 @@ import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -26,33 +26,12 @@ export default function MiniText({ task, onResult }: ExerciseRendererProps) {
   const ex = useTextEntryExercise(task, onResult, { compareTo });
 
   const audioUrl = task.prompt_audio_url ?? task.audio_url;
-  const player = useAudioPlayer(audioUrl);
-  const status = useAudioPlayerStatus(player);
-
-  useEffect(() => {
-    try {
-      player.loop = true;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
+  const { player, status, toggle: handleToggleAudio } = useTaskAudio(audioUrl);
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 350);
     return () => clearTimeout(timer);
   }, []);
-
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
 
   const handleSubmit = () => {
     Keyboard.dismiss();

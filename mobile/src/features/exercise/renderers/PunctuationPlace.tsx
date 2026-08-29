@@ -1,5 +1,10 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useCallback, useEffect, useRef, useState } from 'react';
+// PARKED — unreachable from ExerciseEngine today. Registry key
+// 'punctuation_place' has no entry in taskTypeMap: shared/src/validators/task.ts's
+// TASK_TYPE_OPTION_SHAPE has no punctuation options shape for any of the 43
+// task_type codes, so no real payload can select this renderer. Keep it — it's
+// finished, kid-tested UI — but it needs a backend task_type + options shape
+// before it can go live. See taskTypeMap.ts's header.
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
@@ -11,6 +16,7 @@ import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
 import { usePunctuationExercise } from '@/src/features/exercise/hooks/usePunctuationExercise';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -101,30 +107,10 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
     [gapAt, ex]
   );
 
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  // Non-looping so the prompt ends and the buddy stops talking on its own.
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  const handlePlay = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
+  const { status, toggle: handlePlay } = useTaskAudio(task.prompt_audio_url ?? task.audio_url, {
+    loop: false,
+    replayFromStart: true,
+  });
 
   return (
     <View style={styles.container}>

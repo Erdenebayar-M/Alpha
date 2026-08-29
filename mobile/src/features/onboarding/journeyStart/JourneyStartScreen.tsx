@@ -20,9 +20,9 @@ import { fonts } from '@/src/theme/typography';
 const bg = require('@/assets/onboarding/journey-start/bg.png');
 
 /**
- * The journey-start page (Figma 204:11233, "first page") — runs after
- * `ProfileSetupFlow`, before the first exercise task, at the top of today's lesson
- * (`app/(app)/learner/[id]/lesson.tsx`). Same `{ onDone }` contract as
+ * The journey-start page (Figma 204:11233, "first page") — runs last in the
+ * `app/(onboarding)/[id]` sequence, after `ProfileSetupFlow` and before the
+ * redirect back into the learner's first lesson. Same `{ onDone }` contract as
  * `OnboardingCarousel` / `ProfileSetupFlow`: a self-contained gate that reports when
  * its one CTA is tapped and knows nothing about where it's mounted.
  *

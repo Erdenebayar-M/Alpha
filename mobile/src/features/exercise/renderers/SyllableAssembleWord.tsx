@@ -1,6 +1,10 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+// PARKED — unreachable from ExerciseEngine today. Registry key
+// 'syllable_assemble_word' has no entry in taskTypeMap: both assembleWordOptions
+// task_types (TT_1_4, TT_2_2) already map to assemble_word / audio_assemble_word.
+// Keep it — it's finished, kid-tested UI — but it needs a task_type reassigned to
+// it (or a new one) before it can go live. See taskTypeMap.ts's header.
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
@@ -13,6 +17,7 @@ import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import SyllablePool from '@/src/features/exercise/components/SyllablePool';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
+import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -45,44 +50,17 @@ export default function SyllableAssembleWord({ task, onResult }: ExerciseRendere
   const { width, height } = useWindowDimensions();
   const avatarWidth = Math.max(72, Math.min(width * 0.22, height * 0.12, 96));
 
-  const [hasFinished, setHasFinished] = useState(false);
   // Purely a display toggle over ex.slots, which merging never mutates — unmerging
   // always reveals exactly what was there before, tiles intact.
   const [merged, setMerged] = useState(false);
   const ex = useAssembleWord(task, onResult, { repackOnClear: false });
 
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  useEffect(() => {
-    if (status.didJustFinish) setHasFinished(true);
-  }, [status.didJustFinish]);
-  useEffect(() => {
-    if (status.playing) setHasFinished(false);
-  }, [status.playing]);
-
+  const { status, toggle: handleToggleAudio } = useTaskAudio(task.prompt_audio_url ?? task.audio_url, {
+    loop: false,
+    replayFromStart: true,
+  });
+  const hasFinished = useAudioFinishedLatch(status);
   const sproutState: SproutState = hasFinished ? 'done' : status.playing ? 'playing' : 'idle';
-
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
 
   // Live refs + measured window frames for each slot (the drop targets).
   const slotRefs = useRef<Record<number, View | null>>({});

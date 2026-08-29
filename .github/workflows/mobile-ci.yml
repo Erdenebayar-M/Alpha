@@ -1,0 +1,37 @@
+name: mobile-ci
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+
+jobs:
+  typecheck-lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      # mobile/ is not an npm workspace of the repo root (see AGENTS.md §2/§6),
+      # so it's installed standalone here, same as a local dev setup.
+      # --legacy-peer-deps matches this project's own documented convention
+      # (AGENTS.md §12) for expo-router's radix-ui peer dependency conflicts.
+      - run: npm ci --legacy-peer-deps
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test -- --ci

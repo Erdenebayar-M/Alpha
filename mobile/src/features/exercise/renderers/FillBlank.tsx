@@ -1,6 +1,10 @@
+// PARKED — unreachable from ExerciseEngine today. Registry key 'fill_blank' has
+// no entry in taskTypeMap: every fillOptions task_type (TT_2_1/2_4/3_2/4_3/4_4/5_5)
+// already maps to fill_letter_tiles / audio_fill_letter_tiles / fill_letter. Keep
+// it — it's finished, kid-tested UI — but it needs a task_type reassigned to it
+// (or a new one) before it can go live. See taskTypeMap.ts's header.
 import { Image } from 'expo-image';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
@@ -11,6 +15,7 @@ import SproutAvatar, { type SproutState } from '@/src/features/exercise/componen
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
+import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -27,46 +32,16 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const { width, height } = useWindowDimensions();
   const avatarWidth = Math.max(88, Math.min(width * 0.26, height * 0.14, 120));
 
-  const [hasFinished, setHasFinished] = useState(false);
   const ex = useChoiceExercise(task, onResult);
-
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
 
   // Unlike the looped audio screens, we need the prompt to END so the character can
   // settle into pose 3 — so looping is off and we watch didJustFinish.
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  // Latch "finished" when playback completes; clear it whenever it starts again so a
-  // replay runs pose 2 -> pose 3 afresh.
-  useEffect(() => {
-    if (status.didJustFinish) setHasFinished(true);
-  }, [status.didJustFinish]);
-  useEffect(() => {
-    if (status.playing) setHasFinished(false);
-  }, [status.playing]);
-
+  const { status, toggle: handleToggleAudio } = useTaskAudio(task.prompt_audio_url ?? task.audio_url, {
+    loop: false,
+    replayFromStart: true,
+  });
+  const hasFinished = useAudioFinishedLatch(status);
   const sproutState: SproutState = hasFinished ? 'done' : status.playing ? 'playing' : 'idle';
-
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        // Replay from the start each time the bubble is tapped.
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
 
   // Split the prompt on the "_" blank marker (AGENTS §5): "Эрвээх_й" -> "Эрвээх" / "й".
   const [prefix, suffix] = useMemo(() => {

@@ -27,7 +27,8 @@ export const colors = {
   pastelBg: '#FFF7FC',
   // Orange text-caret shown at the gap a dragged mark will drop into.
   dropCaret: '#FF7A1A',
-  // Dashed orange ring drawn at each empty comma-drop gap (CommaPlace / TT_8_3).
+  // Dashed orange ring drawn at each empty comma-drop gap (CommaPlace). Not TT_8_3 —
+  // that code is choiceOptions per shared/; see CommaPlace.tsx's header note.
   gapRing: '#FF8C3B',
 
   // Choice cards
@@ -88,4 +89,19 @@ export const colors = {
   journeySubtitle: '#575050',
   journeyDurationText: '#7A8797',
   journeyDurationBg: 'rgba(241, 244, 248, 0.3)',
+
+  // Right/wrong feedback. Each surface uses its own visual weight (a bold
+  // filled choice button vs. a pastel chip/field), so these are deliberately
+  // NOT one shared pair — but every hex used more than once now lives here
+  // instead of being re-typed. Consolidated from MultipleChoice.tsx,
+  // TapFindError.tsx and AnswerInput.tsx, which previously each defined their
+  // own literals (some of them byte-identical to each other already).
+  feedbackCorrectBold: '#16a34a', // MultipleChoice: filled correct choice
+  feedbackWrongBold: '#dc2626', // MultipleChoice: filled wrong choice
+  feedbackNeutralBorder: '#ccc', // MultipleChoice: unselected choice border
+  feedbackCorrectBg: '#DCF7E3', // TapFindError: correct chip fill
+  feedbackCorrectBorder: '#34C759', // TapFindError: correct chip border + reveal ring
+  feedbackWrongBg: '#FDF1F1', // TapFindError chip / AnswerInput field: wrong fill
+  feedbackWrongBorder: '#F0B4B4', // TapFindError chip / AnswerInput field: wrong border
+  feedbackCorrectFieldBg: '#EEF4FF', // AnswerInput: correct field fill
 } as const;

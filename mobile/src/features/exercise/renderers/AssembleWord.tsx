@@ -1,6 +1,5 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Image } from 'expo-image';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
@@ -11,6 +10,7 @@ import SproutAvatar, { type SproutState } from '@/src/features/exercise/componen
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
+import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -27,42 +27,15 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
   const { width, height } = useWindowDimensions();
   const avatarWidth = Math.max(72, Math.min(width * 0.22, height * 0.12, 96));
 
-  const [hasFinished, setHasFinished] = useState(false);
-  const ex = useAssembleWord(task, onResult, { feedbackDelayMs: 1200 });
-
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
+  const ex = useAssembleWord(task, onResult);
 
   // Let the prompt END so the sprout can settle into its "done" pose (see FillBlank).
-  useEffect(() => {
-    try {
-      player.loop = false;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
-
-  useEffect(() => {
-    if (status.didJustFinish) setHasFinished(true);
-  }, [status.didJustFinish]);
-  useEffect(() => {
-    if (status.playing) setHasFinished(false);
-  }, [status.playing]);
-
+  const { status, toggle: handleToggleAudio } = useTaskAudio(task.prompt_audio_url ?? task.audio_url, {
+    loop: false,
+    replayFromStart: true,
+  });
+  const hasFinished = useAudioFinishedLatch(status);
   const sproutState: SproutState = hasFinished ? 'done' : status.playing ? 'playing' : 'idle';
-
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.seekTo(0);
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
 
   const promptText = task.prompt_text?.trim() ? task.prompt_text : PROMPT_FALLBACK;
   const slotLetters = useMemo(

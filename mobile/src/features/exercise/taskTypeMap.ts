@@ -1,7 +1,10 @@
-// Fallback map used only when a task's own interaction_form is null. Covers all 43
-// backend task_type codes (shared/src/validators/task.ts TASK_TYPE_OPTION_SHAPE) —
-// every code maps to a renderer whose registry key matches its actual options shape.
-const taskTypeMap: Record<string, string> = {
+// task_type is the sole dispatch key (see ExerciseEngine.tsx) — the backend's
+// interaction_form enum (7 values: CHOOSE/MATCH/FILL/ASSEMBLE/TRANSCRIBE/
+// CORRECT/TAP) has no overlap with this map's 27 renderer keys, so it's used
+// only as a __DEV__ mismatch warning, never for dispatch. Covers all 43
+// backend task_type codes, verified against the per-type options shape in
+// shared/src/validators/task.ts's TASK_TYPE_OPTION_SHAPE.
+export const taskTypeMap: Record<string, string> = {
   // choiceOptions — purpose-built renderers where the interaction clearly fits...
   TT_1_1: 'letter_choice',
   TT_1_2: 'image_match',
@@ -77,37 +80,4 @@ const taskTypeMap: Record<string, string> = {
 
 export function getInteractionForm(taskType: string): string {
   return taskTypeMap[taskType] ?? 'fallback';
-}
-
-/**
- * Last-resort resolver: infer a renderer key from the task's options shape when
- * neither the task's own interaction_form nor the task_type map yields a usable
- * renderer. This keeps the diagnostic/lesson from freezing on the dead-end
- * Fallback renderer for any task whose options we recognise (the backend serves
- * interaction_form = null today, and may later send raw enum values that aren't
- * registry keys). Returns null when the shape is unrecognised. Order matters: more
- * specific/unique fields are checked before the generic `choices` fallback.
- */
-export function inferInteractionForm(options: unknown): string | null {
-  if (!options || typeof options !== 'object') return null;
-  const o = options as Record<string, unknown>;
-
-  if (Array.isArray(o.tiles) && Array.isArray(o.correct_order)) return 'assemble_word';
-  if (Array.isArray(o.pairs)) return 'match_pairs';
-  if (o.punctuation && typeof o.punctuation === 'object') {
-    const p = o.punctuation as Record<string, unknown>;
-    return Array.isArray(p.gap_positions) ? 'comma_place' : 'punctuation_place';
-  }
-  if (typeof o.sentence === 'string' && typeof o.error_word_index === 'number') return 'tap_find_error';
-  if (typeof o.original_attempt === 'string') return 'self_check';
-  if (typeof o.text_to_memorize === 'string') return 'visual_memory';
-  if (typeof o.text_to_copy === 'string') return 'copy_text';
-  if (typeof o.incorrect_text === 'string') return 'correction';
-  if (typeof o.sentence_template === 'string') return 'sentence_fill';
-  if (typeof o.display_text === 'string') return 'fill_letter';
-  if (Array.isArray(o.expected_answers)) {
-    return typeof o.sentence_count === 'number' ? 'mini_text' : 'dictation';
-  }
-  if (Array.isArray(o.choices) && o.choices.length > 0) return 'multiple_choice';
-  return null;
 }

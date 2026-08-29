@@ -152,15 +152,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipCorrect: {
-    backgroundColor: '#DCF7E3',
-    borderColor: '#34C759',
+    backgroundColor: colors.feedbackCorrectBg,
+    borderColor: colors.feedbackCorrectBorder,
   },
   chipWrong: {
-    backgroundColor: '#FDF1F1',
-    borderColor: '#F0B4B4',
+    backgroundColor: colors.feedbackWrongBg,
+    borderColor: colors.feedbackWrongBorder,
   },
   chipReveal: {
-    borderColor: '#34C759',
+    borderColor: colors.feedbackCorrectBorder,
   },
   chipText: {
     fontFamily: fonts.extrabold,

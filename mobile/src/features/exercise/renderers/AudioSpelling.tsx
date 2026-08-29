@@ -1,4 +1,6 @@
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+// PARKED — unreachable from ExerciseEngine today. Registry key 'text_input' has
+// no entry in taskTypeMap. Keep it — it's finished, kid-tested UI — but it needs
+// a task_type assigned to it before it can go live. See taskTypeMap.ts's header.
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, useWindowDimensions, View } from 'react-native';
 
@@ -7,6 +9,7 @@ import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
 import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
+import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -28,17 +31,9 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
   const [isAnswered, setIsAnswered] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
-  const status = useAudioPlayerStatus(player);
-
-  // Loop the prompt so it keeps playing while the child adjusts volume/speed.
-  useEffect(() => {
-    try {
-      player.loop = true;
-    } catch {
-      // ignore; some mock players may not support looping
-    }
-  }, [player]);
+  const { player, status, toggle: handleToggleAudio } = useTaskAudio(
+    task.prompt_audio_url ?? task.audio_url,
+  );
 
   // Open the keyboard as soon as the task mounts ("activate keyboard").
   useEffect(() => {
@@ -46,19 +41,14 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
     return () => clearTimeout(timer);
   }, []);
 
-  // Tap the character to toggle playback; the avatar animation is driven by
-  // status.playing, so it starts/stops together with the audio.
-  const handleToggleAudio = () => {
-    try {
-      if (status.playing) {
-        player.pause();
-      } else {
-        player.play();
-      }
-    } catch {
-      // ignore playback errors (e.g. an unreachable mock URL)
-    }
-  };
+  // Guard the pending onResult timer so it can't fire after unmount.
+  const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
+    },
+    [],
+  );
 
   const handleSubmit = () => {
     if (isAnswered || answer.trim().length === 0) return;
@@ -66,7 +56,10 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
     Keyboard.dismiss();
     const isCorrect = normalize(answer) === normalize(task.correct_answer);
     const submitted = answer.trim();
-    setTimeout(() => onResult(isCorrect, submitted), getFeedbackDelayMs(task, isCorrect));
+    submitTimerRef.current = setTimeout(
+      () => onResult(isCorrect, submitted),
+      getFeedbackDelayMs(task, isCorrect)
+    );
   };
 
   const isCorrect = isAnswered && normalize(answer) === normalize(task.correct_answer);
