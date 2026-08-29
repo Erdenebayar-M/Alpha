@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { Task } from '@/src/features/exercise/types';
 
 export interface UseTextEntryOptions {
@@ -12,8 +13,6 @@ export interface UseTextEntryOptions {
   caseInsensitive?: boolean;
   /** Pre-fill the field (e.g. Correction starts from the incorrect text to edit). */
   initialValue?: string;
-  /** How long feedback stays on screen before onResult advances. Default 1200ms. */
-  feedbackDelayMs?: number;
 }
 
 export interface TextEntryExercise {
@@ -26,8 +25,6 @@ export interface TextEntryExercise {
   canSubmit: boolean;
   submit: () => void;
 }
-
-const DEFAULT_FEEDBACK_DELAY_MS = 1200;
 
 /** NFC-normalise, trim, collapse internal whitespace — mirrors the backend's own
  *  normalizeStr so local feedback agrees with server-side grading. */
@@ -47,12 +44,7 @@ export function useTextEntryExercise(
   onResult: (isCorrect: boolean, inputText: string) => void,
   options: UseTextEntryOptions = {}
 ): TextEntryExercise {
-  const {
-    compareTo,
-    caseInsensitive = true,
-    initialValue = '',
-    feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS,
-  } = options;
+  const { compareTo, caseInsensitive = true, initialValue = '' } = options;
 
   const [value, setValue] = useState(initialValue);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -78,8 +70,8 @@ export function useTextEntryExercise(
     const submitted = value.trim();
     setWasCorrect(correct);
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(correct, submitted), feedbackDelayMs);
-  }, [canSubmit, value, compareTo, task.correct_answer, caseInsensitive, onResult, feedbackDelayMs]);
+    timerRef.current = setTimeout(() => onResult(correct, submitted), getFeedbackDelayMs(task, correct));
+  }, [canSubmit, value, compareTo, task, caseInsensitive, onResult]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;

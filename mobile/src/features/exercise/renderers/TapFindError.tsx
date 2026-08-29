@@ -3,11 +3,10 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
-
-const FEEDBACK_DELAY_MS = 1200;
 
 // prompt_text is just the sentence itself for this task type (no separate instruction
 // field from the backend), so a static instruction line is hardcoded here, mirroring
@@ -41,7 +40,10 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
     setSelectedIndex(index);
     setIsAnswered(true);
     const isCorrect = index === errorIndex;
-    timerRef.current = setTimeout(() => onResult(isCorrect, String(index)), FEEDBACK_DELAY_MS);
+    timerRef.current = setTimeout(
+      () => onResult(isCorrect, String(index)),
+      getFeedbackDelayMs(task, isCorrect)
+    );
   };
 
   const isCorrect = isAnswered && selectedIndex === errorIndex;

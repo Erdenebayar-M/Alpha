@@ -28,7 +28,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const avatarWidth = Math.max(88, Math.min(width * 0.26, height * 0.14, 120));
 
   const [hasFinished, setHasFinished] = useState(false);
-  const ex = useChoiceExercise(task, onResult, { feedbackDelayMs: 1200 });
+  const ex = useChoiceExercise(task, onResult);
 
   const player = useAudioPlayer(task.prompt_audio_url ?? task.audio_url);
   const status = useAudioPlayerStatus(player);

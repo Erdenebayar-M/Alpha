@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { Task } from '@/src/features/exercise/types';
-
-export interface UseFillTilesOptions {
-  /** How long feedback stays on screen before onResult advances. Default 1200ms. */
-  feedbackDelayMs?: number;
-}
 
 export interface FillTilesExercise {
   /** The letter bank: `blank_answer`'s letters, shuffled once per mount. */
@@ -26,8 +22,6 @@ export interface FillTilesExercise {
   removeLast: () => void;
   submit: () => void;
 }
-
-const DEFAULT_FEEDBACK_DELAY_MS = 1200;
 
 /** Deterministic-per-mount shuffle (same helper as useMatchExercise): the bank is
  *  scrambled once so re-renders don't reorder the tiles under the child's finger. */
@@ -55,11 +49,8 @@ function shuffle<T>(items: T[]): T[] {
  */
 export function useFillTiles(
   task: Task,
-  onResult: (isCorrect: boolean, inputText: string) => void,
-  options: UseFillTilesOptions = {}
+  onResult: (isCorrect: boolean, inputText: string) => void
 ): FillTilesExercise {
-  const { feedbackDelayMs = DEFAULT_FEEDBACK_DELAY_MS } = options;
-
   // The missing letters in their correct order. NFC-normalised so a composed and a
   // decomposed "ү" compare equal, and lower-cased because the bank is always shown
   // in lower case even when the word itself is capitalised.
@@ -143,8 +134,8 @@ export function useFillTiles(
     const correct = answer === letters.join('');
     setWasCorrect(correct);
     setIsAnswered(true);
-    timerRef.current = setTimeout(() => onResult(correct, answer), feedbackDelayMs);
-  }, [canSubmit, placed, letters, onResult, feedbackDelayMs]);
+    timerRef.current = setTimeout(() => onResult(correct, answer), getFeedbackDelayMs(task, correct));
+  }, [canSubmit, placed, letters, onResult, task]);
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;
