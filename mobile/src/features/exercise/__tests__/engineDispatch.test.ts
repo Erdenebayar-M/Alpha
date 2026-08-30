@@ -1,7 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-import { getInteractionForm, taskTypeMap } from '@/src/features/exercise/taskTypeMap';
+import {
+  getInteractionForm,
+  resolveInteractionForm,
+  taskTypeMap,
+} from '@/src/features/exercise/taskTypeMap';
 
 // Pure dispatch-logic coverage for ExerciseEngine.tsx. Deliberately does NOT
 // import registry.ts: it pulls in every renderer, which pulls in
@@ -63,5 +67,39 @@ describe('exercise engine dispatch', () => {
     const keys = Object.keys(taskTypeMap);
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys.length).toBe(43);
+  });
+
+  describe('resolveInteractionForm', () => {
+    const isRegistered = (key: string) => readRegistryKeys().has(key);
+
+    it('prefers interaction_form when it names a real registry entry', () => {
+      // TT_1_4 defaults to 'assemble_word', but a task explicitly opting into
+      // the syllable variant (parked registry key 'syllable_assemble_word')
+      // must render that renderer instead.
+      expect(
+        resolveInteractionForm('TT_1_4', 'syllable_assemble_word', isRegistered),
+      ).toBe('syllable_assemble_word');
+    });
+
+    it('ignores the backend enum value and falls back to taskTypeMap', () => {
+      // A real backend payload sends one of the 7 InteractionForm enum
+      // values (schema.prisma), which never names a registry key — dispatch
+      // must still land on taskTypeMap's default, not 'fallback'.
+      expect(resolveInteractionForm('TT_1_4', 'ASSEMBLE', isRegistered)).toBe(
+        'assemble_word',
+      );
+    });
+
+    it('falls back to taskTypeMap when interaction_form is null', () => {
+      expect(resolveInteractionForm('TT_1_4', null, isRegistered)).toBe(
+        'assemble_word',
+      );
+    });
+
+    it('falls back to fallback for an unmapped task_type with no usable override', () => {
+      expect(
+        resolveInteractionForm('TT_99_9', 'not_a_real_key', isRegistered),
+      ).toBe('fallback');
+    });
   });
 });
