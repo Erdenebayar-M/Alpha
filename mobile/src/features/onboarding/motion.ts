@@ -60,6 +60,21 @@ export const EASE_OUT_EXPO = Easing.bezier(0.16, 1, 0.3, 1);
 export const EASE_SPRING_A = makeSampledEasing(SPRING_A);
 export const EASE_SPRING_B = makeSampledEasing(SPRING_B);
 
+/**
+ * Complements and reverses a sampled curve's points so replaying it traces the exact
+ * time-mirror of the original: `reversed(t) === 1 - original(1 - t)`. Used to make a
+ * "closing" animation the true reverse of an "opening" one that rides a spring sample
+ * (e.g. `EASE_SPRING_B_REVERSED` below), rather than swapping in an unrelated curve.
+ */
+export function reverseEasingPoints(points: readonly number[]): readonly number[] {
+  const last = points.length - 1;
+  return points.map((_, i) => 1 - points[last - i]);
+}
+
+/** Time-reverse of `SPRING_B` — the same overshoot-then-settle shape, played backwards. */
+export const SPRING_B_REVERSED = reverseEasingPoints(SPRING_B);
+export const EASE_SPRING_B_REVERSED = makeSampledEasing(SPRING_B_REVERSED);
+
 export type Curve = 'expo' | 'springA' | 'springB';
 
 export function easingFor(curve: Curve): AnyEasing {

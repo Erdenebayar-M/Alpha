@@ -88,7 +88,7 @@ export async function mockFetch<T>(
   if (path === '/learner' && method === 'POST') {
     const grade = Number(body.grade);
     const newLearner = {
-      id: `mock-learner-${mockLearners.length + 1}`,
+      id: `mock-learner-${Date.now()}`,
       name: body.name as string,
       grade,
       variant: grade <= 2 ? 'A' : 'B',
