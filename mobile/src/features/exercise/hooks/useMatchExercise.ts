@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
+import { getFeedbackDelayMs, getFeedbackText } from '@/src/features/exercise/feedbackTiming';
 import type { Task } from '@/src/features/exercise/types';
 
 /** A single tappable card in one of the two columns. `pairId` is the index of the
@@ -248,8 +248,8 @@ export function useMatchExercise(
 
   const feedback = useMemo(() => {
     if (!isAnswered) return null;
-    return (allCorrect ? task.feedback_correct : task.feedback_wrong) ?? task.feedback_text;
-  }, [isAnswered, allCorrect, task.feedback_correct, task.feedback_wrong, task.feedback_text]);
+    return getFeedbackText(task, allCorrect);
+  }, [isAnswered, allCorrect, task]);
 
   return {
     rows,

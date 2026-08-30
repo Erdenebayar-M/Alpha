@@ -106,7 +106,7 @@ describe('useChoiceExercise', () => {
     expect(onResult).toHaveBeenCalledWith(false, 'б');
   });
 
-  it('diagnostic tasks advance quickly regardless of correctness', () => {
+  it('diagnostic tasks advance immediately regardless of correctness', () => {
     const onResult = jest.fn();
     const { result } = renderHook(() =>
       useChoiceExercise(makeTask({ is_diagnostic: true }), onResult)
@@ -114,7 +114,7 @@ describe('useChoiceExercise', () => {
 
     act(() => result.current.select(1)); // wrong, but diagnostic — no feedback shown
     act(() => result.current.submit());
-    act(() => jest.advanceTimersByTime(300));
+    act(() => jest.advanceTimersByTime(0));
 
     expect(onResult).toHaveBeenCalledWith(false, 'б');
   });

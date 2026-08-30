@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
+import { getFeedbackDelayMs, getFeedbackText } from '@/src/features/exercise/feedbackTiming';
 import type { Task, TaskChoice } from '@/src/features/exercise/types';
 
 export interface UseChoiceExerciseOptions {
@@ -83,10 +83,8 @@ export function useChoiceExercise(
 
   const feedback = useMemo(() => {
     if (!isAnswered || !selectedChoice) return null;
-    return (
-      (selectedChoice.is_correct ? task.feedback_correct : task.feedback_wrong) ?? task.feedback_text
-    );
-  }, [isAnswered, selectedChoice, task.feedback_correct, task.feedback_wrong, task.feedback_text]);
+    return getFeedbackText(task, selectedChoice.is_correct);
+  }, [isAnswered, selectedChoice, task]);
 
   const canSubmit = selectedIndex !== null && !isAnswered;
 

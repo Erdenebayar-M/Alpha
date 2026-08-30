@@ -1,8 +1,3 @@
-// PARKED — unreachable from ExerciseEngine today. Registry key 'fill_blank' has
-// no entry in taskTypeMap: every fillOptions task_type (TT_2_1/2_4/3_2/4_3/4_4/5_5)
-// already maps to fill_letter_tiles / audio_fill_letter_tiles / fill_letter. Keep
-// it — it's finished, kid-tested UI — but it needs a task_type reassigned to it
-// (or a new one) before it can go live. See taskTypeMap.ts's header.
 import { Image } from 'expo-image';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
