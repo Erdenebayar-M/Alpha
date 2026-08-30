@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Easing, type EasingFunction, type EasingFunctionFactory } from 'react-native-reanimated';
 
 /**
@@ -143,9 +143,12 @@ export function boardScale(board: Board, width: number, height: number): number 
  * rotation or window resize needs to be tracked.
  */
 export function useKeyboardStableHeight(height: number): number {
-  const stableRef = useRef(height);
-  if (height > stableRef.current) stableRef.current = height;
-  return stableRef.current;
+  const [stableHeight, setStableHeight] = useState(height);
+  if (height > stableHeight) {
+    setStableHeight(height);
+    return height;
+  }
+  return stableHeight;
 }
 
 const fade = (delay: number, duration: number): Track => ({

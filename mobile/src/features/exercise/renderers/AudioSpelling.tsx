@@ -2,7 +2,7 @@
 // no entry in taskTypeMap. Keep it — it's finished, kid-tested UI — but it needs
 // a task_type assigned to it before it can go live. See taskTypeMap.ts's header.
 import { useEffect, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, useWindowDimensions, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, useWindowDimensions } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';

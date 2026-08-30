@@ -19,16 +19,14 @@ export default function VisualMemory({ task, onResult }: ExerciseRendererProps) 
   const displaySeconds = task.options.display_seconds ?? 5;
 
   const [secondsLeft, setSecondsLeft] = useState(displaySeconds);
-  const [phase, setPhase] = useState<'memorize' | 'recall'>('memorize');
+  // Derived, not independent state — recall starts the instant the countdown hits 0,
+  // with no separate setState needed to make that transition.
+  const phase: 'memorize' | 'recall' = secondsLeft <= 0 ? 'recall' : 'memorize';
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: task.correct_answer });
 
   useEffect(() => {
     if (phase !== 'memorize') return;
-    if (secondsLeft <= 0) {
-      setPhase('recall');
-      return;
-    }
     const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(timer);
   }, [phase, secondsLeft]);

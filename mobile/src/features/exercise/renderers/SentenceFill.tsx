@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
 
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
@@ -26,11 +26,12 @@ export default function SentenceFill({ task, onResult }: ExerciseRendererProps) 
     return () => clearTimeout(timer);
   }, []);
 
-  const [prefix, suffix] = useMemo(() => {
-    const idx = sentenceTemplate.indexOf('_');
-    if (idx === -1) return [sentenceTemplate, ''];
-    return [sentenceTemplate.slice(0, idx), sentenceTemplate.slice(idx + 1)];
-  }, [sentenceTemplate]);
+  // A cheap indexOf+slice on a short string — not worth manual memoization.
+  const blankIdx = sentenceTemplate.indexOf('_');
+  const [prefix, suffix] =
+    blankIdx === -1
+      ? [sentenceTemplate, '']
+      : [sentenceTemplate.slice(0, blankIdx), sentenceTemplate.slice(blankIdx + 1)];
 
   const handleSubmit = () => {
     Keyboard.dismiss();

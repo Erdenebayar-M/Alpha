@@ -27,6 +27,10 @@ export function useTaskAudio(
 
   useEffect(() => {
     try {
+      // player is a native AudioPlayer handle, not compiler-tracked data — expo-audio
+      // has no construction-time `loop` option, so mutating it post-hoc is the only,
+      // documented way to set it.
+      // eslint-disable-next-line react-hooks/immutability
       player.loop = loop;
     } catch {
       // ignore; some mock players may not support looping
@@ -56,14 +60,20 @@ export function useTaskAudio(
  */
 export function useAudioFinishedLatch(status: AudioStatus): boolean {
   const [hasFinished, setHasFinished] = useState(false);
+  // Tracked so the two transitions below (finish sets the latch, a fresh play clears
+  // it) can be detected and applied during render — see motion.ts's
+  // useKeyboardStableHeight for the same pattern, and why it replaces an effect.
+  const [prevDidJustFinish, setPrevDidJustFinish] = useState(status.didJustFinish);
+  const [prevPlaying, setPrevPlaying] = useState(status.playing);
 
-  useEffect(() => {
+  if (status.didJustFinish !== prevDidJustFinish) {
+    setPrevDidJustFinish(status.didJustFinish);
     if (status.didJustFinish) setHasFinished(true);
-  }, [status.didJustFinish]);
-
-  useEffect(() => {
+  }
+  if (status.playing !== prevPlaying) {
+    setPrevPlaying(status.playing);
     if (status.playing) setHasFinished(false);
-  }, [status.playing]);
+  }
 
   return hasFinished;
 }

@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
@@ -39,11 +38,13 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const sproutState: SproutState = hasFinished ? 'done' : status.playing ? 'playing' : 'idle';
 
   // Split the prompt on the "_" blank marker (AGENTS §5): "Эрвээх_й" -> "Эрвээх" / "й".
-  const [prefix, suffix] = useMemo(() => {
-    const idx = task.prompt_text.indexOf('_');
-    if (idx === -1) return [task.prompt_text, ''];
-    return [task.prompt_text.slice(0, idx), task.prompt_text.slice(idx + 1)];
-  }, [task.prompt_text]);
+  // A cheap indexOf+slice on a short string — not worth manual memoization (and the
+  // React Compiler auto-memoizes the component as a whole regardless).
+  const blankIdx = task.prompt_text.indexOf('_');
+  const [prefix, suffix] =
+    blankIdx === -1
+      ? [task.prompt_text, '']
+      : [task.prompt_text.slice(0, blankIdx), task.prompt_text.slice(blankIdx + 1)];
 
   const filledLetter = ex.selectedChoice ? ex.selectedChoice.text.toLowerCase() : '';
 

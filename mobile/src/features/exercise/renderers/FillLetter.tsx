@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -35,12 +35,11 @@ export default function FillLetter({ task, onResult }: ExerciseRendererProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Split the display text on the "_" blank marker: "н_м" -> "н" / "м".
-  const [prefix, suffix] = useMemo(() => {
-    const idx = displayText.indexOf('_');
-    if (idx === -1) return [displayText, ''];
-    return [displayText.slice(0, idx), displayText.slice(idx + 1)];
-  }, [displayText]);
+  // Split the display text on the "_" blank marker: "н_м" -> "н" / "м". A cheap
+  // indexOf+slice on a short string — not worth manual memoization.
+  const blankIdx = displayText.indexOf('_');
+  const [prefix, suffix] =
+    blankIdx === -1 ? [displayText, ''] : [displayText.slice(0, blankIdx), displayText.slice(blankIdx + 1)];
 
   const handleSubmit = () => {
     Keyboard.dismiss();
