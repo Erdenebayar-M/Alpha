@@ -11,11 +11,11 @@ export const taskTypeMap: Record<string, string> = {
   TT_4_2: 'audio_choice',
   TT_6_1: 'sentence_capital',
   TT_6_2: 'punctuation_choice',
+  TT_2_3: 'fill_blank',
   // choiceOptions, audio variant — hear the word, pick the correctly spelled one.
   TT_1_5: 'audio_word_choice',
   TT_3_1: 'audio_word_choice',
   // ...the rest of choiceOptions fall back to the generic choice renderer.
-  TT_2_3: 'multiple_choice',
   TT_3_4: 'multiple_choice',
   TT_4_1: 'multiple_choice',
   TT_5_1: 'multiple_choice',
