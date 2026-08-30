@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
@@ -40,12 +39,13 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
   });
 
   // Split the prompt on the "_" blank marker (AGENTS §5), tolerating a run of
-  // underscores ("____ өдөр сайхан." → prefix "" / suffix " өдөр сайхан.").
-  const [prefix, suffix] = useMemo(() => {
-    const m = task.prompt_text.match(/_+/);
-    if (!m || m.index === undefined) return [task.prompt_text, ''];
-    return [task.prompt_text.slice(0, m.index), task.prompt_text.slice(m.index + m[0].length)];
-  }, [task.prompt_text]);
+  // underscores ("____ өдөр сайхан." → prefix "" / suffix " өдөр сайхан."). A cheap
+  // regex match on a short string — not worth manual memoization.
+  const blankMatch = task.prompt_text.match(/_+/);
+  const [prefix, suffix] =
+    !blankMatch || blankMatch.index === undefined
+      ? [task.prompt_text, '']
+      : [task.prompt_text.slice(0, blankMatch.index), task.prompt_text.slice(blankMatch.index + blankMatch[0].length)];
 
   const filled = ex.selectedChoice?.text ?? null;
 

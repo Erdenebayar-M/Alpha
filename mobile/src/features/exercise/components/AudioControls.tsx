@@ -21,13 +21,18 @@ export default function AudioControls({ player }: AudioControlsProps) {
   const [volume, setVolume] = useState(player.volume);
   const [rate, setRate] = useState(player.playbackRate || 1.0);
 
+  // player is a native AudioPlayer handle passed in as a prop, not compiler-tracked
+  // data — volume/shouldCorrectPitch are expo-audio's own documented mutable fields,
+  // set imperatively the same way player.setPlaybackRate() is called below.
   const handleVolumeChange = (value: number) => {
     setVolume(value);
+    // eslint-disable-next-line react-hooks/immutability
     player.volume = value;
   };
 
   const handleRateSelect = (value: number) => {
     setRate(value);
+    // eslint-disable-next-line react-hooks/immutability
     player.shouldCorrectPitch = true;
     player.setPlaybackRate(value, 'high');
   };

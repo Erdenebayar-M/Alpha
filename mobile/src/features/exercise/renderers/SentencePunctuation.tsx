@@ -40,12 +40,13 @@ export default function SentencePunctuation({ task, onResult }: ExerciseRenderer
   });
 
   // Split the prompt on the "_" blank marker (AGENTS §5). The mark sits at the end here
-  // ("Хүүхэд хаашаа явж байна_" → prefix "Хүүхэд хаашаа явж байна" / suffix "").
-  const [prefix, suffix] = useMemo(() => {
-    const m = task.prompt_text.match(/_+/);
-    if (!m || m.index === undefined) return [task.prompt_text, ''];
-    return [task.prompt_text.slice(0, m.index), task.prompt_text.slice(m.index + m[0].length)];
-  }, [task.prompt_text]);
+  // ("Хүүхэд хаашаа явж байна_" → prefix "Хүүхэд хаашаа явж байна" / suffix ""). A
+  // cheap regex match on a short string — not worth manual memoization.
+  const blankMatch = task.prompt_text.match(/_+/);
+  const [prefix, suffix] =
+    !blankMatch || blankMatch.index === undefined
+      ? [task.prompt_text, '']
+      : [task.prompt_text.slice(0, blankMatch.index), task.prompt_text.slice(blankMatch.index + blankMatch[0].length)];
 
   const filled = ex.selectedChoice?.text ?? null;
 

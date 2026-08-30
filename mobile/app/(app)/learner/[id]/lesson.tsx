@@ -52,6 +52,10 @@ export default function LessonScreen() {
   }, [id]);
 
   useEffect(() => {
+    // Date.now() is impure, so it can't be read as a pure render-phase derivation —
+    // this reset genuinely needs the effect, unlike the render-phase pattern used
+    // elsewhere (e.g. useKeyboardStableHeight) for similarly-shaped resets.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTaskStartedAt(Date.now());
   }, [taskIndex]);
 
@@ -119,7 +123,7 @@ export default function LessonScreen() {
     } catch {
       setCompleteFailed(true);
     }
-  }, [data?.lesson, completeLesson]);
+  }, [data, completeLesson]);
 
   if (needsOnboarding === null) {
     return (
