@@ -16,7 +16,8 @@ import Animated, {
 // overlay an animated mouth on top of the baked smile and squash/stretch the body.
 const body = require('@/assets/characters/sprout-talk/body.png');
 
-const ASPECT = 316 / 428;
+export const TALKING_SPROUT_ASPECT = 316 / 428;
+const ASPECT = TALKING_SPROUT_ASPECT;
 export const DEFAULT_TALKING_SPROUT_WIDTH = 96;
 
 // Baked smile position as a fraction of the sprout box, measured from body.png

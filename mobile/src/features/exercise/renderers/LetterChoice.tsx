@@ -5,7 +5,7 @@ import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
-import TalkingSprout from '@/src/features/exercise/components/TalkingSprout';
+import TalkingSprout, { TALKING_SPROUT_ASPECT } from '@/src/features/exercise/components/TalkingSprout';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -14,6 +14,22 @@ import { fonts } from '@/src/theme/typography';
 
 const hand = require('@/assets/characters/sprout-talk/hand.png');
 
+// Measured from a 1:1 render of Figma 444:5669 (390x844) and from the sprite PNGs — not
+// eyeballed. See LetterChoice's plan notes if these ever need re-deriving.
+const CARD_OF_WIDTH = 0.359; // card 140 / screen 390
+const CARD_MAX = 140;
+const SPROUT_OF_CARD = 0.55; // body.png's cone renders 44pt wide at card=140 with this ratio
+const SPROUT_VISIBLE = 0.648; // clip fraction -> 64pt of visible green at card=140
+
+// hand.png is 73x110 with its ink at x 21..63, y 0..90 — the ink is NOT centred in the
+// canvas (centre 0.5753 across, not 0.5). These fractions position the *ink*, not the box,
+// so the two hooked arms land symmetrically on the cone regardless of card size.
+const HAND_BOX_OF_CARD = 0.124; // box width -> 10pt of visible ink at card=140
+const HAND_ASPECT = 110 / 73; // native aspect, so `contain` never letterboxes
+const HAND_INK_CX = (21 + 63) / 2 / 73; // 0.5753
+const HAND_SPREAD_OF_CARD = 0.1607; // ink centre at card centre +/- 22.5pt at card=140
+const HAND_TOP_OF_CARD = -0.05; // ink top 7pt above the card's edge at card=140
+
 /**
  * "First letter" multiple choice ("Эхний үсэг аль нь вэ?"): a picture is shown and
  * the child picks the letter it starts with. Khishigee reads the prompt aloud when
@@ -21,19 +37,29 @@ const hand = require('@/assets/characters/sprout-talk/hand.png');
  */
 export default function LetterChoice({ task, onResult }: ExerciseRendererProps) {
   const { width, height } = useWindowDimensions();
-  const cardSize = Math.max(128, Math.min(width * 0.4, height * 0.2, 150));
+  const cardSize = Math.max(128, Math.min(width * CARD_OF_WIDTH, height * 0.2, CARD_MAX));
   // The sprout is a small character perched on top of the card — in the Figma its body
-  // is ~0.34 of the card's width and it sits right at the card's top edge. Tie its size
-  // to the card so the proportion stays correct on every screen.
-  const sproutWidth = Math.round(cardSize * 0.38);
-  // The sprite is a full-body character but the design crops it to just the top portion
-  // (head-to-chest, above the landscape belly) so it "peeks" over the card. Show the top
-  // ~64% and clip the rest. See TalkingSprout `visibleFraction`.
-  const SPROUT_VISIBLE = 0.64;
-  // Arm-hooks: ~13% of the card wide, hooking down over its top edge from the body's
-  // lower corners (~39% and ~65% across, measured from the Figma).
-  const handW = cardSize * 0.13;
-  const handH = handW * 1.4;
+  // (the cone, not the sprite's full canvas) is 44pt wide against a 140pt card. Tie its
+  // size to the card so the proportion stays correct on every screen.
+  const sproutWidth = Math.round(cardSize * SPROUT_OF_CARD);
+
+  // Khishigee's two little arms hook down over the card's top edge, straddling it (mostly
+  // above, some below). Sized and centred on the card's centre line so both arms mirror by
+  // construction — see HAND_* constants above for why the left/right offsets differ.
+  const handW = cardSize * HAND_BOX_OF_CARD;
+  const handH = handW * HAND_ASPECT;
+  const handTop = cardSize * HAND_TOP_OF_CARD;
+  const handSpread = cardSize * HAND_SPREAD_OF_CARD;
+  // The right hand is un-mirrored: its ink sits HAND_INK_CX across the box.
+  const rightHandLeft = cardSize / 2 + handSpread - handW * HAND_INK_CX;
+  // The left hand is mirrored (scaleX: -1), so its ink sits (1 - HAND_INK_CX) across the box.
+  const leftHandLeft = cardSize / 2 - handSpread - handW * (1 - HAND_INK_CX);
+  // The hands mount in `cluster`, not `card` (see styles.cluster/styles.hand), so `handTop`
+  // — measured relative to the card's own top edge — needs to be re-based to the cluster's
+  // top edge, which starts one sproutRow + its 1pt margin higher. Mirrors TalkingSprout's
+  // own `height * visibleFraction` so this stays exact without duplicating that logic.
+  const sproutHeight = (sproutWidth / TALKING_SPROUT_ASPECT) * SPROUT_VISIBLE;
+  const clusterHandTop = sproutHeight + 1 + handTop;
 
   const ex = useChoiceExercise(task, onResult);
 
@@ -57,33 +83,38 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
 
         {/* Character sits centered directly above the picture card, with the speaker
             button floating to its right (Figma: sprout over the card, arms hooking the
-            top edge). The sprout row is the card's width so the sprout centers over it. */}
+            top edge). The cluster is the card's width so everything centers over it.
+            The two hands are cluster-level siblings of sproutRow/card (not children of
+            card) so their zIndex can lift them above BOTH — matching Figma's own layer
+            order, where the arms sit in front of the whole illustration. Nesting them
+            inside card previously trapped them one stacking level below the sprout, so
+            the cone painted over the arm's shoulder-connecting stroke. */}
         <View style={styles.stage}>
-          <View style={[styles.sproutRow, { width: cardSize }]}>
-            <TalkingSprout playing={status.playing} width={sproutWidth} visibleFraction={SPROUT_VISIBLE} />
-            <View style={styles.speakerWrap}>
-              <SpeakerButton playing={status.playing} onPress={handlePlay} />
+          <View style={[styles.cluster, { width: cardSize }]}>
+            <View style={[styles.sproutRow, { width: cardSize }]}>
+              <TalkingSprout playing={status.playing} width={sproutWidth} visibleFraction={SPROUT_VISIBLE} />
+              <View style={styles.speakerWrap}>
+                <SpeakerButton playing={status.playing} onPress={handlePlay} />
+              </View>
             </View>
-          </View>
 
-          <View style={[styles.card, { width: cardSize, height: cardSize, borderRadius: cardSize * 0.22 }]}>
-            {task.image_url ? (
-              <Image source={{ uri: task.image_url }} style={styles.image} contentFit="contain" transition={200} />
-            ) : null}
-            {/* Khishigee's two little arms hook down over the card's top edge from the
-                body's lower corners (~39% and ~65% across), the left one mirrored. They
-                straddle the top edge (mostly above it), so they connect the sprout to the card. */}
+            <View style={[styles.card, { width: cardSize, height: cardSize, borderRadius: cardSize * 0.22 }]}>
+              {task.image_url ? (
+                <Image source={{ uri: task.image_url }} style={styles.image} contentFit="contain" transition={200} />
+              ) : null}
+            </View>
+
             <Image
               source={hand}
               style={[
                 styles.hand,
-                { width: handW, height: handH, top: -handH * 0.7, left: '39%', marginLeft: -handW / 2, transform: [{ scaleX: -1 }] },
+                { width: handW, height: handH, top: clusterHandTop, left: leftHandLeft, transform: [{ scaleX: -1 }] },
               ]}
               contentFit="contain"
             />
             <Image
               source={hand}
-              style={[styles.hand, { width: handW, height: handH, top: -handH * 0.7, left: '65%', marginLeft: -handW / 2 }]}
+              style={[styles.hand, { width: handW, height: handH, top: clusterHandTop, left: rightHandLeft }]}
               contentFit="contain"
             />
           </View>
@@ -158,12 +189,18 @@ const styles = StyleSheet.create({
   stage: {
     alignItems: 'center',
   },
+  cluster: {
+    // Shared stacking context for sproutRow, card, and the two hands, so the hands'
+    // zIndex can put them above BOTH (see the JSX comment above) instead of being
+    // trapped one level below sproutRow while nested inside card.
+    position: 'relative',
+  },
   sproutRow: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    // Small positive gap: the body sits fully ABOVE the card (never behind it); only the
-    // arms reach down to bridge onto the card's top edge. Matches the Figma (~3px gap).
-    marginBottom: 4,
+    // The body sits fully ABOVE the card (never behind it); only the arms reach down to
+    // bridge onto the card's top edge. Matches the Figma (1pt gap).
+    marginBottom: 1,
     zIndex: 2,
   },
   speakerWrap: {
@@ -193,7 +230,6 @@ const styles = StyleSheet.create({
   },
   hand: {
     position: 'absolute',
-    top: -6,
     zIndex: 3,
   },
 });
