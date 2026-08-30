@@ -12,7 +12,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 // misconfigured EAS profile). See the module-load check below: a release
 // build with no configured API URL fails at startup instead of silently
 // falling back to a fake backend that accepts any password.
-const IS_MOCK = __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK === '1';
+export const IS_MOCK = __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK === '1';
 const REQUEST_TIMEOUT_MS = 20_000;
 
 // Fail at module load, not at the first tap — a release build with no
