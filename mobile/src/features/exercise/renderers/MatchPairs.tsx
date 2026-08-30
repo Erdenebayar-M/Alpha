@@ -46,8 +46,9 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
   // Bubble text scales down a touch on narrow phones (SE) so it never overflows.
   const bubbleFont = Math.round(Math.min(22, width * 0.058));
 
-  // Two cards + a small joint gap must fit the row; cap at the Figma's 160px.
-  const GAP = 16;
+  // The two cards sit flush together so the knob/socket overlap into one
+  // interlocking joint at the seam; cap card width at the Figma's 160px.
+  const GAP = 0;
   const cardW = Math.min(160, Math.floor((width - 32 - GAP) / 2));
   const cardH = Math.round(cardW * (110 / 160));
 
@@ -174,7 +175,7 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
         <View style={styles.board}>
           {ex.rows.map((row) => {
             const rowActive = row.left != null && row.left.id === draggingLeftId;
-            // The forced last pair: auto-filled + highlighted, and pinned so it stays.
+            // The forced last pair: auto-filled and pinned so it stays (no drag, no unlink).
             const isAuto = ex.autoLinkedRightId === row.right.id && row.locked;
             return (
               <View key={row.right.id} style={[styles.row, { gap: GAP, zIndex: rowActive ? 30 : 1 }]}>
@@ -184,7 +185,6 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
                     width={cardW}
                     height={cardH}
                     imageUrl={row.left.imageUrl}
-                    selected={isAuto}
                     disabled={ex.isAnswered || isAuto}
                     onDragStart={handleDragStart}
                     onDragMove={handleDragMove}
@@ -205,7 +205,6 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
                     height={cardH}
                     text={row.right.text}
                     locked={row.locked}
-                    selected={isAuto}
                     hovered={hoveredRowId === row.right.id}
                     rejected={ex.rejectedRightId === row.right.id}
                     onPress={row.locked && !isAuto ? () => ex.unlinkRight(row.right.id) : undefined}
