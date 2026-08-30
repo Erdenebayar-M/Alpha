@@ -13,7 +13,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { SvgProps } from 'react-native-svg';
 
-import { EASE_SPRING_B, WAVE_KEYFRAMES, WAVE_ORIGIN, WAVE_REPEAT_COUNT } from '@/src/features/onboarding/motion';
+import {
+  EASE_SPRING_B,
+  EASE_SPRING_B_REVERSED,
+  WAVE_KEYFRAMES,
+  WAVE_ORIGIN,
+  WAVE_REPEAT_COUNT,
+} from '@/src/features/onboarding/motion';
 
 /**
  * Idle-loop animations shared by every onboarding character — the Slide 1 brand mascots
@@ -98,9 +104,13 @@ export function withBlink(Art: FC<SvgProps>, holdMs = 2600): FC<SvgProps> {
 /** 0 = shut (drawn closed-eye art visible), 1 = open. Absent provider => open. */
 const EyeOpenContext = createContext<SharedValue<number> | null>(null);
 
-/** A wide-eyed pop on the way open; a softer, slightly slower settle on the way shut. */
-const EYE_OPEN_MS = 340;
-const EYE_CLOSE_MS = 260;
+/**
+ * Closing is the exact time-mirror of opening — same duration, same spring shape
+ * played backwards — so the wide-eyed pop on the way open becomes a brief anticipatory
+ * widen near the *end* of closing (the overshoot lands late once time-reversed) before
+ * a quick final shut, instead of reading as two unrelated animations.
+ */
+const EYE_TRANSITION_MS = 340;
 
 /**
  * The cross-dissolve, expressed as three overlapping windows on the driver:
@@ -128,9 +138,10 @@ export function EyeOpenProvider({ open, children }: { open: boolean; children: R
       ? // `EASE_SPRING_B` — the sampled Figma spring every character entrance rides.
         // Its 1.068 overshoot carries through the interpolations below as a small
         // wide-eyed pop, which is what makes waking up read as a reaction to the tap.
-        withTiming(1, { duration: EYE_OPEN_MS, easing: EASE_SPRING_B })
-      : // Shutting gets no overshoot: eyelids don't bounce closed.
-        withTiming(0, { duration: EYE_CLOSE_MS, easing: Easing.inOut(Easing.ease) });
+        withTiming(1, { duration: EYE_TRANSITION_MS, easing: EASE_SPRING_B })
+      : // The same curve played backwards (see `EASE_SPRING_B_REVERSED`), so shutting
+        // is not a different, plainer animation bolted onto the same driver.
+        withTiming(0, { duration: EYE_TRANSITION_MS, easing: EASE_SPRING_B_REVERSED });
   }, [open, value]);
 
   return <EyeOpenContext.Provider value={value}>{children}</EyeOpenContext.Provider>;
