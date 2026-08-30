@@ -1,9 +1,8 @@
-// PARKED — unreachable from ExerciseEngine today. Registry key
-// 'punctuation_place' has no entry in taskTypeMap: shared/src/validators/task.ts's
-// TASK_TYPE_OPTION_SHAPE has no punctuation options shape for any of the 43
-// task_type codes, so no real payload can select this renderer. Keep it — it's
-// finished, kid-tested UI — but it needs a backend task_type + options shape
-// before it can go live. See taskTypeMap.ts's header.
+// Reachable only via an explicit task.interaction_form: 'punctuation_place'
+// override (see resolveInteractionForm in taskTypeMap.ts). No task_type maps
+// here by default: shared/src/validators/task.ts's TASK_TYPE_OPTION_SHAPE has
+// no punctuation options shape for any of the 43 codes yet, so no real backend
+// payload can select this renderer until one is added.
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';

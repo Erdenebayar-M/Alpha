@@ -1,9 +1,16 @@
-// task_type is the sole dispatch key (see ExerciseEngine.tsx) — the backend's
-// interaction_form enum (7 values: CHOOSE/MATCH/FILL/ASSEMBLE/TRANSCRIBE/
-// CORRECT/TAP) has no overlap with this map's 27 renderer keys, so it's used
-// only as a __DEV__ mismatch warning, never for dispatch. Covers all 43
-// backend task_type codes, verified against the per-type options shape in
-// shared/src/validators/task.ts's TASK_TYPE_OPTION_SHAPE.
+// task_type is the default dispatch key (see ExerciseEngine.tsx). The
+// backend's own interaction_form enum (7 values: CHOOSE/MATCH/FILL/ASSEMBLE/
+// TRANSCRIBE/CORRECT/TAP) has no overlap with this map's renderer keys, so it
+// can never resolve a renderer on its own — but a task MAY instead carry a
+// renderer key directly in interaction_form (e.g. a fixture or a future
+// backend opting a specific task into a non-default renderer, such as
+// 'syllable_assemble_word' sharing TT_1_4 with the default 'assemble_word').
+// ExerciseEngine uses resolveInteractionForm() below to prefer that override
+// when — and only when — it names a real registry entry; the 7-value backend
+// enum itself never matches a registry key, so ordinary backend payloads are
+// unaffected. Covers all 43 backend task_type codes, verified against the
+// per-type options shape in shared/src/validators/task.ts's
+// TASK_TYPE_OPTION_SHAPE.
 export const taskTypeMap: Record<string, string> = {
   // choiceOptions — purpose-built renderers where the interaction clearly fits...
   TT_1_1: 'letter_choice',
@@ -80,4 +87,35 @@ export const taskTypeMap: Record<string, string> = {
 
 export function getInteractionForm(taskType: string): string {
   return taskTypeMap[taskType] ?? 'fallback';
+}
+
+// The backend's own InteractionForm enum (schema.prisma) — these values never
+// name a registry renderer, so seeing one in task.interaction_form is expected
+// and not a sign of client/backend drift.
+export const BACKEND_INTERACTION_FORMS = new Set([
+  'CHOOSE',
+  'MATCH',
+  'FILL',
+  'ASSEMBLE',
+  'TRANSCRIBE',
+  'CORRECT',
+  'TAP',
+]);
+
+/**
+ * Resolves the renderer key for a task. Prefers task.interaction_form when it
+ * names a real registry entry (an explicit renderer override); falls back to
+ * taskTypeMap otherwise. `isRegistered` is injected rather than importing
+ * registry.ts directly, so this stays testable without pulling in every
+ * renderer (and therefore reanimated/worklets — see engineDispatch.test.ts).
+ */
+export function resolveInteractionForm(
+  taskType: string,
+  interactionForm: string | null | undefined,
+  isRegistered: (key: string) => boolean,
+): string {
+  if (interactionForm && isRegistered(interactionForm)) {
+    return interactionForm;
+  }
+  return getInteractionForm(taskType);
 }

@@ -1,8 +1,7 @@
-// PARKED — unreachable from ExerciseEngine today. Registry key
-// 'syllable_assemble_word' has no entry in taskTypeMap: both assembleWordOptions
-// task_types (TT_1_4, TT_2_2) already map to assemble_word / audio_assemble_word.
-// Keep it — it's finished, kid-tested UI — but it needs a task_type reassigned to
-// it (or a new one) before it can go live. See taskTypeMap.ts's header.
+// Reachable only via an explicit task.interaction_form: 'syllable_assemble_word'
+// override (see resolveInteractionForm in taskTypeMap.ts) — no task_type maps
+// here by default, since TT_1_4/TT_2_2 already default to
+// assemble_word/audio_assemble_word for the same assembleWordOptions shape.
 import { Image } from 'expo-image';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';

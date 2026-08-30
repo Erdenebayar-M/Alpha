@@ -1,6 +1,6 @@
-// PARKED — unreachable from ExerciseEngine today. Registry key 'text_input' has
-// no entry in taskTypeMap. Keep it — it's finished, kid-tested UI — but it needs
-// a task_type assigned to it before it can go live. See taskTypeMap.ts's header.
+// Reachable only via an explicit task.interaction_form: 'text_input' override
+// (see resolveInteractionForm in taskTypeMap.ts) — no task_type maps here by
+// default yet.
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, useWindowDimensions } from 'react-native';
 
