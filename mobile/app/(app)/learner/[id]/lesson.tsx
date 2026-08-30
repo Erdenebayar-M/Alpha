@@ -134,7 +134,7 @@ export default function LessonScreen() {
   }
 
   if (needsOnboarding) {
-    return <Redirect href={`/onboarding/${id}`} />;
+    return <Redirect href={`/${id}`} />;
   }
 
   if (isLoading) {
