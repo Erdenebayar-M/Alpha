@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { hypotSize } from '@/src/features/onboarding/FigmaBoard';
 import MessageSlide from '@/src/features/onboarding/slides/MessageSlide';
@@ -39,8 +40,8 @@ export default function Slide3({ play, width, height }: { play: boolean; width: 
       play={play}
       width={width}
       height={height}
-      renderOverlay={(scale) => (
-        <View
+      renderOverlay={(scale, style) => (
+        <Animated.View
           pointerEvents="none"
           style={[
             styles.labelOuter,
@@ -50,6 +51,7 @@ export default function Slide3({ play, width, height }: { play: boolean; width: 
               width: LABEL_BOX.width * scale,
               height: LABEL_BOX.height * scale,
             },
+            style,
           ]}
         >
           <View
@@ -68,7 +70,7 @@ export default function Slide3({ play, width, height }: { play: boolean; width: 
               Орто
             </Text>
           </View>
-        </View>
+        </Animated.View>
       )}
     />
   );

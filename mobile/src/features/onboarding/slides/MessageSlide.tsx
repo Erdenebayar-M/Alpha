@@ -1,7 +1,13 @@
 import { type ReactNode, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated, {
+  type AnimatedStyle,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { boardScale, DESIGN, EASE_OUT_EXPO } from '@/src/features/onboarding/motion';
 import { colors } from '@/src/theme/colors';
@@ -55,8 +61,11 @@ interface MessageSlideProps {
   play: boolean;
   width: number;
   height: number;
-  /** Extra art positioned over the mascot (e.g. slide 3's rotated cap label). */
-  renderOverlay?: (scale: number) => ReactNode;
+  /**
+   * Extra art positioned over the mascot (e.g. slide 3's rotated cap label).
+   * Receives the mascot's own entrance style so overlay art can animate in sync with it.
+   */
+  renderOverlay?: (scale: number, style: AnimatedStyle<ViewStyle>) => ReactNode;
 }
 
 export default function MessageSlide({ lines, mascot, play, width, height, renderOverlay }: MessageSlideProps) {
@@ -128,7 +137,7 @@ export default function MessageSlide({ lines, mascot, play, width, height, rende
       >
         <Image source={mascot.source} style={styles.mascotImage} contentFit="fill" />
       </Animated.View>
-      {renderOverlay?.(scale)}
+      {renderOverlay?.(scale, mascotStyle)}
     </View>
   );
 }
