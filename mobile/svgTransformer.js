@@ -9,18 +9,21 @@
  * recognise, so all `<filter>` definitions vanish while the `filter="url(#id)"`
  * reference on the shape survives and points at nothing. The visible result: every
  * blurred/soft-edged asset (mascot glows, drop shadows, background blobs) renders
- * hard-edged. Verified by running the transformer's exact SVGR config over the shipped
- * assets: `<filter>` count in the source vs. `<Filter>` count in the JSX output goes
- * from N to 0 every time.
+ * hard-edged.
  *
- * react-native-svg itself has no such gap — `SvgXml` parses raw SVG text at runtime
- * against its own tag map (`xmlTags.ts`), which does include every filter primitive,
- * and both the iOS (CoreImage) and Android (RenderEffect) native layers implement them.
- * So instead of pre-compiling SVG to JSX (losing filters along the way), this
- * transformer emits a small component that hands the (lightly sanitised) SVG source to
- * `SvgXml` at runtime. Call sites are unaffected — `<Art width="100%" height="100%" />`
- * still works, since `SvgXml` applies incoming props as an `override` on top of the
- * parsed root `<svg>` attributes.
+ * This used to route around that gap by shipping the (lightly sanitised) SVG source
+ * as a string and parsing it at runtime via `SvgXml` — `SvgXml` parses against
+ * react-native-svg's own tag map (`xmlTags.ts`), which does include every filter
+ * primitive. That worked, but every mounted instance re-ran a hand-written
+ * character-by-character XML parser on the JS thread: a screen with dozens of SVGs
+ * (e.g. the onboarding intro slide's ~66 layered assets) paid for dozens of full XML
+ * parses on every mount. `svgToJsx.js` closes the actual SVGR gap instead — it's a
+ * from-scratch compiler that includes the filter primitives xmlTags.ts has and SVGR
+ * doesn't — so this file now compiles straight to `react-native-svg` JSX at build
+ * time via `svgToJsx.compileToSource`, with zero runtime parsing. Call sites are
+ * unaffected: `<Art width="100%" height="100%" />` still works, since the compiled
+ * component spreads incoming props over the parsed root `<svg>` attributes, same as
+ * `SvgXml`'s `override` did.
  */
 
 const getExpoTransformer = () => {
@@ -36,6 +39,7 @@ const getExpoTransformer = () => {
 };
 
 const expoTransformer = getExpoTransformer();
+const { compileToSource } = require('./svgToJsx');
 
 /**
  * Figma's SVG export puts exactly three kinds of `style="…"` attribute on these
@@ -70,25 +74,12 @@ function sanitizeSvg(src, filename) {
   return out;
 }
 
-function wrapAsComponent(xml) {
-  return `import * as React from 'react';
-import { SvgXml } from 'react-native-svg';
-
-const xml = ${JSON.stringify(xml)};
-
-export default function SvgAsset(props) {
-  return React.createElement(SvgXml, { xml, ...props });
-}
-`;
-}
-
 module.exports.transform = async ({ src, filename, ...rest }) => {
   if (filename.endsWith('.svg')) {
-    const code = wrapAsComponent(sanitizeSvg(src, filename));
+    const code = compileToSource(sanitizeSvg(src, filename), filename);
     return expoTransformer.transform({ src: code, filename, ...rest });
   }
   return expoTransformer.transform({ src, filename, ...rest });
 };
 
 module.exports.sanitizeSvg = sanitizeSvg;
-module.exports.wrapAsComponent = wrapAsComponent;

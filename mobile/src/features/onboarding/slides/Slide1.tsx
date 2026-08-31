@@ -30,6 +30,7 @@ import WordmarkName from '@/assets/onboarding/slide1/wordmark-name.svg';
 import WordmarkOrto from '@/assets/onboarding/slide1/wordmark-orto.svg';
 
 import AnimatedLayer from '@/src/features/onboarding/AnimatedLayer';
+import { useDevMountPerf } from '@/src/features/onboarding/__perf__/useDevMountPerf';
 import { GREEN, PINK, WAVING_ARM, YELLOW, type CharacterArt } from '@/src/features/onboarding/characters';
 import FigmaBoard from '@/src/features/onboarding/FigmaBoard';
 import {
@@ -183,9 +184,11 @@ function renderLayer(layer: (typeof SLIDE1_LAYERS)[number], play: boolean, scale
 
 export default function Slide1({ play, width, height }: { play: boolean; width: number; height: number }) {
   const scale = boardScale(DESIGN_SLIDE1, width, height);
+  const { onLayout } = useDevMountPerf('Slide1', play);
   return (
     <View
       pointerEvents="none"
+      onLayout={onLayout}
       style={{ width: DESIGN_SLIDE1.width * scale, height: DESIGN_SLIDE1.height * scale }}
     >
       {SLIDE1_LAYERS.slice(0, WAVING_ARM_INDEX).map((layer) => renderLayer(layer, play, scale))}
