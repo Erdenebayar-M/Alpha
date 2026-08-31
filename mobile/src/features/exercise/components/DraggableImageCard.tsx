@@ -18,9 +18,6 @@ interface DraggableImageCardProps {
   disabled?: boolean;
   /** Highlight border (used when this row was auto-selected as the forced last pair). */
   selected?: boolean;
-  /** Fades the piece to show it isn't this row's turn yet (waiting for an earlier
-   *  row to connect first). */
-  dimmed?: boolean;
   /** Fired when the drag begins (renderer re-measures drop targets + lifts this card). */
   onDragStart: (leftId: string) => void;
   /** Fired continuously with the finger's screen position (drives drop-target hover). */
@@ -42,7 +39,6 @@ export default function DraggableImageCard({
   imageUrl,
   disabled = false,
   selected = false,
-  dimmed = false,
   onDragStart,
   onDragMove,
   onDrop,
@@ -81,7 +77,6 @@ export default function DraggableImageCard({
     zIndex: lift.value > 0 ? 50 : 1,
     shadowOpacity: 0.05 + lift.value * 0.2,
     shadowRadius: 4 + lift.value * 10,
-    opacity: dimmed ? 0.4 : 1,
   }));
 
   return (

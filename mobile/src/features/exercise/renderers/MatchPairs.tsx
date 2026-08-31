@@ -11,6 +11,7 @@ import { useMatchExercise } from '@/src/features/exercise/hooks/useMatchExercise
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { spacing } from '@/src/theme/spacing';
 import { fonts } from '@/src/theme/typography';
 
 // Progress-driven encouragement in the speech bubble (from the Figma states).
@@ -46,10 +47,12 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
   // Bubble text scales down a touch on narrow phones (SE) so it never overflows.
   const bubbleFont = Math.round(Math.min(22, width * 0.058));
 
-  // The two cards sit flush together so the knob/socket overlap into one
-  // interlocking joint at the seam; cap card width at the Figma's 160px.
-  const GAP = 0;
-  const cardW = Math.min(160, Math.floor((width - 32 - GAP) / 2));
+  // Unconnected pairs sit apart (so they read as not-yet-linked); once locked,
+  // the row's gap collapses to 0 so the knob/socket overlap into one
+  // interlocking joint at the seam. Cap card width at the Figma's 160px, sized
+  // against the wider (unlocked) gap so the row never overflows either way.
+  const GAP_UNLOCKED = spacing.md;
+  const cardW = Math.min(160, Math.floor((width - 32 - GAP_UNLOCKED) / 2));
   const cardH = Math.round(cardW * (110 / 160));
 
   const lockMode = task.options.match_lock_mode ?? 'any';
@@ -177,19 +180,18 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
             const rowActive = row.left != null && row.left.id === draggingLeftId;
             // The forced last pair: auto-filled and pinned so it stays (no drag, no unlink).
             const isAuto = ex.autoLinkedRightId === row.right.id && row.locked;
-            // One piece at a time: only the next unconnected row's piece can be picked
-            // up; later pieces stay put (and dimmed) until their turn.
-            const isCurrent = !row.locked && ex.activeRightId === row.right.id;
             return (
-              <View key={row.right.id} style={[styles.row, { gap: GAP, zIndex: rowActive ? 30 : 1 }]}>
+              <View
+                key={row.right.id}
+                style={[styles.row, { gap: row.locked ? 0 : GAP_UNLOCKED, zIndex: rowActive ? 30 : 1 }]}
+              >
                 {row.left ? (
                   <DraggableImageCard
                     leftId={row.left.id}
                     width={cardW}
                     height={cardH}
                     imageUrl={row.left.imageUrl}
-                    disabled={ex.isAnswered || isAuto || !isCurrent}
-                    dimmed={!row.locked && !isCurrent}
+                    disabled={ex.isAnswered || isAuto}
                     onDragStart={handleDragStart}
                     onDragMove={handleDragMove}
                     onDrop={handleDrop}
