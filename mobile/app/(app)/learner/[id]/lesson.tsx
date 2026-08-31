@@ -15,14 +15,15 @@ import { isOnboardingComplete } from '@/src/lib/onboardingStore';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
-const handleBack = () => {
-  if (router.canGoBack()) {
-    router.back();
-  }
-};
-
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // Always returns to the learner menu (not just one step back) — swiping from the
+  // screen's left edge is the gesture for a plain one-step pop instead.
+  const handleBack = () => {
+    router.replace(`/learner/${id}`);
+  };
+
   const { data, isLoading, isError } = useGetTodayLesson(id);
   const submitAttempt = useSubmitAttempt();
   const completeLesson = useCompleteLesson();
