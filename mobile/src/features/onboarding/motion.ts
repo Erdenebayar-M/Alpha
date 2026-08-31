@@ -144,9 +144,18 @@ export const DESIGN: Board = { width: 390, height: 844 } as const;
 export const DESIGN_SLIDE1: Board = { width: 395, height: 852 } as const;
 
 /** Size a board off both axes so it never overflows a short screen (AGENTS.md §12). */
-export function boardScale(board: Board, width: number, height: number): number {
-  return Math.min(width / board.width, height / board.height);
+export function boardScale(board: Board, width: number, height: number, min = 0): number {
+  return Math.max(min, Math.min(width / board.width, height / board.height));
 }
+
+/**
+ * Readability floor for `PersonalInfoStep` — the only profile-setup step that scrolls
+ * (`ProfileStepLayout`'s `avoidsKeyboard` branch), so it's the only one that can safely
+ * take a floored scale without risking the CTA or content overflowing a short screen.
+ * Below this, an SE-class phone's height ratio shrinks its 14px labels/39px fields to
+ * ~11px/~31px — legible but cramped; 0.85 keeps them close to design size.
+ */
+export const MIN_TYPE_SCALE = 0.85;
 
 /**
  * Freezes `useWindowDimensions().height` at its highest-seen value. The app is
