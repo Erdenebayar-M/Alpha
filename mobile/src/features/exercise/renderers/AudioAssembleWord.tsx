@@ -12,6 +12,7 @@ import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 
 /**
  * Audio assemble-the-word task (TT_2_2, interaction_form `audio_assemble_word`): the
@@ -41,7 +42,12 @@ export default function AudioAssembleWord({ task, onResult }: ExerciseRendererPr
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale
+          onPress={handleToggleAudio}
+          pressScale={CHARACTER_PRESS_SCALE}
+          accessibilityRole="button"
+          accessibilityLabel="Сонсох / зогсоох"
+        >
           <CharacterAvatar playing={status.playing} width={avatarWidth} />
         </PressableScale>
 

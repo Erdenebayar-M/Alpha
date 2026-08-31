@@ -10,6 +10,7 @@ import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExerci
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 
 /**
  * Audio similar-word choice task (TT_1_5, "төстэй сонсогддог үгийг ялгах"): the
@@ -35,7 +36,12 @@ export default function AudioWordChoice({ task, onResult }: ExerciseRendererProp
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale
+          onPress={handleToggleAudio}
+          pressScale={CHARACTER_PRESS_SCALE}
+          accessibilityRole="button"
+          accessibilityLabel="Сонсох / зогсоох"
+        >
           <CharacterAvatar playing={status.playing} width={avatarWidth} />
         </PressableScale>
 

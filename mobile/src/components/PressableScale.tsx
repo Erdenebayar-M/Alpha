@@ -21,6 +21,8 @@ interface PressableScaleProps extends PressableProps {
    *  `height` (shrinking a border on a fixed-height, border-box view is
    *  layout-neutral). Pass 0 to opt a bordered button out of the sink. */
   depth?: number;
+  /** Override how far the press-in scales down. Defaults to PRESS_SCALE. */
+  pressScale?: number;
 }
 
 /**
@@ -31,7 +33,7 @@ interface PressableScaleProps extends PressableProps {
  * styles on `style` keep working exactly as on a plain Pressable.
  */
 export default forwardRef<View, PressableScaleProps>(function PressableScale(
-  { style, children, disabled, depth, onPressIn, onPressOut, ...rest },
+  { style, children, disabled, depth, pressScale = PRESS_SCALE, onPressIn, onPressOut, ...rest },
   ref
 ) {
   const resolvedStyle = typeof style === 'function' ? style({ pressed: false }) : style;
@@ -60,7 +62,7 @@ export default forwardRef<View, PressableScaleProps>(function PressableScale(
       onPressIn={(event) => {
         setPressed(true);
         if (!disabled) {
-          scale.value = withTiming(PRESS_SCALE, { duration: PRESS_DOWN_DURATION, easing: PRESS_EASING });
+          scale.value = withTiming(pressScale, { duration: PRESS_DOWN_DURATION, easing: PRESS_EASING });
           if (sink > 0) {
             depthValue.value = withTiming(sink, { duration: PRESS_DOWN_DURATION, easing: PRESS_EASING });
           }

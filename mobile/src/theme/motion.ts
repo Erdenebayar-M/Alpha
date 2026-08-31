@@ -8,6 +8,10 @@ import { Easing } from 'react-native-reanimated';
  *  button reads as depressed rather than squashed. */
 export const PRESS_SCALE = 0.98;
 
+/** Press-in scale for the tappable character avatar — deeper than PRESS_SCALE so a
+ *  tap reads as a satisfying "boop" on the character rather than a button click. */
+export const CHARACTER_PRESS_SCALE = 0.88;
+
 /** Press-down must land under the finger, not after it. */
 export const PRESS_DOWN_DURATION = 60;
 
