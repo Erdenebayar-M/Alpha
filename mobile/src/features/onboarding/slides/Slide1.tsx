@@ -43,7 +43,6 @@ import {
   WAVE_START,
   boardScale,
 } from '@/src/features/onboarding/motion';
-import { useMountWaves } from '@/src/features/onboarding/useMountWaves';
 
 /**
  * Slide 1 — the brand splash (Figma 163:1739). Geometry and choreography live in
@@ -76,43 +75,6 @@ const CHARACTER_ART: Record<string, CharacterArt> = {
   green: GREEN,
   yellow: YELLOW,
 };
-
-/**
- * Mounting all 21 layers (three of them full mascots, ~50 FigmaBoard leaves
- * combined) in the same commit is what makes this slide's first paint slow —
- * not the entrance choreography itself, which already staggers when each
- * layer's animation *starts* via its own track delays below. This map instead
- * staggers when each layer *mounts*, in the same relative order as those
- * authored delays, so the visual result is unchanged (every layer starts
- * invisible either way — see AnimatedLayer's `initial()`) but the synchronous
- * mount burst is spread across a few animation frames. Each mascot gets its
- * own wave since they're disproportionately expensive versus a single
- * decorative SVG.
- */
-const LAYER_WAVE: Record<string, number> = {
-  bgBlobRight: 0,
-  bgBlobLeft: 0,
-  ring: 0,
-  wordmark: 0,
-  headline: 1,
-  pink: 2,
-  green: 3,
-  swooshTop: 3,
-  yellow: 4,
-  swooshRight: 4,
-  star1: 5,
-  star2: 5,
-  swooshLeft: 5,
-  sparkleLeft: 5,
-  sparkleBottomRight: 5,
-  sparkleBottomLeft: 5,
-  dotRight: 5,
-  dotLeft: 5,
-  miniStar1: 5,
-  miniStar2: 5,
-};
-const TOTAL_WAVES = 6;
-const WAVING_ARM_WAVE = 5;
 
 /**
  * The wordmark group holds two sibling exports — the "ОРТО ба" lettering and the
@@ -219,24 +181,16 @@ function renderLayer(layer: (typeof SLIDE1_LAYERS)[number], play: boolean, scale
   );
 }
 
-const isMounted = (layer: (typeof SLIDE1_LAYERS)[number], wave: number) =>
-  (LAYER_WAVE[layer.key] ?? 0) <= wave;
-
 export default function Slide1({ play, width, height }: { play: boolean; width: number; height: number }) {
   const scale = boardScale(DESIGN_SLIDE1, width, height);
-  const wave = useMountWaves(play, TOTAL_WAVES);
   return (
     <View
       pointerEvents="none"
       style={{ width: DESIGN_SLIDE1.width * scale, height: DESIGN_SLIDE1.height * scale }}
     >
-      {SLIDE1_LAYERS.slice(0, WAVING_ARM_INDEX)
-        .filter((layer) => isMounted(layer, wave))
-        .map((layer) => renderLayer(layer, play, scale))}
-      {wave >= WAVING_ARM_WAVE ? <WavingArm play={play} scale={scale} /> : null}
-      {SLIDE1_LAYERS.slice(WAVING_ARM_INDEX)
-        .filter((layer) => isMounted(layer, wave))
-        .map((layer) => renderLayer(layer, play, scale))}
+      {SLIDE1_LAYERS.slice(0, WAVING_ARM_INDEX).map((layer) => renderLayer(layer, play, scale))}
+      <WavingArm play={play} scale={scale} />
+      {SLIDE1_LAYERS.slice(WAVING_ARM_INDEX).map((layer) => renderLayer(layer, play, scale))}
     </View>
   );
 }
