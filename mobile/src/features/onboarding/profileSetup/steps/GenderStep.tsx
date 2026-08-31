@@ -19,8 +19,9 @@ import { BOY_EYES_DRIVEN, type Gender } from '@/src/features/onboarding/profileS
  * and neither pays for mounting a new character (see `genderCharacters.tsx`).
  *
  * This is the *only* step that plays the opening; Personal Info and Grade use
- * `BOY_OPEN_EYES_STEADY`, so he stays open-eyed for the rest of the flow without
- * replaying it. The girl needs no equivalent — her eyes are already open by design.
+ * `BOY_OPEN_EYES_GAZE`, so he stays open-eyed for the rest of the flow without replaying
+ * it (that variant adds its own `GazeProvider`-driven glance, unrelated to this step's
+ * open/shut driver). The girl needs no equivalent — her eyes are already open by design.
  */
 export default function GenderStep({
   gender,

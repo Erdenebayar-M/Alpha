@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
+import { GazeProvider } from '@/src/features/onboarding/idleLoops';
 import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
 import AvatarBubble from '@/src/features/onboarding/profileSetup/components/AvatarBubble';
 import ProfileStepLayout from '@/src/features/onboarding/profileSetup/components/ProfileStepLayout';
-import { BOY_OPEN_EYES_STEADY, type Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
+import {
+  BOY_OPEN_EYES_GAZE,
+  GIRL_GAZE,
+  type Gender,
+} from '@/src/features/onboarding/profileSetup/genderCharacters';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -14,8 +20,9 @@ import { fonts } from '@/src/theme/typography';
  * Measured geometry (`get_metadata` on 804:10366): the character block occupies 194 of
  * vertical space, then a 10px gap, then four 216x39 pills spaced 10 apart.
  *
- * Like Personal Info, the boy is shown already awake (`BOY_OPEN_EYES_STEADY`) — he opened
- * his eyes on the Gender step and shouldn't shut them again on the way here.
+ * Like Personal Info, the boy is shown already awake (`BOY_OPEN_EYES_GAZE`) — he opened
+ * his eyes on the Gender step and shouldn't shut them again on the way here — with a
+ * `GazeProvider` driving a glance down while a grade pill is pressed.
  */
 
 const GRADES = [1, 2, 3, 4];
@@ -37,15 +44,21 @@ export default function GradeStep({
 }) {
   const { width, height } = useWindowDimensions();
   const scale = boardScale(DESIGN, width, height);
+  // A pill press is momentary and mutually exclusive (only one finger, one pill at a
+  // time), unlike Personal Info's two independently-focusable text fields — so a plain
+  // boolean is enough here.
+  const [pointing, setPointing] = useState(false);
 
   return (
     <ProfileStepLayout ctaDisabled={grade === null} onContinue={onContinue}>
-      <AvatarBubble
-        gender={gender}
-        scale={scale}
-        blockHeight={CHARACTER_BLOCK}
-        characterOverride={gender === 'boy' ? BOY_OPEN_EYES_STEADY : undefined}
-      />
+      <GazeProvider down={pointing}>
+        <AvatarBubble
+          gender={gender}
+          scale={scale}
+          blockHeight={CHARACTER_BLOCK}
+          characterOverride={gender === 'boy' ? BOY_OPEN_EYES_GAZE : GIRL_GAZE}
+        />
+      </GazeProvider>
 
       <View style={{ width: '100%', gap: GAP * scale, marginTop: GAP * scale }}>
         {GRADES.map((value) => {
@@ -59,6 +72,8 @@ export default function GradeStep({
                 selected && styles.pillSelected,
               ]}
               onPress={() => onSelect(value)}
+              onPressIn={() => setPointing(true)}
+              onPressOut={() => setPointing(false)}
               accessibilityRole="button"
               accessibilityLabel={`${value}-р анги`}
               accessibilityState={{ selected }}

@@ -1,10 +1,16 @@
+import type { FC } from 'react';
+import type { SvgProps } from 'react-native-svg';
+
 import type { CharacterArt } from '@/src/features/onboarding/characters';
 import type { Leaf } from '@/src/features/onboarding/FigmaBoard';
 import {
+  stackArt,
   withBlink,
   withEyeCover,
   withEyeOpen,
   withFloat,
+  withGaze,
+  withGazeShorten,
   withPulse,
   withSmile,
 } from '@/src/features/onboarding/idleLoops';
@@ -33,6 +39,16 @@ import BoyClosedEyesArt from '@/assets/onboarding/gender/boy/closed-eyes.svg';
 // from any shared source geometry — see `BOY_OPEN_EYES` below.
 import YellowEyeLeftArt from '@/assets/onboarding/slide1/yellow/eye-left.svg';
 import YellowEyeRightArt from '@/assets/onboarding/slide1/yellow/eye-right.svg';
+
+// The same Yellow eyes, split into a white/sclera layer and a pupil(+catchlight) layer
+// (same viewBox as the combined files above, just partitioned by element) — needed so
+// the boy's gaze can move only the pupil, not the whole eye. Used only by
+// `BOY_OPEN_EYES_GAZE` below; the Gender step's `BOY_EYES_DRIVEN` still uses the
+// combined files untouched.
+import BoyEyeLeftPupilArt from '@/assets/onboarding/gender/boy/eye-left-pupil.svg';
+import BoyEyeLeftWhiteArt from '@/assets/onboarding/gender/boy/eye-left-white.svg';
+import BoyEyeRightPupilArt from '@/assets/onboarding/gender/boy/eye-right-pupil.svg';
+import BoyEyeRightWhiteArt from '@/assets/onboarding/gender/boy/eye-right-white.svg';
 
 // Girl ("Эмэгтэй", Figma node 804:9541 inside the Gender frames)
 import GirlBlushArt from '@/assets/onboarding/gender/girl/blush.svg';
@@ -103,88 +119,102 @@ export const BOY: CharacterArt = {
  */
 const FACE = { left: 63.076, top: 63.194 } as const;
 
-const GIRL_INNER: readonly Leaf[] = [
-  {
-    Art: GirlBody,
-    inset: [24.84, 17.87, 9.46, 15.09],
-    hypot: { width: [96.903, 9.98364], height: [-8.34697, 96.7503] },
-    rotate: 5.23,
-    skewX: -0.32,
-  },
-  {
-    Art: GirlBodyEdgeLight,
-    inset: [25.5, 18.42, 10.65, 15.82],
-    hypot: { width: [99.2496, 7.39661], height: [-6.26898, 99.7338] },
-    rotate: 3.75,
-    skewX: -0.34,
-  },
-  {
-    Art: GirlLandscapeDecoration,
-    inset: [62.44, 21.06, 9.32, 15.04],
-    hypot: { width: [98.414, 27.1281], height: [-3.25755, 90.8637] },
-    rotate: 5.51,
-    skewX: -0.34,
-  },
-  { Art: GirlEyes, box: { ...FACE, width: 31.9416, height: 25.8131 } },
-  { Art: GirlMouth, box: { left: FACE.left + 9.5, top: FACE.top + 29.4, width: 12, height: 5.6 } },
-  {
-    // The flower's stem half.
-    Art: GirlMiddleMark,
-    inset: [58.93, 11.57, 38.13, 83.7],
-    hypot: { width: [90.6724, 53.6873], height: [-9.64397, 56.7139] },
-    rotate: 17.11,
-    skewX: -1,
-    expand: [-42.02, -13.74, -42.03, -13.74],
-  },
-  {
-    // The flower's head half.
-    Art: GirlTopMark,
-    inset: [53.57, 13.84, 43.44, 82.46],
-    expand: [-22.36, -16.63, -22.36, -16.63],
-  },
-  {
-    Art: GirlHeart,
-    inset: [28.05, 13.05, 55.72, 71.29],
-    hypot: { width: [62.0675, 44.5248], height: [-38.9341, 57.2901] },
-    rotate: 34.12,
-    skewX: -1.62,
-  },
-  {
-    Art: GirlDot,
-    inset: [86.31, 29.25, 6.24, 21.92],
-    hypot: { width: [99.6566, 86.1907], height: [-0.622867, 99.5211] },
-    rotate: 3.75,
-    skewX: -0.98,
-  },
-  // Cheeks — pulsed independently so she keeps moving between blinks.
-  { Art: GirlBlush, inset: [57.26, 34.68, 34.02, 31.71] },
-  {
-    Art: GirlSquiggle,
-    inset: [64.03, 77, 20, 2.41],
-    hypot: { width: [99.7783, 9.62863], height: [-4.41889, 99.7705] },
-    rotate: 3.75,
-    skewX: 0.01,
-    expand: [-2.29, -1.55, -2.29, -1.56],
-  },
-];
+/**
+ * Every leaf but the eyes is identical between the plain and gaze-capable girl, so this
+ * takes the eyes component as a parameter — `GIRL` below passes plain `GirlEyes`
+ * (blink-only), `GIRL_GAZE` passes `withGazeShorten(GirlEyes)`.
+ */
+function buildGirlInner(eyes: FC<SvgProps>): readonly Leaf[] {
+  return [
+    {
+      Art: GirlBody,
+      inset: [24.84, 17.87, 9.46, 15.09],
+      hypot: { width: [96.903, 9.98364], height: [-8.34697, 96.7503] },
+      rotate: 5.23,
+      skewX: -0.32,
+    },
+    {
+      Art: GirlBodyEdgeLight,
+      inset: [25.5, 18.42, 10.65, 15.82],
+      hypot: { width: [99.2496, 7.39661], height: [-6.26898, 99.7338] },
+      rotate: 3.75,
+      skewX: -0.34,
+    },
+    {
+      Art: GirlLandscapeDecoration,
+      inset: [62.44, 21.06, 9.32, 15.04],
+      hypot: { width: [98.414, 27.1281], height: [-3.25755, 90.8637] },
+      rotate: 5.51,
+      skewX: -0.34,
+    },
+    { Art: eyes, box: { ...FACE, width: 31.9416, height: 25.8131 } },
+    { Art: GirlMouth, box: { left: FACE.left + 9.5, top: FACE.top + 29.4, width: 12, height: 5.6 } },
+    {
+      // The flower's stem half.
+      Art: GirlMiddleMark,
+      inset: [58.93, 11.57, 38.13, 83.7],
+      hypot: { width: [90.6724, 53.6873], height: [-9.64397, 56.7139] },
+      rotate: 17.11,
+      skewX: -1,
+      expand: [-42.02, -13.74, -42.03, -13.74],
+    },
+    {
+      // The flower's head half.
+      Art: GirlTopMark,
+      inset: [53.57, 13.84, 43.44, 82.46],
+      expand: [-22.36, -16.63, -22.36, -16.63],
+    },
+    {
+      Art: GirlHeart,
+      inset: [28.05, 13.05, 55.72, 71.29],
+      hypot: { width: [62.0675, 44.5248], height: [-38.9341, 57.2901] },
+      rotate: 34.12,
+      skewX: -1.62,
+    },
+    {
+      Art: GirlDot,
+      inset: [86.31, 29.25, 6.24, 21.92],
+      hypot: { width: [99.6566, 86.1907], height: [-0.622867, 99.5211] },
+      rotate: 3.75,
+      skewX: -0.98,
+    },
+    // Cheeks — pulsed independently so she keeps moving between blinks.
+    { Art: GirlBlush, inset: [57.26, 34.68, 34.02, 31.71] },
+    {
+      Art: GirlSquiggle,
+      inset: [64.03, 77, 20, 2.41],
+      hypot: { width: [99.7783, 9.62863], height: [-4.41889, 99.7705] },
+      rotate: 3.75,
+      skewX: 0.01,
+      expand: [-2.29, -1.55, -2.29, -1.56],
+    },
+  ];
+}
 
-export const GIRL: CharacterArt = {
+const GIRL_INNER = buildGirlInner(GirlEyes);
+
+/**
+ * Figma's two sources disagree on this box's `top`: the design context's 3.83% inset
+ * works out to 8, while `get_metadata` reports 18.617 for all three frames that embed
+ * her. Rendering both and measuring the pink silhouette against Figma's own export
+ * settled it — 18.617 sits ~10px low, so the inset wins. (Figma appears to report a
+ * rotated frame's `y` as something other than its bounding-box top.) Shared by `GIRL`
+ * and `GIRL_GAZE` — only the inner eyes leaf differs between them.
+ */
+const girlBoard = (leaves: readonly Leaf[]): CharacterArt => ({
   size: BOARD,
   leaves: [
     {
-      // Figma's two sources disagree on this box's `top`: the design context's 3.83%
-      // inset works out to 8, while `get_metadata` reports 18.617 for all three frames
-      // that embed her. Rendering both and measuring the pink silhouette against Figma's
-      // own export settled it — 18.617 sits ~10px low, so the inset wins. (Figma appears
-      // to report a rotated frame's `y` as something other than its bounding-box top.)
       box: { left: 27, top: 8.005, width: 172.155, height: 159.845 },
       size: { width: 162.74, height: 149.54 },
       rotate: -3.74,
       clip: true,
-      board: { width: 162.74, height: 149.54, leaves: GIRL_INNER },
+      board: { width: 162.74, height: 149.54, leaves },
     },
   ],
-};
+});
+
+export const GIRL: CharacterArt = girlBoard(GIRL_INNER);
 
 export const CHARACTERS: Record<Gender, CharacterArt> = { boy: BOY, girl: GIRL };
 
@@ -246,8 +276,6 @@ const boyBoard = (leaves: readonly Leaf[]): CharacterArt => ({
 const DrivenClosedEyes = withEyeCover(BoyClosedEyesArt);
 const DrivenBoyEyeLeft = withEyeOpen(YellowEyeLeftArt, -EYE_SLIDE_X, BOY_BLINK_HOLD_MS);
 const DrivenBoyEyeRight = withEyeOpen(YellowEyeRightArt, EYE_SLIDE_X, BOY_BLINK_HOLD_MS);
-const BlinkBoyEyeLeft = withBlink(YellowEyeLeftArt, BOY_BLINK_HOLD_MS);
-const BlinkBoyEyeRight = withBlink(YellowEyeRightArt, BOY_BLINK_HOLD_MS);
 
 /**
  * The boy on the Gender step, where he opens his eyes when picked and shuts them again
@@ -276,14 +304,38 @@ export const BOY_EYES_DRIVEN: CharacterArt = boyBoard([
   { Art: DrivenBoyEyeRight, box: EYE_RIGHT_BOX },
 ]);
 
-/**
- * The same open-eyed boy, already awake — Personal Info and Grade, which he always
- * reaches after being selected. Plain `withBlink` at pink's pace, no driver and no shut
- * arcs, so the opening plays where it means something (the tap on the Gender step)
- * rather than replaying on arrival at every later step.
- */
-export const BOY_OPEN_EYES_STEADY: CharacterArt = boyBoard([
+// ---------------------------------------------------------------------------
+// The same open-eyed boy, already awake — Personal Info and Grade, which he always
+// reaches after being selected. No driver and no shut arcs, so the opening plays where
+// it means something (the tap on the Gender step) rather than replaying on arrival at
+// every later step; only the eyes' gaze is driven from here on, via `GazeProvider`.
+//
+// Unlike the Gender step's combined eye art, these eyes are built from the split
+// white/pupil files (see the import comment above): the pupil is a real round shape
+// inside a fixed white, so the gaze only needs to translate it — rotating a circle is
+// invisible — while `stackArt` holds the white layer still underneath. `withBlink`
+// wraps the *stacked* pair so a blink squashes both white and pupil together, as one
+// eyelid closing over the whole eye, with the gaze-driven translate still applying to
+// just the pupil inside that squash. Without a `GazeProvider` above these, the pupil
+// sits centred and blinks at pink's pace — pixel-identical to the boy's plain resting
+// eyes, just built from two files instead of one.
+// ---------------------------------------------------------------------------
+
+const GazeBoyEyeLeft = withBlink(stackArt(BoyEyeLeftWhiteArt, withGaze(BoyEyeLeftPupilArt)), BOY_BLINK_HOLD_MS);
+const GazeBoyEyeRight = withBlink(stackArt(BoyEyeRightWhiteArt, withGaze(BoyEyeRightPupilArt)), BOY_BLINK_HOLD_MS);
+
+export const BOY_OPEN_EYES_GAZE: CharacterArt = boyBoard([
   ...BOY_BODY_LEAVES,
-  { Art: BlinkBoyEyeLeft, box: EYE_LEFT_BOX },
-  { Art: BlinkBoyEyeRight, box: EYE_RIGHT_BOX },
+  { Art: GazeBoyEyeLeft, box: EYE_LEFT_BOX },
+  { Art: GazeBoyEyeRight, box: EYE_RIGHT_BOX },
 ]);
+
+// The girl's eyes render as a tall, narrow oval (a `stroke-width: 10` line, rotated to
+// near-vertical by its transform, with round caps — not a thin arc). Shortening that
+// oval's height only, anchored at its bottom edge, moves its aspect ratio toward square
+// (reads as rounder) while the bottom-anchored shrink reads as the eye/lid lowering — one
+// transform gets both "looks down" and "gets round" with no rotation and no new art.
+// See `withGazeShorten` in `idleLoops.tsx`.
+const GirlGazeEyes = withGazeShorten(GirlEyes);
+
+export const GIRL_GAZE: CharacterArt = girlBoard(buildGirlInner(GirlGazeEyes));

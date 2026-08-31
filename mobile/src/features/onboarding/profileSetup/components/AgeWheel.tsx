@@ -46,10 +46,16 @@ export default function AgeWheel({
   value,
   onChange,
   scale = 1,
+  onDragStart,
+  onDragEnd,
 }: {
   value: number;
   onChange: (age: number) => void;
   scale?: number;
+  /** Fires on finger-down/finger-up on the wheel — lets a caller react to the user
+   *  actively scrolling it (e.g. the character glancing down while it's being dragged). */
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }) {
   const step = ITEM * scale;
   // Where the wheel opens. Only read on mount — the wheel is uncontrolled after that,
@@ -104,6 +110,8 @@ export default function AgeWheel({
         decelerationRate="fast"
         onScroll={scrollHandler}
         scrollEventThrottle={16}
+        onScrollBeginDrag={onDragStart}
+        onScrollEndDrag={onDragEnd}
         onMomentumScrollEnd={handleSettle}
         // Half a pill minus half an item on each side, so the first and last ages can
         // still reach the centre line.
