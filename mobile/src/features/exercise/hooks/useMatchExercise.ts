@@ -51,6 +51,11 @@ export interface MatchExercise {
   /** The row that was filled in automatically once only one pair was left (the
    *  last one is forced), so the renderer can show it as auto-selected. */
   autoLinkedRightId: string | null;
+  /** The one row the child may currently drag a piece onto — the first
+   *  not-yet-linked row in display order. Every other unlinked row is locked
+   *  until this one connects, so pieces must be placed one at a time in order.
+   *  Null once every row is linked. */
+  activeRightId: string | null;
   /** Try to link a dragged image onto a word row. Returns true if it stuck
    *  (always true in 'any' mode; only on a correct pair in 'correct-only'). */
   attemptLink: (leftId: string, rightId: string) => boolean;
@@ -213,6 +218,15 @@ export function useMatchExercise(
     return () => clearTimeout(t);
   }, [rejectedRightId]);
 
+  // First unlinked row in display order — the only piece the child may drag
+  // right now. Locked rows always form a prefix of `rows` (links land one at a
+  // time via this gate, and the lone auto-completed pair is always the sole
+  // survivor), so this is well-defined.
+  const activeRightId = useMemo(() => {
+    const next = rows.find((r) => !r.locked);
+    return next ? next.right.id : null;
+  }, [rows]);
+
   const linkedCount = Object.keys(links).length;
   const isComplete = totalPairs > 0 && linkedCount === totalPairs;
 
@@ -260,6 +274,7 @@ export function useMatchExercise(
     canSubmit: isComplete && !isAnswered,
     rejectedRightId,
     autoLinkedRightId,
+    activeRightId,
     attemptLink,
     unlinkRight,
     submit,

@@ -177,6 +177,9 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
             const rowActive = row.left != null && row.left.id === draggingLeftId;
             // The forced last pair: auto-filled and pinned so it stays (no drag, no unlink).
             const isAuto = ex.autoLinkedRightId === row.right.id && row.locked;
+            // One piece at a time: only the next unconnected row's piece can be picked
+            // up; later pieces stay put (and dimmed) until their turn.
+            const isCurrent = !row.locked && ex.activeRightId === row.right.id;
             return (
               <View key={row.right.id} style={[styles.row, { gap: GAP, zIndex: rowActive ? 30 : 1 }]}>
                 {row.left ? (
@@ -185,7 +188,8 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
                     width={cardW}
                     height={cardH}
                     imageUrl={row.left.imageUrl}
-                    disabled={ex.isAnswered || isAuto}
+                    disabled={ex.isAnswered || isAuto || !isCurrent}
+                    dimmed={!row.locked && !isCurrent}
                     onDragStart={handleDragStart}
                     onDragMove={handleDragMove}
                     onDrop={handleDrop}
