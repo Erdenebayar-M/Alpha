@@ -1,4 +1,5 @@
 import { createContext, type FC, type ReactNode, useContext, useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
@@ -228,6 +229,132 @@ export function withEyeCover(Art: FC<SvgProps>): FC<SvgProps> {
     );
   }
   return EyeCover;
+}
+
+// ---------------------------------------------------------------------------
+// Gaze: nudges an eye leaf down while `GazeProvider`'s `down` is true, back up
+// otherwise. Independent of `EyeOpenContext` above — gaze and open/shut are unrelated
+// axes, and a step may one day want both drivers on the same character — so this is its
+// own context rather than a second meaning bolted onto the eye-open one. Same shape as
+// `EyeOpenProvider`/`useEyeOpen`: one shared value, retargeted with the same spring pair
+// so a glance reads as the same character reacting, not a bolted-on effect.
+// ---------------------------------------------------------------------------
+
+/** 0 = neutral, 1 = looking down. Absent provider => neutral. */
+const GazeContext = createContext<SharedValue<number> | null>(null);
+
+/** Quicker than `EYE_TRANSITION_MS` — this is a small, frequent glance triggered by
+ *  focus changes, not a one-shot reveal, so it should feel responsive rather than grand. */
+const GAZE_TRANSITION_MS = 260;
+
+/** Wrap the character (or anything containing it) and flip `down` as the user's
+ *  attention moves onto/off of a field below it. */
+export function GazeProvider({ down, children }: { down: boolean; children: ReactNode }) {
+  const value = useSharedValue(down ? 1 : 0);
+
+  useEffect(() => {
+    value.value = down
+      ? withTiming(1, { duration: GAZE_TRANSITION_MS, easing: EASE_SPRING_B })
+      : withTiming(0, { duration: GAZE_TRANSITION_MS, easing: EASE_SPRING_B_REVERSED });
+  }, [down, value]);
+
+  return <GazeContext.Provider value={value}>{children}</GazeContext.Provider>;
+}
+
+function useGaze(): SharedValue<number> {
+  // Hooks can't be conditional, so the fallback is always created; it's a constant 0, so
+  // a character used without a provider just renders at its neutral gaze.
+  const standalone = useSharedValue(0);
+  return useContext(GazeContext) ?? standalone;
+}
+
+/**
+ * A leaf that nudges down by `downOffsetY` (board px) while the `GazeProvider` above it
+ * is `down`, back to resting otherwise. For a leaf with a real pupil (a round shape
+ * inside a fixed white) — a straight translate reads as the eyeball rolling down inside
+ * the white; there's nothing else on a circle worth animating.
+ *
+ * A solid eye shape with no separate pupil (the drawn shape *is* the whole eye, nothing
+ * to move *inside* it) needs a different technique — see `withGazeShorten` below, which
+ * reshapes such a shape in place rather than translating it.
+ *
+ * Compose this *outside* `withBlink` (e.g. `withGaze(withBlink(Art))`) — each wrapper is
+ * its own `Animated.View` layer, so the blink's `scaleY` squash and this translate apply
+ * independently instead of one clobbering the other.
+ */
+export function withGaze(Art: FC<SvgProps>, downOffsetY = 2.5): FC<SvgProps> {
+  function Gazing(props: SvgProps) {
+    const gaze = useGaze();
+
+    const style = useAnimatedStyle(() => ({
+      transform: [{ translateY: interpolate(gaze.value, [0, 1], [0, downOffsetY], Extrapolation.CLAMP) }],
+    }));
+
+    return (
+      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
+        <Art {...props} />
+      </Animated.View>
+    );
+  }
+  return Gazing;
+}
+
+/**
+ * Stacks several leaves on top of each other, each filling the same box — e.g. a fixed
+ * white sclera layer with a `withGaze`-driven pupil layer on top of it — and hands the
+ * result back as a single `Art` so an outer wrapper like `withBlink` squashes every
+ * layer together instead of each needing its own blink.
+ */
+export function stackArt(...layers: FC<SvgProps>[]): FC<SvgProps> {
+  function Stacked(props: SvgProps) {
+    return (
+      <View style={{ width: '100%', height: '100%' }}>
+        {layers.map((Layer, index) => (
+          <View key={index} style={StyleSheet.absoluteFill}>
+            <Layer {...props} />
+          </View>
+        ))}
+      </View>
+    );
+  }
+  return Stacked;
+}
+
+/** Horizontal centre, vertical bottom — the shape shrinks upward from a fixed bottom
+ *  edge instead of shrinking evenly from its centre. */
+const BOTTOM_ORIGIN = '50% 100%';
+
+/**
+ * Shrinks a leaf's height only (width untouched) while `GazeProvider`'s `down` is true,
+ * anchored at the bottom edge, back to full height otherwise.
+ *
+ * For a shape that's already narrow relative to its height — the girl's eyes render as
+ * a tall, narrow oval rather than a circle or a thin arc — shortening it moves the
+ * aspect ratio toward square, which reads as the shape becoming round. Anchoring the
+ * scale at the bottom means the shape also ends up sitting lower as it shrinks, so one
+ * transform reads as both "looking down" and "getting rounder" — no rotation, no shape
+ * swap.
+ *
+ * `toScaleY` default of `0.71` is tuned to a Figma reference (a "Happy" character's
+ * eyes, node 117:2298 in the Orthography file) measured at ~7×12 board px — a ~1.71:1
+ * height:width ratio. Our own eye is ~10 wide × 24.17 tall (≈2.42:1 natively), so
+ * `1.71 / 2.42 ≈ 0.71` lands the shrunk shape at that same ratio without touching width.
+ */
+export function withGazeShorten(Art: FC<SvgProps>, toScaleY = 0.71): FC<SvgProps> {
+  function Shortening(props: SvgProps) {
+    const gaze = useGaze();
+
+    const style = useAnimatedStyle(() => ({
+      transform: [{ scaleY: interpolate(gaze.value, [0, 1], [1, toScaleY], Extrapolation.CLAMP) }],
+    }));
+
+    return (
+      <Animated.View style={[{ width: '100%', height: '100%', transformOrigin: BOTTOM_ORIGIN }, style]}>
+        <Art {...props} />
+      </Animated.View>
+    );
+  }
+  return Shortening;
 }
 
 /**

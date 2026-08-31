@@ -1,12 +1,24 @@
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 
+import { GazeProvider } from '@/src/features/onboarding/idleLoops';
 import { boardScale, DESIGN, MIN_TYPE_SCALE, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
 import AgeWheel from '@/src/features/onboarding/profileSetup/components/AgeWheel';
 import AvatarBubble from '@/src/features/onboarding/profileSetup/components/AvatarBubble';
 import ProfileStepLayout from '@/src/features/onboarding/profileSetup/components/ProfileStepLayout';
-import { BOY_OPEN_EYES_STEADY, type Gender } from '@/src/features/onboarding/profileSetup/genderCharacters';
+import {
+  BOY_OPEN_EYES_GAZE,
+  GIRL_GAZE,
+  type Gender,
+} from '@/src/features/onboarding/profileSetup/genderCharacters';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
+
+/** Which control the user is currently pointing at — drives the character's gaze. Kept
+ *  as an id rather than a plain boolean so switching focus directly between the two
+ *  name fields can't leave a stray "look up" flicker between one's blur and the next's
+ *  focus: the outgoing field's blur only clears the id if nothing else has claimed it. */
+type PointedField = 'surname' | 'givenName' | 'age' | null;
 
 /**
  * Step 2 (Figma `804-9969` idle / `804-10250` filled): surname, given name, age.
@@ -18,9 +30,10 @@ import { fonts } from '@/src/theme/typography';
  * name fields only.
  *
  * The boy arrives already awake: he opened his eyes back on the Gender step
- * (`GenderStep.tsx`), so this uses `BOY_OPEN_EYES_STEADY` — the same character without
- * the one-shot opening, which would otherwise replay on every arrival here. Grade does
- * the same.
+ * (`GenderStep.tsx`), so this uses `BOY_OPEN_EYES_GAZE` — the same character without
+ * the one-shot opening (which would otherwise replay on every arrival here), but with a
+ * `GazeProvider` above it so his eyes glance down at whichever field is currently
+ * focused/being dragged, and back up otherwise. Grade does the same.
  */
 
 /** Figma gives the 233-tall character cell only 187px of layout space here. */
@@ -55,14 +68,20 @@ export default function PersonalInfoStep({
   const scale = boardScale(DESIGN, width, stableHeight, MIN_TYPE_SCALE);
   const canContinue = surname.trim().length > 0 && givenName.trim().length > 0;
 
+  const [pointing, setPointing] = useState<PointedField>(null);
+  const point = (field: PointedField) => () => setPointing(field);
+  const unpoint = (field: PointedField) => () => setPointing((cur) => (cur === field ? null : cur));
+
   return (
     <ProfileStepLayout ctaDisabled={!canContinue} onContinue={onContinue} avoidsKeyboard>
-      <AvatarBubble
-        gender={gender}
-        scale={scale}
-        blockHeight={CHARACTER_BLOCK}
-        characterOverride={gender === 'boy' ? BOY_OPEN_EYES_STEADY : undefined}
-      />
+      <GazeProvider down={pointing !== null}>
+        <AvatarBubble
+          gender={gender}
+          scale={scale}
+          blockHeight={CHARACTER_BLOCK}
+          characterOverride={gender === 'boy' ? BOY_OPEN_EYES_GAZE : GIRL_GAZE}
+        />
+      </GazeProvider>
 
       <View style={{ width: '100%', gap: GAP * scale, marginTop: GAP * scale }}>
         <Label scale={scale}>Овог</Label>
@@ -71,6 +90,8 @@ export default function PersonalInfoStep({
           onChangeText={onChangeSurname}
           placeholder="Батсайхан"
           scale={scale}
+          onFocus={point('surname')}
+          onBlur={unpoint('surname')}
         />
 
         <Label scale={scale}>Нэр</Label>
@@ -79,10 +100,18 @@ export default function PersonalInfoStep({
           onChangeText={onChangeGivenName}
           placeholder="Цэцэгмаа"
           scale={scale}
+          onFocus={point('givenName')}
+          onBlur={unpoint('givenName')}
         />
 
         <Label scale={scale}>Нас</Label>
-        <AgeWheel value={age} onChange={onChangeAge} scale={scale} />
+        <AgeWheel
+          value={age}
+          onChange={onChangeAge}
+          scale={scale}
+          onDragStart={point('age')}
+          onDragEnd={unpoint('age')}
+        />
       </View>
     </ProfileStepLayout>
   );
@@ -101,11 +130,15 @@ function Field({
   onChangeText,
   placeholder,
   scale,
+  onFocus,
+  onBlur,
 }: {
   value: string;
   onChangeText: (value: string) => void;
   placeholder: string;
   scale: number;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   return (
     <TextInput
@@ -118,6 +151,8 @@ function Field({
       placeholder={placeholder}
       placeholderTextColor={colors.profileInputPlaceholder}
       autoCapitalize="words"
+      onFocus={onFocus}
+      onBlur={onBlur}
     />
   );
 }
