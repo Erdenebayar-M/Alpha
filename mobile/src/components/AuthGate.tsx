@@ -1,12 +1,13 @@
-import { Redirect, Slot } from 'expo-router';
+import { Redirect } from 'expo-router';
+import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '@/src/features/auth/AuthContext';
 
 /** Shared by every route group that requires a logged-in parent — (app) and
- *  (onboarding) both mount this as their whole _layout. Redirects to /login
- *  while unauthenticated; otherwise renders the group's own routes. */
-export default function AuthGate() {
+ *  (onboarding) both mount this, each passing its own navigator (Stack/Slot) as
+ *  children. Redirects to /login while unauthenticated; otherwise renders it. */
+export default function AuthGate({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -21,7 +22,7 @@ export default function AuthGate() {
     return <Redirect href="/login" />;
   }
 
-  return <Slot />;
+  return <>{children}</>;
 }
 
 const styles = StyleSheet.create({

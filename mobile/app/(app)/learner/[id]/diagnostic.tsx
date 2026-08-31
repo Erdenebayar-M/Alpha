@@ -19,12 +19,15 @@ type Phase =
   | { kind: 'running'; sessionId: string; task: Task; itemNumber: number }
   | { kind: 'done'; result: DiagnosticResult };
 
-const goBack = () => {
-  if (router.canGoBack()) router.back();
-};
-
 export default function DiagnosticScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  // Always returns to the learner menu (not just one step back) — swiping from the
+  // screen's left edge is the gesture for a plain one-step pop instead.
+  const goBack = () => {
+    router.replace(`/learner/${id}`);
+  };
+
   const startDiagnostic = useStartDiagnostic();
   const submitDiagnostic = useSubmitDiagnostic();
 
