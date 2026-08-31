@@ -10,6 +10,7 @@ import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntry
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 import { fonts } from '@/src/theme/typography';
 
 /**
@@ -48,7 +49,12 @@ export default function Dictation({ task, onResult }: ExerciseRendererProps) {
       >
         <Text style={styles.prompt}>{task.prompt_text}</Text>
 
-        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale
+          onPress={handleToggleAudio}
+          pressScale={CHARACTER_PRESS_SCALE}
+          accessibilityRole="button"
+          accessibilityLabel="Сонсох / зогсоох"
+        >
           <CharacterAvatar playing={status.playing} width={160} />
         </PressableScale>
 

@@ -11,6 +11,7 @@ import { useFillTiles } from '@/src/features/exercise/hooks/useFillTiles';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 
 /**
  * Audio fill-the-letters task (TT_2_4, "Үгийг сонсоод дутуу үсгийг нөхөх"): the child
@@ -36,7 +37,12 @@ export default function AudioFillLetterTiles({ task, onResult }: ExerciseRendere
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <PressableScale onPress={handleToggleAudio} accessibilityRole="button" accessibilityLabel="Сонсох / зогсоох">
+        <PressableScale
+          onPress={handleToggleAudio}
+          pressScale={CHARACTER_PRESS_SCALE}
+          accessibilityRole="button"
+          accessibilityLabel="Сонсох / зогсоох"
+        >
           <CharacterAvatar playing={status.playing} width={avatarWidth} />
         </PressableScale>
 

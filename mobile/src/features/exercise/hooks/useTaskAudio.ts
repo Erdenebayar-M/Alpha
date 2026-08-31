@@ -39,7 +39,12 @@ export function useTaskAudio(
 
   const toggle = useCallback(() => {
     try {
-      if (status.playing) {
+      // Branch on the native player's own synchronous flag, not `status.playing` —
+      // that's React state pushed by a bridged event (up to ~500ms behind), so a
+      // second tap landing inside that window would re-issue the same command
+      // (e.g. play() twice) instead of alternating, leaving playback stuck.
+      const playing = player.playing ?? status.playing;
+      if (playing) {
         player.pause();
       } else {
         if (replayFromStart) player.seekTo(0);
