@@ -11,7 +11,7 @@ import {
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { boardScale, DESIGN, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
+import { boardScale, DESIGN, MIN_TYPE_SCALE, useKeyboardStableHeight } from '@/src/features/onboarding/motion';
 import ContinueButton from '@/src/features/onboarding/profileSetup/components/ContinueButton';
 import { OuterScrollHandlerContext } from '@/src/features/onboarding/profileSetup/components/nestedScrollArbitration';
 
@@ -58,7 +58,12 @@ export default function ProfileStepLayout({
   // value. Freezing height stops Android's keyboard-driven window resize (adjustResize)
   // from rescaling the board — see `useKeyboardStableHeight`.
   const stableHeight = useKeyboardStableHeight(height);
-  const scale = boardScale(DESIGN, width, avoidsKeyboard ? stableHeight : height);
+  const scale = boardScale(
+    DESIGN,
+    width,
+    avoidsKeyboard ? stableHeight : height,
+    avoidsKeyboard ? MIN_TYPE_SCALE : undefined
+  );
   // On Android, `root`'s real flex box still shrinks by this amount even though `scale`
   // (and so the CTA's `bottom` value) is frozen — this cancels that drift so the CTA
   // never visually moves. Always 0 on iOS, where nothing here shrinks `root` anymore.
