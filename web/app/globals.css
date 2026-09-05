@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Design tokens
+ * Sourced from Figma file CO08jDXzqSImiVJLDsC18v, node 1195:6158 (+ 1152:7157
+ * benefits section, + 1207:8197 mobile footer). Values taken from the file's
+ * published variables (get_variable_defs) and measured node fills.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-nunito);
+
+  /* Brand */
+  --color-brand-blue: #2f5be4;
+  --color-brand-indigo: #4f6ef7;
+  --color-brand-green: #a4dc6a;
+  --color-brand-green-edge: #4f9ef5;
+
+  /* Text */
+  --color-text-navy: #24428f;
+  --color-text-label: #2a4263;
+  --color-text-nav: #667085;
+  --color-text-nav-strong: #101828;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-artwork: #fafcfe;
+  --color-surface-page: #f7f9fc;
+  --color-surface-lilac: #eef2ff;
+
+  /* Borders */
+  --color-border-card: #e4e7ec;
+  --color-border-soft: #e8eef7;
+
+  /* Hills / ground (exact Figma layer fills, node 1195:6160) */
+  --color-hill-back: #d3eedb;
+  --color-hill-mid: #d3eebd;
+  --color-hill-front: #d3efb5;
+  --color-hill-band: #eef7d4;
+  --color-hill-back-left: #bae4cf;
+  --color-hill-back-left-soft: #e8f5d5;
+  --color-hill-mid-center: #e0f2d7;
+  --color-hill-mid-left: #c5ead9;
+  --color-hill-shade: #9dc980;
+  --color-bush: #d2d0da;
+  --color-bush-teal: #bbddd7;
+
+  /* Sky */
+  --color-sky-tint: rgba(63, 160, 251, 0.13);
+  --color-sky-mid: #e5f1fd;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 24px;
+  --radius-2xl: 42px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-card: 0px 12px 16px rgba(16, 24, 40, 0.07);
+  --shadow-page: 0px 24px 64px rgba(16, 24, 40, 0.07);
+
+  /* Easing (matches mobile/src/theme/motion.ts press feel) */
+  --ease-press: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--color-surface-page);
+  color: var(--color-brand-blue);
+}
+
+/* ---------------------------------------------------------------------------
+ * Entrance + ambient keyframes. transform/opacity only — no layout properties.
+ * ------------------------------------------------------------------------- */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes blink-eyes {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes drift-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(24px);
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 600ms var(--ease-entrance) both;
+}
+
+.animate-float {
+  animation: float-y 4.5s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: blink-eyes 5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.animate-drift-slow {
+  animation: drift-x 30s linear infinite alternate;
+}
+
+.animate-drift-slower {
+  animation: drift-x 40s linear infinite alternate;
+}
+
+/* Scroll-reveal: Reveal.tsx toggles data-visible after IntersectionObserver
+ * fires once, then disconnects. CSS drives the actual animation. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+[data-reveal][data-visible='true'] {
+  animation: rise-in 500ms var(--ease-entrance) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in,
+  .animate-float,
+  .animate-blink,
+  .animate-drift-slow,
+  .animate-drift-slower {
+    animation: none !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-reveal][data-visible='true'] {
+    animation: none !important;
+  }
+}

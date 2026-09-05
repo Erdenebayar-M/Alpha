@@ -11,6 +11,8 @@ node_modules
 /backend/dist
 /frontend/.next
 /frontend/out
+/web/.next
+/web/out
 /coverage
 
 # Generated binary assets — stored in R2, not in repo
