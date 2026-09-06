@@ -1,5 +1,5 @@
-import { createContext, type FC, type ReactNode, useContext, useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { createContext, type ComponentProps, type FC, type ReactNode, useContext, useEffect } from 'react';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   Extrapolation,
@@ -35,6 +35,42 @@ import {
  */
 
 const LOOP_EASE = Easing.inOut(Easing.ease);
+
+/** Every `with*` HOC below wraps its `Art` in a same-shaped `Animated.View` that
+ *  just fills its box; hoisted so that box isn't a fresh object every render. */
+const FILL_STYLE: ViewStyle = { width: '100%', height: '100%' };
+
+/** The `Animated.View` + `Art` wrapper every idle-loop HOC below returns —
+ *  factored out since it was the one part all ten of them shared byte-for-byte. */
+function ArtLayer({
+  Art,
+  props,
+  style,
+}: {
+  Art: FC<SvgProps>;
+  props: SvgProps;
+  style: ComponentProps<typeof Animated.View>['style'];
+}) {
+  return (
+    <Animated.View style={[FILL_STYLE, style]}>
+      <Art {...props} />
+    </Animated.View>
+  );
+}
+
+/** A shared value that alternates `from` -> `to` -> `from` forever, split evenly
+ *  across `periodMs` — the ping-pong loop `withPulse`/`withFloat`/
+ *  `useBreatheStyle` each built by hand with the same two `withTiming` calls. */
+function pingPong(from: number, to: number, periodMs: number) {
+  return withRepeat(
+    withSequence(
+      withTiming(to, { duration: periodMs / 2, easing: LOOP_EASE }),
+      withTiming(from, { duration: periodMs / 2, easing: LOOP_EASE })
+    ),
+    -1,
+    false
+  );
+}
 
 /**
  * `scaleY` for a "shut" eye — a thin slit, deliberately not 0.
@@ -76,11 +112,7 @@ export function withBlink(Art: FC<SvgProps>, holdMs = 2600): FC<SvgProps> {
 
     const style = useAnimatedStyle(() => ({ transform: [{ scaleY: scaleY.value }] }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Blinking;
 }
@@ -201,11 +233,7 @@ export function withEyeOpen(Art: FC<SvgProps>, fromX = 0, blinkHoldMs = 2400): F
       };
     });
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Eye;
 }
@@ -222,11 +250,7 @@ export function withEyeCover(Art: FC<SvgProps>): FC<SvgProps> {
       opacity: interpolate(open.value, [0, LID_FADE_OUT_AT], [1, 0], Extrapolation.CLAMP),
     }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return EyeCover;
 }
@@ -290,11 +314,7 @@ export function withGaze(Art: FC<SvgProps>, downOffsetY = 2.5): FC<SvgProps> {
       transform: [{ translateY: interpolate(gaze.value, [0, 1], [0, downOffsetY], Extrapolation.CLAMP) }],
     }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Gazing;
 }
@@ -348,11 +368,7 @@ export function withGazeShorten(Art: FC<SvgProps>, toScaleY = 0.71): FC<SvgProps
       transform: [{ scaleY: interpolate(gaze.value, [0, 1], [1, toScaleY], Extrapolation.CLAMP) }],
     }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%', transformOrigin: BOTTOM_ORIGIN }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={[{ transformOrigin: BOTTOM_ORIGIN }, style]} />;
   }
   return Shortening;
 }
@@ -388,11 +404,7 @@ export function withWave(
 
     const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${rotate.value}deg` }] }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%', transformOrigin: origin }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={[{ transformOrigin: origin }, style]} />;
   }
   return Waving;
 }
@@ -403,23 +415,12 @@ export function withPulse(Art: FC<SvgProps>, periodMs = 1800): FC<SvgProps> {
     const opacity = useSharedValue(1);
 
     useEffect(() => {
-      opacity.value = withRepeat(
-        withSequence(
-          withTiming(0.55, { duration: periodMs / 2, easing: LOOP_EASE }),
-          withTiming(1, { duration: periodMs / 2, easing: LOOP_EASE })
-        ),
-        -1,
-        false
-      );
+      opacity.value = pingPong(1, 0.55, periodMs);
     }, [opacity]);
 
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Pulsing;
 }
@@ -452,11 +453,7 @@ export function withSmile(Art: FC<SvgProps>, holdMs = 1500): FC<SvgProps> {
       transform: [{ scaleX: 1 + grow.value * 0.2 }, { scaleY: 1 + grow.value * 0.3 }],
     }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Smiling;
 }
@@ -467,23 +464,12 @@ export function withFloat(Art: FC<SvgProps>, distance = 4, periodMs = 2200): FC<
     const translateY = useSharedValue(0);
 
     useEffect(() => {
-      translateY.value = withRepeat(
-        withSequence(
-          withTiming(-distance, { duration: periodMs / 2, easing: LOOP_EASE }),
-          withTiming(0, { duration: periodMs / 2, easing: LOOP_EASE })
-        ),
-        -1,
-        false
-      );
+      translateY.value = pingPong(0, -distance, periodMs);
     }, [translateY]);
 
     const style = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Floating;
 }
@@ -497,11 +483,7 @@ export function withBreathe(Art: FC<SvgProps>, periodMs = 2400): FC<SvgProps> {
   function Breathing(props: SvgProps) {
     const style = useBreatheStyle(periodMs);
 
-    return (
-      <Animated.View style={[{ width: '100%', height: '100%' }, style]}>
-        <Art {...props} />
-      </Animated.View>
-    );
+    return <ArtLayer Art={Art} props={props} style={style} />;
   }
   return Breathing;
 }
@@ -523,22 +505,8 @@ export function useBreatheStyle(periodMs = 2400) {
   const translateY = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = withRepeat(
-      withSequence(
-        withTiming(1.035, { duration: periodMs / 2, easing: LOOP_EASE }),
-        withTiming(1, { duration: periodMs / 2, easing: LOOP_EASE })
-      ),
-      -1,
-      false
-    );
-    translateY.value = withRepeat(
-      withSequence(
-        withTiming(-3, { duration: periodMs / 2, easing: LOOP_EASE }),
-        withTiming(0, { duration: periodMs / 2, easing: LOOP_EASE })
-      ),
-      -1,
-      false
-    );
+    scale.value = pingPong(1, 1.035, periodMs);
+    translateY.value = pingPong(0, -3, periodMs);
   }, [scale, translateY, periodMs]);
 
   return useAnimatedStyle(() => ({
