@@ -1,6 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import GradientRect from '@/src/components/GradientRect';
 import PressableScale from '@/src/components/PressableScale';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
@@ -34,15 +34,12 @@ export default function PrimaryPillButton({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <LinearGradient id="journeyCta" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={colors.journeyCtaStart} />
-            <Stop offset="1" stopColor={colors.journeyCtaEnd} />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" rx={32 * scale} fill="url(#journeyCta)" />
-      </Svg>
+      <GradientRect
+        id="journeyCta"
+        from={colors.journeyCtaStart}
+        to={colors.journeyCtaEnd}
+        rx={32 * scale}
+      />
       <Text style={[styles.label, { fontSize: 17 * scale }]}>{label}</Text>
     </PressableScale>
   );

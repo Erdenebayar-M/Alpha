@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import GradientRect from '@/src/components/GradientRect';
 import PressableScale from '@/src/components/PressableScale';
 import ArrowIcon from '@/assets/onboarding/profile-setup/arrow.svg';
 import { colors } from '@/src/theme/colors';
@@ -48,15 +48,13 @@ export default function ContinueButton({
       accessibilityLabel="Үргэлжлүүлэх"
       accessibilityState={{ disabled }}
     >
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <LinearGradient id="profileCta" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={colors.profileCtaStart} stopOpacity={stopOpacity} />
-            <Stop offset="1" stopColor={colors.profileCtaEnd} stopOpacity={stopOpacity} />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" rx={24 * scale} fill="url(#profileCta)" />
-      </Svg>
+      <GradientRect
+        id="profileCta"
+        from={colors.profileCtaStart}
+        to={colors.profileCtaEnd}
+        opacity={stopOpacity}
+        rx={24 * scale}
+      />
       <View pointerEvents="none">
         <ArrowIcon width={ARROW.width * scale} height={ARROW.height * scale} />
       </View>
