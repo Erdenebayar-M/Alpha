@@ -1,17 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, type TextInput } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
-import { colors } from '@/src/theme/colors';
 import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
-import { fonts } from '@/src/theme/typography';
 
 /**
  * Dictation task (dictationOptions: TT_7_3 word / TT_7_4 sentence): the child hears
@@ -40,14 +39,14 @@ export default function Dictation({ task, onResult }: ExerciseRendererProps) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={exerciseStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 10, align: 'center' })}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
         <PressableScale
           onPress={handleToggleAudio}
@@ -74,29 +73,3 @@ export default function Dictation({ task, onResult }: ExerciseRendererProps) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 10,
-  },
-  prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
-  },
-});

@@ -6,6 +6,7 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingSprout, { TALKING_SPROUT_ASPECT } from '@/src/features/exercise/components/TalkingSprout';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -69,10 +70,10 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
   });
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 16, align: 'center', justify: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         {/* Prompt in a speech bubble whose tail points down toward the character. */}
@@ -142,22 +143,6 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 16,
-  },
   choicesWrap: {
     // content sets alignItems:'center', so stretch the choice sheet back to full width.
     alignSelf: 'stretch',

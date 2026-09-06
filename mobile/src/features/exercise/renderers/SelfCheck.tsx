@@ -3,6 +3,7 @@ import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
 
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
@@ -33,14 +34,14 @@ export default function SelfCheck({ task, onResult }: ExerciseRendererProps) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={exerciseStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 12, align: 'center', justify: 'center' })}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+        <Text style={[exerciseStyles.prompt, styles.prompt]}>{task.prompt_text}</Text>
 
         <View style={styles.card}>
           <Text style={styles.cardLabel}>Таны бичсэн</Text>
@@ -68,28 +69,7 @@ export default function SelfCheck({ task, onResult }: ExerciseRendererProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 12,
-  },
   prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
     marginBottom: 4,
   },
   card: {

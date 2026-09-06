@@ -8,6 +8,7 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -50,10 +51,10 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
   const filled = ex.selectedChoice?.text ?? null;
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, compact && styles.contentCompact]}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: compact ? 14 : 22, justify: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         {/* Naran + speech bubble; tapping either plays the prompt audio. */}
@@ -121,24 +122,6 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 22,
-  },
-  contentCompact: {
-    gap: 14,
-  },
   questionRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',

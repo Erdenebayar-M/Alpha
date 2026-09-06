@@ -8,6 +8,7 @@ import LetterTileBar from '@/src/features/exercise/components/LetterTileBar';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -49,10 +50,10 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
   const filledLetter = ex.selectedChoice ? ex.selectedChoice.text.toLowerCase() : '';
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 16, align: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         {/* Character + speech bubble; tapping either plays the prompt audio. */}
@@ -101,22 +102,6 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 16,
-  },
   characterRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -9,6 +9,7 @@ import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -44,10 +45,10 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
   );
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 20, align: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         {/* Prompt bubble + the sprout, whose speaker replays the prompt audio. */}
@@ -93,22 +94,6 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 20,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

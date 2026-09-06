@@ -14,6 +14,7 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { usePunctuationExercise } from '@/src/features/exercise/hooks/usePunctuationExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -112,10 +113,10 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
   });
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, compact && styles.contentCompact]}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: compact ? 16 : 26, justify: 'center' })}
         showsVerticalScrollIndicator={false}
         scrollEnabled={!dragging}
       >
@@ -201,24 +202,6 @@ export default function PunctuationPlace({ task, onResult }: ExerciseRendererPro
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 26,
-  },
-  contentCompact: {
-    gap: 16,
-  },
   questionRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
