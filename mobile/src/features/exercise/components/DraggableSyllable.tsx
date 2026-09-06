@@ -1,13 +1,8 @@
 import { StyleSheet, Text } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 
+import { useDragPan } from '@/src/features/exercise/hooks/useDragPan';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -41,40 +36,15 @@ export default function DraggableSyllable({
   onDragMove,
   onDrop,
 }: DraggableSyllableProps) {
-  const tx = useSharedValue(0);
-  const ty = useSharedValue(0);
-  const lift = useSharedValue(0); // 0 = resting, 1 = picked up
-
-  const pan = Gesture.Pan()
-    .enabled(!disabled && !used)
-    .onBegin(() => {
-      lift.value = withTiming(1, { duration: 120 });
-      runOnJS(onDragStart)();
-    })
-    .onUpdate((e) => {
-      tx.value = e.translationX;
-      ty.value = e.translationY;
-      runOnJS(onDragMove)(e.absoluteX, e.absoluteY);
-    })
-    .onEnd((e) => {
-      runOnJS(onDrop)(e.absoluteX, e.absoluteY);
-    })
-    .onFinalize(() => {
-      tx.value = withSpring(0, { damping: 18, stiffness: 220 });
-      ty.value = withSpring(0, { damping: 18, stiffness: 220 });
-      lift.value = withTiming(0, { duration: 160 });
-    });
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: tx.value },
-      { translateY: ty.value },
-      { scale: 1 + lift.value * 0.12 },
-    ],
-    zIndex: lift.value > 0 ? 50 : 1,
-    shadowOpacity: 0.14 + lift.value * 0.24,
-    shadowRadius: 9 + lift.value * 10,
-  }));
+  const { pan, style } = useDragPan({
+    enabled: !disabled && !used,
+    scaleBoost: 0.12,
+    shadowOpacity: [0.14, 0.24],
+    shadowRadius: [9, 10],
+    onDragStart,
+    onDragMove,
+    onDrop,
+  });
 
   return (
     <GestureDetector gesture={pan}>
