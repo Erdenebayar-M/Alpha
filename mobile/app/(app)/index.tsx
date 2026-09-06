@@ -5,6 +5,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleShe
 import PressableScale from '@/src/components/PressableScale';
 import { ApiError, GENERIC_ERROR_MESSAGE } from '@/src/api/client';
 import type { Learner } from '@/src/api/learner';
+import { authStyles } from '@/src/features/auth/authStyles';
 import { useCreateLearner, useGetLearners } from '@/src/features/learner/useLearners';
 import { useActiveLearnerStore } from '@/src/store/activeLearner';
 
@@ -47,7 +48,7 @@ export default function HomeScreen() {
       <Text style={styles.title}>Who&apos;s learning today?</Text>
 
       {isLoading ? <ActivityIndicator style={styles.spacing} /> : null}
-      {isError ? <Text style={styles.error}>Couldn&apos;t load children.</Text> : null}
+      {isError ? <Text style={authStyles.error}>Couldn&apos;t load children.</Text> : null}
 
       {data?.learners.map((learner) => (
         <PressableScale key={learner.id} style={styles.card} onPress={() => handleSelectLearner(learner)}>
@@ -60,7 +61,7 @@ export default function HomeScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.form}>
             <TextInput
-              style={styles.input}
+              style={authStyles.input}
               placeholder="Child's name"
               value={name}
               onChangeText={setName}
@@ -79,21 +80,21 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {formError ? <Text style={styles.error}>{formError}</Text> : null}
+            {formError ? <Text style={authStyles.error}>{formError}</Text> : null}
 
             <PressableScale
-              style={[styles.button, createLearner.isPending && styles.buttonDisabled]}
+              style={[authStyles.button, createLearner.isPending && authStyles.buttonDisabled]}
               onPress={handleSubmit}
               disabled={createLearner.isPending}
             >
               {createLearner.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Save</Text>
+                <Text style={authStyles.buttonText}>Save</Text>
               )}
             </PressableScale>
-            <PressableScale style={styles.linkButton} onPress={() => setIsFormOpen(false)}>
-              <Text style={styles.linkText}>Cancel</Text>
+            <PressableScale style={authStyles.linkButton} onPress={() => setIsFormOpen(false)}>
+              <Text style={authStyles.linkText}>Cancel</Text>
             </PressableScale>
           </View>
         </KeyboardAvoidingView>
@@ -157,14 +158,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 8,
   },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-  },
   gradeRow: {
     flexDirection: 'row',
     gap: 8,
@@ -189,31 +182,5 @@ const styles = StyleSheet.create({
   },
   gradeChipTextSelected: {
     color: '#fff',
-  },
-  error: {
-    color: '#c0392b',
-  },
-  button: {
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  linkButton: {
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkText: {
-    color: '#2563eb',
   },
 });

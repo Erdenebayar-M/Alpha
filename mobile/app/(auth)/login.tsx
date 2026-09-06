@@ -1,10 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
-import PressableScale from '@/src/components/PressableScale';
 import { ApiError, GENERIC_ERROR_MESSAGE } from '@/src/api/client';
 import { useAuth } from '@/src/features/auth/AuthContext';
+import AuthForm from '@/src/features/auth/AuthForm';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -28,96 +27,34 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Log in</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          autoCapitalize="none"
-          autoComplete="password"
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <PressableScale
-          style={[styles.button, isSubmitting && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
-        </PressableScale>
-
-        <PressableScale style={styles.linkButton} onPress={() => router.push('/register')}>
-          <Text style={styles.linkText}>Need an account? Register</Text>
-        </PressableScale>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <AuthForm
+      title="Log in"
+      fields={[
+        {
+          key: 'email',
+          value: email,
+          onChangeText: setEmail,
+          placeholder: 'Email',
+          autoCapitalize: 'none',
+          autoComplete: 'email',
+          keyboardType: 'email-address',
+        },
+        {
+          key: 'password',
+          value: password,
+          onChangeText: setPassword,
+          placeholder: 'Password',
+          secureTextEntry: true,
+          autoCapitalize: 'none',
+          autoComplete: 'password',
+        },
+      ]}
+      error={error}
+      isSubmitting={isSubmitting}
+      cta="Log in"
+      onSubmit={handleSubmit}
+      footerLabel="Need an account? Register"
+      onFooterPress={() => router.push('/register')}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-  },
-  error: {
-    color: '#c0392b',
-  },
-  button: {
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  linkButton: {
-    height: 44,
-    marginTop: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkText: {
-    color: '#2563eb',
-  },
-});
