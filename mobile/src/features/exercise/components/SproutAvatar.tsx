@@ -80,21 +80,24 @@ export default function SproutAvatar({ state, width = DEFAULT_SPROUT_WIDTH }: Sp
     };
   });
 
+  // Rules of Hooks means these three useAnimatedStyle calls can't themselves be
+  // produced by a loop, but the render tree below them can be.
   const s1 = useAnimatedStyle(() => ({ opacity: o1.value }));
   const s2 = useAnimatedStyle(() => ({ opacity: o2.value }));
   const s3 = useAnimatedStyle(() => ({ opacity: o3.value }));
+  const poses = [
+    { source: pose1, style: s1 },
+    { source: pose2, style: s2 },
+    { source: pose3, style: s3 },
+  ];
 
   return (
     <Animated.View style={[styles.root, { width, height }, bobStyle]} pointerEvents="none">
-      <Animated.View style={[styles.fill, s1]}>
-        <Image source={pose1} style={styles.fill} contentFit="contain" />
-      </Animated.View>
-      <Animated.View style={[styles.fill, s2]}>
-        <Image source={pose2} style={styles.fill} contentFit="contain" />
-      </Animated.View>
-      <Animated.View style={[styles.fill, s3]}>
-        <Image source={pose3} style={styles.fill} contentFit="contain" />
-      </Animated.View>
+      {poses.map((pose, i) => (
+        <Animated.View key={i} style={[styles.fill, pose.style]}>
+          <Image source={pose.source} style={styles.fill} contentFit="contain" />
+        </Animated.View>
+      ))}
     </Animated.View>
   );
 }
