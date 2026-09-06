@@ -6,7 +6,13 @@ import PressableScale from '@/src/components/PressableScale';
 import { ApiError } from '@/src/api/client';
 import type { SkillsState } from '@/src/api/dashboard';
 import { usePlan, useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
-import { isDone, SKILL_LABELS, skillLabel, templateLabel } from '@/src/features/plan/planFormat';
+import {
+  isDone,
+  SKILL_LABELS,
+  skillLabel,
+  START_DIAGNOSTIC_LABEL,
+  templateLabel,
+} from '@/src/features/plan/planFormat';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -42,7 +48,7 @@ export default function DashboardScreen() {
         <Text style={styles.title}>Ахиц алга байна</Text>
         <Text style={styles.muted}>Эхлээд онош өгснөөр чадварын дүн энд харагдана.</Text>
         <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
-          <Text style={styles.primaryButtonText}>Онош эхлүүлэх</Text>
+          <Text style={styles.primaryButtonText}>{START_DIAGNOSTIC_LABEL}</Text>
         </PressableScale>
       </SafeAreaView>
     );

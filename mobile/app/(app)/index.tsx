@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
-import { ApiError } from '@/src/api/client';
+import { ApiError, GENERIC_ERROR_MESSAGE } from '@/src/api/client';
 import type { Learner } from '@/src/api/learner';
 import { useCreateLearner, useGetLearners } from '@/src/features/learner/useLearners';
 import { useActiveLearnerStore } from '@/src/store/activeLearner';
@@ -38,7 +38,7 @@ export default function HomeScreen() {
       setGrade(null);
       setIsFormOpen(false);
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+      setFormError(err instanceof ApiError ? err.message : GENERIC_ERROR_MESSAGE);
     }
   };
 

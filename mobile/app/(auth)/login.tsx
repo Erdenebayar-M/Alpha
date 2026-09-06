@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
-import { ApiError } from '@/src/api/client';
+import { ApiError, GENERIC_ERROR_MESSAGE } from '@/src/api/client';
 import { useAuth } from '@/src/features/auth/AuthContext';
 
 export default function LoginScreen() {
@@ -21,7 +21,7 @@ export default function LoginScreen() {
       await login(email, password);
       router.replace('/');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+      setError(err instanceof ApiError ? err.message : GENERIC_ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }

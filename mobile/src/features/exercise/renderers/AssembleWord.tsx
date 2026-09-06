@@ -9,6 +9,7 @@ import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
+import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -56,7 +57,7 @@ export default function AssembleWord({ task, onResult }: ExerciseRendererProps) 
           style={styles.header}
           onPress={handleToggleAudio}
           accessibilityRole="button"
-          accessibilityLabel="Сонсох"
+          accessibilityLabel={LISTEN_LABEL}
         >
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>{promptText}</Text>

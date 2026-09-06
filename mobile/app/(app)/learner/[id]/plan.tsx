@@ -11,6 +11,7 @@ import {
   formatDate,
   isDone,
   skillLabel,
+  START_DIAGNOSTIC_LABEL,
   statusLabel,
   templateLabel,
 } from '@/src/features/plan/planFormat';
@@ -38,7 +39,7 @@ export default function PlanScreen() {
         <Text style={styles.title}>Төлөвлөгөө алга</Text>
         <Text style={styles.muted}>Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана.</Text>
         <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
-          <Text style={styles.primaryButtonText}>Онош эхлүүлэх</Text>
+          <Text style={styles.primaryButtonText}>{START_DIAGNOSTIC_LABEL}</Text>
         </PressableScale>
       </SafeAreaView>
     );

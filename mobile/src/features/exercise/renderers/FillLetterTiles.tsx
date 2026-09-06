@@ -9,6 +9,7 @@ import SproutAvatar, { type SproutState } from '@/src/features/exercise/componen
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordWithBlanks from '@/src/features/exercise/components/WordWithBlanks';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
+import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useFillTiles } from '@/src/features/exercise/hooks/useFillTiles';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -55,7 +56,7 @@ export default function FillLetterTiles({ task, onResult }: ExerciseRendererProp
           style={styles.characterRow}
           onPress={handleToggleAudio}
           accessibilityRole="button"
-          accessibilityLabel="Сонсох"
+          accessibilityLabel={LISTEN_LABEL}
         >
           <SproutAvatar state={sproutState} width={avatarWidth} />
           <View style={styles.bubble}>

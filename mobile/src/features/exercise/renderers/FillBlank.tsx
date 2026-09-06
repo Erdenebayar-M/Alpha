@@ -8,6 +8,7 @@ import LetterTileBar from '@/src/features/exercise/components/LetterTileBar';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
+import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -62,7 +63,7 @@ export default function FillBlank({ task, onResult }: ExerciseRendererProps) {
           style={styles.characterRow}
           onPress={handleToggleAudio}
           accessibilityRole="button"
-          accessibilityLabel="Сонсох"
+          accessibilityLabel={LISTEN_LABEL}
         >
           <SproutAvatar state={sproutState} width={avatarWidth} />
           <View style={styles.bubble}>

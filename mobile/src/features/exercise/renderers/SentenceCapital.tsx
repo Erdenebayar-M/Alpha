@@ -8,6 +8,7 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
+import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -62,7 +63,7 @@ export default function SentenceCapital({ task, onResult }: ExerciseRendererProp
           style={styles.questionRow}
           onPress={handlePlay}
           accessibilityRole="button"
-          accessibilityLabel="Сонсох"
+          accessibilityLabel={LISTEN_LABEL}
         >
           <TalkingBuddy playing={status.playing} width={buddyWidth} />
           <View style={styles.bubble}>

@@ -19,6 +19,10 @@ type Phase =
   | { kind: 'running'; sessionId: string; task: Task; itemNumber: number }
   | { kind: 'done'; result: DiagnosticResult };
 
+// Fallback for an error with no server-provided message — shared by the start and
+// submit failure paths below.
+const NETWORK_ERROR_MESSAGE = 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.';
+
 export default function DiagnosticScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
@@ -73,8 +77,7 @@ export default function DiagnosticScreen() {
         setPhase({ kind: 'running', sessionId, task: res.next_task, itemNumber: res.item_number });
       }
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.';
+      const message = err instanceof ApiError ? err.message : NETWORK_ERROR_MESSAGE;
       setPhase({ kind: 'error', message, canRetry: false });
     }
   };
@@ -148,7 +151,7 @@ function describeStartError(err: unknown): { message: string; canRetry: boolean 
     }
     return { message: err.message, canRetry: false };
   }
-  return { message: 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.', canRetry: true };
+  return { message: NETWORK_ERROR_MESSAGE, canRetry: true };
 }
 
 const styles = StyleSheet.create({
