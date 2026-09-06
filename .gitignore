@@ -29,3 +29,6 @@ content-pipeline/images/generated/*.png
 .clone/
 bash.exe.stackdump
 /shared/dist
+
+# Secondary git worktree (see `git worktree list`), not repo content
+/mobile-button-animations/
