@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PressableScale from '@/src/components/PressableScale';
+import ProgressBar from '@/src/components/ProgressBar';
 import { ApiError } from '@/src/api/client';
 import type { SkillsState } from '@/src/api/dashboard';
 import { usePlan, useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
@@ -87,14 +88,15 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.streakRow}>
-          <View style={styles.streakBox}>
-            <Text style={styles.streakValue}>{streakUnavailable ? '—' : (streak ?? 0)}</Text>
-            <Text style={styles.streakLabel}>Өдрийн цуваа 🔥</Text>
-          </View>
-          <View style={styles.streakBox}>
-            <Text style={styles.streakValue}>{streakUnavailable ? '—' : (longest ?? 0)}</Text>
-            <Text style={styles.streakLabel}>Хамгийн урт</Text>
-          </View>
+          {[
+            { value: streak, label: 'Өдрийн цуваа 🔥' },
+            { value: longest, label: 'Хамгийн урт' },
+          ].map((box, i) => (
+            <View key={i} style={styles.streakBox}>
+              <Text style={styles.streakValue}>{streakUnavailable ? '—' : (box.value ?? 0)}</Text>
+              <Text style={styles.streakLabel}>{box.label}</Text>
+            </View>
+          ))}
         </View>
         {streakUnavailable && <Text style={styles.inlineError}>Цуваа ачаалж чадсангүй.</Text>}
 
@@ -122,9 +124,7 @@ export default function DashboardScreen() {
         {rows.map((row) => (
           <View key={row.n} style={styles.skillRow}>
             <Text style={styles.skillLabel}>{row.label}</Text>
-            <View style={styles.skillBarTrack}>
-              <View style={[styles.skillBarFill, { width: `${Math.round(row.score * 100)}%` }]} />
-            </View>
+            <ProgressBar percent={Math.round(row.score * 100)} height={12} style={styles.skillBarTrack} />
             <Text style={styles.skillLevel}>{row.level}</Text>
           </View>
         ))}
@@ -271,15 +271,6 @@ const styles = StyleSheet.create({
   },
   skillBarTrack: {
     flex: 1,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  skillBarFill: {
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressFill,
   },
   skillLevel: {
     fontFamily: fonts.extrabold,

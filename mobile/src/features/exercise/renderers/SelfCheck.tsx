@@ -44,15 +44,15 @@ export default function SelfCheck({ task, onResult }: ExerciseRendererProps) {
       >
         <Text style={[exerciseStyles.prompt, styles.prompt]}>{task.prompt_text}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Таны бичсэн</Text>
-          <Text style={styles.cardText}>{originalAttempt}</Text>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Зөв хариулт</Text>
-          <Text style={[styles.cardText, styles.modelText]}>{modelAnswer}</Text>
-        </View>
+        {[
+          { label: 'Таны бичсэн', text: originalAttempt, textStyle: styles.cardText },
+          { label: 'Зөв хариулт', text: modelAnswer, textStyle: [styles.cardText, styles.modelText] },
+        ].map((card, i) => (
+          <View key={i} style={styles.card}>
+            <Text style={styles.cardLabel}>{card.label}</Text>
+            <Text style={card.textStyle}>{card.text}</Text>
+          </View>
+        ))}
 
         <FeedbackText>{ex.feedback}</FeedbackText>
       </ScrollView>

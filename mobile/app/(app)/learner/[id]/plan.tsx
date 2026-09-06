@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PressableScale from '@/src/components/PressableScale';
+import ProgressBar from '@/src/components/ProgressBar';
 import { ApiError } from '@/src/api/client';
 import type { PlanLesson } from '@/src/api/plan';
 import { usePlan } from '@/src/features/dashboard/useDashboard';
@@ -71,23 +72,19 @@ export default function PlanScreen() {
             <Text style={styles.badgeText}>{templateLabel(plan.template)}</Text>
           </View>
           <View style={styles.overviewGrid}>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{plan.duration_days}</Text>
-              <Text style={styles.overviewLabel}>өдөр</Text>
-            </View>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{plan.daily_minutes}</Text>
-              <Text style={styles.overviewLabel}>мин / өдөр</Text>
-            </View>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{overallPct}%</Text>
-              <Text style={styles.overviewLabel}>биелэлт</Text>
-            </View>
+            {[
+              { value: plan.duration_days, label: 'өдөр' },
+              { value: plan.daily_minutes, label: 'мин / өдөр' },
+              { value: `${overallPct}%`, label: 'биелэлт' },
+            ].map((cell, i) => (
+              <View key={i} style={styles.overviewCell}>
+                <Text style={styles.overviewValue}>{cell.value}</Text>
+                <Text style={styles.overviewLabel}>{cell.label}</Text>
+              </View>
+            ))}
           </View>
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${overallPct}%` }]} />
-          </View>
+          <ProgressBar percent={overallPct} height={12} style={styles.overviewProgress} />
           <Text style={styles.overviewSub}>
             {doneCount}/{lessons.length} хичээл · {doneTasks}/{totalTasks} даалгавар
           </Text>
@@ -133,21 +130,17 @@ export default function PlanScreen() {
 
               {open ? (
                 <View style={styles.lessonDetail}>
-                  <View style={styles.detailProgressTrack}>
-                    <View style={[styles.detailProgressFill, { width: `${pct}%` }]} />
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Өдөр</Text>
-                    <Text style={styles.detailValue}>{formatDate(lesson.scheduled_date) || '—'}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Чадвар</Text>
-                    <Text style={styles.detailValue}>{skillLabel(lesson.primary_skill)}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Ахиц</Text>
-                    <Text style={styles.detailValue}>{pct}%</Text>
-                  </View>
+                  <ProgressBar percent={pct} height={8} />
+                  {[
+                    { label: 'Өдөр', value: formatDate(lesson.scheduled_date) || '—' },
+                    { label: 'Чадвар', value: skillLabel(lesson.primary_skill) },
+                    { label: 'Ахиц', value: `${pct}%` },
+                  ].map((row, i) => (
+                    <View key={i} style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{row.label}</Text>
+                      <Text style={styles.detailValue}>{row.value}</Text>
+                    </View>
+                  ))}
                 </View>
               ) : null}
             </PressableScale>
@@ -255,17 +248,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
   },
-  progressTrack: {
+  overviewProgress: {
     alignSelf: 'stretch',
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressFill,
   },
   overviewSub: {
     fontFamily: fonts.bold,
@@ -345,17 +329,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.sheetBorder,
     gap: 8,
-  },
-  detailProgressTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  detailProgressFill: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.progressFill,
   },
   detailRow: {
     flexDirection: 'row',
