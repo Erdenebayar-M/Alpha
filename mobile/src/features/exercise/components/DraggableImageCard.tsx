@@ -1,14 +1,9 @@
 import { StyleSheet } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 
 import PuzzleCard from '@/src/features/exercise/components/PuzzleCard';
+import { useDragPan } from '@/src/features/exercise/hooks/useDragPan';
 
 interface DraggableImageCardProps {
   leftId: string;
@@ -43,41 +38,17 @@ export default function DraggableImageCard({
   onDragMove,
   onDrop,
 }: DraggableImageCardProps) {
-  const tx = useSharedValue(0);
-  const ty = useSharedValue(0);
-  const lift = useSharedValue(0); // 0 = resting, 1 = picked up
-
-  const pan = Gesture.Pan()
-    .enabled(!disabled)
-    .onBegin(() => {
-      lift.value = withTiming(1, { duration: 120 });
-      runOnJS(onDragStart)(leftId);
-    })
-    .onUpdate((e) => {
-      tx.value = e.translationX;
-      ty.value = e.translationY;
-      runOnJS(onDragMove)(e.absoluteX, e.absoluteY);
-    })
-    .onEnd((e) => {
-      runOnJS(onDrop)(leftId, e.absoluteX, e.absoluteY);
-    })
-    .onFinalize(() => {
-      // Always return to the slot origin; a successful link reflows/unmounts us.
-      tx.value = withSpring(0, { damping: 18, stiffness: 220 });
-      ty.value = withSpring(0, { damping: 18, stiffness: 220 });
-      lift.value = withTiming(0, { duration: 160 });
-    });
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: tx.value },
-      { translateY: ty.value },
-      { scale: 1 + lift.value * 0.08 },
-    ],
-    zIndex: lift.value > 0 ? 50 : 1,
-    shadowOpacity: 0.05 + lift.value * 0.2,
-    shadowRadius: 4 + lift.value * 10,
-  }));
+  // Always returns to the slot origin on release (via useDragPan's onFinalize); a
+  // successful link reflows/unmounts us instead.
+  const { pan, style } = useDragPan({
+    enabled: !disabled,
+    scaleBoost: 0.08,
+    shadowOpacity: [0.05, 0.2],
+    shadowRadius: [4, 10],
+    onDragStart: () => onDragStart(leftId),
+    onDragMove,
+    onDrop: (x, y) => onDrop(leftId, x, y),
+  });
 
   return (
     <GestureDetector gesture={pan}>

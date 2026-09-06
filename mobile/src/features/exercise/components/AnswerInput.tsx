@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import { StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 interface AnswerInputProps {
@@ -62,11 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sheet,
     borderWidth: 1,
     borderColor: colors.sheetBorder,
-    shadowColor: '#2C4064',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 6,
+    ...shadows.sheet(6),
   },
   field: {
     minHeight: 58,
@@ -80,11 +77,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.textChoice,
     letterSpacing: -0.032,
-    shadowColor: '#283C64',
-    shadowOffset: { width: -1, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.sheetEdge,
   },
   fieldCorrect: {
     borderColor: colors.choiceSelectedBorder,

@@ -5,6 +5,10 @@ import type { RequestOptions } from '@/src/api/mockClient';
 
 export { ApiError };
 
+// Fallback copy for a caught error that isn't an ApiError (so has no server-provided
+// message) — shared by every screen that calls apiRequest directly in a try/catch.
+export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.';
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Mock mode is a dev convenience only — it must never be reachable from a

@@ -3,10 +3,10 @@ import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-n
 
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
-import { fonts } from '@/src/theme/typography';
 
 /**
  * Image + multiple-choice ("Зөв бичсэн үгийг олоорой"): show a picture of the
@@ -22,13 +22,13 @@ export default function ImageMatch({ task, onResult }: ExerciseRendererProps) {
   const ex = useChoiceExercise(task, onResult, { autoSubmit: true });
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 10, align: 'center' })}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
         <View style={[styles.card, { width: cardSize, height: cardSize, borderRadius: cardSize * 0.3 }]}>
           {task.image_url ? (
@@ -50,29 +50,6 @@ export default function ImageMatch({ task, onResult }: ExerciseRendererProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 10,
-  },
-  prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
-  },
   card: {
     backgroundColor: colors.white,
     borderWidth: 1,

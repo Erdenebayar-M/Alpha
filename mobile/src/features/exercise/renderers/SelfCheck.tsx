@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 
-import AnswerInput from '@/src/features/exercise/components/AnswerInput';
-import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import TextEntryScreen from '@/src/features/exercise/components/TextEntryScreen';
+import { exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 /**
@@ -16,80 +16,39 @@ import { fonts } from '@/src/theme/typography';
  * full design system — the simplest version always shows both texts plainly.
  */
 export default function SelfCheck({ task, onResult }: ExerciseRendererProps) {
-  const inputRef = useRef<TextInput>(null);
   const originalAttempt = task.options.original_attempt ?? '';
   const modelAnswer = task.options.model_answer ?? task.correct_answer;
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: modelAnswer });
 
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    ex.submit();
-  };
-
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+    <TextEntryScreen
+      gap={12}
+      justify="center"
+      value={ex.value}
+      onChangeText={ex.setValue}
+      onSubmit={ex.submit}
+      disabled={ex.isAnswered}
+      state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      feedback={ex.feedback}
+    >
+      <Text style={[exerciseStyles.prompt, styles.prompt]}>{task.prompt_text}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Таны бичсэн</Text>
-          <Text style={styles.cardText}>{originalAttempt}</Text>
+      {[
+        { label: 'Таны бичсэн', text: originalAttempt, textStyle: styles.cardText },
+        { label: 'Зөв хариулт', text: modelAnswer, textStyle: [styles.cardText, styles.modelText] },
+      ].map((card, i) => (
+        <View key={i} style={styles.card}>
+          <Text style={styles.cardLabel}>{card.label}</Text>
+          <Text style={card.textStyle}>{card.text}</Text>
         </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Зөв хариулт</Text>
-          <Text style={[styles.cardText, styles.modelText]}>{modelAnswer}</Text>
-        </View>
-
-        <FeedbackText>{ex.feedback}</FeedbackText>
-      </ScrollView>
-
-      <AnswerInput
-        ref={inputRef}
-        value={ex.value}
-        onChangeText={ex.setValue}
-        onSubmit={handleSubmit}
-        disabled={ex.isAnswered}
-        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
-      />
-    </KeyboardAvoidingView>
+      ))}
+    </TextEntryScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 12,
-  },
   prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
     marginBottom: 4,
   },
   card: {
@@ -99,11 +58,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 6,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   cardLabel: {
     fontFamily: fonts.semibold,

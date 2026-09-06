@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PressableScale from '@/src/components/PressableScale';
+import { screenChrome } from '@/src/components/screenChrome';
 import { ApiError } from '@/src/api/client';
 import type { DiagnosticResult } from '@/src/api/diagnostic';
 import { useStartDiagnostic, useSubmitDiagnostic } from '@/src/features/diagnostic/useDiagnostic';
@@ -18,6 +19,10 @@ type Phase =
   | { kind: 'error'; message: string; canRetry: boolean }
   | { kind: 'running'; sessionId: string; task: Task; itemNumber: number }
   | { kind: 'done'; result: DiagnosticResult };
+
+// Fallback for an error with no server-provided message — shared by the start and
+// submit failure paths below.
+const NETWORK_ERROR_MESSAGE = 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.';
 
 export default function DiagnosticScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -73,15 +78,14 @@ export default function DiagnosticScreen() {
         setPhase({ kind: 'running', sessionId, task: res.next_task, itemNumber: res.item_number });
       }
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.';
+      const message = err instanceof ApiError ? err.message : NETWORK_ERROR_MESSAGE;
       setPhase({ kind: 'error', message, canRetry: false });
     }
   };
 
   if (phase.kind === 'loading') {
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
+      <SafeAreaView style={screenChrome.centered} edges={['top', 'bottom']}>
         <ActivityIndicator color={colors.progressFill} />
         <Text style={styles.message}>Онош бэлдэж байна…</Text>
       </SafeAreaView>
@@ -90,10 +94,10 @@ export default function DiagnosticScreen() {
 
   if (phase.kind === 'error') {
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
+      <SafeAreaView style={screenChrome.centered} edges={['top', 'bottom']}>
         <Text style={styles.message}>{phase.message}</Text>
-        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
-          <Text style={styles.primaryButtonText}>Ахиц харах</Text>
+        <PressableScale style={screenChrome.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
+          <Text style={screenChrome.primaryButtonText}>Ахиц харах</Text>
         </PressableScale>
         <PressableScale style={styles.linkButton} onPress={goBack}>
           <Text style={styles.linkText}>Буцах</Text>
@@ -105,7 +109,7 @@ export default function DiagnosticScreen() {
   if (phase.kind === 'done') {
     const { result } = phase;
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
+      <SafeAreaView style={screenChrome.centered} edges={['top', 'bottom']}>
         <Text style={styles.celebration}>Онош дууслаа! 🎉</Text>
         <Text style={styles.levelBadge}>Түвшин: {result.general_level}</Text>
         {result.priority_skills.length > 0 ? (
@@ -116,8 +120,8 @@ export default function DiagnosticScreen() {
         <Text style={styles.message}>
           Өдрийн дасгал: ~{result.recommended_daily_minutes} мин
         </Text>
-        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
-          <Text style={styles.primaryButtonText}>Ахиц харах</Text>
+        <PressableScale style={screenChrome.primaryButton} onPress={() => router.replace(`/learner/${id}/dashboard`)}>
+          <Text style={screenChrome.primaryButtonText}>Ахиц харах</Text>
         </PressableScale>
       </SafeAreaView>
     );
@@ -125,7 +129,7 @@ export default function DiagnosticScreen() {
 
   // running
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
+    <SafeAreaView style={screenChrome.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <PressableScale style={styles.backButton} hitSlop={10} onPress={goBack} accessibilityLabel="Back">
           <ChevronLeftIcon />
@@ -148,22 +152,10 @@ function describeStartError(err: unknown): { message: string; canRetry: boolean 
     }
     return { message: err.message, canRetry: false };
   }
-  return { message: 'Сүлжээний алдаа гарлаа. Дахин оролдоно уу.', canRetry: true };
+  return { message: NETWORK_ERROR_MESSAGE, canRetry: true };
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 14,
-    backgroundColor: colors.background,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,21 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textNavy,
     textAlign: 'center',
-  },
-  primaryButton: {
-    minWidth: 200,
-    minHeight: 56,
-    borderRadius: 16,
-    backgroundColor: colors.primaryBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 17,
-    color: colors.white,
   },
   linkButton: {
     minHeight: 44,

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
@@ -8,10 +8,10 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import LetterPool from '@/src/features/exercise/components/LetterPool';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordSlots from '@/src/features/exercise/components/WordSlots';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useAssembleWord } from '@/src/features/exercise/hooks/useAssembleWord';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
-import { colors } from '@/src/theme/colors';
 import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 
 /**
@@ -36,10 +36,10 @@ export default function AudioAssembleWord({ task, onResult }: ExerciseRendererPr
   );
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 16, align: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         <PressableScale
@@ -69,22 +69,3 @@ export default function AudioAssembleWord({ task, onResult }: ExerciseRendererPr
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 16,
-  },
-});

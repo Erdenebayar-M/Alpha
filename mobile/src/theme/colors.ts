@@ -25,6 +25,11 @@ export const colors = {
   // Pastel word chips (Figma "Pastel background" variable) — sentence tokens,
   // draggable punctuation mark.
   pastelBg: '#FFF7FC',
+  // Speech-bubble fill shared by every character prompt bubble (AssembleWord,
+  // FillBlank, FillLetterTiles, MatchPairs, SyllableAssembleWord, CommaPlace,
+  // PunctuationPlace, SentenceCapital, SentencePunctuation, LetterChoice) and
+  // SpeakerButton's own idle fill — was hardcoded per-file, never in this file.
+  bubbleFill: '#E5F2FF',
   // Orange text-caret shown at the gap a dragged mark will drop into.
   dropCaret: '#FF7A1A',
   // Dashed orange ring drawn at each empty comma-drop gap (CommaPlace). Not TT_8_3 —

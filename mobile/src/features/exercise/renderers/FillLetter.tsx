@@ -1,20 +1,11 @@
-import { useEffect, useRef } from 'react';
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  type TextInput,
-  View,
-} from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 
-import AnswerInput from '@/src/features/exercise/components/AnswerInput';
-import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import TextEntryScreen from '@/src/features/exercise/components/TextEntryScreen';
+import { exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 /**
@@ -24,16 +15,10 @@ import { fonts } from '@/src/theme/typography';
  * reconstructed word), so input_text carries the raw typed value.
  */
 export default function FillLetter({ task, onResult }: ExerciseRendererProps) {
-  const inputRef = useRef<TextInput>(null);
   const displayText = task.options.display_text ?? task.prompt_text;
   const blankAnswer = task.options.blank_answer ?? task.correct_answer;
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: blankAnswer });
-
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Split the display text on the "_" blank marker: "н_м" -> "н" / "м". A cheap
   // indexOf+slice on a short string — not worth manual memoization.
@@ -41,68 +26,30 @@ export default function FillLetter({ task, onResult }: ExerciseRendererProps) {
   const [prefix, suffix] =
     blankIdx === -1 ? [displayText, ''] : [displayText.slice(0, blankIdx), displayText.slice(blankIdx + 1)];
 
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    ex.submit();
-  };
-
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+    <TextEntryScreen
+      gap={16}
+      value={ex.value}
+      onChangeText={ex.setValue}
+      onSubmit={ex.submit}
+      disabled={ex.isAnswered}
+      state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      feedback={ex.feedback}
+    >
+      <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
-        <View style={styles.word}>
-          <Text style={styles.wordText}>{prefix}</Text>
-          <View style={[styles.slot, ex.value ? styles.slotFilled : null]}>
-            <Text style={styles.slotText}>{ex.value}</Text>
-          </View>
-          <Text style={styles.wordText}>{suffix}</Text>
+      <View style={styles.word}>
+        <Text style={styles.wordText}>{prefix}</Text>
+        <View style={[styles.slot, ex.value ? styles.slotFilled : null]}>
+          <Text style={styles.slotText}>{ex.value}</Text>
         </View>
-
-        <FeedbackText>{ex.feedback}</FeedbackText>
-      </ScrollView>
-
-      <AnswerInput
-        ref={inputRef}
-        value={ex.value}
-        onChangeText={ex.setValue}
-        onSubmit={handleSubmit}
-        disabled={ex.isAnswered}
-        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
-      />
-    </KeyboardAvoidingView>
+        <Text style={styles.wordText}>{suffix}</Text>
+      </View>
+    </TextEntryScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 16,
-  },
-  prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
-  },
   word: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -124,11 +71,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#DDE6F3',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#283C64',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    ...shadows.slot,
   },
   slotFilled: {
     borderBottomColor: colors.choiceSelectedBorder,

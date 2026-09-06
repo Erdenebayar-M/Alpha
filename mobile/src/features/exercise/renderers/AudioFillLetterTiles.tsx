@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ScrollView, useWindowDimensions, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
@@ -7,10 +7,10 @@ import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import LetterTileBar from '@/src/features/exercise/components/LetterTileBar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
 import WordWithBlanks from '@/src/features/exercise/components/WordWithBlanks';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useFillTiles } from '@/src/features/exercise/hooks/useFillTiles';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
-import { colors } from '@/src/theme/colors';
 import { CHARACTER_PRESS_SCALE } from '@/src/theme/motion';
 
 /**
@@ -31,10 +31,10 @@ export default function AudioFillLetterTiles({ task, onResult }: ExerciseRendere
   const displayText = task.options.display_text ?? task.prompt_text;
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 16, align: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         <PressableScale
@@ -65,22 +65,3 @@ export default function AudioFillLetterTiles({ task, onResult }: ExerciseRendere
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 16,
-  },
-});

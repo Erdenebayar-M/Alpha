@@ -1,10 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 
-import PressableScale from '@/src/components/PressableScale';
-import { ApiError } from '@/src/api/client';
+import { ApiError, GENERIC_ERROR_MESSAGE } from '@/src/api/client';
 import { useAuth } from '@/src/features/auth/AuthContext';
+import AuthForm from '@/src/features/auth/AuthForm';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -22,115 +21,49 @@ export default function RegisterScreen() {
       await register(name, email, password);
       router.replace('/');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+      setError(err instanceof ApiError ? err.message : GENERIC_ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Create account</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          autoCapitalize="words"
-          autoComplete="name"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password (min 8 characters)"
-          secureTextEntry
-          autoCapitalize="none"
-          autoComplete="password-new"
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-
-        <PressableScale
-          style={[styles.button, isSubmitting && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Create account</Text>
-          )}
-        </PressableScale>
-
-        <PressableScale style={styles.linkButton} onPress={() => router.push('/login')}>
-          <Text style={styles.linkText}>Already have an account? Log in</Text>
-        </PressableScale>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <AuthForm
+      title="Create account"
+      fields={[
+        {
+          key: 'name',
+          value: name,
+          onChangeText: setName,
+          placeholder: 'Name',
+          autoCapitalize: 'words',
+          autoComplete: 'name',
+        },
+        {
+          key: 'email',
+          value: email,
+          onChangeText: setEmail,
+          placeholder: 'Email',
+          autoCapitalize: 'none',
+          autoComplete: 'email',
+          keyboardType: 'email-address',
+        },
+        {
+          key: 'password',
+          value: password,
+          onChangeText: setPassword,
+          placeholder: 'Password (min 8 characters)',
+          secureTextEntry: true,
+          autoCapitalize: 'none',
+          autoComplete: 'password-new',
+        },
+      ]}
+      error={error}
+      isSubmitting={isSubmitting}
+      cta="Create account"
+      onSubmit={handleSubmit}
+      footerLabel="Already have an account? Log in"
+      onFooterPress={() => router.push('/login')}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-  },
-  error: {
-    color: '#c0392b',
-  },
-  button: {
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#2563eb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  linkButton: {
-    height: 44,
-    marginTop: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkText: {
-    color: '#2563eb',
-  },
-});

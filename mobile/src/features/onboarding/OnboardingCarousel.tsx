@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { type NativeScrollEvent, type NativeSyntheticEvent, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import GradientRect from '@/src/components/GradientRect';
 import PressableScale from '@/src/components/PressableScale';
 import PageDots from '@/src/features/onboarding/PageDots';
 import { boardScale, DESIGN } from '@/src/features/onboarding/motion';
@@ -23,15 +23,12 @@ const SLIDES = [Slide1, Slide2, Slide3];
 /** Slide 1 is a vertical gradient; slides 2 and 3 sit on flat `primaryBlue`. */
 function GradientBackground() {
   return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-      <Defs>
-        <LinearGradient id="onboardingSky" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={colors.onboardingGradientTop} />
-          <Stop offset="1" stopColor={colors.onboardingGradientBottom} />
-        </LinearGradient>
-      </Defs>
-      <Rect width="100%" height="100%" fill="url(#onboardingSky)" />
-    </Svg>
+    <GradientRect
+      id="onboardingSky"
+      from={colors.onboardingGradientTop}
+      to={colors.onboardingGradientBottom}
+      vertical
+    />
   );
 }
 

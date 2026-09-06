@@ -161,14 +161,7 @@ export default function LessonScreen() {
         <Text style={styles.message}>
           {correctCount} / {tasks.length} зөв
         </Text>
-        {completeFailed && (
-          <View style={styles.syncBanner}>
-            <Text style={styles.syncBannerText}>Ахиц хадгалагдсангүй.</Text>
-            <Pressable onPress={retryComplete} hitSlop={8}>
-              <Text style={styles.syncBannerRetry}>Дахин оролдох</Text>
-            </Pressable>
-          </View>
-        )}
+        {completeFailed && <SyncBanner message="Ахиц хадгалагдсангүй." onRetry={retryComplete} />}
       </SafeAreaView>
     );
   }
@@ -177,17 +170,27 @@ export default function LessonScreen() {
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <LessonHeader current={taskIndex + 1} total={tasks.length} onBack={handleBack} />
       {pendingAttempts.length > 0 && (
-        <View style={styles.syncBanner}>
-          <Text style={styles.syncBannerText}>
-            {pendingAttempts.length} дасгалын ахиц хадгалагдсангүй.
-          </Text>
-          <Pressable onPress={retryPendingAttempts} hitSlop={8}>
-            <Text style={styles.syncBannerRetry}>Дахин оролдох</Text>
-          </Pressable>
-        </View>
+        <SyncBanner
+          message={`${pendingAttempts.length} дасгалын ахиц хадгалагдсангүй.`}
+          onRetry={retryPendingAttempts}
+        />
       )}
       <ExerciseEngine key={currentTask.id} task={currentTask} onResult={handleResult} />
     </SafeAreaView>
+  );
+}
+
+// A dismiss-free "this didn't save" banner with a retry action — shown for both a
+// failed lesson completion and any queued failed attempts, identical apart from the
+// message and the retry handler.
+function SyncBanner({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <View style={styles.syncBanner}>
+      <Text style={styles.syncBannerText}>{message}</Text>
+      <Pressable onPress={onRetry} hitSlop={8}>
+        <Text style={styles.syncBannerRetry}>Дахин оролдох</Text>
+      </Pressable>
+    </View>
   );
 }
 

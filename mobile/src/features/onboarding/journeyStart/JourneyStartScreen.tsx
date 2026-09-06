@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { ReactNode } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -56,6 +57,8 @@ const NARHAN_POS = { left: 233, top: 328 };
 const WORDMARK_BOX = { left: 213, top: 80, width: 144.059, height: 79.005 };
 const BUBBLE_BOX = { left: 309, top: 183, width: 10, height: 10 };
 const CARD_BOX = { left: 5, top: 479, width: 379, height: 360 };
+const TITLE_BOX = { left: 59, top: 39, width: 261, height: 70 };
+const SUBTITLE_BOX = { left: 37, top: 102, width: 320, height: 66 };
 
 // Both sparkles' Figma page coordinates fall inside CARD_BOX, so they're card
 // decorations, not page ones — positioned card-locally (page coord minus the card's
@@ -91,6 +94,73 @@ function Mascot({
   );
 }
 
+/** The four board-level mascots, index-matched to their Figma page position. */
+const BOARD_MASCOTS = [
+  { art: ORTO, pos: ORTO_POS },
+  { art: GREENY, pos: GREENY_POS },
+  { art: PINKY, pos: PINKY_POS },
+  { art: NARHAN, pos: NARHAN_POS },
+];
+
+/** A non-mascot icon (an svg mark) at an already-resolved board position — same
+ *  absolute-box wrapper `Mascot` uses, but for the wordmark/bubble marks, whose art
+ *  isn't a `CharacterArt`. */
+function BoardIcon({
+  box,
+  boardLeft,
+  shiftTop,
+  scale,
+  children,
+}: {
+  box: { left: number; top: number; width: number; height: number };
+  boardLeft: number;
+  shiftTop: number;
+  scale: number;
+  children: ReactNode;
+}) {
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.absolute,
+        {
+          left: boardLeft + box.left * scale,
+          top: shiftTop + box.top * scale,
+          width: box.width * scale,
+          height: box.height * scale,
+        },
+      ]}
+    >
+      {children}
+    </View>
+  );
+}
+
+/** Figma centres this text block vertically within its own box (`justify-center` on a
+ *  fixed-height flex column), not top-anchored — so it gets a sized wrapper View doing
+ *  the centring, with the Text itself unpositioned. Card-local coordinates (no
+ *  `boardLeft`/shift — `JourneySheet` already positions the card itself). */
+function CenteredBox({
+  box,
+  scale,
+  children,
+}: {
+  box: { left: number; top: number; width: number; height: number };
+  scale: number;
+  children: ReactNode;
+}) {
+  return (
+    <View
+      style={[
+        styles.absolute,
+        { left: box.left * scale, top: box.top * scale, width: box.width * scale, height: box.height * scale, justifyContent: 'center' },
+      ]}
+    >
+      {children}
+    </View>
+  );
+}
+
 export default function JourneyStartScreen({ onDone }: { onDone: () => void }) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -120,67 +190,30 @@ export default function JourneyStartScreen({ onDone }: { onDone: () => void }) {
     <View style={styles.root}>
       <Image source={bg} style={StyleSheet.absoluteFill} contentFit="cover" />
 
-      <Mascot art={ORTO} left={boardLeft + ORTO_POS.left * s} top={mascotShift + ORTO_POS.top * s} scale={s} />
-      <Mascot art={GREENY} left={boardLeft + GREENY_POS.left * s} top={mascotShift + GREENY_POS.top * s} scale={s} />
-      <Mascot art={PINKY} left={boardLeft + PINKY_POS.left * s} top={mascotShift + PINKY_POS.top * s} scale={s} />
-      <Mascot art={NARHAN} left={boardLeft + NARHAN_POS.left * s} top={mascotShift + NARHAN_POS.top * s} scale={s} />
+      {BOARD_MASCOTS.map(({ art, pos }, i) => (
+        <Mascot key={i} art={art} left={boardLeft + pos.left * s} top={mascotShift + pos.top * s} scale={s} />
+      ))}
 
-      <View
-        pointerEvents="none"
-        style={[
-          styles.absolute,
-          {
-            left: boardLeft + WORDMARK_BOX.left * s,
-            top: topShift + WORDMARK_BOX.top * s,
-            width: WORDMARK_BOX.width * s,
-            height: WORDMARK_BOX.height * s,
-          },
-        ]}
-      >
+      <BoardIcon box={WORDMARK_BOX} boardLeft={boardLeft} shiftTop={topShift} scale={s}>
         <Wordmark width="100%" height="100%" />
-      </View>
+      </BoardIcon>
 
-      <View
-        pointerEvents="none"
-        style={[
-          styles.absolute,
-          {
-            left: boardLeft + BUBBLE_BOX.left * s,
-            top: topShift + BUBBLE_BOX.top * s,
-            width: BUBBLE_BOX.width * s,
-            height: BUBBLE_BOX.height * s,
-          },
-        ]}
-      >
+      <BoardIcon box={BUBBLE_BOX} boardLeft={boardLeft} shiftTop={topShift} scale={s}>
         <BubbleRight width="100%" height="100%" />
-      </View>
+      </BoardIcon>
 
       <View style={[styles.absolute, { left: 0, right: 0, top: cardTop, alignItems: 'center' }]}>
         <JourneySheet scale={s}>
-          {/* Figma centres both text blocks vertically within their own box
-              (`justify-center` on a fixed-height flex column), not top-anchored —
-              so each gets a sized wrapper View doing the centring, with the Text
-              itself unpositioned. */}
-          <View
-            style={[
-              styles.absolute,
-              { left: 59 * s, top: 39 * s, width: 261 * s, height: 70 * s, justifyContent: 'center' },
-            ]}
-          >
+          <CenteredBox box={TITLE_BOX} scale={s}>
             <Text style={[styles.title, { fontSize: 24 * s, lineHeight: 28.8 * s }]}>
               Зөв бичих аяллаа{'\n'}хаанаас эхлэх вэ?
             </Text>
-          </View>
-          <View
-            style={[
-              styles.absolute,
-              { left: 37 * s, top: 102 * s, width: 320 * s, height: 66 * s, justifyContent: 'center' },
-            ]}
-          >
+          </CenteredBox>
+          <CenteredBox box={SUBTITLE_BOX} scale={s}>
             <Text style={[styles.subtitle, { fontSize: 16 * s, lineHeight: 26 * s }]}>
               3 хөгжилтэй даалгавараар эхлэе!
             </Text>
-          </View>
+          </CenteredBox>
           <View style={[styles.absolute, { left: 53 * s, top: 186 * s }]}>
             <PrimaryPillButton label="Аяллаа эхлэх" onPress={onDone} scale={s} />
           </View>

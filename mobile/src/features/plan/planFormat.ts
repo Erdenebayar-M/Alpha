@@ -1,6 +1,10 @@
 // Shared parent-facing labels/formatters for skills and the study plan. Used by both
 // the dashboard summary card and the dedicated plan screen so the wording stays in sync.
 
+// The dashboard and plan screens' "no plan/progress yet" states both end with this
+// call-to-action, pointing at the same diagnostic route.
+export const START_DIAGNOSTIC_LABEL = 'Онош эхлүүлэх';
+
 // Short parent-facing labels for the eight orthography skills (S1..S8).
 export const SKILL_LABELS: Record<number, string> = {
   1: 'Үсэг таних',

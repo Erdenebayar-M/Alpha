@@ -3,9 +3,11 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import PressableScale from '@/src/components/PressableScale';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 // prompt_text is just the sentence itself for this task type (no separate instruction
@@ -52,14 +54,14 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
     : null;
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 24, justify: 'center' })}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.instruction}>{INSTRUCTION_LABEL}</Text>
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
         <View style={styles.card}>
           <View style={styles.wordWrap}>
@@ -93,21 +95,6 @@ export default function TapFindError({ task, onResult }: ExerciseRendererProps) 
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 24,
-  },
   instruction: {
     fontFamily: fonts.bold,
     fontSize: 14,
@@ -116,23 +103,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.028,
     marginBottom: -12,
   },
-  prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: 32,
     paddingHorizontal: 24,
     paddingVertical: 28,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   wordWrap: {
     flexDirection: 'row',

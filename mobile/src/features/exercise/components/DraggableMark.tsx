@@ -1,13 +1,8 @@
 import { StyleSheet, Text } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 
+import { useDragPan } from '@/src/features/exercise/hooks/useDragPan';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -36,44 +31,19 @@ export default function DraggableMark({
   onDragMove,
   onDrop,
 }: DraggableMarkProps) {
-  const tx = useSharedValue(0);
-  const ty = useSharedValue(0);
-  const lift = useSharedValue(0); // 0 = resting, 1 = picked up
-
-  const pan = Gesture.Pan()
-    .enabled(!disabled)
-    .onBegin(() => {
-      lift.value = withTiming(1, { duration: 120 });
-      runOnJS(onDragStart)();
-    })
-    .onUpdate((e) => {
-      tx.value = e.translationX;
-      ty.value = e.translationY;
-      runOnJS(onDragMove)(e.absoluteX, e.absoluteY);
-    })
-    .onEnd((e) => {
-      runOnJS(onDrop)(e.absoluteX, e.absoluteY);
-    })
-    .onFinalize(() => {
-      // Infinite source: always return home so another mark can be dragged.
-      tx.value = withSpring(0, { damping: 18, stiffness: 220 });
-      ty.value = withSpring(0, { damping: 18, stiffness: 220 });
-      lift.value = withTiming(0, { duration: 160 });
-    });
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: tx.value },
-      { translateY: ty.value },
-      { scale: 1 + lift.value * 0.12 },
-    ],
-    zIndex: lift.value > 0 ? 50 : 1,
-    // Fade the tile while it's picked up so the orange drop-caret in the gap
-    // underneath stays visible through it (the tile sits on top of the target).
-    opacity: 1 - lift.value * 0.5,
-    shadowOpacity: 0.14 + lift.value * 0.24,
-    shadowRadius: 9 + lift.value * 10,
-  }));
+  // Infinite source: always returns home on release (via useDragPan's onFinalize) so
+  // another mark can be dragged. Fades while picked up so the orange drop-caret in the
+  // gap underneath stays visible through it (the tile sits on top of the target).
+  const { pan, style } = useDragPan({
+    enabled: !disabled,
+    scaleBoost: 0.12,
+    shadowOpacity: [0.14, 0.24],
+    shadowRadius: [9, 10],
+    fade: 0.5,
+    onDragStart,
+    onDragMove,
+    onDrop,
+  });
 
   return (
     <GestureDetector gesture={pan}>

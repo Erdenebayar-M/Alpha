@@ -3,12 +3,11 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
-import PressableScale from '@/src/components/PressableScale';
+import BuddyPrompt from '@/src/features/exercise/components/BuddyPrompt';
 import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
-import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -60,28 +59,13 @@ export default function SentencePunctuation({ task, onResult }: ExerciseRenderer
   }, [prefix]);
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, compact && styles.contentCompact]}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: compact ? 14 : 22, justify: 'center' })}
         showsVerticalScrollIndicator={false}
       >
-        {/* Naran + speech bubble; tapping either plays the prompt audio. */}
-        <PressableScale
-          style={styles.questionRow}
-          onPress={handlePlay}
-          accessibilityRole="button"
-          accessibilityLabel="Сонсох"
-        >
-          <TalkingBuddy playing={status.playing} width={buddyWidth} />
-          <View style={styles.bubble}>
-            <Text style={styles.bubbleText}>{BUBBLE_LABEL}</Text>
-            <View style={styles.bubbleTail} />
-            <View style={styles.speakerBadge}>
-              <SpeakerButton playing={status.playing} onPress={handlePlay} size={40} />
-            </View>
-          </View>
-        </PressableScale>
+        <BuddyPrompt variant="buddy" label={BUBBLE_LABEL} playing={status.playing} onPress={handlePlay} width={buddyWidth} />
 
         {/* White card: picture on top, sentence with the end-mark slot below. */}
         <View style={styles.card}>
@@ -125,60 +109,6 @@ export default function SentencePunctuation({ task, onResult }: ExerciseRenderer
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 10,
-    gap: 22,
-  },
-  contentCompact: {
-    gap: 14,
-  },
-  questionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  bubble: {
-    flex: 1,
-    backgroundColor: '#E5F2FF',
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  bubbleText: {
-    fontFamily: fonts.black,
-    fontSize: 18,
-    color: colors.textChoice,
-    textAlign: 'center',
-    letterSpacing: -0.036,
-  },
-  bubbleTail: {
-    position: 'absolute',
-    left: -6,
-    bottom: 22,
-    width: 12,
-    height: 12,
-    backgroundColor: '#E5F2FF',
-    transform: [{ rotate: '45deg' }],
-    borderRadius: 2,
-  },
-  speakerBadge: {
-    position: 'absolute',
-    left: -14,
-    top: -12,
-  },
   card: {
     backgroundColor: colors.white,
     borderWidth: 1,

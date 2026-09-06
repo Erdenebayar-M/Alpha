@@ -2,6 +2,7 @@ import { Fragment, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 interface WordWithBlanksProps {
@@ -64,10 +65,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 3,
     borderBottomColor: '#DDE6F3',
-    shadowColor: '#283C64',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    ...shadows.slot,
   },
 });

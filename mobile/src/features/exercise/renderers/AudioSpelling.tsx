@@ -8,6 +8,7 @@ import PressableScale from '@/src/components/PressableScale';
 import AnswerInput from '@/src/features/exercise/components/AnswerInput';
 import AudioControls from '@/src/features/exercise/components/AudioControls';
 import CharacterAvatar from '@/src/features/exercise/components/CharacterAvatar';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -70,16 +71,16 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={exerciseStyles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 10, align: 'center' })}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.prompt}>{task.prompt_text}</Text>
+        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
         <PressableScale
           onPress={handleToggleAudio}
@@ -108,29 +109,6 @@ export default function AudioSpelling({ task, onResult }: ExerciseRendererProps)
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 10,
-  },
-  prompt: {
-    fontFamily: fonts.black,
-    fontSize: 16,
-    color: colors.textPrompt,
-    textAlign: 'center',
-    letterSpacing: -0.032,
-  },
   feedback: {
     fontFamily: fonts.bold,
     fontSize: 15,

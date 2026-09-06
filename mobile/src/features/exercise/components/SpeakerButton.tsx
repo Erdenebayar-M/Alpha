@@ -3,6 +3,7 @@ import { SvgXml } from 'react-native-svg';
 
 import PressableScale from '@/src/components/PressableScale';
 import { VOLUME_HIGH_SVG } from '@/src/features/exercise/components/volumeIcons';
+import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { colors } from '@/src/theme/colors';
 
 interface SpeakerButtonProps {
@@ -23,7 +24,7 @@ export default function SpeakerButton({ playing, onPress, size = 48 }: SpeakerBu
       onPress={onPress}
       hitSlop={12}
       accessibilityRole="button"
-      accessibilityLabel="Сонсох"
+      accessibilityLabel={LISTEN_LABEL}
       style={({ pressed }) => [
         styles.button,
         { width: size, height: size, borderRadius: size / 2 },
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
   },
   buttonActive: {
     backgroundColor: colors.primaryBlue,

@@ -1,19 +1,18 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import DiagnosisRequiredScreen from '@/src/components/DiagnosisRequiredScreen';
+import LoadFailedScreen from '@/src/components/LoadFailedScreen';
+import LoadingScreen from '@/src/components/LoadingScreen';
 import PressableScale from '@/src/components/PressableScale';
+import ProgressBar from '@/src/components/ProgressBar';
+import { screenChrome } from '@/src/components/screenChrome';
 import { ApiError } from '@/src/api/client';
 import type { PlanLesson } from '@/src/api/plan';
 import { usePlan } from '@/src/features/dashboard/useDashboard';
-import {
-  formatDate,
-  isDone,
-  skillLabel,
-  statusLabel,
-  templateLabel,
-} from '@/src/features/plan/planFormat';
+import { formatDate, isDone, skillLabel, statusLabel, templateLabel } from '@/src/features/plan/planFormat';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -25,31 +24,21 @@ export default function PlanScreen() {
   const noPlanYet = planQuery.error instanceof ApiError && planQuery.error.status === 404;
 
   if (planQuery.isLoading) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <ActivityIndicator color={colors.progressFill} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
 
   if (noPlanYet) {
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.title}>Төлөвлөгөө алга</Text>
-        <Text style={styles.muted}>Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана.</Text>
-        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
-          <Text style={styles.primaryButtonText}>Онош эхлүүлэх</Text>
-        </PressableScale>
-      </SafeAreaView>
+      <DiagnosisRequiredScreen
+        learnerId={id}
+        title="Төлөвлөгөө алга"
+        message="Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана."
+      />
     );
   }
 
   if (planQuery.isError || !planQuery.data) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.muted}>Төлөвлөгөөг ачаалж чадсангүй.</Text>
-      </SafeAreaView>
-    );
+    return <LoadFailedScreen message="Төлөвлөгөөг ачаалж чадсангүй." />;
   }
 
   const plan = planQuery.data.plan;
@@ -60,9 +49,9 @@ export default function PlanScreen() {
   const overallPct = lessons.length > 0 ? Math.round((doneCount / lessons.length) * 100) : 0;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Хичээлийн төлөвлөгөө</Text>
+    <SafeAreaView style={screenChrome.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={screenChrome.content}>
+        <Text style={screenChrome.title}>Хичээлийн төлөвлөгөө</Text>
 
         {/* Overview card */}
         <View style={styles.overview}>
@@ -70,23 +59,19 @@ export default function PlanScreen() {
             <Text style={styles.badgeText}>{templateLabel(plan.template)}</Text>
           </View>
           <View style={styles.overviewGrid}>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{plan.duration_days}</Text>
-              <Text style={styles.overviewLabel}>өдөр</Text>
-            </View>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{plan.daily_minutes}</Text>
-              <Text style={styles.overviewLabel}>мин / өдөр</Text>
-            </View>
-            <View style={styles.overviewCell}>
-              <Text style={styles.overviewValue}>{overallPct}%</Text>
-              <Text style={styles.overviewLabel}>биелэлт</Text>
-            </View>
+            {[
+              { value: plan.duration_days, label: 'өдөр' },
+              { value: plan.daily_minutes, label: 'мин / өдөр' },
+              { value: `${overallPct}%`, label: 'биелэлт' },
+            ].map((cell, i) => (
+              <View key={i} style={styles.overviewCell}>
+                <Text style={styles.overviewValue}>{cell.value}</Text>
+                <Text style={styles.overviewLabel}>{cell.label}</Text>
+              </View>
+            ))}
           </View>
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${overallPct}%` }]} />
-          </View>
+          <ProgressBar percent={overallPct} height={12} style={styles.overviewProgress} />
           <Text style={styles.overviewSub}>
             {doneCount}/{lessons.length} хичээл · {doneTasks}/{totalTasks} даалгавар
           </Text>
@@ -132,21 +117,17 @@ export default function PlanScreen() {
 
               {open ? (
                 <View style={styles.lessonDetail}>
-                  <View style={styles.detailProgressTrack}>
-                    <View style={[styles.detailProgressFill, { width: `${pct}%` }]} />
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Өдөр</Text>
-                    <Text style={styles.detailValue}>{formatDate(lesson.scheduled_date) || '—'}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Чадвар</Text>
-                    <Text style={styles.detailValue}>{skillLabel(lesson.primary_skill)}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Ахиц</Text>
-                    <Text style={styles.detailValue}>{pct}%</Text>
-                  </View>
+                  <ProgressBar percent={pct} height={8} />
+                  {[
+                    { label: 'Өдөр', value: formatDate(lesson.scheduled_date) || '—' },
+                    { label: 'Чадвар', value: skillLabel(lesson.primary_skill) },
+                    { label: 'Ахиц', value: `${pct}%` },
+                  ].map((row, i) => (
+                    <View key={i} style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>{row.label}</Text>
+                      <Text style={styles.detailValue}>{row.value}</Text>
+                    </View>
+                  ))}
                 </View>
               ) : null}
             </PressableScale>
@@ -181,38 +162,11 @@ export default function PlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 14,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontFamily: fonts.black,
-    fontSize: 26,
-    color: colors.textNavy,
-  },
   sectionTitle: {
     fontFamily: fonts.extrabold,
     fontSize: 16,
     color: colors.textNavy,
     marginTop: 12,
-  },
-  muted: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
   },
   overview: {
     backgroundColor: colors.card,
@@ -254,17 +208,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
   },
-  progressTrack: {
+  overviewProgress: {
     alignSelf: 'stretch',
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.progressFill,
   },
   overviewSub: {
     fontFamily: fonts.bold,
@@ -345,17 +290,6 @@ const styles = StyleSheet.create({
     borderTopColor: colors.sheetBorder,
     gap: 8,
   },
-  detailProgressTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.progressTrack,
-    overflow: 'hidden',
-  },
-  detailProgressFill: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.progressFill,
-  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -369,20 +303,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 13,
     color: colors.textNavy,
-  },
-  primaryButton: {
-    minWidth: 200,
-    minHeight: 56,
-    borderRadius: 16,
-    backgroundColor: colors.primaryBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 17,
-    color: colors.white,
   },
 });

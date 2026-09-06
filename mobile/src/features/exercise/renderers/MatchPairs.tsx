@@ -7,6 +7,7 @@ import PuzzleCard from '@/src/features/exercise/components/PuzzleCard';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SproutAvatar, { type SproutState } from '@/src/features/exercise/components/SproutAvatar';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
+import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useMatchExercise } from '@/src/features/exercise/hooks/useMatchExercise';
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
@@ -151,10 +152,10 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
   }, [complete, ex.linkedCount, ex.totalPairs]);
 
   return (
-    <View style={styles.container}>
+    <View style={exerciseStyles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={exerciseStyles.scroll}
+        contentContainerStyle={exerciseContent({ gap: 16 })}
         showsVerticalScrollIndicator={false}
       >
         {/* Large centered bubble (left) with Khishigee overlapping its right edge and
@@ -231,28 +232,13 @@ export default function MatchPairs({ task, onResult }: ExerciseRendererProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'space-evenly',
-    paddingVertical: 10,
-    gap: 16,
-  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   bubble: {
     maxWidth: '64%',
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     borderRadius: 16,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -270,7 +256,7 @@ const styles = StyleSheet.create({
     marginTop: -6,
     width: 12,
     height: 12,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     transform: [{ rotate: '45deg' }],
     borderRadius: 2,
   },
