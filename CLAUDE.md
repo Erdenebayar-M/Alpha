@@ -13,6 +13,16 @@ Phase 2 of a Mongolian Spelling & Dictation Learning Application — adaptive ed
 
 `content-pipeline/` is at the repo root and is **not** a workspace; it imports the Prisma client from `../../backend/generated/prisma`.
 
+## Other Apps in This Repo
+
+Alongside the `backend`/`shared` npm workspaces, this repo also contains:
+- `mobile/` — the Expo/React Native learner app.
+- `web/` — a standalone Next.js marketing site (not an npm workspace
+  member; install/run from inside `web/`). See `web/AGENTS.md`.
+
+These aren't covered by the Session Workflow rules below, which are scoped
+to backend/shared/content-pipeline.
+
 ## Environment Setup
 
 Requires PostgreSQL 18+ on port **5433**, database `mongolian_app`.
