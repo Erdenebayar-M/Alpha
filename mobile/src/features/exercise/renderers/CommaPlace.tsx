@@ -10,12 +10,10 @@ import Svg, { Circle } from 'react-native-svg';
 
 import PressableScale from '@/src/components/PressableScale';
 import { BackspaceIcon } from '@/src/features/exercise/components/icons';
+import BuddyPrompt from '@/src/features/exercise/components/BuddyPrompt';
 import DraggableMark from '@/src/features/exercise/components/DraggableMark';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
-import TalkingCharacter from '@/src/features/exercise/components/TalkingCharacter';
-import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { usePunctuationExercise } from '@/src/features/exercise/hooks/usePunctuationExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -155,22 +153,7 @@ export default function CommaPlace({ task, onResult }: ExerciseRendererProps) {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!dragging}
       >
-        {/* Naran + speech bubble; tapping either plays the prompt audio. */}
-        <PressableScale
-          style={styles.questionRow}
-          onPress={handlePlay}
-          accessibilityRole="button"
-          accessibilityLabel={LISTEN_LABEL}
-        >
-          <TalkingCharacter character="buddy" playing={status.playing} width={buddyWidth} />
-          <View style={styles.bubble}>
-            <Text style={styles.bubbleText}>{BUBBLE_LABEL}</Text>
-            <View style={styles.bubbleTail} />
-            <View style={styles.speakerBadge}>
-              <SpeakerButton playing={status.playing} onPress={handlePlay} size={40} />
-            </View>
-          </View>
-        </PressableScale>
+        <BuddyPrompt variant="buddy" label={BUBBLE_LABEL} playing={status.playing} onPress={handlePlay} width={buddyWidth} />
 
         {/* Sentence card: plain navy words wrap; at each candidate boundary sits a measurable
             ring that shows the placed comma (or fills while a comma hovers over it). */}
@@ -238,42 +221,6 @@ export default function CommaPlace({ task, onResult }: ExerciseRendererProps) {
 }
 
 const styles = StyleSheet.create({
-  questionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  bubble: {
-    flex: 1,
-    backgroundColor: colors.bubbleFill,
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    minHeight: 96,
-    justifyContent: 'center',
-  },
-  bubbleText: {
-    fontFamily: fonts.black,
-    fontSize: 18,
-    color: colors.textChoice,
-    textAlign: 'center',
-    letterSpacing: -0.036,
-  },
-  bubbleTail: {
-    position: 'absolute',
-    left: -6,
-    bottom: 22,
-    width: 12,
-    height: 12,
-    backgroundColor: colors.bubbleFill,
-    transform: [{ rotate: '45deg' }],
-    borderRadius: 2,
-  },
-  speakerBadge: {
-    position: 'absolute',
-    left: -14,
-    top: -12,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: 32,
