@@ -35,6 +35,7 @@ function Cloud({ left, top, width, height, opacity, drift }: CloudProps) {
         height: `${height}%`,
         opacity,
         background: "radial-gradient(closest-side, rgba(255,255,255,0.95), rgba(255,255,255,0))",
+        filter: "blur(6px)",
       }}
     />
   );

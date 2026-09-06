@@ -3,7 +3,11 @@ import Clouds from "@/components/decor/Clouds";
 import { PairFlower, YellowFlower, WhiteTrioFlower, LilacPetal, SmallYellowPetal } from "@/components/decor/Flower";
 import Tree from "@/components/decor/Tree";
 
-const SKY_GRADIENT = "linear-gradient(to bottom, rgba(63,160,251,0.13), #E5F1FD 50%, #FAFCFE)";
+// Figma's own "bg-sky" layer is only 252px tall (node 1195:6163) — the
+// transition completes near the top of the artwork, then stays flat pale
+// below it. Pixel stops (instead of percentages) reproduce that regardless
+// of how tall this scene's own container is.
+const SKY_GRADIENT = "linear-gradient(to bottom, rgba(63,160,251,0.13) 0px, #E5F1FD 126px, #FAFCFE 252px)";
 
 /**
  * The decorative hero backdrop. Everything here is aria-hidden and

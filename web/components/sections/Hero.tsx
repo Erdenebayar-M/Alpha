@@ -11,7 +11,7 @@ export default function Hero() {
     >
       <HeroScene />
 
-      <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-10 px-5 pb-24 pt-14 md:px-10 lg:flex-row lg:items-start lg:gap-[59px] lg:py-19 lg:pl-[100px] lg:pr-20">
+      <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-10 px-5 pb-24 pt-14 md:px-10 lg:flex-row lg:items-start lg:gap-[59px] lg:pt-19 lg:pb-24 lg:pl-[100px] lg:pr-20">
         <div className="order-first w-48 shrink-0 lg:order-last lg:w-[clamp(280px,28vw,406px)]">
           <Mascot className="w-full" />
         </div>

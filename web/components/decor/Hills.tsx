@@ -32,22 +32,31 @@ export default function Hills() {
         fill="var(--color-hill-back-left-soft)"
         opacity="0.7"
       />
-      <ellipse cx="112" cy="632" rx="363.5" ry="233.5" fill="var(--color-hill-mid)" opacity="0.85" />
+      <ellipse cx="475.5" cy="865.5" rx="363.5" ry="233.5" fill="var(--color-hill-mid)" opacity="0.85" />
       <ellipse cx="384.914" cy="1073.4" rx="392.914" ry="230.4" fill="var(--color-hill-front)" />
       <ellipse cx="1197.26" cy="886.629" rx="271.543" ry="195.429" fill="var(--color-hill-shade)" opacity="0.05" />
       <rect x="-8" y="905" width="1456" height="342" fill="var(--color-hill-front)" opacity="0.7" />
       <rect x="0" y="761" width="1456" height="441" fill="var(--color-hill-mid)" opacity="0.85" />
+
+      {/* Shrubs tucked under the two trees (Figma "Ellipse 58/59/61/62/63/64").
+          Figma blurs these so they read as soft background texture instead of
+          flat circles, and paints them *before* hill-mid-left/hill-front below
+          so those hills cover their lower half — only a soft sliver peeks
+          above the hill crest, instead of sitting fully exposed in front of
+          it. The rest of this file skips filters for perf, but blurring 6
+          small ellipses is cheap. */}
+      <g style={{ filter: "blur(6px)" }}>
+        <ellipse cx="1232.229" cy="471.086" rx="18.514" ry="26.743" fill="var(--color-bush)" />
+        <ellipse cx="1168.457" cy="481.371" rx="45.257" ry="28.8" fill="var(--color-bush-teal)" />
+        <ellipse cx="1112.914" cy="508.114" rx="14.4" ry="18.514" fill="var(--color-bush)" />
+        <ellipse cx="1284.357" cy="499.886" rx="24.686" ry="39.086" fill="var(--color-bush-teal)" />
+        <ellipse cx="1096.457" cy="479.314" rx="18.514" ry="22.629" fill="var(--color-bush)" />
+        <ellipse cx="1215.771" cy="508.114" rx="18.514" ry="26.743" fill="var(--color-bush-teal)" />
+      </g>
+
       <ellipse cx="1091.5" cy="841.5" rx="526.5" ry="360.5" fill="var(--color-hill-mid-left)" opacity="0.85" />
       <ellipse cx="1085.5" cy="837" rx="526.5" ry="356" fill="var(--color-hill-mid-left)" opacity="0.85" />
       <ellipse cx="674" cy="969" rx="845" ry="376" fill="var(--color-hill-front)" />
-
-      {/* Shrubs tucked under the two trees (Figma "Ellipse 58/59/61/62/63/64") */}
-      <ellipse cx="1232.229" cy="471.086" rx="18.514" ry="26.743" fill="var(--color-bush)" />
-      <ellipse cx="1168.457" cy="481.371" rx="45.257" ry="28.8" fill="var(--color-bush-teal)" />
-      <ellipse cx="1112.914" cy="508.114" rx="14.4" ry="18.514" fill="var(--color-bush)" />
-      <ellipse cx="1284.357" cy="499.886" rx="24.686" ry="39.086" fill="var(--color-bush-teal)" />
-      <ellipse cx="1096.457" cy="479.314" rx="18.514" ry="22.629" fill="var(--color-bush)" />
-      <ellipse cx="1215.771" cy="508.114" rx="18.514" ry="26.743" fill="var(--color-bush-teal)" />
     </svg>
   );
 }

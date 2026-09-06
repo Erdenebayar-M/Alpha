@@ -9,7 +9,7 @@ export default function Pricing() {
     <section
       id="une"
       aria-labelledby="pricing-heading"
-      className="relative overflow-hidden bg-hill-band px-5 pt-10 pb-20 md:px-10 lg:pl-[123px] lg:pr-20"
+      className="relative overflow-hidden bg-hill-band px-5 pt-14 pb-20 md:px-10 md:pt-16 lg:pt-20 lg:pl-[123px] lg:pr-20"
     >
       <div className="mx-auto flex max-w-[1440px] flex-col items-start gap-12 lg:flex-row lg:gap-[72px]">
         <div className="flex flex-1 flex-col items-start gap-4">
