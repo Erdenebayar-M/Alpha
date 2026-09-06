@@ -1,21 +1,18 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import DiagnosisRequiredScreen from '@/src/components/DiagnosisRequiredScreen';
+import LoadFailedScreen from '@/src/components/LoadFailedScreen';
+import LoadingScreen from '@/src/components/LoadingScreen';
 import PressableScale from '@/src/components/PressableScale';
 import ProgressBar from '@/src/components/ProgressBar';
+import { screenChrome } from '@/src/components/screenChrome';
 import { ApiError } from '@/src/api/client';
 import type { PlanLesson } from '@/src/api/plan';
 import { usePlan } from '@/src/features/dashboard/useDashboard';
-import {
-  formatDate,
-  isDone,
-  skillLabel,
-  START_DIAGNOSTIC_LABEL,
-  statusLabel,
-  templateLabel,
-} from '@/src/features/plan/planFormat';
+import { formatDate, isDone, skillLabel, statusLabel, templateLabel } from '@/src/features/plan/planFormat';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -27,31 +24,21 @@ export default function PlanScreen() {
   const noPlanYet = planQuery.error instanceof ApiError && planQuery.error.status === 404;
 
   if (planQuery.isLoading) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <ActivityIndicator color={colors.progressFill} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
 
   if (noPlanYet) {
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.title}>Төлөвлөгөө алга</Text>
-        <Text style={styles.muted}>Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана.</Text>
-        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
-          <Text style={styles.primaryButtonText}>{START_DIAGNOSTIC_LABEL}</Text>
-        </PressableScale>
-      </SafeAreaView>
+      <DiagnosisRequiredScreen
+        learnerId={id}
+        title="Төлөвлөгөө алга"
+        message="Эхлээд онош өгснөөр хичээлийн төлөвлөгөө энд харагдана."
+      />
     );
   }
 
   if (planQuery.isError || !planQuery.data) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.muted}>Төлөвлөгөөг ачаалж чадсангүй.</Text>
-      </SafeAreaView>
-    );
+    return <LoadFailedScreen message="Төлөвлөгөөг ачаалж чадсангүй." />;
   }
 
   const plan = planQuery.data.plan;
@@ -62,9 +49,9 @@ export default function PlanScreen() {
   const overallPct = lessons.length > 0 ? Math.round((doneCount / lessons.length) * 100) : 0;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Хичээлийн төлөвлөгөө</Text>
+    <SafeAreaView style={screenChrome.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={screenChrome.content}>
+        <Text style={screenChrome.title}>Хичээлийн төлөвлөгөө</Text>
 
         {/* Overview card */}
         <View style={styles.overview}>
@@ -175,38 +162,11 @@ export default function PlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 14,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontFamily: fonts.black,
-    fontSize: 26,
-    color: colors.textNavy,
-  },
   sectionTitle: {
     fontFamily: fonts.extrabold,
     fontSize: 16,
     color: colors.textNavy,
     marginTop: 12,
-  },
-  muted: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
   },
   overview: {
     backgroundColor: colors.card,
@@ -343,20 +303,5 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 13,
     color: colors.textNavy,
-  },
-  primaryButton: {
-    minWidth: 200,
-    minHeight: 56,
-    borderRadius: 16,
-    backgroundColor: colors.primaryBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 17,
-    color: colors.white,
   },
 });

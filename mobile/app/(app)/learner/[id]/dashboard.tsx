@@ -1,19 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import DiagnosisRequiredScreen from '@/src/components/DiagnosisRequiredScreen';
+import LoadFailedScreen from '@/src/components/LoadFailedScreen';
+import LoadingScreen from '@/src/components/LoadingScreen';
 import PressableScale from '@/src/components/PressableScale';
 import ProgressBar from '@/src/components/ProgressBar';
+import { screenChrome } from '@/src/components/screenChrome';
 import { ApiError } from '@/src/api/client';
 import type { SkillsState } from '@/src/api/dashboard';
 import { usePlan, useProgress, useSkills } from '@/src/features/dashboard/useDashboard';
-import {
-  isDone,
-  SKILL_LABELS,
-  skillLabel,
-  START_DIAGNOSTIC_LABEL,
-  templateLabel,
-} from '@/src/features/plan/planFormat';
+import { isDone, SKILL_LABELS, skillLabel, templateLabel } from '@/src/features/plan/planFormat';
 import { colors } from '@/src/theme/colors';
 import { fonts } from '@/src/theme/typography';
 
@@ -36,31 +34,21 @@ export default function DashboardScreen() {
     skillsQuery.error instanceof ApiError && skillsQuery.error.status === 404;
 
   if (skillsQuery.isLoading) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <ActivityIndicator color={colors.progressFill} />
-      </SafeAreaView>
-    );
+    return <LoadingScreen />;
   }
 
   if (notDiagnosedYet) {
     return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.title}>Ахиц алга байна</Text>
-        <Text style={styles.muted}>Эхлээд онош өгснөөр чадварын дүн энд харагдана.</Text>
-        <PressableScale style={styles.primaryButton} onPress={() => router.replace(`/learner/${id}/diagnostic`)}>
-          <Text style={styles.primaryButtonText}>{START_DIAGNOSTIC_LABEL}</Text>
-        </PressableScale>
-      </SafeAreaView>
+      <DiagnosisRequiredScreen
+        learnerId={id}
+        title="Ахиц алга байна"
+        message="Эхлээд онош өгснөөр чадварын дүн энд харагдана."
+      />
     );
   }
 
   if (skillsQuery.isError || !skillsQuery.data) {
-    return (
-      <SafeAreaView style={styles.centered} edges={['top', 'bottom']}>
-        <Text style={styles.muted}>Дүнг ачаалж чадсангүй.</Text>
-      </SafeAreaView>
-    );
+    return <LoadFailedScreen message="Дүнг ачаалж чадсангүй." />;
   }
 
   const skills = skillsQuery.data.skills;
@@ -78,9 +66,9 @@ export default function DashboardScreen() {
     planQuery.isError && !(planQuery.error instanceof ApiError && planQuery.error.status === 404);
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Ахиц</Text>
+    <SafeAreaView style={screenChrome.screen} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={screenChrome.content}>
+        <Text style={screenChrome.title}>Ахиц</Text>
 
         <View style={styles.levelCard}>
           <Text style={styles.levelLabel}>Ерөнхий түвшин</Text>
@@ -132,7 +120,7 @@ export default function DashboardScreen() {
         {skills.weak_skills.length > 0 ? (
           <>
             <Text style={styles.sectionTitle}>Анхаарах чадвар</Text>
-            <Text style={styles.muted}>{skills.weak_skills.map(skillLabel).join(', ')}</Text>
+            <Text style={screenChrome.muted}>{skills.weak_skills.map(skillLabel).join(', ')}</Text>
           </>
         ) : null}
       </ScrollView>
@@ -141,38 +129,11 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 14,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontFamily: fonts.black,
-    fontSize: 26,
-    color: colors.textNavy,
-  },
   sectionTitle: {
     fontFamily: fonts.extrabold,
     fontSize: 16,
     color: colors.textNavy,
     marginTop: 12,
-  },
-  muted: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
   },
   levelCard: {
     backgroundColor: colors.card,
@@ -278,21 +239,6 @@ const styles = StyleSheet.create({
     color: colors.progressText,
     width: 28,
     textAlign: 'right',
-  },
-  primaryButton: {
-    minWidth: 200,
-    minHeight: 56,
-    borderRadius: 16,
-    backgroundColor: colors.primaryBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontFamily: fonts.bold,
-    fontSize: 17,
-    color: colors.white,
   },
   inlineError: {
     fontFamily: fonts.semibold,
