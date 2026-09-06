@@ -4,6 +4,7 @@ import { useState } from "react";
 import { diagnostic } from "@/lib/content";
 import ProfileStep from "@/components/register/ProfileStep";
 import DiagnosticStep from "@/components/register/DiagnosticStep";
+import StepCard from "@/components/register/StepCard";
 
 type Step = "profile" | "diagnostic" | "done";
 
@@ -29,26 +30,20 @@ export default function RegisterChildFlow() {
 
   return (
     <div className="mx-auto flex w-full max-w-[min(760px,53vw)] flex-col">
-      {/* No min-height: the parent screen is fixed-height and non-scrolling
-          (see app/register-child/page.tsx: h-[calc(100dvh-5rem)] section,
-          minus its own py-4), so each card sizes to its own content and caps
-          at that same available height (100dvh minus the 5rem header and
-          2rem of section padding) instead of forcing a fixed box.
-          overflow-y-auto is a fallback for pathologically short viewports
-          where content still can't fully fit — the page itself never
-          scrolls, only this card would.
-
-          max-w and the lg: padding below are clamp()ed against dvh/vw
-          rather than pinned to Figma's literal 760px/60px/40px: those
+      {/* max-w and the lg: padding on each step below are clamp()ed against
+          dvh/vw rather than pinned to Figma's literal 760px/60px/40px: those
           numbers only look right at Figma's own 1440x1200 canvas, and this
           screen has to fit whatever real (often shorter, often narrower)
           viewport it's given without scrolling. Each clamp still resolves
           to the exact Figma value once the viewport is as tall/wide as the
-          design, so nothing is invented — just given room to shrink. */}
+          design, so nothing is invented — just given room to shrink. Why
+          each card caps its own height instead of the section scrolling:
+          see StepCard. */}
       {step === "profile" ? (
-        <div
+        <StepCard
           key="profile"
-          className="animate-rise-in max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-lg border border-border-card bg-white px-6 py-6 shadow-card sm:px-10 sm:py-8 lg:pt-[clamp(32px,6dvh,60px)] lg:pb-[clamp(24px,4dvh,40px)]"
+          animationClassName="animate-rise-in"
+          className="border border-border-card px-6 py-6 shadow-card sm:px-10 sm:py-8 lg:pt-[clamp(32px,6dvh,60px)] lg:pb-[clamp(24px,4dvh,40px)]"
         >
           <ProfileStep
             age={answers.age}
@@ -59,11 +54,12 @@ export default function RegisterChildFlow() {
             onChangeGrade={(grade) => setAnswers((prev) => ({ ...prev, grade }))}
             onContinue={() => setStep("diagnostic")}
           />
-        </div>
+        </StepCard>
       ) : step === "diagnostic" ? (
-        <div
+        <StepCard
           key="diagnostic"
-          className="animate-step-in flex max-h-[calc(100dvh-7rem)] flex-col justify-center overflow-y-auto rounded-lg bg-white p-6 sm:p-8 lg:p-[clamp(24px,5dvh,48px)]"
+          animationClassName="animate-step-in"
+          className="flex flex-col justify-center p-6 sm:p-8 lg:p-[clamp(24px,5dvh,48px)]"
           style={{ boxShadow: "var(--shadow-question-card)" }}
         >
           <DiagnosticStep
@@ -72,15 +68,16 @@ export default function RegisterChildFlow() {
             onNext={() => finish(answers.diagnosticAnswer)}
             onSkip={() => finish(null)}
           />
-        </div>
+        </StepCard>
       ) : (
-        <div
+        <StepCard
           key="done"
-          className="animate-step-in flex max-h-[calc(100dvh-7rem)] flex-col items-center justify-center gap-2 overflow-y-auto rounded-lg bg-white p-12 text-center"
+          animationClassName="animate-step-in"
+          className="flex flex-col items-center justify-center gap-2 p-12 text-center"
           style={{ boxShadow: "var(--shadow-question-card)" }}
         >
           <p className="text-xl font-extrabold text-text-label">{diagnostic.doneMessage}</p>
-        </div>
+        </StepCard>
       )}
     </div>
   );

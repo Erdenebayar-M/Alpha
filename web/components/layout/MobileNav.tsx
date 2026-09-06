@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { nav } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
+import Button from "@/components/ui/Button";
 
 interface MobileNavProps {
   /** See Header.tsx's basePath — prefixes each link's hash for use off "/" . */
@@ -36,7 +37,7 @@ export default function MobileNav({ basePath = "" }: MobileNavProps) {
         aria-expanded={open}
         aria-controls="mobile-nav-panel"
         onClick={() => setOpen((value) => !value)}
-        className="flex size-11 items-center justify-center rounded-md border border-border-card bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+        className="flex size-11 items-center justify-center rounded-md border border-border-card bg-white focus-ring"
       >
         <span className="sr-only">Цэс {open ? "хаах" : "нээх"}</span>
         <svg viewBox="0 0 24 24" className="size-5 text-text-nav-strong" fill="none" aria-hidden="true">
@@ -67,18 +68,12 @@ export default function MobileNav({ basePath = "" }: MobileNavProps) {
             ))}
           </ul>
           <div className="mt-3 flex gap-2 border-t border-border-card pt-3">
-            <a
-              href={siteConfig.loginUrl}
-              className="min-h-11 flex-1 rounded-sm border border-border-card bg-white px-3.5 py-2 text-center text-sm font-black text-text-nav-strong"
-            >
-              Нэвтрэх
-            </a>
-            <a
-              href={siteConfig.registerUrl}
-              className="min-h-11 flex-1 rounded-sm border border-border-card bg-brand-green px-3.5 py-2 text-center text-sm font-black text-text-nav-strong"
-            >
-              Бүртгүүлэх
-            </a>
+            <Button variant="navOutline" href={siteConfig.loginUrl} className="flex-1 text-center">
+              {nav.auth.loginLabel}
+            </Button>
+            <Button variant="navSolid" href={siteConfig.registerUrl} className="flex-1 text-center">
+              {nav.auth.registerLabel}
+            </Button>
           </div>
         </div>
       ) : null}

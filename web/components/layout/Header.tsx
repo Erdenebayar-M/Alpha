@@ -38,10 +38,10 @@ export default function Header({ basePath = "" }: HeaderProps) {
           </ul>
           <div className="flex items-center gap-[5px]">
             <Button variant="navOutline" href={siteConfig.loginUrl}>
-              Нэвтрэх
+              {nav.auth.loginLabel}
             </Button>
             <Button variant="navSolid" href={siteConfig.registerUrl}>
-              Бүртгүүлэх
+              {nav.auth.registerLabel}
             </Button>
           </div>
         </nav>

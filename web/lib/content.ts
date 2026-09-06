@@ -5,6 +5,14 @@ export const nav = {
     { label: "Нүүр", href: "#top" },
     { label: "Үнэ", href: "#une" },
   ],
+  auth: {
+    loginLabel: "Нэвтрэх",
+    registerLabel: "Бүртгүүлэх",
+  },
+} as const;
+
+export const storeBadges = {
+  downloadLabel: "Татаж авах",
 } as const;
 
 export const hero = {
