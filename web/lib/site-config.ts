@@ -9,6 +9,8 @@ export const siteConfig = {
     "5-7 насны хүүхдийн Монгол хэлний зөв бичих чадварыг тодорхойлж, түвшинд нь тохирсон суралцах төлөвлөгөө санал болгодог хөгжлийн үнэлгээ.",
   url: "https://orto.mn",
 
+  assessmentUrl: "/register-child",
+
   // TODO: replace with the real destinations.
   appUrl: "#",
   loginUrl: "#",

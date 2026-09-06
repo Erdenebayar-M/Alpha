@@ -4,10 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { nav } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
+interface MobileNavProps {
+  /** See Header.tsx's basePath — prefixes each link's hash for use off "/" . */
+  basePath?: string;
+}
+
 /** The only stateful component in the header: a disclosure panel for narrow
  *  viewports. Traps no focus (a full modal is overkill for 5 links) but does
  *  return focus to the trigger and closes on Escape or link selection. */
-export default function MobileNav() {
+export default function MobileNav({ basePath = "" }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -52,7 +57,7 @@ export default function MobileNav() {
             {nav.links.map((link) => (
               <li key={link.href}>
                 <a
-                  href={link.href}
+                  href={`${basePath}${link.href}`}
                   onClick={() => setOpen(false)}
                   className="block min-h-11 py-2 text-sm font-extrabold text-text-nav"
                 >

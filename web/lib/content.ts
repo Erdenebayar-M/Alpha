@@ -62,3 +62,54 @@ export const footer = {
   tagline: "5-7 насны хүүхдэд зориулсан Монгол хэлний хөгжлийн үнэлгээ.",
   copyright: `© ${new Date().getFullYear()} Орто`,
 } as const;
+
+export interface ChoiceOption {
+  readonly id: string;
+  readonly label: string;
+}
+
+// Register-child flow, step 1 (Figma node 1218:13205, card 1218:13843).
+export const registerChild = {
+  ageLabel: "Нас",
+  ages: [5, 6, 7, 8],
+  ageSuffix: "нас",
+  genderLabel: "Хүйс",
+  genders: [
+    { id: "boy", label: "Хөвгүүн" },
+    { id: "girl", label: "Охин" },
+  ],
+  gradeLabel: "Анги",
+  grades: [
+    { id: "preschool", label: "Сургуулийн өмнөх" },
+    { id: "grade1", label: "1-р анги" },
+    { id: "grade2", label: "2-р анги" },
+    { id: "grade3", label: "3-р анги" },
+  ],
+  continueLabel: "Үргэлжлүүлэх",
+} as const satisfies {
+  ageLabel: string;
+  ages: readonly number[];
+  ageSuffix: string;
+  genderLabel: string;
+  genders: readonly ChoiceOption[];
+  gradeLabel: string;
+  grades: readonly ChoiceOption[];
+  continueLabel: string;
+};
+
+// Register-child flow, step 2 (Figma node 1218:13643, card 1218:13786).
+// Choices transcribed verbatim from the design, including the third option's
+// Latin "o" (бороo vs. бороо/боро) — likely a Figma typo, but CLAUDE.md
+// forbids inventing or "correcting" vocabulary. The design marks no answer
+// as correct, so none is recorded here.
+export const diagnostic = {
+  eyebrow: "СОНСООД ЗӨВ ҮГИЙГ СОНГООРОЙ",
+  question: "Аль үгийг зөв бичсэн бэ?",
+  audioSrc: "/audio/boroo.mp3",
+  audioHint: "Дууг сонсох",
+  choices: ["бороо", "боро", "бороo"],
+  skipLabel: "Алгасах",
+  nextLabel: "Дараагийнх",
+  // TODO: no Figma node for the post-diagnostic state — confirm copy with design.
+  doneMessage: "Баярлалаа! Таны мэдээллийг хүлээн авлаа.",
+} as const;

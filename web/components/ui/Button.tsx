@@ -1,13 +1,18 @@
-import type { AnchorHTMLAttributes, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 
 type ButtonVariant = "cta" | "navOutline" | "navSolid" | "pricingOutline" | "pricingSolid";
 
-interface ButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+interface BaseProps {
   variant: ButtonVariant;
   children: ReactNode;
+  className?: string;
 }
+
+type ButtonProps =
+  | (BaseProps & { href: string } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "className" | "children" | "href">)
+  | (BaseProps & { href?: undefined } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children">);
 
 const base =
   "inline-flex items-center justify-center gap-2.5 font-extrabold transition-[transform,box-shadow,background-color] duration-150 ease-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2";
@@ -24,13 +29,28 @@ const variants: Record<ButtonVariant, string> = {
     "w-full rounded-sm bg-brand-green px-5 py-2 text-sm text-black hover:brightness-105",
 };
 
+/** Renders an `<a>` when `href` is given, a `<button>` otherwise — the CTA
+ *  variant is shared by the hero's link into the assessment and the
+ *  register-child flow's form-submit buttons, so both need the same chrome. */
 export default function Button({ variant, children, className, ...props }: ButtonProps) {
+  const classes = cn(base, variants[variant], className);
+  const arrow = variant === "cta" ? (
+    <ArrowIcon className="h-[29px] w-[53px] shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
+  ) : null;
+
+  if (props.href !== undefined) {
+    return (
+      <a className={classes} {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+        {children}
+        {arrow}
+      </a>
+    );
+  }
+
   return (
-    <a className={cn(base, variants[variant], className)} {...props}>
+    <button type="button" {...(props as ButtonHTMLAttributes<HTMLButtonElement>)} className={classes}>
       {children}
-      {variant === "cta" ? (
-        <ArrowIcon className="h-[29px] w-[53px] shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
-      ) : null}
-    </a>
+      {arrow}
+    </button>
   );
 }

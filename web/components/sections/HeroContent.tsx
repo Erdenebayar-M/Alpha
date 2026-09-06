@@ -24,7 +24,7 @@ export default function HeroContent() {
       </div>
 
       <div className="animate-rise-in w-full max-w-sm [animation-delay:320ms] lg:max-w-none lg:pl-5">
-        <Button variant="cta" href={siteConfig.appUrl}>
+        <Button variant="cta" href={siteConfig.assessmentUrl}>
           {hero.cta}
         </Button>
       </div>

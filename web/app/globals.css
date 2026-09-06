@@ -20,6 +20,7 @@
   --color-text-label: #2a4263;
   --color-text-nav: #667085;
   --color-text-nav-strong: #101828;
+  --color-text-question: #183153;
 
   /* Surfaces */
   --color-surface: #ffffff;
@@ -43,10 +44,23 @@
   --color-hill-shade: #9dc980;
   --color-bush: #d2d0da;
   --color-bush-teal: #bbddd7;
+  /* Register page "алсын модод" (distant trees) blur cluster, node 1218:13616 */
+  --color-bush-peach: #f7cbb5;
+  --color-bush-gray: #d9d9d9;
+  --color-bush-mint: #c5dab1;
+  --color-bush-blue: #bacfe5;
 
   /* Sky */
   --color-sky-tint: rgba(63, 160, 251, 0.13);
   --color-sky-mid: #e5f1fd;
+
+  /* Borders (register-child form controls, node 1218:13843 / 1218:13786) */
+  --color-border-cyan: #32ade6;
+  --color-border-choice: #dde5ef;
+  /* The diagnostic card's own accent blue — close to but distinct from
+   * --color-brand-blue, measured off its own eyebrow/button/selected-answer
+   * fills rather than reused from the profile step's tokens. */
+  --color-accent-question: #315be8;
 
   /* Radii */
   --radius-sm: 8px;
@@ -59,6 +73,7 @@
   /* Shadows */
   --shadow-card: 0px 12px 16px rgba(16, 24, 40, 0.07);
   --shadow-page: 0px 24px 64px rgba(16, 24, 40, 0.07);
+  --shadow-question-card: 0px 16px 40px rgba(36, 66, 143, 0.09);
 
   /* Easing (matches mobile/src/theme/motion.ts press feel) */
   --ease-press: cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -118,8 +133,23 @@ body {
   }
 }
 
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-rise-in {
   animation: rise-in 600ms var(--ease-entrance) both;
+}
+
+.animate-step-in {
+  animation: step-in 420ms var(--ease-entrance) both;
 }
 
 .animate-float {
@@ -153,6 +183,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-rise-in,
+  .animate-step-in,
   .animate-float,
   .animate-blink,
   .animate-drift-slow,
