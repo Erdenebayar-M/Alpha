@@ -1,9 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 
-import AnswerInput from '@/src/features/exercise/components/AnswerInput';
-import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
+import TextEntryScreen from '@/src/features/exercise/components/TextEntryScreen';
+import { exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
@@ -18,54 +16,34 @@ import { fonts } from '@/src/theme/typography';
  * full design system — the simplest version always shows both texts plainly.
  */
 export default function SelfCheck({ task, onResult }: ExerciseRendererProps) {
-  const inputRef = useRef<TextInput>(null);
   const originalAttempt = task.options.original_attempt ?? '';
   const modelAnswer = task.options.model_answer ?? task.correct_answer;
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: modelAnswer });
 
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    ex.submit();
-  };
-
   return (
-    <KeyboardAvoidingView style={exerciseStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={exerciseStyles.scroll}
-        contentContainerStyle={exerciseContent({ gap: 12, align: 'center', justify: 'center' })}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[exerciseStyles.prompt, styles.prompt]}>{task.prompt_text}</Text>
+    <TextEntryScreen
+      gap={12}
+      justify="center"
+      value={ex.value}
+      onChangeText={ex.setValue}
+      onSubmit={ex.submit}
+      disabled={ex.isAnswered}
+      state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      feedback={ex.feedback}
+    >
+      <Text style={[exerciseStyles.prompt, styles.prompt]}>{task.prompt_text}</Text>
 
-        {[
-          { label: 'Таны бичсэн', text: originalAttempt, textStyle: styles.cardText },
-          { label: 'Зөв хариулт', text: modelAnswer, textStyle: [styles.cardText, styles.modelText] },
-        ].map((card, i) => (
-          <View key={i} style={styles.card}>
-            <Text style={styles.cardLabel}>{card.label}</Text>
-            <Text style={card.textStyle}>{card.text}</Text>
-          </View>
-        ))}
-
-        <FeedbackText>{ex.feedback}</FeedbackText>
-      </ScrollView>
-
-      <AnswerInput
-        ref={inputRef}
-        value={ex.value}
-        onChangeText={ex.setValue}
-        onSubmit={handleSubmit}
-        disabled={ex.isAnswered}
-        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
-      />
-    </KeyboardAvoidingView>
+      {[
+        { label: 'Таны бичсэн', text: originalAttempt, textStyle: styles.cardText },
+        { label: 'Зөв хариулт', text: modelAnswer, textStyle: [styles.cardText, styles.modelText] },
+      ].map((card, i) => (
+        <View key={i} style={styles.card}>
+          <Text style={styles.cardLabel}>{card.label}</Text>
+          <Text style={card.textStyle}>{card.text}</Text>
+        </View>
+      ))}
+    </TextEntryScreen>
   );
 }
 

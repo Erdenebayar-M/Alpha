@@ -1,9 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 
-import AnswerInput from '@/src/features/exercise/components/AnswerInput';
-import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
+import TextEntryScreen from '@/src/features/exercise/components/TextEntryScreen';
+import { exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
@@ -16,17 +14,11 @@ import { fonts } from '@/src/theme/typography';
  * (the backend checks only that single word, not the whole sentence).
  */
 export default function SentenceFill({ task, onResult }: ExerciseRendererProps) {
-  const inputRef = useRef<TextInput>(null);
   const sentenceTemplate = task.options.sentence_template ?? task.prompt_text;
   const blankAnswer = task.options.blank_answer ?? task.correct_answer;
   const hint = task.options.hint;
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: blankAnswer });
-
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(timer);
-  }, []);
 
   // A cheap indexOf+slice on a short string — not worth manual memoization.
   const blankIdx = sentenceTemplate.indexOf('_');
@@ -35,43 +27,28 @@ export default function SentenceFill({ task, onResult }: ExerciseRendererProps) 
       ? [sentenceTemplate, '']
       : [sentenceTemplate.slice(0, blankIdx), sentenceTemplate.slice(blankIdx + 1)];
 
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    ex.submit();
-  };
-
   return (
-    <KeyboardAvoidingView style={exerciseStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={exerciseStyles.scroll}
-        contentContainerStyle={exerciseContent({ gap: 16, align: 'center' })}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
+    <TextEntryScreen
+      gap={16}
+      value={ex.value}
+      onChangeText={ex.setValue}
+      onSubmit={ex.submit}
+      disabled={ex.isAnswered}
+      state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      feedback={ex.feedback}
+    >
+      <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.sentence}>
-            {prefix}
-            <Text style={[styles.blank, ex.value ? styles.blankFilled : null]}> {ex.value || '____'} </Text>
-            {suffix}
-          </Text>
-        </View>
+      <View style={styles.card}>
+        <Text style={styles.sentence}>
+          {prefix}
+          <Text style={[styles.blank, ex.value ? styles.blankFilled : null]}> {ex.value || '____'} </Text>
+          {suffix}
+        </Text>
+      </View>
 
-        {hint ? <Text style={styles.hint}>💡 {hint}</Text> : null}
-
-        <FeedbackText>{ex.feedback}</FeedbackText>
-      </ScrollView>
-
-      <AnswerInput
-        ref={inputRef}
-        value={ex.value}
-        onChangeText={ex.setValue}
-        onSubmit={handleSubmit}
-        disabled={ex.isAnswered}
-        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
-      />
-    </KeyboardAvoidingView>
+      {hint ? <Text style={styles.hint}>💡 {hint}</Text> : null}
+    </TextEntryScreen>
   );
 }
 

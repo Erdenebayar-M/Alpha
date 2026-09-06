@@ -1,9 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, type TextInput, View } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 
-import AnswerInput from '@/src/features/exercise/components/AnswerInput';
-import FeedbackText from '@/src/features/exercise/components/FeedbackText';
-import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
+import TextEntryScreen from '@/src/features/exercise/components/TextEntryScreen';
+import { exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
@@ -16,47 +14,26 @@ import { fonts } from '@/src/theme/typography';
  * against `correct_answer`.
  */
 export default function CopyText({ task, onResult }: ExerciseRendererProps) {
-  const inputRef = useRef<TextInput>(null);
   const textToCopy = task.options.text_to_copy ?? task.correct_answer;
 
   const ex = useTextEntryExercise(task, onResult, { compareTo: task.correct_answer });
 
-  useEffect(() => {
-    const timer = setTimeout(() => inputRef.current?.focus(), 350);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    ex.submit();
-  };
-
   return (
-    <KeyboardAvoidingView style={exerciseStyles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={exerciseStyles.scroll}
-        contentContainerStyle={exerciseContent({ gap: 16, align: 'center' })}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
+    <TextEntryScreen
+      gap={16}
+      value={ex.value}
+      onChangeText={ex.setValue}
+      onSubmit={ex.submit}
+      disabled={ex.isAnswered}
+      state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
+      feedback={ex.feedback}
+    >
+      <Text style={exerciseStyles.prompt}>{task.prompt_text}</Text>
 
-        <View style={styles.card}>
-          <Text style={styles.copyText}>{textToCopy}</Text>
-        </View>
-
-        <FeedbackText>{ex.feedback}</FeedbackText>
-      </ScrollView>
-
-      <AnswerInput
-        ref={inputRef}
-        value={ex.value}
-        onChangeText={ex.setValue}
-        onSubmit={handleSubmit}
-        disabled={ex.isAnswered}
-        state={ex.isAnswered ? (ex.isCorrect ? 'correct' : 'wrong') : null}
-      />
-    </KeyboardAvoidingView>
+      <View style={styles.card}>
+        <Text style={styles.copyText}>{textToCopy}</Text>
+      </View>
+    </TextEntryScreen>
   );
 }
 
