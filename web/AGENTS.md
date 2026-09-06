@@ -74,6 +74,11 @@ materially affects UX, performance, accessibility, or visual fidelity
 client-vs-server, new dependencies). Don't ask for confirmation on small
 implementation details.
 
+## Git Workflow
+
+Every job gets its own new branch — never commit directly to `master`.
+Create the branch before writing any code, even for small fixes.
+
 ## Validation Before Calling a Section Done
 
 - Responsive at 320/375/390/430/768/1024/1280/1440/1920px, no horizontal
