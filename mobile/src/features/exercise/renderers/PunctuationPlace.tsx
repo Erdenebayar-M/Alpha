@@ -19,6 +19,7 @@ import { usePunctuationExercise } from '@/src/features/exercise/hooks/usePunctua
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 // The buddy asks the same thing on every place-the-mark task; the sentence tokens
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   },
   bubble: {
     flex: 1,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 18,
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     bottom: 22,
     width: 12,
     height: 12,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     transform: [{ rotate: '45deg' }],
     borderRadius: 2,
   },
@@ -243,11 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     paddingHorizontal: 24,
     paddingVertical: 28,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   wordWrap: {
     flexDirection: 'row',
@@ -308,11 +305,7 @@ const styles = StyleSheet.create({
     borderColor: colors.sheetBorder,
     borderRadius: 46,
     padding: 27,
-    shadowColor: '#2C4064',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    ...shadows.sheet(3),
   },
   deleteTile: {
     width: 52,
@@ -323,10 +316,6 @@ const styles = StyleSheet.create({
     borderColor: colors.sheetBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2C4064',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.sheetSmall,
   },
 });

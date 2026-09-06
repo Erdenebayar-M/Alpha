@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   bubble: {
     flex: 1,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingVertical: 18,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     bottom: 22,
     width: 12,
     height: 12,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     transform: [{ rotate: '45deg' }],
     borderRadius: 2,
   },

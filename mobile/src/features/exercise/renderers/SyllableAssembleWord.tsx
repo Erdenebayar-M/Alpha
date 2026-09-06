@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   bubble: {
     flex: 1,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 14,

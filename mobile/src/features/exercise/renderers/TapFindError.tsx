@@ -7,6 +7,7 @@ import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exercis
 import { getFeedbackDelayMs } from '@/src/features/exercise/feedbackTiming';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 // prompt_text is just the sentence itself for this task type (no separate instruction
@@ -107,11 +108,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     paddingHorizontal: 24,
     paddingVertical: 28,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   wordWrap: {
     flexDirection: 'row',

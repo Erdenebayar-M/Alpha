@@ -13,6 +13,7 @@ import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExerci
 import { useAudioFinishedLatch, useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 const BUBBLE_LABEL = 'Үгийг нөхөөрэй';
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     marginTop: -6,
     width: 12,
     height: 12,
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
     transform: [{ rotate: '45deg' }],
     borderRadius: 2,
   },
@@ -165,11 +166,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#DDE6F3',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#283C64',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    ...shadows.slot,
   },
   slotFilled: {
     borderBottomColor: colors.choiceSelectedBorder,

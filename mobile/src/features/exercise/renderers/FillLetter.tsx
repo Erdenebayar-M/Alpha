@@ -16,6 +16,7 @@ import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exercis
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 /**
@@ -102,11 +103,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#DDE6F3',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#283C64',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 3,
+    ...shadows.slot,
   },
   slotFilled: {
     borderBottomColor: colors.choiceSelectedBorder,

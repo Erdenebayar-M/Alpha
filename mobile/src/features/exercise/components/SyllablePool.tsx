@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import DraggableSyllable from '@/src/features/exercise/components/DraggableSyllable';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 
 interface SyllablePoolProps {
   /** The syllable tiles (word syllables + distractors), in payload order. */
@@ -56,10 +57,6 @@ const styles = StyleSheet.create({
     borderColor: colors.sheetBorder,
     borderRadius: 46,
     padding: 36,
-    shadowColor: '#2C4064',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    ...shadows.sheet(3),
   },
 });

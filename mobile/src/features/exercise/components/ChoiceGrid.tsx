@@ -3,6 +3,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import PressableScale from '@/src/components/PressableScale';
 import type { TaskChoice } from '@/src/features/exercise/types';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 interface ChoiceGridProps {
@@ -71,11 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sheet,
     borderWidth: 1,
     borderColor: colors.sheetBorder,
-    shadowColor: '#2C4064',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 6,
+    ...shadows.sheet(6),
   },
   grid: {
     flexDirection: 'row',
@@ -95,11 +92,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 16,
-    shadowColor: '#283C64',
-    shadowOffset: { width: -1, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.sheetEdge,
   },
   cardSingleRow: {
     // Equal-width columns that share one row, regardless of choice count.

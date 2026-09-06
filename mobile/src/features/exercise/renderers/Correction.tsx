@@ -7,6 +7,7 @@ import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exercis
 import { useTextEntryExercise } from '@/src/features/exercise/hooks/useTextEntryExercise';
 import type { ExerciseRendererProps } from '@/src/features/exercise/registry';
 import { colors } from '@/src/theme/colors';
+import { shadows } from '@/src/theme/shadows';
 import { fonts } from '@/src/theme/typography';
 
 /**
@@ -74,11 +75,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     gap: 8,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   cardLabel: {
     fontFamily: fonts.semibold,

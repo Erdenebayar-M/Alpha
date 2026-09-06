@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5F2FF',
+    backgroundColor: colors.bubbleFill,
   },
   buttonActive: {
     backgroundColor: colors.primaryBlue,
