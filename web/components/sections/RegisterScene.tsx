@@ -11,39 +11,61 @@ import { SKY_GRADIENT } from "@/components/decor/sky";
  * HeroScene — sky gradient only below `lg`, full scene at `lg` and up.
  *
  * The `lg` tier can't just copy HeroScene's fixed-`927px`-box trick: this
- * flow's section height is `100dvh`-driven (no page scroll allowed), and a
- * *fixed* artwork height fights that in both directions — too tall relative
- * to a short viewport crops away most of the sky (tried this: on a plain
- * short-but-not-especially-wide window it looked worse, not better), and
- * `RegisterHills`' `xMidYMax slice` cropping (scale =
- * `max(boxWidth/1440, boxHeight/1202)`) still lets a wide-enough box push
- * scale past 1 — a real enlargement of every hill shape, which is what
- * actually caused "the mountain is so high" in the first place.
+ * flow's section height is `100dvh`-driven (no page scroll allowed), so the
+ * artwork frame is sized dynamically instead.
  *
- * Fix: give the *artwork* frame (the inner, clipped layer below) its own
- * `aspect-[1440/1202]` and cap its width at `max-w-[1440px]`, centered, all
- * sitting on a plain `SKY_GRADIENT` painted on the *outer* (dynamic,
- * `100dvh`) wrapper instead of the artwork frame itself. That makes the
- * artwork frame's height a pure function of its own (capped) width — never
- * of the viewport's height — so `RegisterHills`' slice-scale is pinned at
- * `boxWidth/1440` with `boxHeight/1202` always equal to it by construction:
- * scale can never exceed 1 (capped width), and it shrinks proportionately,
- * whole-scene-at-once, on narrower/shorter viewports instead of just
- * cropping the top off. `bottom-0` (no `top`) keeps it anchored to the
- * ground; on a short viewport, resulting excess bleeds *upward* behind the
- * header (same trick as HeroScene's `-top-20`) instead of past the
- * section's bottom edge, which is what caused the earlier page-scroll bug.
- * On viewports wider than 1440px the capped frame no longer reaches the
- * edges — the outer wrapper's matching sky gradient shows through there
- * instead of a hard edge.
+ * Sky:land must read 1:1 at every viewport. In the 1440×1202 artboard the
+ * full-width green crest (the `cx=674 rx=845` ellipse in RegisterHills) peaks
+ * at y=593 — 1202/1218 of the way down a box whose *land portion* (593→1202,
+ * 609 units) is pinned to exactly `50dvh`. So the box's height is driven by
+ * `100dvh * 1202/1218` (≈ 98.7dvh) and its width by the matching
+ * `100dvh * 1440/1218`, both constants below as `SCENE_H`/`SCENE_W` — the
+ * artboard's bottom edge is already the land band's bottom edge, so
+ * `bottom-0` still anchors it correctly; only the height source changed
+ * (from width-derived to dvh-derived). An earlier version sized this frame
+ * by covering the viewport (`width: max(100%, ...)`, height from aspect
+ * ratio) — that kept the frame's aspect locked to the artboard's, which
+ * anchoring only the bottom edge meant a wider viewport grew the frame
+ * *and* pushed the horizon up screen with it, eventually erasing the sky
+ * entirely on a wide monitor. Driving height alone from `dvh` breaks that
+ * coupling: width can no longer feed back into how tall the box gets.
+ *
+ * `SCENE_W` can be narrower than the viewport (e.g. a wide, short monitor).
+ * Two sibling boxes at that same `SCENE_H`/`SCENE_W` split what happens to
+ * the leftover width:
+ * - The **ground** box takes `width: max(100%, SCENE_W)` — at least
+ *   viewport-wide — so `RegisterHills`' own `xMidYMax meet` fit still
+ *   resolves to the same scale (`min(boxW/1440, boxH/1202)`, and `boxH/1202`
+ *   is already that scale, so the `max()` just guarantees the width term
+ *   can't undercut it) while its two mirrored copies (see that file) bleed
+ *   into whatever gutter `meet`'s own horizontal centering opens up —
+ *   extending the ground sideways rather than upscaling it. `RegisterClouds`
+ *   lives here too, not in the artboard box below: on a normal-proportioned
+ *   viewport this box is exactly `SCENE_W` wide anyway (`max()` is a no-op),
+ *   so clouds sit at their usual Figma percentages; only on an extreme wide
+ *   monitor does this box widen past `SCENE_W`, spreading the clouds out
+ *   with it instead of leaving the newly-revealed sky at the sides bare.
+ * - The **artboard** box stays at exactly `SCENE_W`×`SCENE_H` (true
+ *   1440:1202), so every remaining decor child's Figma-derived
+ *   `left`/`top`/`width` percentage (node 1218:13206) still means exactly
+ *   what it says — these are anchored to specific hill/ground features, so
+ *   unlike clouds they can't drift with viewport width.
+ *
+ * On viewports taller/narrower than 1440:1202, `SCENE_W` alone can exceed
+ * the viewport width, and the artboard's sides crop symmetrically — the
+ * same "excess bleeds off, ground never does" trade as before, just driven
+ * by width now instead of height.
  *
  * Two nested layers here, unlike HeroScene's one: an unclipped "ambience"
  * layer (four soft cloud blobs + two radial glows that intentionally bleed
  * past the artwork edges in Figma, since only the inner artwork frame has
- * `overflow-clip`) sits behind the clipped "artwork" frame (hills, clouds,
- * trees, flowers, and the card's glint accent — everything Figma nests
- * inside the clipped frame).
+ * `overflow-clip`) sits behind the clipped ground/artboard boxes (hills,
+ * clouds, trees, flowers, and the card's glint accent — everything Figma
+ * nests inside the clipped frame).
  */
+const SCENE_H = "calc(100dvh * 1202 / 1218)";
+const SCENE_W = "calc(100dvh * 1440 / 1218)";
+
 export default function RegisterScene() {
   return (
     <>
@@ -101,27 +123,31 @@ export default function RegisterScene() {
           />
         </div>
 
-        <div
-          className="absolute inset-x-0 bottom-0 mx-auto aspect-[1440/1202] w-full max-w-[1440px] overflow-hidden"
-          style={{ contain: "paint" }}
-        >
-          <RegisterClouds />
-          <RegisterHills />
-
-          <Tree className="h-auto" style={{ left: "88.889%", top: "54.243%", width: "6.024%" }} />
-          <Tree className="h-auto" style={{ left: "93.193%", top: "58.15%", width: "5.368%" }} />
-          <DistantTrees className="h-auto" style={{ left: "5.972%", top: "44.593%", width: "14.887%" }} />
-
-          <PairFlower className="h-auto" style={{ left: "73.958%", top: "78.869%", width: "9.15%" }} />
-          <YellowFlower className="h-auto" style={{ left: "14.167%", top: "80.616%", width: "6.076%" }} />
-          <WhiteTrioFlower className="h-auto" style={{ left: "59.431%", top: "66.639%", width: "4.781%" }} />
-          <LilacPetal className="h-auto" style={{ left: "8.889%", top: "61.065%", width: "3.01%" }} />
-
+        <div className="absolute inset-0 overflow-hidden" style={{ contain: "paint" }}>
           <div
-            aria-hidden="true"
-            className="absolute rotate-45 bg-white"
-            style={{ left: "31.16%", top: "12.665%", width: "2.828%", aspectRatio: "1 / 1", filter: "blur(8px)" }}
-          />
+            className="absolute bottom-0 left-1/2 -translate-x-1/2"
+            style={{ width: `max(100%, ${SCENE_W})`, height: SCENE_H }}
+          >
+            <RegisterHills />
+            <RegisterClouds />
+          </div>
+
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2" style={{ width: SCENE_W, height: SCENE_H }}>
+            <Tree className="h-auto" style={{ left: "88.889%", top: "54.243%", width: "6.024%" }} />
+            <Tree className="h-auto" style={{ left: "93.193%", top: "58.15%", width: "5.368%" }} />
+            <DistantTrees className="h-auto" style={{ left: "5.972%", top: "44.593%", width: "14.887%" }} />
+
+            <PairFlower className="h-auto" style={{ left: "73.958%", top: "78.869%", width: "9.15%" }} />
+            <YellowFlower className="h-auto" style={{ left: "14.167%", top: "80.616%", width: "6.076%" }} />
+            <WhiteTrioFlower className="h-auto" style={{ left: "59.431%", top: "66.639%", width: "4.781%" }} />
+            <LilacPetal className="h-auto" style={{ left: "8.889%", top: "61.065%", width: "3.01%" }} />
+
+            <div
+              aria-hidden="true"
+              className="absolute rotate-45 bg-white"
+              style={{ left: "31.16%", top: "12.665%", width: "2.828%", aspectRatio: "1 / 1", filter: "blur(8px)" }}
+            />
+          </div>
         </div>
       </div>
     </>
