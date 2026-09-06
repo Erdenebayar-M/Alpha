@@ -34,7 +34,7 @@ export default function ChoiceField({
 }: ChoiceFieldProps) {
   return (
     <fieldset
-      className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0 lg:pl-[43px]"
+      className="m-0 flex min-w-0 flex-col gap-6 border-0 p-2 lg:pl-[43px]"
       style={{ "--delay": `${delayMs}ms` } as React.CSSProperties}
     >
       <legend className="animate-rise-in p-0 text-xl font-extrabold text-text-label [animation-delay:var(--delay)]">
