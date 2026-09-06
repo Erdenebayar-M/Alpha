@@ -14,7 +14,7 @@ import DraggableMark from '@/src/features/exercise/components/DraggableMark';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
-import TalkingBuddy from '@/src/features/exercise/components/TalkingBuddy';
+import TalkingCharacter from '@/src/features/exercise/components/TalkingCharacter';
 import { LISTEN_LABEL } from '@/src/features/exercise/copy';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { usePunctuationExercise } from '@/src/features/exercise/hooks/usePunctuationExercise';
@@ -162,7 +162,7 @@ export default function CommaPlace({ task, onResult }: ExerciseRendererProps) {
           accessibilityRole="button"
           accessibilityLabel={LISTEN_LABEL}
         >
-          <TalkingBuddy playing={status.playing} width={buddyWidth} />
+          <TalkingCharacter character="buddy" playing={status.playing} width={buddyWidth} />
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>{BUBBLE_LABEL}</Text>
             <View style={styles.bubbleTail} />

@@ -5,7 +5,7 @@ import ChoiceGrid from '@/src/features/exercise/components/ChoiceGrid';
 import FeedbackText from '@/src/features/exercise/components/FeedbackText';
 import SpeakerButton from '@/src/features/exercise/components/SpeakerButton';
 import SubmitButton from '@/src/features/exercise/components/SubmitButton';
-import TalkingSprout, { TALKING_SPROUT_ASPECT } from '@/src/features/exercise/components/TalkingSprout';
+import TalkingCharacter, { CHARACTER_ASPECT } from '@/src/features/exercise/components/TalkingCharacter';
 import { exerciseContent, exerciseStyles } from '@/src/features/exercise/exerciseStyles';
 import { useChoiceExercise } from '@/src/features/exercise/hooks/useChoiceExercise';
 import { useTaskAudio } from '@/src/features/exercise/hooks/useTaskAudio';
@@ -57,9 +57,9 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
   const leftHandLeft = cardSize / 2 - handSpread - handW * (1 - HAND_INK_CX);
   // The hands mount in `cluster`, not `card` (see styles.cluster/styles.hand), so `handTop`
   // — measured relative to the card's own top edge — needs to be re-based to the cluster's
-  // top edge, which starts one sproutRow + its 1pt margin higher. Mirrors TalkingSprout's
+  // top edge, which starts one sproutRow + its 1pt margin higher. Mirrors TalkingCharacter's
   // own `height * visibleFraction` so this stays exact without duplicating that logic.
-  const sproutHeight = (sproutWidth / TALKING_SPROUT_ASPECT) * SPROUT_VISIBLE;
+  const sproutHeight = (sproutWidth / CHARACTER_ASPECT.sprout) * SPROUT_VISIBLE;
   const clusterHandTop = sproutHeight + 1 + handTop;
 
   const ex = useChoiceExercise(task, onResult);
@@ -93,7 +93,7 @@ export default function LetterChoice({ task, onResult }: ExerciseRendererProps) 
         <View style={styles.stage}>
           <View style={[styles.cluster, { width: cardSize }]}>
             <View style={[styles.sproutRow, { width: cardSize }]}>
-              <TalkingSprout playing={status.playing} width={sproutWidth} visibleFraction={SPROUT_VISIBLE} />
+              <TalkingCharacter character="sprout" playing={status.playing} width={sproutWidth} visibleFraction={SPROUT_VISIBLE} />
               <View style={styles.speakerWrap}>
                 <SpeakerButton playing={status.playing} onPress={handlePlay} />
               </View>
