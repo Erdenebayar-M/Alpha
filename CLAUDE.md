@@ -23,6 +23,38 @@ Alongside the `backend`/`shared` npm workspaces, this repo also contains:
 These aren't covered by the Session Workflow rules below, which are scoped
 to backend/shared/content-pipeline.
 
+## Don't Hand-Write the Same Structure Twice
+
+Applies to **every** app in this repo — `web/`, `mobile/`, `backend/`,
+`shared/`, `content-pipeline/`.
+
+Before writing a block of markup, JSX, styles or handler code, look at the
+block next to it. If two or more siblings share a structure and differ only
+in *values* — a label, an href, a colour, a delay, a set of options — that
+is one component, or one `.map()` over a config array. Not N copies.
+
+1. **Two is the threshold.** The second copy is when you extract, not the
+   third. Copy-paste-then-tweak is not an acceptable first draft.
+2. **Prefer data over markup.** A list of things differing only in values
+   belongs in an array — `web/lib/content.ts` for copy, a local `const`
+   beside the component for geometry — rendered with one `.map()`.
+   `web/components/decor/CloudShape.tsx` and `mobile`'s renderer registry
+   (`src/features/exercise/registry.ts`) are the patterns to copy.
+3. **Repeated literals count too.** A class string, a shadow recipe, a
+   colour, a delay sequence, or a magic number written more than twice
+   becomes a named token, a shared utility class, or a CSS variable. If a
+   theme token already exists for it, use the token.
+4. **Extract structure, not coincidence.** Only merge blocks that are alike
+   *because they mean the same thing*. Two blocks that resemble each other
+   today but answer to different parts of the design stay separate — leave a
+   comment saying so rather than forcing a shared component behind a pile of
+   boolean props.
+5. **De-duplication is refactoring, never redesign.** Output must be
+   identical: same DOM/native tree, same classes, same coordinates, same
+   behaviour. Carry every Figma node-ID comment across with its code.
+6. If honouring this would need a new dependency, a state library, or a
+   generic "config-driven renderer", stop and ask instead.
+
 ## Environment Setup
 
 Requires PostgreSQL 18+ on port **5433**, database `mongolian_app`.

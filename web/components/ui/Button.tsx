@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 import { cn } from "@/lib/cn";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 
-type ButtonVariant = "cta" | "navOutline" | "navSolid" | "pricingOutline" | "pricingSolid";
+type ButtonVariant = "cta" | "navOutline" | "navSolid" | "pricingOutline" | "pricingSolid" | "ghost" | "stepNext";
 
 interface BaseProps {
   variant: ButtonVariant;
@@ -15,18 +15,21 @@ type ButtonProps =
   | (BaseProps & { href?: undefined } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children">);
 
 const base =
-  "inline-flex items-center justify-center gap-2.5 font-extrabold transition-[transform,box-shadow,background-color] duration-150 ease-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2";
+  "inline-flex items-center justify-center gap-2.5 font-extrabold transition-[transform,box-shadow,background-color] duration-150 ease-press focus-ring";
 
 const variants: Record<ButtonVariant, string> = {
   cta: "group w-full h-20 rounded-xl bg-brand-green border-b-[3px] border-brand-green-edge px-[30px] py-4 text-base font-black text-white shadow-card hover:-translate-y-px active:translate-y-px active:duration-75",
   navOutline:
-    "min-h-11 rounded-sm border border-border-card bg-white px-3.5 py-2 text-[13px] font-black text-text-nav-strong hover:bg-surface-lilac/60 lg:h-[34px] lg:min-h-0",
+    "min-h-11 rounded-sm border border-border-card bg-white px-3.5 py-2 text-sm font-black text-text-nav-strong hover:bg-surface-lilac/60 lg:h-[34px] lg:min-h-0 lg:text-[13px]",
   navSolid:
-    "min-h-11 rounded-sm border border-border-card bg-brand-green px-3.5 py-2 text-[13px] font-black text-text-nav-strong hover:brightness-105 lg:h-[34px] lg:min-h-0",
+    "min-h-11 rounded-sm border border-border-card bg-brand-green px-3.5 py-2 text-sm font-black text-text-nav-strong hover:brightness-105 lg:h-[34px] lg:min-h-0 lg:text-[13px]",
   pricingOutline:
     "w-full rounded-sm bg-surface-lilac px-5 py-2 text-sm text-brand-blue hover:brightness-97",
   pricingSolid:
     "w-full rounded-sm bg-brand-green px-5 py-2 text-sm text-black hover:brightness-105",
+  ghost: "rounded-sm text-sm font-extrabold text-text-nav",
+  stepNext:
+    "rounded-xl bg-brand-green px-[30px] py-4 text-[17px] font-bold text-white hover:-translate-y-px disabled:pointer-events-none disabled:opacity-50",
 };
 
 /** Renders an `<a>` when `href` is given, a `<button>` otherwise — the CTA

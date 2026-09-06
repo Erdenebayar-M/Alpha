@@ -1,6 +1,6 @@
 import { registerChild } from "@/lib/content";
-import ChoiceCard from "@/components/ui/ChoiceCard";
 import Button from "@/components/ui/Button";
+import ChoiceField, { type ChoiceFieldOption } from "@/components/register/ChoiceField";
 
 interface ProfileStepProps {
   age: number | null;
@@ -11,6 +11,26 @@ interface ProfileStepProps {
   onChangeGrade: (id: string) => void;
   onContinue: () => void;
 }
+
+const ageOptions: readonly ChoiceFieldOption[] = registerChild.ages.map((value) => ({
+  value: String(value),
+  label: (
+    <span className="flex flex-col items-center">
+      <span className="text-[22px] font-extrabold text-brand-blue">{value}</span>
+      <span className="text-base font-bold text-text-label">{registerChild.ageSuffix}</span>
+    </span>
+  ),
+}));
+
+const genderOptions: readonly ChoiceFieldOption[] = registerChild.genders.map((option) => ({
+  value: option.id,
+  label: <span className="whitespace-nowrap text-[15px] font-extrabold text-text-label">{option.label}</span>,
+}));
+
+const gradeOptions: readonly ChoiceFieldOption[] = registerChild.grades.map((option) => ({
+  value: option.id,
+  label: <span className="whitespace-nowrap text-[15px] font-extrabold text-brand-blue">{option.label}</span>,
+}));
 
 /** Step 1 of the register-child flow, node 1218:13843 ("Хувийн мэдээлэл").
  *  Figma renders the selected label one size up from the unselected ones
@@ -29,6 +49,36 @@ export default function ProfileStep({
 }: ProfileStepProps) {
   const canContinue = age !== null && gender !== null && grade !== null;
 
+  const fields = [
+    {
+      legend: registerChild.ageLabel,
+      name: "age",
+      listClassName: "grid grid-cols-2 gap-2.5 sm:grid-cols-4",
+      cardClassName: "h-[clamp(48px,7dvh,64px)] px-5 py-3",
+      options: ageOptions,
+      selected: age === null ? null : String(age),
+      onChange: (value: string) => onChangeAge(Number(value)),
+    },
+    {
+      legend: registerChild.genderLabel,
+      name: "gender",
+      listClassName: "flex gap-3",
+      cardClassName: "h-[clamp(48px,7dvh,64px)] flex-1 p-4",
+      options: genderOptions,
+      selected: gender,
+      onChange: onChangeGender,
+    },
+    {
+      legend: registerChild.gradeLabel,
+      name: "grade",
+      listClassName: "flex flex-wrap gap-2.5",
+      cardClassName: "h-[clamp(48px,7dvh,64px)] px-3.5 py-2.5",
+      options: gradeOptions,
+      selected: grade,
+      onChange: onChangeGrade,
+    },
+  ];
+
   return (
     <form
       className="flex flex-col gap-6 lg:gap-[clamp(20px,4dvh,51px)]"
@@ -37,68 +87,9 @@ export default function ProfileStep({
         if (canContinue) onContinue();
       }}
     >
-      <fieldset className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0 lg:pl-[43px]">
-        <legend className="animate-rise-in p-0 text-xl font-extrabold text-text-label [animation-delay:0ms]">
-          {registerChild.ageLabel}
-        </legend>
-        <div className="grid animate-rise-in grid-cols-2 gap-2.5 [animation-delay:0ms] sm:grid-cols-4">
-          {registerChild.ages.map((value) => (
-            <ChoiceCard
-              key={value}
-              name="age"
-              value={String(value)}
-              checked={age === value}
-              onChange={() => onChangeAge(value)}
-              className="h-[clamp(48px,7dvh,64px)] px-5 py-3"
-            >
-              <span className="flex flex-col items-center">
-                <span className="text-[22px] font-extrabold text-brand-blue">{value}</span>
-                <span className="text-base font-bold text-text-label">{registerChild.ageSuffix}</span>
-              </span>
-            </ChoiceCard>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0 lg:pl-[43px]">
-        <legend className="animate-rise-in p-0 text-xl font-extrabold text-text-label [animation-delay:80ms]">
-          {registerChild.genderLabel}
-        </legend>
-        <div className="flex animate-rise-in gap-3 [animation-delay:80ms]">
-          {registerChild.genders.map((option) => (
-            <ChoiceCard
-              key={option.id}
-              name="gender"
-              value={option.id}
-              checked={gender === option.id}
-              onChange={onChangeGender}
-              className="h-[clamp(48px,7dvh,64px)] flex-1 p-4"
-            >
-              <span className="whitespace-nowrap text-[15px] font-extrabold text-text-label">{option.label}</span>
-            </ChoiceCard>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0 lg:pl-[43px]">
-        <legend className="animate-rise-in p-0 text-xl font-extrabold text-text-label [animation-delay:160ms]">
-          {registerChild.gradeLabel}
-        </legend>
-        <div className="flex animate-rise-in flex-wrap gap-2.5 [animation-delay:160ms]">
-          {registerChild.grades.map((option) => (
-            <ChoiceCard
-              key={option.id}
-              name="grade"
-              value={option.id}
-              checked={grade === option.id}
-              onChange={onChangeGrade}
-              className="h-[clamp(48px,7dvh,64px)] px-3.5 py-2.5"
-            >
-              <span className="whitespace-nowrap text-[15px] font-extrabold text-brand-blue">{option.label}</span>
-            </ChoiceCard>
-          ))}
-        </div>
-      </fieldset>
+      {fields.map((field, index) => (
+        <ChoiceField key={field.name} {...field} delayMs={index * 80} />
+      ))}
 
       {/* animate-rise-in goes on this wrapper, not the button — a CSS
           animation's own opacity keyframe otherwise permanently overrides

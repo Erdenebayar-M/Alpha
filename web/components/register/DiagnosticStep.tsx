@@ -1,12 +1,22 @@
 import { useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { diagnostic } from "@/lib/content";
 import ChoiceCard from "@/components/ui/ChoiceCard";
+import Button from "@/components/ui/Button";
 
 interface DiagnosticStepProps {
   answer: string | null;
   onChangeAnswer: (choice: string) => void;
   onNext: () => void;
   onSkip: () => void;
+}
+
+const STAGGER_MS = 60;
+
+/** See HeroContent.tsx's `delay()` for why this is a CSS var rather than a
+ *  literal `[animation-delay:Nms]` class. */
+function delay(index: number): CSSProperties {
+  return { "--delay": `${index * STAGGER_MS}ms` } as CSSProperties;
 }
 
 /** The round "Дууг сонсох" play button's waveform — hand-authored to match
@@ -45,24 +55,27 @@ export default function DiagnosticStep({ answer, onChangeAnswer, onNext, onSkip 
     <div className="flex flex-col items-center gap-[clamp(20px,4dvh,32px)] text-center">
       <audio ref={audioRef} preload="none" src={diagnostic.audioSrc} onEnded={() => setIsPlaying(false)} />
 
-      <div className="animate-step-in flex flex-col items-center gap-2.5 [animation-delay:0ms]">
+      <div className="animate-step-in flex flex-col items-center gap-2.5 [animation-delay:var(--delay)]" style={delay(0)}>
         <p className="text-sm font-black tracking-[0.7px] text-accent-question uppercase">{diagnostic.eyebrow}</p>
         <p className="text-[28px] leading-[1.3] font-black text-text-question">{diagnostic.question}</p>
       </div>
 
-      <div className="animate-step-in flex flex-col items-center gap-2.5 [animation-delay:60ms]">
+      <div className="animate-step-in flex flex-col items-center gap-2.5 [animation-delay:var(--delay)]" style={delay(1)}>
         <button
           type="button"
           onClick={handlePlay}
           aria-label={diagnostic.audioHint}
-          className={`flex size-[clamp(72px,11dvh,104px)] items-center justify-center rounded-full border-2 border-accent-question bg-surface-lilac text-accent-question transition-transform duration-150 ease-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 ${isPlaying ? "scale-95" : "hover:-translate-y-px"}`}
+          className={`flex size-[clamp(72px,11dvh,104px)] items-center justify-center rounded-full border-2 border-accent-question bg-surface-lilac text-accent-question transition-transform duration-150 ease-press focus-ring ${isPlaying ? "scale-95" : "hover:-translate-y-px"}`}
         >
           <WaveformIcon className="size-[42px]" />
         </button>
         <p className="text-sm font-extrabold text-text-nav">{diagnostic.audioHint}</p>
       </div>
 
-      <fieldset className="m-0 flex w-full min-w-0 animate-step-in flex-col gap-2.5 border-0 p-0 [animation-delay:120ms]">
+      <fieldset
+        className="m-0 flex w-full min-w-0 animate-step-in flex-col gap-2.5 border-0 p-0 [animation-delay:var(--delay)]"
+        style={delay(2)}
+      >
         <legend className="sr-only">{diagnostic.question}</legend>
         {diagnostic.choices.map((choice) => (
           <ChoiceCard
@@ -79,22 +92,13 @@ export default function DiagnosticStep({ answer, onChangeAnswer, onNext, onSkip 
         ))}
       </fieldset>
 
-      <div className="flex w-full animate-step-in items-center justify-between [animation-delay:180ms]">
-        <button
-          type="button"
-          onClick={onSkip}
-          className="rounded-sm text-sm font-extrabold text-text-nav focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
-        >
+      <div className="flex w-full animate-step-in items-center justify-between [animation-delay:var(--delay)]" style={delay(3)}>
+        <Button variant="ghost" onClick={onSkip}>
           {diagnostic.skipLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={answer === null}
-          className="rounded-xl bg-brand-green px-[30px] py-4 text-[17px] font-bold text-white transition-[transform,box-shadow] duration-150 ease-press hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="stepNext" onClick={onNext} disabled={answer === null}>
           {diagnostic.nextLabel}
-        </button>
+        </Button>
       </div>
     </div>
   );

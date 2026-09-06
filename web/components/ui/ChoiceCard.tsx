@@ -28,7 +28,7 @@ export default function ChoiceCard({ name, value, checked, onChange, children, c
   return (
     <label
       className={cn(
-        "relative flex cursor-pointer items-center rounded-md transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-blue has-[:focus-visible]:ring-offset-2",
+        "relative flex cursor-pointer items-center rounded-md transition-colors focus-ring-within",
         marker ? "h-[clamp(56px,7dvh,72px)] gap-4 px-6 text-left" : "justify-center text-center",
         checked && marker && "border-2 border-accent-question bg-surface-lilac",
         checked && !marker && "border-2 border-brand-blue bg-surface-lilac",
