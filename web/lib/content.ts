@@ -76,48 +76,69 @@ export interface ChoiceOption {
   readonly label: string;
 }
 
-// Register-child flow, step 1 (Figma node 1218:13205, card 1218:13843).
+// Register-child flow — the three setup steps.
+// Gender  node 1218:13205 (card 1268:18752) / selected state 1269:18875
+// Name    node 1269:19324 (card 1269:19617)
+// Grade   node 1269:19819 (card 1269:20261) / enabled state 1269:20118
+//
+// The design has no visible heading on any of the three cards, so each step's
+// `legend` below exists only as an <fieldset>/<form> accessible name — it is
+// rendered sr-only, never drawn. The visible strings (option labels, field
+// labels, placeholders) are transcribed from the design as-is.
+//
+// `grades` is verbatim from node 1269:20305, which jumps preschool -> 2nd year
+// with no "1-р анги". Root CLAUDE.md forbids inventing vocabulary, so the gap
+// is left as designed rather than filled in.
 export const registerChild = {
-  ageLabel: "Нас",
-  ages: [5, 6, 7, 8],
-  ageSuffix: "нас",
-  genderLabel: "Хүйс",
+  genderLegend: "Хүүхдийн хүйс",
   genders: [
-    { id: "boy", label: "Хөвгүүн" },
-    { id: "girl", label: "Охин" },
+    { id: "boy", label: "Эрэгтэй" },
+    { id: "girl", label: "Эмэгтэй" },
   ],
-  gradeLabel: "Анги",
+  nameLegend: "Хүүхдийн нэр",
+  surnameLabel: "Овог",
+  surnamePlaceholder: "Батсайхан",
+  givenNameLabel: "Нэр",
+  givenNamePlaceholder: "Цэцэгмаа",
+  gradeLegend: "Хүүхдийн анги",
   grades: [
-    { id: "preschool", label: "Сургуулийн өмнөх" },
-    { id: "grade1", label: "1-р анги" },
+    { id: "preschool", label: "Сургуулийн өмнөх бэлтгэл" },
     { id: "grade2", label: "2-р анги" },
     { id: "grade3", label: "3-р анги" },
+    { id: "grade4", label: "4-р анги" },
   ],
+  // The setup CTA is arrow-only in every frame, so this names it for screen
+  // readers rather than printing next to the glyph.
   continueLabel: "Үргэлжлүүлэх",
 } as const satisfies {
-  ageLabel: string;
-  ages: readonly number[];
-  ageSuffix: string;
-  genderLabel: string;
+  genderLegend: string;
   genders: readonly ChoiceOption[];
-  gradeLabel: string;
+  nameLegend: string;
+  surnameLabel: string;
+  surnamePlaceholder: string;
+  givenNameLabel: string;
+  givenNamePlaceholder: string;
+  gradeLegend: string;
   grades: readonly ChoiceOption[];
   continueLabel: string;
 };
 
-// Register-child flow, step 2 (Figma node 1218:13643, card 1218:13786).
-// Choices transcribed verbatim from the design, including the third option's
-// Latin "o" (бороo vs. бороо/боро) — likely a Figma typo, but CLAUDE.md
-// forbids inventing or "correcting" vocabulary. The design marks no answer
-// as correct, so none is recorded here.
+// Register-child flow — the 9-exercise diagnostic that follows setup.
+// Chrome shared by every task card (nodes 1270:22692 … 1255:17752); the
+// per-exercise prompts and answer options live in lib/diagnostic-tasks.ts.
 export const diagnostic = {
-  eyebrow: "СОНСООД ЗӨВ ҮГИЙГ СОНГООРОЙ",
-  question: "Аль үгийг зөв бичсэн бэ?",
-  audioSrc: "/audio/boroo.mp3",
+  // "ДАСГАЛ {n}" — the count badge (node 1270:22695), which is also this
+  // flow's only progress indicator; the design draws no progress bar.
+  countBadge: (position: number) => `ДАСГАЛ ${position}`,
+  progressLabel: (position: number, total: number) =>
+    `${position} / ${total} дасгал`,
+  nextLabel: "Үргэлжлүүлэх",
   audioHint: "Дууг сонсох",
-  choices: ["бороо", "боро", "бороo"],
-  skipLabel: "Алгасах",
-  nextLabel: "Дараагийнх",
-  // TODO: no Figma node for the post-diagnostic state — confirm copy with design.
-  doneMessage: "Баярлалаа! Таны мэдээллийг хүлээн авлаа.",
+  // Speech bubble beside the listening mascot, node 1270:22713/22714.
+  audioPrompt: "Намайг дараарай!",
+  // TODO: neither the post-diagnostic state nor a renderer-failure state has a
+  // Figma node — confirm both with design.
+  fallbackMessage: "Энэ дасгалыг харуулж чадсангүй. Дараагийнх руу үргэлжлүүлнэ үү.",
+  doneTitle: "Баярлалаа!",
+  doneMessage: "Таны мэдээллийг хүлээн авлаа.",
 } as const;

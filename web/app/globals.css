@@ -54,15 +54,35 @@
   --color-sky-tint: rgba(63, 160, 251, 0.13);
   --color-sky-mid: #e5f1fd;
 
-  /* Borders (register-child form controls, node 1218:13843 / 1218:13786) */
-  --color-border-cyan: #32ade6;
-  --color-border-choice: #dde5ef;
-  /* The diagnostic card's own accent blue — close to but distinct from
-   * --color-brand-blue, measured off its own eyebrow/button/selected-answer
-   * fills rather than reused from the profile step's tokens. */
-  --color-accent-question: #315be8;
+
+  /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
+  --color-setup-border: #e7edf6;
+  --color-setup-label: #243f67;
+  --color-setup-grade: #f7faff;
+
+  /* --- Register-child diagnostic task cards (nodes 1270:22692 … 1255:17752) ---
+   * This family carries its own palette, distinct from the marketing page's
+   * brand tokens: the task blue is #2356f8, not #2f5be4. Measured off the
+   * card fills rather than reused from the brand scale. */
+  --color-task-accent: #2356f8;
+  --color-task-badge: #e7eeff;
+  --color-task-strong: #263446;
+  --color-task-muted: #718096;
+  --color-task-border: #dde8f5;
+  --color-task-tile: #f8fbff;
+  /* Sentence word chips + their dashed drop target (nodes 1255:16730 / 1255:16736).
+   * Both match mobile's theme (bubbleFill-adjacent chip, gapRing #FF8C3B). */
+  --color-task-chip: #eef6ff;
+  --color-task-gap: #ff8c3b;
+  /* Image frames on the letter-order / capital-letter cards (1255:17496,
+   * 1255:17763) — mobile calls the same value choiceBorder. */
+  --color-task-image-border: #d8e3f5;
 
   /* Radii */
+  --radius-card: 32px;
+  --radius-panel: 20px;
+  --radius-tile: 16px;
+  --radius-slot: 12px;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 22px;
@@ -73,7 +93,13 @@
   /* Shadows */
   --shadow-card: 0px 12px 16px rgba(16, 24, 40, 0.07);
   --shadow-page: 0px 24px 64px rgba(16, 24, 40, 0.07);
-  --shadow-question-card: 0px 16px 40px rgba(36, 66, 143, 0.09);
+  /* Register-child flow (setup cards 1268:18752, task cards 1270:22692 …) */
+  --shadow-setup-card: 0px 12px 32px rgba(25, 59, 112, 0.07);
+  --shadow-task-card: 0px 14px 36px rgba(44, 64, 100, 0.08);
+  --shadow-tile: 0px 8px 18px rgba(79, 125, 255, 0.14);
+  --shadow-tile-loose: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  --shadow-piece: 0px 4px 4px rgba(0, 0, 0, 0.05);
+  --shadow-slot: 0px 4px 4px rgba(40, 60, 100, 0.4);
 
   /* Easing (matches mobile/src/theme/motion.ts press feel) */
   --ease-press: cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -152,6 +178,48 @@ body {
   }
 }
 
+/* Mascot's "listening" state (ported from mobile's CharacterAvatar `playing`
+ * shared values) — halo pulse behind the character, plus the wave-bar/dot
+ * chrome ListeningMascot.tsx renders around it. */
+@keyframes halo-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+/* The bars are SVG rects, and each carries its own --wave-from/--wave-to:
+ * mobile tints a bar by its live height, so a short bar never reaches the
+ * full blue a tall one does (see waveFill in ListeningMascot.tsx). */
+@keyframes wave-bar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+    fill: var(--wave-from, #eff5fe);
+  }
+  50% {
+    transform: scaleY(1);
+    fill: var(--wave-to, #5088ee);
+  }
+}
+
+@keyframes wave-dot {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
 @keyframes step-in {
   from {
     opacity: 0;
@@ -188,6 +256,27 @@ body {
   animation: drift-x 40s linear infinite alternate;
 }
 
+.animate-halo-pulse {
+  animation: halo-pulse 6s ease-in-out infinite;
+}
+
+/* Both scale about their own centre, the way mobile's centred rows do —
+ * without fill-box an SVG child would scale about the viewBox origin.
+ * `backwards` matters as much: these are staggered up to 1.4s, and without it
+ * a bar renders its own pre-animation state for the whole delay (an SVG rect
+ * with no fill of its own is black). */
+.animate-wave-bar {
+  animation: wave-bar 1900ms ease-in-out infinite backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.animate-wave-dot {
+  animation: wave-dot 1900ms ease-in-out infinite backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 /* Scroll-reveal: Reveal.tsx toggles data-visible after IntersectionObserver
  * fires once, then disconnects. CSS drives the actual animation. */
 [data-reveal] {
@@ -206,7 +295,10 @@ body {
   .animate-float,
   .animate-blink,
   .animate-drift-slow,
-  .animate-drift-slower {
+  .animate-drift-slower,
+  .animate-halo-pulse,
+  .animate-wave-bar,
+  .animate-wave-dot {
     animation: none !important;
   }
 

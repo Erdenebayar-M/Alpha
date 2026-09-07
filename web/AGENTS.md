@@ -48,8 +48,23 @@ scroll performance.
 - `transform`/`opacity` only; no layout-triggering properties.
 - Must respect `prefers-reduced-motion` (see `globals.css`) — every new
   animation needs a reduced-motion fallback.
-- Keep the number of independently animated elements low; prefer CSS
-  animations over JS-driven ones.
+- Keep the number of independently animated elements low.
+- **Character animation is Framer Motion territory.** Anything animating a
+  mascot/character (`components/brand/`, and character-driven pieces like
+  `ListeningMascot.tsx`) — expression/state swaps, sequenced or staggered
+  limb/decoration motion, gesture- or audio-driven state, physics-y bounce —
+  use Framer Motion. These tend to have multiple coordinated parts and
+  interrupt-safe state transitions that get unwieldy as CSS class toggles.
+- **Everything else site-side (layout, scroll, hover/press, decorative
+  background elements) is CSS-first.** `@keyframes` in `globals.css`,
+  following the existing `float-y`/`blink-eyes` pattern, plus Tailwind
+  transition utilities for hover/press states. Don't reach for Framer Motion
+  for a fade-in, a hover lift, a scroll-reveal, or ambient drifting shapes —
+  CSS already does those cleanly and without a JS runtime cost.
+- When in doubt which bucket a piece of motion falls in, default to CSS —
+  only move to Framer Motion once CSS classes genuinely start fighting you
+  (coordinating many timed parts, needing interrupt/cancel semantics, or
+  driving motion off arbitrary JS state).
 
 ## Component & Architecture Rules
 

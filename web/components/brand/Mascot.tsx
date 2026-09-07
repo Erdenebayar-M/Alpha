@@ -1,8 +1,26 @@
 import { useId } from "react";
 import { cn } from "@/lib/cn";
 
+/** The artwork's coordinate space, exported so anything drawing chrome over
+ *  the mascot (ListeningMascot's wave bars) can share it instead of
+ *  re-deriving positions in percentages. */
+export const MASCOT_BOX = { width: 302, height: 312 };
+
+/** The globe itself — the anchor everything else on the character is
+ *  measured from, here and in ListeningMascot. */
+export const MASCOT_SPHERE = { cx: 150.693, cy: 163.722, r: 107.987 };
+
 interface MascotProps {
   className?: string;
+  /** Drop the image role and label — for call sites where the mascot sits
+   *  inside an already-labelled control (the diagnostic's play button) and
+   *  announcing it again would only add noise. */
+  decorative?: boolean;
+  /** The mascot's "Sound listening component" state (same Figma character,
+   *  ported from mobile's `CharacterAvatar`'s `playing` prop): eyes closed
+   *  and the halo pulses. Defaults to the idle, eyes-open state every other
+   *  call site (Hero, StepMascot, GenderStep) already renders. */
+  playing?: boolean;
 }
 
 /**
@@ -32,16 +50,25 @@ interface MascotProps {
  * Everything else — the green-hill clip, the three inline clouds, both
  * earbuds, the eyes/smile/headband — is the real exported path data.
  *
- * Sized by `aspect-[352/312]` (the source viewBox's own ratio) rather than
- * forced into a square box, so callers only need to set a width — height
- * follows automatically and the art never letterboxes.
+ * The 302x312 viewBox is the artwork's own box: the Figma component is 282
+ * wide with the character centred in it (sphere centre x = 140.69), plus the
+ * ~10px the glow overflows on each side. An earlier pass drew these same
+ * paths on a 352-wide canvas, which left 55px of dead space on the right and
+ * only 5px on the left — so centring the box left the character ~7% of its
+ * width off-centre, and anything positioned against the box's edges (the
+ * listening chrome in ListeningMascot.tsx) was anchored to nothing. Don't
+ * widen it back: the padding was an export artifact, not part of the design.
+ *
+ * Sized by `aspect-[302/312]` (the viewBox's own ratio) rather than forced
+ * into a square box, so callers only need to set a width — height follows
+ * automatically and the art never letterboxes.
  *
  * Rendered once (Hero.tsx resizes/reorders the same instance per
  * breakpoint instead of mounting it twice), so `useId()` only ever needs to
  * disambiguate this component from itself across separate page instances,
  * not two copies on the same page.
  */
-export default function Mascot({ className }: MascotProps) {
+export default function Mascot({ className, decorative, playing }: MascotProps) {
   const uid = useId();
   const bodyGrad = `mascot-body-${uid}`;
   const shadeGrad = `mascot-shade-${uid}`;
@@ -60,8 +87,14 @@ export default function Mascot({ className }: MascotProps) {
   const haloBlue = `mascot-halo-blue-${uid}`;
 
   return (
-    <div className={cn("relative aspect-[352/312] animate-float", className)}>
-      <svg viewBox="0 0 352 312" className="absolute inset-0 h-full w-full" role="img" aria-label="ОРто дүрс, санал болгож буй туслах">
+    <div className={cn("relative aspect-[302/312] animate-float", className)}>
+      <svg
+        viewBox={`0 0 ${MASCOT_BOX.width} ${MASCOT_BOX.height}`}
+        className="absolute inset-0 h-full w-full"
+        {...(decorative
+          ? { "aria-hidden": true as const }
+          : { role: "img", "aria-label": "ОРто дүрс, санал болгож буй туслах" })}
+      >
         <defs>
           <radialGradient id={haloPurple} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="white" stopOpacity="0" />
@@ -87,7 +120,7 @@ export default function Mascot({ className }: MascotProps) {
             <stop offset="1" stopColor="#4F9EF5" />
           </linearGradient>
           <clipPath id={bodyClip}>
-            <circle cx="150.693" cy="163.722" r="107.987" />
+            <circle {...MASCOT_SPHERE} />
           </clipPath>
           <linearGradient id={hillGradA} x1="78" y1="233" x2="145" y2="266" gradientUnits="userSpaceOnUse">
             <stop stopColor="#85DD54" />
@@ -133,7 +166,11 @@ export default function Mascot({ className }: MascotProps) {
           </linearGradient>
         </defs>
 
-        <g opacity="0.94">
+        <g
+          opacity="0.94"
+          className={playing ? "animate-halo-pulse" : undefined}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        >
           <ellipse cx="151" cy="157" rx="146" ry="134" fill={`url(#${haloBlue})`} />
           <ellipse cx="151" cy="157" rx="140" ry="129" fill={`url(#${haloPink})`} />
           <ellipse cx="151" cy="157" rx="134" ry="123" fill={`url(#${haloPurple})`} />
@@ -141,8 +178,8 @@ export default function Mascot({ className }: MascotProps) {
 
         <ellipse cx="149.7" cy="256.2" rx="81.24" ry="13.73" fill="#073CC2" opacity="0.12" />
 
-        <circle cx="150.693" cy="163.722" r="107.987" fill={`url(#${bodyGrad})`} />
-        <circle cx="150.695" cy="163.722" r="107.987" fill={`url(#${shadeGrad})`} fillOpacity="0.18" />
+        <circle {...MASCOT_SPHERE} fill={`url(#${bodyGrad})`} />
+        <circle {...MASCOT_SPHERE} fill={`url(#${shadeGrad})`} fillOpacity="0.18" />
 
         <g clipPath={`url(#${bodyClip})`}>
           <path
@@ -227,16 +264,43 @@ export default function Mascot({ className }: MascotProps) {
           fill="#17191B"
         />
 
-        <g style={{ transformBox: "fill-box", transformOrigin: "center" }} className="animate-blink">
+        <g
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          className={playing ? undefined : "animate-blink"}
+        >
           <g>
             <circle cx="175.46" cy="120.18" r="20.9" fill="white" />
-            <circle cx="173.89" cy="120.73" r="12.6" fill="#111111" />
-            <circle cx="183.27" cy="115.17" r="3.3" fill="white" />
+            {playing ? (
+              <path
+                d="M165 121C167.5 126 179 126 182.5 121"
+                stroke="#111111"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+            ) : (
+              <>
+                <circle cx="173.89" cy="120.73" r="12.6" fill="#111111" />
+                <circle cx="183.27" cy="115.17" r="3.3" fill="white" />
+              </>
+            )}
           </g>
           <g>
             <circle cx="130.18" cy="120.18" r="20.9" fill="white" />
-            <circle cx="130.54" cy="120.73" r="12.6" fill="#111111" />
-            <circle cx="136.05" cy="115.17" r="3.3" fill="white" />
+            {playing ? (
+              <path
+                d="M120.5 121C123 126 134.5 126 138 121"
+                stroke="#111111"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+            ) : (
+              <>
+                <circle cx="130.54" cy="120.73" r="12.6" fill="#111111" />
+                <circle cx="136.05" cy="115.17" r="3.3" fill="white" />
+              </>
+            )}
           </g>
         </g>
 

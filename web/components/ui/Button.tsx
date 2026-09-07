@@ -2,7 +2,14 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 import { cn } from "@/lib/cn";
 import ArrowIcon from "@/components/ui/ArrowIcon";
 
-type ButtonVariant = "cta" | "navOutline" | "navSolid" | "pricingOutline" | "pricingSolid" | "ghost" | "stepNext";
+type ButtonVariant =
+  | "cta"
+  | "navOutline"
+  | "navSolid"
+  | "pricingOutline"
+  | "pricingSolid"
+  | "setupNext"
+  | "taskNext";
 
 interface BaseProps {
   variant: ButtonVariant;
@@ -27,17 +34,29 @@ const variants: Record<ButtonVariant, string> = {
     "w-full rounded-sm bg-surface-lilac px-5 py-2 text-sm text-brand-blue hover:brightness-97",
   pricingSolid:
     "w-full rounded-sm bg-brand-green px-5 py-2 text-sm text-black hover:brightness-105",
-  ghost: "rounded-sm text-sm font-extrabold text-text-nav",
-  stepNext:
-    "rounded-xl bg-brand-green px-[30px] py-4 text-[17px] font-bold text-white hover:-translate-y-px disabled:pointer-events-none disabled:opacity-50",
+  /* The register-child setup steps' arrow-only CTA (node 1269:19687). Disabled
+   * fades only the bar's gradient stops, exactly as node 1269:18869 draws it —
+   * the arrow and the bottom edge stay at full strength. Fading the background
+   * instead of the whole button also keeps this clear of the CSS-animation
+   * problem noted in GenderStep: an entrance animation's own opacity keyframe
+   * would win over disabled:opacity-* for its whole fill-mode duration. */
+  setupNext:
+    "group h-[66px] w-full rounded-xl border-b-[3px] border-brand-green-edge bg-linear-to-r from-task-accent to-brand-blue px-[30px] py-4 text-white hover:-translate-y-px active:translate-y-px active:duration-75 disabled:pointer-events-none disabled:from-task-accent/20 disabled:to-brand-blue/20",
+  /* The diagnostic task cards' CTA (node 1255:16764 and siblings) — the same
+   * green bar as `cta` but edged in brand blue and unshadowed, per the design. */
+  taskNext:
+    "group h-20 w-full rounded-xl border-b-[3px] border-brand-blue bg-brand-green px-[30px] py-4 text-base font-black text-white hover:-translate-y-px active:translate-y-px active:duration-75 disabled:pointer-events-none disabled:bg-brand-green/40",
 };
 
+/** Variants whose Figma node draws the trailing arrow glyph. */
+const withArrow: ReadonlySet<ButtonVariant> = new Set<ButtonVariant>(["cta", "setupNext", "taskNext"]);
+
 /** Renders an `<a>` when `href` is given, a `<button>` otherwise — the CTA
- *  variant is shared by the hero's link into the assessment and the
- *  register-child flow's form-submit buttons, so both need the same chrome. */
+ *  variant is shared by the hero's link into the assessment and the pricing
+ *  cards, so both need the same chrome. */
 export default function Button({ variant, children, className, ...props }: ButtonProps) {
   const classes = cn(base, variants[variant], className);
-  const arrow = variant === "cta" ? (
+  const arrow = withArrow.has(variant) ? (
     <ArrowIcon className="h-[29px] w-[53px] shrink-0 transition-transform duration-200 group-hover:translate-x-1" />
   ) : null;
 
