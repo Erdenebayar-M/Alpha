@@ -18,14 +18,15 @@ interface StepCardProps {
  * pathologically short viewports where content still can't fully fit; the
  * page itself never scrolls, only this card would.
  *
- * Each step keeps its own entrance animation, border/shadow treatment and
- * padding via `animationClassName`/`className`/`style` — only the height
- * cap and scroll fallback are shared.
+ * Each step keeps its own entrance animation, radius, shadow and padding via
+ * `animationClassName`/`className`/`style` — only the white fill, the height
+ * cap and the scroll fallback are shared. SetupCard and TaskCard are the two
+ * shells built on this.
  */
 export default function StepCard({ animationClassName, className, style, children }: StepCardProps) {
   return (
     <div
-      className={cn("max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-lg bg-white", animationClassName, className)}
+      className={cn("max-h-[calc(100dvh-7rem)] overflow-y-auto bg-white", animationClassName, className)}
       style={style}
     >
       {children}

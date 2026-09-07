@@ -2,81 +2,108 @@
 
 import { useState } from "react";
 import { diagnostic } from "@/lib/content";
-import ProfileStep from "@/components/register/ProfileStep";
-import DiagnosticStep from "@/components/register/DiagnosticStep";
+import { diagnosticTasks } from "@/lib/diagnostic-tasks";
 import StepCard from "@/components/register/StepCard";
+import GenderStep from "@/components/register/steps/GenderStep";
+import NameStep from "@/components/register/steps/NameStep";
+import GradeStep from "@/components/register/steps/GradeStep";
+import ExerciseEngine from "@/components/register/exercise/ExerciseEngine";
 
-type Step = "profile" | "diagnostic" | "done";
+type Phase = "gender" | "name" | "grade" | "diagnostic" | "done";
 
 interface Answers {
-  age: number | null;
   gender: string | null;
+  surname: string;
+  givenName: string;
   grade: string | null;
-  diagnosticAnswer: string | null;
+  /** Keyed by task id, so a response survives being read back out of order. */
+  responses: Readonly<Record<string, string>>;
 }
 
-/** Owns the register-child flow's only state: which step is showing, and the
- *  answers collected so far. No backend yet — finishing/skipping just logs
- *  the answers and shows a placeholder confirmation (see doneMessage's TODO
- *  in lib/content.ts, since Figma has no frame for this state). */
-export default function RegisterChildFlow() {
-  const [step, setStep] = useState<Step>("profile");
-  const [answers, setAnswers] = useState<Answers>({ age: null, gender: null, grade: null, diagnosticAnswer: null });
+const EMPTY: Answers = { gender: null, surname: "", givenName: "", grade: null, responses: {} };
 
-  function finish(diagnosticAnswer: string | null) {
-    console.log("register-child answers", { ...answers, diagnosticAnswer });
-    setStep("done");
+/**
+ * Owns the whole register-child flow: which of the twelve screens is showing,
+ * and everything collected so far. It is the only client component in the
+ * flow — every step and renderer below it is a child of this boundary — and
+ * the only place that holds state, which is what web/AGENTS.md asks for on a
+ * presentation site ("no state management libraries, context providers, API
+ * layers, or custom hooks unless a section genuinely needs one").
+ *
+ * The diagnostic phase is modelled on mobile's lesson runner
+ * (mobile/app/(app)/learner/[id]/lesson.tsx): hold an index into the task list,
+ * hand the current task to the engine, advance on its result, finish on the
+ * last one. What is deliberately not carried over is the runner's scoring —
+ * `onResult` reports only what was answered, never whether it was right.
+ *
+ * There is no backend yet and no back navigation, matching both the design
+ * (which draws neither a back control nor a step indicator beyond the count
+ * badge) and the flow this replaces. Reloading starts over.
+ */
+export default function RegisterChildFlow() {
+  const [phase, setPhase] = useState<Phase>("gender");
+  const [taskIndex, setTaskIndex] = useState(0);
+  const [answers, setAnswers] = useState<Answers>(EMPTY);
+
+  const task = diagnosticTasks[taskIndex];
+
+  function handleResult(answer: string) {
+    const responses = { ...answers.responses, [task.id]: answer };
+    setAnswers((previous) => ({ ...previous, responses }));
+
+    if (taskIndex + 1 < diagnosticTasks.length) {
+      setTaskIndex(taskIndex + 1);
+      return;
+    }
+
+    // TODO: no submission endpoint from this page yet — see lib/site-config.ts,
+    // whose auth URLs are still placeholders.
+    console.log("register-child answers", { ...answers, responses });
+    setPhase("done");
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[min(760px,53vw)] flex-col">
-      {/* max-w and the lg: padding on each step below are clamp()ed against
-          dvh/vw rather than pinned to Figma's literal 760px/60px/40px: those
-          numbers only look right at Figma's own 1440x1200 canvas, and this
-          screen has to fit whatever real (often shorter, often narrower)
-          viewport it's given without scrolling. Each clamp still resolves
-          to the exact Figma value once the viewport is as tall/wide as the
-          design, so nothing is invented — just given room to shrink. Why
-          each card caps its own height instead of the section scrolling:
-          see StepCard. */}
-      {step === "profile" ? (
-        <StepCard
-          key="profile"
-          animationClassName="animate-rise-in"
-          className="border border-border-card px-6 py-6 shadow-card sm:px-10 sm:py-8 lg:pt-[clamp(32px,6dvh,60px)] lg:pb-[clamp(24px,4dvh,40px)]"
-        >
-          <ProfileStep
-            age={answers.age}
-            gender={answers.gender}
-            grade={answers.grade}
-            onChangeAge={(age) => setAnswers((prev) => ({ ...prev, age }))}
-            onChangeGender={(gender) => setAnswers((prev) => ({ ...prev, gender }))}
-            onChangeGrade={(grade) => setAnswers((prev) => ({ ...prev, grade }))}
-            onContinue={() => setStep("diagnostic")}
-          />
-        </StepCard>
-      ) : step === "diagnostic" ? (
-        <StepCard
-          key="diagnostic"
-          animationClassName="animate-step-in"
-          className="flex flex-col justify-center p-6 sm:p-8 lg:p-[clamp(24px,5dvh,48px)]"
-          style={{ boxShadow: "var(--shadow-question-card)" }}
-        >
-          <DiagnosticStep
-            answer={answers.diagnosticAnswer}
-            onChangeAnswer={(diagnosticAnswer) => setAnswers((prev) => ({ ...prev, diagnosticAnswer }))}
-            onNext={() => finish(answers.diagnosticAnswer)}
-            onSkip={() => finish(null)}
-          />
-        </StepCard>
+    <div className="mx-auto flex w-full max-w-[800px] flex-col">
+      {phase === "gender" ? (
+        <GenderStep
+          key="gender"
+          gender={answers.gender}
+          onChange={(gender) => setAnswers((previous) => ({ ...previous, gender }))}
+          onContinue={() => answers.gender !== null && setPhase("name")}
+        />
+      ) : phase === "name" ? (
+        <NameStep
+          key="name"
+          surname={answers.surname}
+          givenName={answers.givenName}
+          onChangeSurname={(surname) => setAnswers((previous) => ({ ...previous, surname }))}
+          onChangeGivenName={(givenName) => setAnswers((previous) => ({ ...previous, givenName }))}
+          onContinue={() => setPhase("grade")}
+        />
+      ) : phase === "grade" ? (
+        <GradeStep
+          key="grade"
+          grade={answers.grade}
+          onChange={(grade) => setAnswers((previous) => ({ ...previous, grade }))}
+          onContinue={() => setPhase("diagnostic")}
+        />
+      ) : phase === "diagnostic" ? (
+        <ExerciseEngine
+          key={task.id}
+          task={task}
+          position={taskIndex + 1}
+          total={diagnosticTasks.length}
+          onResult={handleResult}
+        />
       ) : (
         <StepCard
           key="done"
           animationClassName="animate-step-in"
-          className="flex flex-col items-center justify-center gap-2 p-12 text-center"
-          style={{ boxShadow: "var(--shadow-question-card)" }}
+          className="mx-auto flex w-full max-w-[620px] flex-col items-center justify-center gap-2 rounded-card p-12 text-center"
+          style={{ boxShadow: "var(--shadow-setup-card)" }}
         >
-          <p className="text-xl font-extrabold text-text-label">{diagnostic.doneMessage}</p>
+          <p className="text-2xl font-black text-task-strong">{diagnostic.doneTitle}</p>
+          <p className="text-base font-bold text-task-muted">{diagnostic.doneMessage}</p>
         </StepCard>
       )}
     </div>
