@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import Button from "@/components/ui/Button";
 import ChoiceCard from "@/components/ui/ChoiceCard";
 import SetupCard from "@/components/register/SetupCard";
+import ChildMascot from "@/components/brand/ChildMascot";
 
 interface GenderStepProps {
   gender: string | null;
@@ -16,11 +17,6 @@ interface GenderStepProps {
  * well (nodes 1268:18771 for Эрэгтэй, 1268:18825 for Эмэгтэй). Figma positions
  * both by absolute inset, which only holds at the design's own card size —
  * expressed as percentages they stay true at every width the card shrinks to.
- *
- * Both files are SVG and decorative here (the visible text label names the
- * choice), so they are painted as backgrounds: that keeps them out of
- * next/image, which would otherwise need `dangerouslyAllowSVG` turned on
- * globally just to serve two of our own vector assets.
  */
 const MASCOTS: Record<string, CSSProperties> = {
   // mobile/assets/onboarding/gender/boy/group.svg — the same flattened
@@ -33,12 +29,16 @@ const MASCOTS: Record<string, CSSProperties> = {
   girl: { left: "12.5%", top: "3.83%", width: "79.7%", height: "76.48%", rotate: "-3.74deg" },
 };
 
-/** The green tick that marks the chosen card, node 1268:18818 / 1269:18875. */
-function CheckBadge() {
+/** The green tick that marks the chosen card, node 1268:18818 / 1269:18875 —
+ *  always mounted (AvatarBubble's own pattern) and driven by `.gender-check`
+ *  in globals.css, so it pops in on the same beat as the boy's eyes opening
+ *  instead of cutting in/out with the card border. */
+function CheckBadge({ selected }: { selected: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute top-2.5 right-2.5 flex size-6 items-center justify-center rounded-full bg-brand-green"
+      data-selected={selected ? "true" : undefined}
+      className="gender-check absolute top-2.5 right-2.5 flex size-6 items-center justify-center rounded-full bg-brand-green"
     >
       <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
         <path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -54,7 +54,12 @@ function CheckBadge() {
  *  this option, so leaving it outside would drop the radio back to announcing
  *  its raw value ("girl"). The border and the tick therefore sit on an inner
  *  box rather than on the label itself, which is why this step draws its own
- *  selected state instead of handing one to ChoiceCard. */
+ *  selected state instead of handing one to ChoiceCard.
+ *
+ *  The boy's eyes cross-dissolve open on selection and shut again on
+ *  deselection (mobile's GenderStep/BOY_EYES_DRIVEN — see ChildMascot.tsx
+ *  and the "register-child gender mascot" section of globals.css); the girl
+ *  has no equivalent state, only her ambient idle loops. */
 export default function GenderStep({ gender, onChange, onContinue }: GenderStepProps) {
   return (
     <SetupCard
@@ -86,12 +91,14 @@ export default function GenderStep({ gender, onChange, onContinue }: GenderStepP
               >
                 {/* The well keeps Figma's 216:209 ratio so the percentages above stay exact. */}
                 <span className="block aspect-[216/209]" />
-                <span
-                  aria-hidden="true"
-                  className="absolute bg-contain bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url(/mascots/${option.id}.svg)`, ...MASCOTS[option.id] }}
+                <ChildMascot
+                  gender={option.id as "boy" | "girl"}
+                  awake={checked}
+                  reveal
+                  className="absolute"
+                  style={MASCOTS[option.id]}
                 />
-                {checked ? <CheckBadge /> : null}
+                <CheckBadge selected={checked} />
               </span>
               <span className="text-base font-bold text-setup-label">{option.label}</span>
             </ChoiceCard>

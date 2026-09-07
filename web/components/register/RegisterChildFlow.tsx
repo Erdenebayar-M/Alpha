@@ -71,18 +71,20 @@ export default function RegisterChildFlow() {
           onChange={(gender) => setAnswers((previous) => ({ ...previous, gender }))}
           onContinue={() => answers.gender !== null && setPhase("name")}
         />
-      ) : phase === "name" ? (
+      ) : phase === "name" && answers.gender !== null ? (
         <NameStep
           key="name"
+          gender={answers.gender as "boy" | "girl"}
           surname={answers.surname}
           givenName={answers.givenName}
           onChangeSurname={(surname) => setAnswers((previous) => ({ ...previous, surname }))}
           onChangeGivenName={(givenName) => setAnswers((previous) => ({ ...previous, givenName }))}
           onContinue={() => setPhase("grade")}
         />
-      ) : phase === "grade" ? (
+      ) : phase === "grade" && answers.gender !== null ? (
         <GradeStep
           key="grade"
+          gender={answers.gender as "boy" | "girl"}
           grade={answers.grade}
           onChange={(grade) => setAnswers((previous) => ({ ...previous, grade }))}
           onContinue={() => setPhase("diagnostic")}
