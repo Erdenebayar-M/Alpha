@@ -65,6 +65,15 @@ scroll performance.
   only move to Framer Motion once CSS classes genuinely start fighting you
   (coordinating many timed parts, needing interrupt/cancel semantics, or
   driving motion off arbitrary JS state).
+- In practice, every character on this site so far (`Mascot.tsx`,
+  `ListeningMascot.tsx`, `ChildMascot.tsx`) has stayed CSS-first: registered
+  custom properties (`@property`) stand in for a shared driver value, with
+  `calc()`/`clamp()` on each dependent element doing what `interpolate()`
+  does on the mobile side — see the "register-child gender mascot" section
+  of `globals.css`. No dependency has been added yet; keep defaulting to CSS
+  per the rule above, and only reach for Framer Motion when a character
+  genuinely needs interrupt-safe JS-driven sequencing this technique can't
+  express.
 
 ## Component & Architecture Rules
 
