@@ -1,8 +1,8 @@
 import RegisterHills from "@/components/decor/RegisterHills";
 import RegisterClouds from "@/components/decor/RegisterClouds";
-import DistantTrees from "@/components/decor/DistantTrees";
-import { PairFlower, YellowFlower, WhiteTrioFlower, LilacPetal } from "@/components/decor/Flower";
-import Tree from "@/components/decor/Tree";
+import { ARTWORK_FLOWERS, ARTWORK_TREES, ArtworkGlint, DecorItems } from "@/components/decor/ArtworkDecor";
+import { PairFlower } from "@/components/decor/Flower";
+import { SoftCloud, type SoftCloudPosition } from "@/components/decor/SoftCloud";
 import { SKY_GRADIENT } from "@/components/decor/sky";
 
 /**
@@ -66,6 +66,15 @@ import { SKY_GRADIENT } from "@/components/decor/sky";
 const SCENE_H = "calc(100dvh * 1202 / 1218)";
 const SCENE_W = "calc(100dvh * 1440 / 1218)";
 
+// The four "bg-cloud" blobs (nodes 1218:13397–13400), as percentages of the
+// ambience layer.
+const SOFT_CLOUDS: SoftCloudPosition[] = [
+  { left: "-8.333%", top: "-9.984%", width: "22.222%", height: "13.311%" },
+  { left: "77.778%", top: "11.647%", width: "19.444%", height: "11.647%" },
+  { left: "-5.556%", top: "68.22%", width: "18.056%", height: "10.816%" },
+  { left: "80.556%", top: "64.892%", width: "15.278%", height: "9.151%" },
+];
+
 export default function RegisterScene() {
   return (
     <>
@@ -81,22 +90,9 @@ export default function RegisterScene() {
         style={{ background: SKY_GRADIENT }}
       >
         <div className="absolute inset-0" style={{ contain: "paint" }}>
-          <div
-            className="absolute rounded-full bg-white"
-            style={{ left: "-8.333%", top: "-9.984%", width: "22.222%", height: "13.311%", opacity: 0.35, filter: "blur(20px)" }}
-          />
-          <div
-            className="absolute rounded-full bg-white"
-            style={{ left: "77.778%", top: "11.647%", width: "19.444%", height: "11.647%", opacity: 0.35, filter: "blur(20px)" }}
-          />
-          <div
-            className="absolute rounded-full bg-white"
-            style={{ left: "-5.556%", top: "68.22%", width: "18.056%", height: "10.816%", opacity: 0.35, filter: "blur(20px)" }}
-          />
-          <div
-            className="absolute rounded-full bg-white"
-            style={{ left: "80.556%", top: "64.892%", width: "15.278%", height: "9.151%", opacity: 0.35, filter: "blur(20px)" }}
-          />
+          {SOFT_CLOUDS.map((cloud, i) => (
+            <SoftCloud key={i} {...cloud} />
+          ))}
           <div
             className="absolute rounded-full"
             style={{
@@ -133,20 +129,12 @@ export default function RegisterScene() {
           </div>
 
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2" style={{ width: SCENE_W, height: SCENE_H }}>
-            <Tree className="h-auto" style={{ left: "88.889%", top: "54.243%", width: "6.024%" }} />
-            <Tree className="h-auto" style={{ left: "93.193%", top: "58.15%", width: "5.368%" }} />
-            <DistantTrees className="h-auto" style={{ left: "5.972%", top: "44.593%", width: "14.887%" }} />
+            <DecorItems items={ARTWORK_TREES} />
 
             <PairFlower className="h-auto" style={{ left: "73.958%", top: "78.869%", width: "9.15%" }} />
-            <YellowFlower className="h-auto" style={{ left: "14.167%", top: "80.616%", width: "6.076%" }} />
-            <WhiteTrioFlower className="h-auto" style={{ left: "59.431%", top: "66.639%", width: "4.781%" }} />
-            <LilacPetal className="h-auto" style={{ left: "8.889%", top: "61.065%", width: "3.01%" }} />
+            <DecorItems items={ARTWORK_FLOWERS} />
 
-            <div
-              aria-hidden="true"
-              className="absolute rotate-45 bg-white"
-              style={{ left: "31.16%", top: "12.665%", width: "2.828%", aspectRatio: "1 / 1", filter: "blur(8px)" }}
-            />
+            <ArtworkGlint />
           </div>
         </div>
       </div>

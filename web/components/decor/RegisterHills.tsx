@@ -21,8 +21,13 @@
  * mirrored shape ever rises above the original anywhere in 0–1440 (checked
  * numerically), so this only ever extends the ground sideways — it never
  * changes a pixel of the artboard itself.
+ *
+ * Also drawn by LandingScene: the landing redesign's artwork (node 1360:8563)
+ * repeats every hill layer here at the same geometry, except the full-width
+ * `y=761` "hill-bottom-fill" band (register node 1218:13234), which that
+ * frame doesn't have — hence `midBand`.
  */
-export default function RegisterHills() {
+export default function RegisterHills({ midBand = true }: { midBand?: boolean }) {
   return (
     <svg
       viewBox="0 0 1440 1202"
@@ -48,7 +53,7 @@ export default function RegisterHills() {
           <ellipse cx="384.914" cy="1073.4" rx="392.914" ry="230.4" fill="var(--color-hill-front)" />
           <ellipse cx="1197.26" cy="886.629" rx="271.543" ry="195.429" fill="var(--color-hill-shade)" opacity="0.05" />
           <rect x="-8" y="905" width="1456" height="342" fill="var(--color-hill-front)" opacity="0.7" />
-          <rect x="0" y="761" width="1456" height="441" fill="var(--color-hill-mid)" opacity="0.85" />
+          {midBand && <rect x="0" y="761" width="1456" height="441" fill="var(--color-hill-mid)" opacity="0.85" />}
           <ellipse cx="674" cy="969" rx="845" ry="376" fill="var(--color-hill-front)" />
         </g>
         <clipPath id="rh-gutter-left">

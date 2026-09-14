@@ -60,6 +60,35 @@ export function PairFlower({ className, style }: WrapperProps) {
   );
 }
 
+// Landing redesign only: the lone white "хос цэцэг" on the left margin
+// (node 1360:8924). Same construction as one PairFlower head, but Figma
+// rotates and skews this instance, so the export bakes that into different
+// petal geometry — ported from that export rather than reusing PairFlower.
+export function WhiteFlower({ className, style }: WrapperProps) {
+  return (
+    <svg viewBox="0 0 84.1 110.54" className={cn("absolute", className)} style={style} aria-hidden="true">
+      <path
+        d="M48.6535 38.9268C48.8416 37.8384 49.8836 37.0593 50.9808 37.1867L57.0403 37.8901C58.2357 38.0288 58.9791 39.1799 58.632 40.3405C51.2673 64.964 49.2898 78.6093 48.2738 100.223C48.2176 101.419 47.1123 102.355 45.9149 102.216L39.8611 101.514C38.7639 101.386 38.027 100.401 38.2151 99.3124L48.6535 38.9268Z"
+        fill="#7A9E7A"
+      />
+      <ellipse cx="19.1865" cy="9.99078" rx="19.1865" ry="9.99078" transform="matrix(-0.784997 -0.580118 -0.784283 0.663347 50.6982 82.8057)" fill="#7A9E7A" />
+      <ellipse cx="15.3204" cy="6.76248" rx="15.3204" ry="6.76248" transform="matrix(-0.950728 0.378629 0.528604 0.815751 70.5713 66.9043)" fill="#7A9E7A" />
+      <path
+        d="M29.1331 102.908C30.1022 104.932 33.5843 105.365 40.745 104.57C44.8766 103.505 52.9249 101.491 51.9559 99.467C49.2482 98.6249 44.8261 97.2496 37.2356 97.2417C30.075 98.0365 28.164 100.884 29.1331 102.908Z"
+        fill="#7A9E7A"
+        opacity="0.7"
+      />
+      <g>
+        <ellipse cx="62.5053" cy="12.7808" rx="13.8676" ry="12.7808" fill="white" />
+        <ellipse cx="33.0424" cy="18.6382" rx="15.601" ry="14.3784" fill="white" />
+        <ellipse cx="36.5125" cy="45.2668" rx="16.7567" ry="15.4435" fill="white" />
+        <ellipse cx="65.9754" cy="37.2746" rx="15.0232" ry="13.8459" fill="white" />
+        <ellipse cx="48.6469" cy="29.8287" rx="13.8676" ry="12.7808" fill="#FDE68A" />
+      </g>
+    </svg>
+  );
+}
+
 export function YellowFlower({ className, style }: WrapperProps) {
   return (
     <svg viewBox="0 0 93 94" className={cn("absolute", className)} style={style} aria-hidden="true">
