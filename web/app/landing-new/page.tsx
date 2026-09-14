@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
+import LandingHero from "@/components/sections/LandingHero";
 import LandingScene from "@/components/sections/LandingScene";
 import { landingNav } from "@/lib/content";
 
@@ -18,7 +19,9 @@ export default function LandingNewPage() {
     <div className="relative isolate min-h-dvh lg:min-h-[2706px]">
       <LandingScene />
       <Header links={landingNav.links} variant="spacious" activeHref="#top" />
-      <main id="main" className="relative" />
+      <main id="main" className="relative">
+        <LandingHero />
+      </main>
     </div>
   );
 }

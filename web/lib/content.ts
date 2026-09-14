@@ -34,6 +34,30 @@ export const storeBadges = {
   downloadLabel: "Татаж авах",
 } as const;
 
+// /landing-new's hero (Figma node 1360:8705). The heading is one text layer
+// authored as two manual lines, kept as a 2-tuple here so the component can
+// join them with a <br/> inside a single <h1> rather than relying on wrap.
+export const landingHero = {
+  badge: "Эцэг эхэд",
+  headingLines: [
+    "Хүүхдээ илүү сайн ойлгох",
+    "Хүүхдийн тань өөртөө итгэх итгэлийг нэмэгдүүлэхэд тусална",
+  ] as [string, string],
+  lead: "Бага ангийн сурагчид, сургуулийн өмнөх шатны хүүхдүүдэд унших, зөв бичих, суралцахад нь дэмжлэг болох мэдээлэл, судалгаанд суурилсан зөвлөгөө дэмжлэгийг нэг дороос аваарай. ",
+  // Accessible name for the <section> landmark — distinct from the visible
+  // `badge` text so the two aren't read as the same thing twice.
+  sectionLabel: "Эцэг эхэд зориулсан танилцуулга",
+  // Accessible name for the cloud + reading-characters illustration
+  // (nodes 1360:8712, 1360:8738), which has no on-canvas text of its own.
+  artLabel: "Нархан, ОРто хоёр үүл дээр сууж ном уншиж байгаа зураг",
+} as const satisfies {
+  badge: string;
+  headingLines: readonly [string, string];
+  lead: string;
+  sectionLabel: string;
+  artLabel: string;
+};
+
 export const hero = {
   badge: "ХҮҮХДИЙН ХӨГЖЛИЙН ҮНЭЛГЭЭ",
   title: "Хүүхдийнхээ зөв бичих чадварыг өнөөдрөөс тодорхойлоорой",

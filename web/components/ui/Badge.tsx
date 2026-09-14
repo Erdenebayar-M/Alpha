@@ -4,11 +4,28 @@ import { cn } from "@/lib/cn";
 interface BadgeProps {
   children: ReactNode;
   className?: string;
+  /** "pill" (default) is the original eyebrow badge above the homepage H1
+   *  and section headings (Figma node 1202:7474): h-51, a rounded-pill
+   *  border, a leading dot, 16px black text. "flat" is the landing
+   *  redesign's smaller badge (node 1360:8707): h-35, 8px radius, no
+   *  border or dot, 18px text on a light-blue fill. */
+  variant?: "pill" | "flat";
 }
 
-/** The pill-shaped eyebrow badge used above the hero H1 and section headings.
- *  Figma (node 1202:7474): h-51, px-12 py-7, gap-8, dot 7px, text 16px black. */
-export default function Badge({ children, className }: BadgeProps) {
+export default function Badge({ children, className, variant = "pill" }: BadgeProps) {
+  if (variant === "flat") {
+    return (
+      <span
+        className={cn(
+          "inline-flex h-[35px] items-center justify-center rounded-sm bg-hero-badge px-3 py-[6px] text-[18px] text-hero-ink",
+          className
+        )}
+      >
+        {children}
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(

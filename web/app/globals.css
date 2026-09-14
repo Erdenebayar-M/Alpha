@@ -54,6 +54,12 @@
   --color-sky-tint: rgba(63, 160, 251, 0.13);
   --color-sky-mid: #e5f1fd;
 
+  /* --- Landing redesign hero (node 1360:8705) — its own "Basic color" and
+   * "Accents/Indigo" Figma variables, distinct from the brand-blue/indigo
+   * scale above. --- */
+  --color-hero-badge: #eaf5ff;
+  --color-hero-ink: #2e5be8;
+  --color-hero-lead: #6155f5;
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;
