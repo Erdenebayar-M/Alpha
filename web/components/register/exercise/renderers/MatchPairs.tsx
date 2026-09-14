@@ -94,7 +94,7 @@ export default function MatchPairs({ task, position, total, onResult }: Exercise
                 aria-pressed={picked}
                 aria-label={pair.image.alt}
                 className={cn(
-                  "flex h-[clamp(76px,15dvh,110px)] min-w-0 flex-1 items-center justify-center rounded-panel bg-white drop-shadow-piece transition-[border-color,transform] duration-150 ease-press focus-ring",
+                  "flex h-[clamp(76px,15dvh,110px)] min-w-0 flex-1 items-center justify-center rounded-panel bg-white shadow-piece transition-[border-color,transform] duration-150 ease-press focus-ring",
                   picked || imageLinked ? "border-2 border-task-accent" : "border border-task-border hover:-translate-y-px"
                 )}
               >
@@ -113,7 +113,7 @@ export default function MatchPairs({ task, position, total, onResult }: Exercise
                 disabled={pickedImage === null && !imageLinked}
                 aria-pressed={imageLinked}
                 className={cn(
-                  "flex h-[clamp(76px,15dvh,110px)] min-w-0 flex-1 items-center justify-center rounded-panel text-[clamp(18px,4vw,24px)] font-bold drop-shadow-piece transition-[border-color,transform] duration-150 ease-press focus-ring disabled:cursor-not-allowed",
+                  "flex h-[clamp(76px,15dvh,110px)] min-w-0 flex-1 items-center justify-center rounded-panel text-[clamp(18px,4vw,24px)] font-bold shadow-piece transition-[border-color,transform] duration-150 ease-press focus-ring disabled:cursor-not-allowed",
                   imageLinked
                     ? "border-2 border-task-accent bg-task-badge text-task-accent"
                     : "border border-task-border bg-white text-task-strong enabled:hover:-translate-y-px"

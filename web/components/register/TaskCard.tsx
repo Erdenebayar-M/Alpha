@@ -7,7 +7,11 @@ import StepCard from "@/components/register/StepCard";
 interface TaskCardProps {
   /** 1-based position in the diagnostic, shown in the count badge. */
   position: number;
-  total: number;
+  /** Omitted by the live diagnostic flow, whose adaptive length isn't known
+   *  up front — see lib/api/task-type-map.ts. When present, the fixture's
+   *  original "n / total" screen-reader text is used; when absent, the
+   *  count badge (which never showed a total) is the whole story. */
+  total?: number;
   prompt: string;
   /** Whether the exercise has been answered enough to move on. */
   canContinue: boolean;

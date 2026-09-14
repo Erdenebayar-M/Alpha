@@ -149,8 +149,11 @@ export const diagnostic = {
   // "ДАСГАЛ {n}" — the count badge (node 1270:22695), which is also this
   // flow's only progress indicator; the design draws no progress bar.
   countBadge: (position: number) => `ДАСГАЛ ${position}`,
-  progressLabel: (position: number, total: number) =>
-    `${position} / ${total} дасгал`,
+  // The live diagnostic's length is adaptive and unknown up front (see
+  // lib/api/task-type-map.ts), so `total` is omitted there and this falls
+  // back to a plain ordinal instead of a fraction.
+  progressLabel: (position: number, total?: number) =>
+    total === undefined ? `${position}-р дасгал` : `${position} / ${total} дасгал`,
   nextLabel: "Үргэлжлүүлэх",
   audioHint: "Дууг сонсох",
   // Speech bubble beside the listening mascot, node 1270:22713/22714.
@@ -160,4 +163,60 @@ export const diagnostic = {
   fallbackMessage: "Энэ дасгалыг харуулж чадсангүй. Дараагийнх руу үргэлжлүүлнэ үү.",
   doneTitle: "Баярлалаа!",
   doneMessage: "Таны мэдээллийг хүлээн авлаа.",
+
+  // Copy for the live-diagnostic screens (lib/api/task-type-map.ts). The
+  // backend serves task types the nine-card fixture never anticipated — the
+  // writing family above all — so those screens have no Figma node and are
+  // built from the same task-* tokens. Their copy still lives here rather than
+  // inline in the components, like the rest of this flow's chrome.
+  live: {
+    /** Under the writing field: how much is expected. */
+    wordCount: (count: number) => `${count} үг`,
+    sentenceCount: (count: number) => `${count} өгүүлбэр`,
+    letterCount: (count: number) => `${count} үсэг`,
+    audioMissing: "Дуу ачаалагдсангүй.",
+    // Header for a choice task whose prompt is itself the sentence being
+    // completed — the sentence moves down into its own panel, so the header
+    // needs the instruction the backend never sends. This is TT_1_1's own
+    // prompt ("Сонсоод зөв хариултыг сонгоорой.") without the listening half,
+    // rather than a new phrasing.
+    chooseAnswer: "Зөв хариултыг сонгоорой.",
+    dictationPlaceholder: "Сонссоноо бичнэ үү",
+    fillPlaceholder: "Дутуу үсэг",
+    sentenceFillPlaceholder: "Дутуу үг",
+    correctionPlaceholder: "Зассан хувилбар",
+    copyPlaceholder: "Хуулж бичнэ үү",
+    // Visual memory (TT_7_2) — the word shows, then hides.
+    memoryPlaceholder: "Санаж байгаагаа бичнэ үү",
+    memoryPrompt: "Одоо санаж бичнэ үү.",
+    memoryCountdown: (seconds: number) => `${seconds}`,
+    selfCheckPlaceholder: "Засварласан хариу",
+    selfCheckYours: "Таны хариу",
+    selfCheckModel: "Загвар хариу",
+  },
+
+  // Headers and drag instructions for the four live task_types routed to the
+  // designed punctuation/capital cards (TT_6_1..TT_6_4 — see
+  // lib/api/task-type-map.ts). Those tasks send only the sentence to judge, so
+  // the card's own instruction has to come from somewhere: these are the
+  // design's exact words for those exact exercises, kept verbatim from the
+  // fixture in lib/diagnostic-tasks.ts (nodes 1254:16502, 1255:16722,
+  // 1255:16988, 1255:17752) rather than written fresh.
+  punctuation: {
+    choicePrompt: "Өгүүлбэр дуусахад ямар тэмдэг тавих вэ?",
+    capitalPrompt: "Өгүүлбэр юугаар эхлэх вэ?",
+    periodPrompt: "Өгүүлбэрийн төгсгөлийг олж тэмдэглэ",
+    periodInstruction: "Цэгийг чирч өгүүлбэрийн төгсгөлд тавиарай.",
+    commaPrompt: "Таслалыг хаана, хаана тавих вэ?",
+    commaInstruction: "Таслалыг чирч зөв байрлалд дарна уу",
+  },
+
+  // Result screen (components/register/ResultCard.tsx) — also without a Figma
+  // node; see the TODO above.
+  result: {
+    levelConfidence: (label: string) => `Найдвартай байдал: ${label}`,
+    cappedByBank: "Энэ ангийн хамгийн хэцүү даалгавруудыг давсан тул түвшин үүнээс өндөр байж болзошгүй.",
+    topErrors: (codes: string) => `Түгээмэл алдаа: ${codes}`,
+    dailyMinutes: (minutes: number) => `Өдрийн дасгал: ~${minutes} мин`,
+  },
 } as const;

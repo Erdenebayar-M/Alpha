@@ -42,7 +42,7 @@ export default function FillLetterTiles({ task, position, total, onResult }: Exe
         />
 
         <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
-          <p className="text-base font-bold text-task-muted sm:text-lg">{task.hint}</p>
+          {task.hint ? <p className="text-base font-bold text-task-muted sm:text-lg">{task.hint}</p> : null}
 
           <p className="flex flex-wrap items-center gap-2">
             {task.segments.map((segment, index) => {
@@ -64,7 +64,7 @@ export default function FillLetterTiles({ task, position, total, onResult }: Exe
                   disabled={letter === null}
                   aria-label={`${slot + 1}-р нүд${letter === null ? "" : `: ${letter}`}`}
                   className={cn(
-                    "flex h-[clamp(40px,8vw,56px)] w-[clamp(32px,6vw,44px)] items-center justify-center rounded-sm border-2 bg-white text-[clamp(20px,4.5vw,32px)] font-black drop-shadow-slot focus-ring",
+                    "flex h-[clamp(40px,8vw,56px)] w-[clamp(32px,6vw,44px)] items-center justify-center rounded-sm border-2 bg-white text-[clamp(20px,4.5vw,32px)] font-black shadow-slot focus-ring",
                     letter === null
                       ? "border-task-border text-task-muted"
                       : "cursor-pointer border-task-accent text-task-accent"
