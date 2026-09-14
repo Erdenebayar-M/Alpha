@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Header from "@/components/layout/Header";
 import LandingScene from "@/components/sections/LandingScene";
+import { landingNav } from "@/lib/content";
 
 // Review route for the parents' landing redesign (Figma frame 1360:8561).
 // Kept out of search until it replaces `/`; everything else is inherited from
@@ -15,6 +17,7 @@ export default function LandingNewPage() {
     // the horizontal guard lives on `html` (see HeroScene).
     <div className="relative isolate min-h-dvh lg:min-h-[2706px]">
       <LandingScene />
+      <Header links={landingNav.links} variant="spacious" activeHref="#top" />
       <main id="main" className="relative" />
     </div>
   );

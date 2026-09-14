@@ -1,5 +1,12 @@
 /** Page copy, transcribed from the Figma design (file CO08jDXzqSImiVJLDsC18v). */
 
+import { siteConfig } from "@/lib/site-config";
+
+export interface NavLink {
+  readonly label: string;
+  readonly href: string;
+}
+
 export const nav = {
   links: [
     { label: "Нүүр", href: "#top" },
@@ -9,7 +16,19 @@ export const nav = {
     loginLabel: "Нэвтрэх",
     registerLabel: "Бүртгүүлэх",
   },
-} as const;
+} as const satisfies { links: readonly NavLink[]; auth: { loginLabel: string; registerLabel: string } };
+
+// /landing-new's own nav link set (Figma node 1360:8955), passed to Header in
+// place of the homepage's `nav.links` above. "Эцэг эхэд" is this page itself
+// (Header renders it at 16px with aria-current="page"); the other two are
+// existing destinations, sourced from site-config rather than repeated here.
+export const landingNav = {
+  links: [
+    { label: "Эцэг эхэд", href: "#top" },
+    { label: "Оношилгоо", href: siteConfig.assessmentUrl },
+    { label: "Үнэ", href: siteConfig.pricingUrl },
+  ],
+} as const satisfies { links: readonly NavLink[] };
 
 export const storeBadges = {
   downloadLabel: "Татаж авах",

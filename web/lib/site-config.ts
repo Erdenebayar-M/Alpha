@@ -10,6 +10,9 @@ export const siteConfig = {
   url: "https://orto.mn",
 
   assessmentUrl: "/register-child",
+  // The homepage's existing pricing anchor, reused as a cross-page nav
+  // destination from other routes (e.g. /landing-new's "Үнэ" link).
+  pricingUrl: "/#une",
 
   // TODO: replace with the real destinations.
   appUrl: "#",

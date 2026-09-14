@@ -6,6 +6,8 @@ type ButtonVariant =
   | "cta"
   | "navOutline"
   | "navSolid"
+  | "navOutlineLg"
+  | "navSolidLg"
   | "pricingOutline"
   | "pricingSolid"
   | "setupNext"
@@ -30,6 +32,14 @@ const variants: Record<ButtonVariant, string> = {
     "min-h-11 rounded-sm border border-border-card bg-white px-3.5 py-2 text-sm font-black text-text-nav-strong hover:bg-surface-lilac/60 lg:h-[34px] lg:min-h-0 lg:text-[13px]",
   navSolid:
     "min-h-11 rounded-sm border border-border-card bg-brand-green px-3.5 py-2 text-sm font-black text-text-nav-strong hover:brightness-105 lg:h-[34px] lg:min-h-0 lg:text-[13px]",
+  /* The landing redesign's spacious header (node 1360:8937) draws the same
+   * outline/solid chrome as navOutline/navSolid but never shrinks it at
+   * `lg` — kept as separate variants rather than a size prop on navOutline/
+   * navSolid because the two headers answer to different Figma frames. */
+  navOutlineLg:
+    "min-h-11 rounded-sm border border-border-card bg-white px-3.5 py-2 text-sm font-black text-text-nav-strong hover:bg-surface-lilac/60",
+  navSolidLg:
+    "min-h-11 rounded-sm border border-border-card bg-brand-green px-3.5 py-2 text-sm font-black text-text-nav-strong hover:brightness-105",
   pricingOutline:
     "w-full rounded-sm bg-surface-lilac px-5 py-2 text-sm text-brand-blue hover:brightness-97",
   pricingSolid:
