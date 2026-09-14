@@ -30,6 +30,14 @@ Figma node ID in a comment near the code that reproduces it (see the
 existing pattern in `globals.css`, `content.ts`, `Header.tsx`). Don't invent
 colors, spacing, or copy — pull them from the design or ask.
 
+Two Figma gotchas:
+- **Fonts:** set Mongolian text in Nunito even where Figma specifies Comic
+  Relief, keeping Figma's size, line height, tracking and weight. Comic
+  Relief's Cyrillic subset lacks Ө/Ү, so words would render in mixed fonts.
+- **Large frames:** `get_metadata` can return a big frame with no child
+  layers. Call `get_design_context` with `forceCode` on the node and read the
+  saved output instead.
+
 ## Background & Asset Strategy
 
 Decorative visuals follow a cost hierarchy — cheapest technique that
