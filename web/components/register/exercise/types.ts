@@ -11,6 +11,9 @@ export interface ExerciseProps<T extends DiagnosticTask = DiagnosticTask> {
   readonly task: T;
   /** 1-based position, for the card's count badge. */
   readonly position: number;
-  readonly total: number;
+  /** Omitted by the live diagnostic flow (lib/api/adapt.ts /
+   *  components/register/exercise/live/LiveExerciseEngine.tsx), whose
+   *  adaptive length isn't known up front — see TaskCard's own `total`. */
+  readonly total?: number;
   readonly onResult: (answer: string) => void;
 }

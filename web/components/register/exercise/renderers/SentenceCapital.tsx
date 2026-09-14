@@ -13,12 +13,16 @@ type CapitalTask = Extract<DiagnosticTask, { form: "sentence_capital" }>;
 export default function SentenceCapital({ task, position, total, onResult }: ExerciseProps<CapitalTask>) {
   const media = (
     <div className="flex w-full flex-col items-center gap-6 sm:flex-row sm:gap-10">
-      <TaskIllustration
-        image={task.image}
-        className="w-[clamp(96px,18vw,120px)] rounded-slot [aspect-ratio:4/3]"
-        sizes="(max-width: 640px) 18vw, 120px"
-        priority
-      />
+      {/* Live TT_6_1 tasks carry no picture (see lib/api/adapt.ts); the
+          sentence then takes the whole row. */}
+      {task.image ? (
+        <TaskIllustration
+          image={task.image}
+          className="w-[clamp(96px,18vw,120px)] rounded-slot [aspect-ratio:4/3]"
+          sizes="(max-width: 640px) 18vw, 120px"
+          priority
+        />
+      ) : null}
       <p className="flex min-w-0 flex-1 flex-col gap-3 text-center text-[clamp(20px,4.5vw,34px)] font-bold text-task-strong sm:text-left">
         {task.sentenceLines.map((line) => (
           <span key={line}>{line}</span>

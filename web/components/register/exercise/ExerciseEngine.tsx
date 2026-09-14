@@ -1,33 +1,12 @@
 "use client";
 
-import { Component } from "react";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 import { diagnostic } from "@/lib/content";
 import type { DiagnosticTask } from "@/lib/diagnostic-tasks";
 import TaskCard from "@/components/register/TaskCard";
+import RendererBoundary from "@/components/register/exercise/RendererBoundary";
 import { registry } from "@/components/register/exercise/registry";
 import type { ExerciseProps } from "@/components/register/exercise/types";
-
-interface BoundaryProps {
-  fallback: ReactNode;
-  children: ReactNode;
-}
-
-/** A renderer that throws must not take the whole diagnostic down with it —
- *  the learner should still be able to reach the next exercise. Same guarantee
- *  mobile's RendererBoundary gives the lesson runner. Error boundaries have no
- *  hook form, hence the class. */
-class RendererBoundary extends Component<BoundaryProps, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
-  }
-}
 
 /**
  * Picks the renderer for a task and hands it the card.

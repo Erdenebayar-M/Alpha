@@ -6,12 +6,16 @@ import TaskCard from "@/components/register/TaskCard";
 interface ChoiceExerciseProps {
   id: string;
   position: number;
-  total: number;
+  /** Optional for the same reason as TaskCard's — the live diagnostic's
+   *  adaptive length isn't known up front. */
+  total?: number;
   prompt: string;
   choices: readonly string[];
   onResult: (answer: string) => void;
-  /** Whatever the design puts between the header and the choices. */
-  media: ReactNode;
+  /** Whatever the design puts between the header and the choices. Given as a
+   *  function when it reflects the current answer — the live cloze cards show
+   *  the sentence with the chosen word dropped into its blank. */
+  media: ReactNode | ((selected: string | null) => ReactNode);
   /** Vertical rhythm of the card, which Figma varies per exercise. */
   className?: string;
   listClassName: string;
@@ -63,7 +67,7 @@ export default function ChoiceExercise({
       onNext={() => answer !== null && onResult(answer)}
       className={className}
     >
-      {media}
+      {typeof media === "function" ? media(answer) : media}
 
       <fieldset className={`m-0 w-full min-w-0 border-0 p-0 ${listClassName}`}>
         <legend className="sr-only">{prompt}</legend>

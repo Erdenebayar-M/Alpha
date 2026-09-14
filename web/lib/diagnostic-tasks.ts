@@ -54,15 +54,21 @@ export type ChoiceTask = TaskBase &
   (
     | { readonly form: "audio_choice"; readonly audioSrc: string; readonly choices: readonly string[] }
     | { readonly form: "image_match"; readonly image: TaskImage; readonly choices: readonly string[] }
+    // The two sentence-judging exercises draw an illustration beside the
+    // sentence, but the live task_types that reach them (TT_6_1, TT_6_2 — see
+    // lib/api/task-type-map.ts) carry `choiceOptions`, which has no image
+    // field at all. The picture is optional rather than these tasks being
+    // pushed to the generic choice list: the sentence panel and the option
+    // tiles are what these two cards are *for*.
     | {
         readonly form: "punctuation_choice";
-        readonly image: TaskImage;
+        readonly image?: TaskImage;
         readonly sentence: string;
         readonly choices: readonly string[];
       }
     | {
         readonly form: "sentence_capital";
-        readonly image: TaskImage;
+        readonly image?: TaskImage;
         readonly sentenceLines: readonly string[];
         readonly choices: readonly string[];
       }
@@ -86,14 +92,17 @@ export type LetterTask = TaskBase &
   (
     | {
         readonly form: "fill_letter_tiles";
-        readonly hint: string;
+        /** Optional because a live task has only one piece of prose — its
+         *  prompt, already in the card header (see lib/api/adapt.ts). */
+        readonly hint?: string;
         readonly image: TaskImage;
         readonly segments: readonly WordSegment[];
         readonly tiles: readonly string[];
       }
     | {
         readonly form: "assemble_word";
-        readonly hint: string;
+        /** Optional for the same reason as fill_letter_tiles' above. */
+        readonly hint?: string;
         readonly image: TaskImage;
         readonly slotCount: number;
         readonly tiles: readonly string[];

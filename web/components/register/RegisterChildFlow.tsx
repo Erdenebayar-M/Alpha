@@ -1,65 +1,116 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { diagnostic } from "@/lib/content";
-import { diagnosticTasks } from "@/lib/diagnostic-tasks";
 import StepCard from "@/components/register/StepCard";
 import GenderStep from "@/components/register/steps/GenderStep";
 import NameStep from "@/components/register/steps/NameStep";
 import GradeStep from "@/components/register/steps/GradeStep";
-import ExerciseEngine from "@/components/register/exercise/ExerciseEngine";
+import ResultCard from "@/components/register/ResultCard";
+import LiveExerciseEngine from "@/components/register/exercise/live/LiveExerciseEngine";
+import { startDiagnostic, submitDiagnostic } from "@/lib/api/client";
+import { ApiClientError } from "@/lib/api/types";
+import type { ApiDiagnosticTask, DiagnosticResult } from "@/lib/api/types";
 
-type Phase = "gender" | "name" | "grade" | "diagnostic" | "done";
+type Phase = "gender" | "name" | "grade" | "diagnostic" | "result";
 
 interface Answers {
   gender: string | null;
   surname: string;
   givenName: string;
   grade: string | null;
-  /** Keyed by task id, so a response survives being read back out of order. */
-  responses: Readonly<Record<string, string>>;
 }
 
-const EMPTY: Answers = { gender: null, surname: "", givenName: "", grade: null, responses: {} };
+const EMPTY: Answers = { gender: null, surname: "", givenName: "", grade: null };
+
+/** registerChild.grades' ids -> the backend's 1..4 grade column. "preschool"
+ *  has no dedicated backend grade, so it maps to 1 per the user's call. */
+const GRADE_TO_BACKEND: Record<string, number> = {
+  preschool: 1,
+  grade2: 2,
+  grade3: 3,
+  grade4: 4,
+};
+
+type DiagnosticState =
+  | { kind: "starting" }
+  | { kind: "error"; message: string }
+  | { kind: "running"; sessionId: string; task: ApiDiagnosticTask; itemNumber: number }
+  | { kind: "submitting"; sessionId: string; task: ApiDiagnosticTask; itemNumber: number };
 
 /**
- * Owns the whole register-child flow: which of the twelve screens is showing,
- * and everything collected so far. It is the only client component in the
- * flow — every step and renderer below it is a child of this boundary — and
- * the only place that holds state, which is what web/AGENTS.md asks for on a
- * presentation site ("no state management libraries, context providers, API
- * layers, or custom hooks unless a section genuinely needs one").
+ * Owns the whole register-child flow: which of the setup screens is showing,
+ * everything collected so far, and — once diagnostic starts — the live
+ * session against the real backend (see lib/api/client.ts, and the proxy
+ * routes under app/api/diagnostic/* that hold the dev auth token and strip
+ * every task's correct_answer before it reaches this component).
  *
- * The diagnostic phase is modelled on mobile's lesson runner
- * (mobile/app/(app)/learner/[id]/lesson.tsx): hold an index into the task list,
- * hand the current task to the engine, advance on its result, finish on the
- * last one. What is deliberately not carried over is the runner's scoring —
- * `onResult` reports only what was answered, never whether it was right.
- *
- * There is no backend yet and no back navigation, matching both the design
- * (which draws neither a back control nor a step indicator beyond the count
- * badge) and the flow this replaces. Reloading starts over.
+ * The diagnostic's length is adaptive (backend/src/lib/engines/
+ * diagnostic-adaptive.ts) — there is no fixed task list to index into, so
+ * this drives off the session returned by /start and each answer's response
+ * from /submit, the same inline-next-task loop mobile's diagnostic.tsx uses.
  */
 export default function RegisterChildFlow() {
   const [phase, setPhase] = useState<Phase>("gender");
-  const [taskIndex, setTaskIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>(EMPTY);
+  const [diagState, setDiagState] = useState<DiagnosticState>({ kind: "starting" });
+  const [result, setResult] = useState<DiagnosticResult | null>(null);
+  // 0 until beginDiagnostic/handleAnswer set a real timestamp — never read
+  // before then, since diagState only reaches "running" after that happens.
+  // Initialized to a literal (not Date.now()) because React requires render
+  // to stay pure; an impure initializer here would violate that rule.
+  const taskStartedAt = useRef<number>(0);
+  const startedRef = useRef(false);
 
-  const task = diagnosticTasks[taskIndex];
+  async function beginDiagnostic() {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    setPhase("diagnostic");
+    setDiagState({ kind: "starting" });
 
-  function handleResult(answer: string) {
-    const responses = { ...answers.responses, [task.id]: answer };
-    setAnswers((previous) => ({ ...previous, responses }));
+    const name = `${answers.surname} ${answers.givenName}`.trim() || "Хүүхэд";
+    const grade = GRADE_TO_BACKEND[answers.grade ?? "preschool"];
 
-    if (taskIndex + 1 < diagnosticTasks.length) {
-      setTaskIndex(taskIndex + 1);
-      return;
+    try {
+      const started = await startDiagnostic(name, grade);
+      taskStartedAt.current = Date.now();
+      setDiagState({ kind: "running", sessionId: started.session_id, task: started.task, itemNumber: started.item_number });
+    } catch (err) {
+      setDiagState({ kind: "error", message: err instanceof ApiClientError ? err.message : "Холболтын алдаа гарлаа." });
     }
+  }
 
-    // TODO: no submission endpoint from this page yet — see lib/site-config.ts,
-    // whose auth URLs are still placeholders.
-    console.log("register-child answers", { ...answers, responses });
-    setPhase("done");
+  async function handleAnswer(inputText: string) {
+    if (diagState.kind !== "running") return;
+    const { sessionId, task } = diagState;
+    const timeSeconds = Math.max(0, Math.round((Date.now() - taskStartedAt.current) / 1000));
+    setDiagState({ kind: "submitting", sessionId, task, itemNumber: diagState.itemNumber });
+
+    try {
+      // A blank answer (an unrenderable task skipped without input) would
+      // fail the backend's `input_text.min(1)` — mirrors mobile's diagnostic.tsx.
+      const answer = inputText.length > 0 ? inputText : "✗";
+      const submitted = await submitDiagnostic(sessionId, task.id, answer, timeSeconds);
+
+      if (submitted.completed) {
+        setResult(submitted.result);
+        setPhase("result");
+        return;
+      }
+
+      taskStartedAt.current = Date.now();
+      setDiagState({
+        kind: "running",
+        sessionId,
+        task: submitted.next_task,
+        itemNumber: submitted.item_number,
+      });
+    } catch (err) {
+      setDiagState({
+        kind: "error",
+        message: err instanceof ApiClientError ? err.message : "Хариултаа илгээхэд алдаа гарлаа.",
+      });
+    }
   }
 
   return (
@@ -87,16 +138,36 @@ export default function RegisterChildFlow() {
           gender={answers.gender as "boy" | "girl"}
           grade={answers.grade}
           onChange={(grade) => setAnswers((previous) => ({ ...previous, grade }))}
-          onContinue={() => setPhase("diagnostic")}
+          onContinue={beginDiagnostic}
         />
       ) : phase === "diagnostic" ? (
-        <ExerciseEngine
-          key={task.id}
-          task={task}
-          position={taskIndex + 1}
-          total={diagnosticTasks.length}
-          onResult={handleResult}
-        />
+        diagState.kind === "starting" ? (
+          <StepCard
+            animationClassName="animate-step-in"
+            className="mx-auto flex w-full max-w-[620px] flex-col items-center justify-center gap-4 rounded-card p-12 text-center"
+            style={{ boxShadow: "var(--shadow-setup-card)" }}
+          >
+            <p className="text-lg font-bold text-task-muted">Онош бэлдэж байна…</p>
+          </StepCard>
+        ) : diagState.kind === "error" ? (
+          <StepCard
+            animationClassName="animate-step-in"
+            className="mx-auto flex w-full max-w-[620px] flex-col items-center justify-center gap-4 rounded-card p-12 text-center"
+            style={{ boxShadow: "var(--shadow-setup-card)" }}
+          >
+            <p className="text-lg font-bold text-task-strong">{diagState.message}</p>
+          </StepCard>
+        ) : (
+          <LiveExerciseEngine
+            key={diagState.task.id}
+            task={diagState.task}
+            position={diagState.itemNumber}
+            onResult={handleAnswer}
+            onUnrenderable={() => handleAnswer("")}
+          />
+        )
+      ) : phase === "result" && result !== null ? (
+        <ResultCard result={result} />
       ) : (
         <StepCard
           key="done"

@@ -53,7 +53,7 @@ export default function AssembleWord({ task, position, total, onResult }: Exerci
             ))}
           </div>
 
-          <p className="text-sm text-task-muted">{task.hint}</p>
+          {task.hint ? <p className="text-sm text-task-muted">{task.hint}</p> : null}
 
           <div className="flex flex-wrap gap-2">
             {task.tiles.map((tile, index) => {
