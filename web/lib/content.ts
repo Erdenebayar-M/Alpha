@@ -58,6 +58,27 @@ export const landingHero = {
   artLabel: string;
 };
 
+export interface CategoryPill {
+  readonly label: string;
+  readonly href: string;
+}
+
+// /landing-new's Category pills (Figma node 1360:8718), directly under the
+// hero. Унших, Зөв бичих and Үсэглэх are Categories (see CONTEXT.md);
+// Оношилгоо is not a Category — it's a Diagnostic shortcut, so it links to
+// `assessmentUrl` rather than a Category placeholder.
+export const categoryPills = {
+  // Accessible name for the <nav> landmark grouping the four pills — Figma
+  // draws no heading above this row.
+  navLabel: "Ангилалын сонголтууд",
+  items: [
+    { label: "Унших", href: siteConfig.categoryUrls.reading },
+    { label: "Зөв бичих", href: siteConfig.categoryUrls.orthography },
+    { label: "Оношилгоо", href: siteConfig.assessmentUrl },
+    { label: "Үсэглэх", href: siteConfig.categoryUrls.spellingOut },
+  ],
+} as const satisfies { navLabel: string; items: readonly CategoryPill[] };
+
 export const hero = {
   badge: "ХҮҮХДИЙН ХӨГЖЛИЙН ҮНЭЛГЭЭ",
   title: "Хүүхдийнхээ зөв бичих чадварыг өнөөдрөөс тодорхойлоорой",

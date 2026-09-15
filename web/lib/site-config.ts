@@ -20,4 +20,14 @@ export const siteConfig = {
   registerUrl: "#",
   appStoreUrl: "#",
   playStoreUrl: "#",
+
+  // TODO: replace with the real Category destinations (see web/CONTEXT.md
+  // for the glossary). /landing-new's Category pills link here for Унших,
+  // Зөв бичих and Үсэглэх; Оношилгоо is not a Category and links to
+  // `assessmentUrl` above instead.
+  categoryUrls: {
+    reading: "#",
+    orthography: "#",
+    spellingOut: "#",
+  },
 } as const;
