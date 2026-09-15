@@ -62,6 +62,18 @@
   --color-hero-lead: #6155f5;
   /* Category pills (node 1360:8718), directly below the hero. */
   --color-pill-lilac: rgba(214, 194, 240, 0.64);
+  /* Diagnostic card (node 1401:21880) — its lilac card-badge fill (Badge's
+   * "lilac" variant, node 1401:21883) and the card's own white-to-
+   * translucent surface gradient. Both are reused by the Featured article
+   * card. */
+  --color-badge-lilac: rgba(214, 194, 240, 0.45);
+  --color-card-surface-from: rgba(255, 255, 255, 0.57);
+  --color-card-surface-to: rgba(255, 255, 255, 0.06);
+  /* The card's heading + body ink (get_variable_defs on 1401:21880: bound to
+   * a "Miscellaneous/Floating Tab - Text Unselected" variable, evidently
+   * repurposed from an unrelated component — its value, not its name, is
+   * what's real here). */
+  --color-card-ink: #090909;
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;

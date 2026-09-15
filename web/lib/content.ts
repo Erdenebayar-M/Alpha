@@ -79,6 +79,17 @@ export const categoryPills = {
   ],
 } as const satisfies { navLabel: string; items: readonly CategoryPill[] };
 
+// /landing-new's Diagnostic card (Figma node 1401:21880), directly under the
+// Category pills. "Оношилгоо" badges the same Diagnostic the "Оношилгоо" nav
+// link and pill point at (see CONTEXT.md); "Үнэлгээг эхлүүлэх" is its
+// parent-facing CTA wording, matching the homepage's own `hero.cta`.
+export const diagnosticCard = {
+  badge: "Оношилгоо",
+  heading: "Хүүхдийнхээ унших, бичих, үсэглэх чадварыг мэдэхийг хүсч байна уу?",
+  body: 'Хүүхэд нэг үгийг өчигдөр зөв бичсэн атлаа өнөөдөр буруу бичихэд "мэдэж байгаа мөртлөө анхаарсангүй" гэж бодох амархан.',
+  cta: "Үнэлгээг эхлүүлэх",
+} as const satisfies { badge: string; heading: string; body: string; cta: string };
+
 export const hero = {
   badge: "ХҮҮХДИЙН ХӨГЖЛИЙН ҮНЭЛГЭЭ",
   title: "Хүүхдийнхээ зөв бичих чадварыг өнөөдрөөс тодорхойлоорой",

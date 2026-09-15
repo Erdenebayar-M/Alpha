@@ -11,7 +11,8 @@ type ButtonVariant =
   | "pricingOutline"
   | "pricingSolid"
   | "setupNext"
-  | "taskNext";
+  | "taskNext"
+  | "cardCta";
 
 interface BaseProps {
   variant: ButtonVariant;
@@ -56,10 +57,16 @@ const variants: Record<ButtonVariant, string> = {
    * green bar as `cta` but edged in brand blue and unshadowed, per the design. */
   taskNext:
     "group h-20 w-full rounded-xl border-b-[3px] border-brand-blue bg-brand-green px-[30px] py-4 text-base font-black text-white hover:-translate-y-px active:translate-y-px active:duration-75 disabled:pointer-events-none disabled:bg-brand-green/40",
+  /* The landing redesign's card CTA (Diagnostic card, node 1401:21889;
+   * reused by the Featured article card) — the same green/blue-edge chrome
+   * as `cta`, but 70px tall and unshadowed rather than `cta`'s 80px +
+   * shadow-card, matching that frame exactly. */
+  cardCta:
+    "group h-[70px] w-full rounded-xl border-b-[3px] border-brand-green-edge bg-brand-green px-[30px] py-4 text-base font-black text-white hover:-translate-y-px active:translate-y-px active:duration-75",
 };
 
 /** Variants whose Figma node draws the trailing arrow glyph. */
-const withArrow: ReadonlySet<ButtonVariant> = new Set<ButtonVariant>(["cta", "setupNext", "taskNext"]);
+const withArrow: ReadonlySet<ButtonVariant> = new Set<ButtonVariant>(["cta", "setupNext", "taskNext", "cardCta"]);
 
 /** Renders an `<a>` when `href` is given, a `<button>` otherwise — the CTA
  *  variant is shared by the hero's link into the assessment and the pricing
