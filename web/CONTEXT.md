@@ -10,7 +10,30 @@ The short adaptive test a child takes at `/register-child` to establish their sp
 _Avoid_: treating Assessment / Үнэлгээ and Оношилгоо as two different offerings
 
 **Article** (Нийтлэл):
-A piece of parent-facing reading about a child's literacy. Every Article belongs to exactly one **Category**, shown as its badge. An Article may be the **Featured article** (Онцлох нийтлэл) — a promoted Article, not a separate kind of content.
+A piece of parent-facing reading about a child's literacy, written by staff in the admin panel. Every Article belongs to exactly one **Category**, shown as its badge. The site section that lists Articles may be titled "blog", but the thing itself is always an Article.
+_Avoid_: Blog, Post, Blog post
+
+**Featured article** (Онцлох нийтлэл):
+The one **Published** Article staff have hand-picked to promote. There is at most one at a time: featuring an Article takes the title away from the previous one, and unpublishing the Featured article leaves none. It is an ordinary Article with a promotion, not a separate kind of content.
+_Avoid_: using "featured" for a ranked or computed list — a future popularity ranking is a different thing and needs its own name
+
+**Thumbnail**:
+The picture that stands for an **Article** wherever it is listed (article cards, link previews). It is not shown on the Article's own reading page.
+_Avoid_: Cover, cover image (a cover sits at the top of the page; a Thumbnail never does)
+
+**Draft** / **Published**:
+The two states of an **Article**. A Draft is visible only in the admin panel; a Published Article is visible on the site. An Article's publish date is the first time it was Published and does not move when it is unpublished and republished.
+
+**Unpublish** / **Delete**:
+Unpublishing takes a Published Article off the site and returns it to Draft; nothing is lost. Deleting permanently removes a Draft. A Published Article cannot be deleted — it is unpublished first.
+_Avoid_: "deleting" a Published Article, archive, trash
+
+**Body**:
+An **Article**'s content: an ordered sequence of **Blocks**, freely arranged by the author — there is no fixed article template.
+
+**Block**:
+One unit of an Article's **Body** — a paragraph, subheading (дэд гарчиг), list, quote, image, video, link, and so on. Images, videos and subheadings sit between paragraphs wherever the author puts them. Every Block is one of a fixed set of kinds; the site decides how each kind looks.
+_Avoid_: Section (that word already means a page section of the site)
 
 **Category**:
 One of the three literacy areas an **Article** is tagged with: Унших (reading), Зөв бичих (orthography), Үсэглэх (spelling out). Shown as the large pills and as an Article's badge.
@@ -23,5 +46,9 @@ _Avoid_: Topic, when meaning a Category
 ## Relationships
 
 - An **Article** belongs to exactly one **Category**
+- An **Article** has one **Body**, made of one or more **Blocks**
+- Only **Published** Articles appear on the site
+- Every **Published** Article has a **Thumbnail**; a Draft may not yet
+- At most one Article is the **Featured article**, and it is always **Published**
 - A **Collection** holds exercises, advice, or **Articles**
 - The **Diagnostic** is reachable from the nav, a pill, and its own card, but is never a **Category**
