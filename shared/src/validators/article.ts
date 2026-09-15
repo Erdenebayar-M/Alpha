@@ -104,30 +104,26 @@ export function validateArticleBody(
 
 // ── Create schema ─────────────────────────────────────────────────────────
 
-export const createArticleSchema = z
-  .object({
-    title: z.string().min(1).max(300),
-    slug: articleSlugSchema,
-    category: articleCategorySchema,
-    excerpt: z.string().max(500).optional(),
-    body: z.array(z.unknown()).default([]),
-  })
-  .superRefine((val, ctx) => {
-    const result = validateArticleBody(val.body);
-    if (!result.ok) {
-      for (const message of result.errors) {
-        ctx.addIssue({ code: 'custom', path: ['body'], message });
+export const createArticleSchema = z.object({
+  title: z.string().min(1).max(300),
+  slug: articleSlugSchema,
+  category: articleCategorySchema,
+  excerpt: z.string().max(500).optional(),
+  // One pass: validateArticleBody both reports position-aware issues and
+  // supplies the typed, key-stripped Blocks that get persisted — a caller
+  // can't smuggle extra fields into a Block past this transform.
+  body: z
+    .array(z.unknown())
+    .default([])
+    .transform((raw, ctx) => {
+      const result = validateArticleBody(raw);
+      if (!result.ok) {
+        for (const message of result.errors) ctx.addIssue({ code: 'custom', message });
+        return z.NEVER;
       }
-    }
-  })
-  // Re-parse into the typed, key-stripped Blocks so callers persist exactly
-  // what was validated — not the raw payload a caller could smuggle extra
-  // fields into. Safe to assume success: the superRefine above already
-  // rejected anything articleBodySchema wouldn't parse.
-  .transform((val) => {
-    const result = validateArticleBody(val.body);
-    return { ...val, body: result.ok ? result.data : ([] as ArticleBody) };
-  });
+      return result.data;
+    }),
+});
 
 export type CreateArticleInput = z.infer<typeof createArticleSchema>;
 
