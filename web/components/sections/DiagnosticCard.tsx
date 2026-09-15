@@ -27,6 +27,19 @@ import { siteConfig } from "@/lib/site-config";
  * Figma has no mobile frame; below `lg` the card stacks mascot, then text,
  * then a full-width CTA (the mascot is first in the DOM for this reason,
  * and only becomes an absolutely-positioned overlay at `lg`).
+ *
+ * The heading and body are the one exception to "text stays literal px":
+ * unlike LandingHero/CategoryPills, whose fixed-px text can afford to drift
+ * from Figma's line breaks a little as their box scales down, this heading
+ * has no manually-authored line breaks, so a fixed 26px in a shrinking box
+ * re-wraps into an ugly orphaned third line well before `lg`. Both
+ * `text-[clamp(...)]` calls scale 1:1 with the viewport instead (min at the
+ * `lg` floor, `Npx/1440*100vw` as the fluid middle, capped at Figma's exact
+ * size) so the heading/body keep the same characters-per-line — and thus
+ * Figma's own wrap — at every width between `lg` and 1440px, not just at
+ * 1440px itself. `leading-*` is unitless for the same reason: a fixed px
+ * line-height would stop matching Figma's ratio the moment the font-size
+ * starts floating.
  */
 export default function DiagnosticCard() {
   return (
@@ -41,11 +54,11 @@ export default function DiagnosticCard() {
           <Badge variant="lilac">{diagnosticCard.badge}</Badge>
           <h2
             id="diagnostic-heading"
-            className="max-w-md text-2xl leading-[1.3] font-bold text-card-ink lg:mt-[47px] lg:max-w-[61.56%] lg:text-[26px] lg:leading-[31px]"
+            className="max-w-md text-2xl leading-[1.3] font-bold text-card-ink lg:mt-[47px] lg:max-w-[61.56%] lg:text-[clamp(18.49px,1.806vw,26px)] lg:leading-[1.1923]"
           >
             {diagnosticCard.heading}
           </h2>
-          <p className="max-w-md text-base leading-relaxed font-normal text-card-ink lg:mt-[29px] lg:max-w-[59.74%] lg:text-[18px] lg:leading-[31px]">
+          <p className="max-w-md text-base leading-relaxed font-normal text-card-ink lg:mt-[29px] lg:max-w-[59.74%] lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222]">
             {diagnosticCard.body}
           </p>
         </div>
