@@ -40,6 +40,27 @@ import { siteConfig } from "@/lib/site-config";
  * 1440px itself. `leading-*` is unitless for the same reason: a fixed px
  * line-height would stop matching Figma's ratio the moment the font-size
  * starts floating.
+ *
+ * The card's own outer box is the other exception: unlike LandingHero and
+ * CategoryPills, which never pin their own root box's height (it's purely
+ * content-driven), this card does — so a literal `h-[401px]` alongside a
+ * scaling width fought itself, squaring the card off as the viewport
+ * narrowed below 1440px. `aspect-[1115/401]` derives height from the
+ * (already-correct, scaling) width instead, reproducing exactly 401px at
+ * 1440px and shrinking the true Figma ratio below it — it's a floor, not a
+ * ceiling, on a plain block box with no `overflow`/`min-height` override, so
+ * content that needs more room just grows the box rather than clipping.
+ * Everything sized relative to the old fixed-401px context has to follow:
+ * `pt`/`mt` percentages resolve against the containing block's *width*, never
+ * its height (CSS's padding/margin rule, even for a vertical side) — and
+ * "containing block" means each element's own parent, not the card
+ * unconditionally: the content wrapper's `pt` and the CTA wrapper's `mt` are
+ * direct children of the (unpadded) card, so they convert against the card's
+ * own 1115px; the heading's and body's `mt`, one level deeper inside the
+ * content wrapper's own 5.785%-padded box, convert against *that* box's
+ * narrower content width (1115 − 2×64.5 = 986px) instead. Only the Mascot's
+ * `top` (an absolute-position offset, which *does* resolve against height)
+ * converts against the card's height, 401.
  */
 export default function DiagnosticCard() {
   return (
@@ -47,23 +68,23 @@ export default function DiagnosticCard() {
       aria-labelledby="diagnostic-heading"
       className="relative mx-auto max-w-[1440px] px-5 pb-10 md:px-10 lg:px-0 lg:pb-[45px] lg:pl-[10.833%]"
     >
-      <div className="relative flex flex-col items-center gap-6 rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to p-6 text-center shadow-card sm:p-8 lg:h-[401px] lg:w-[77.431%] lg:items-stretch lg:gap-0 lg:p-0 lg:text-left lg:shadow-none">
-        <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[105px] lg:left-[71.735%] lg:w-[18.598%]" />
+      <div className="relative flex flex-col items-center gap-6 rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to p-6 text-center shadow-card sm:p-8 lg:aspect-[1115/401] lg:w-[77.431%] lg:items-stretch lg:gap-0 lg:p-0 lg:text-left lg:shadow-none">
+        <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[26.185%] lg:left-[71.735%] lg:w-[18.598%]" />
 
-        <div className="flex flex-col items-center gap-4 lg:items-start lg:gap-0 lg:pt-[63px] lg:pr-[5.785%] lg:pl-[5.785%]">
+        <div className="flex flex-col items-center gap-4 lg:items-start lg:gap-0 lg:pt-[5.650%] lg:pr-[5.785%] lg:pl-[5.785%]">
           <Badge variant="lilac">{diagnosticCard.badge}</Badge>
           <h2
             id="diagnostic-heading"
-            className="max-w-md text-2xl leading-[1.3] font-bold text-card-ink lg:mt-[47px] lg:max-w-[61.56%] lg:text-[clamp(18.49px,1.806vw,26px)] lg:leading-[1.1923]"
+            className="max-w-md text-2xl leading-[1.3] font-bold text-card-ink lg:mt-[4.767%] lg:max-w-[61.56%] lg:text-[clamp(18.49px,1.806vw,26px)] lg:leading-[1.1923]"
           >
             {diagnosticCard.heading}
           </h2>
-          <p className="max-w-md text-base leading-relaxed font-normal text-card-ink lg:mt-[29px] lg:max-w-[59.74%] lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222]">
+          <p className="max-w-md text-base leading-relaxed font-normal text-card-ink lg:mt-[2.941%] lg:max-w-[59.74%] lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222]">
             {diagnosticCard.body}
           </p>
         </div>
 
-        <div className="w-full max-w-sm lg:mt-[41.5px] lg:max-w-[59.23%] lg:pl-[5.785%]">
+        <div className="w-full max-w-sm lg:mt-[3.722%] lg:max-w-[59.23%] lg:pl-[5.785%]">
           <Button variant="cardCta" href={siteConfig.assessmentUrl}>
             {diagnosticCard.cta}
           </Button>
