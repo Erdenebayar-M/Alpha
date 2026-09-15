@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
+import CategoryPills from "@/components/sections/CategoryPills";
 import LandingHero from "@/components/sections/LandingHero";
 import LandingScene from "@/components/sections/LandingScene";
 import { landingNav } from "@/lib/content";
@@ -21,6 +22,7 @@ export default function LandingNewPage() {
       <Header links={landingNav.links} variant="spacious" activeHref="#top" />
       <main id="main" className="relative">
         <LandingHero />
+        <CategoryPills />
       </main>
     </div>
   );

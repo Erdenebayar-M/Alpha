@@ -60,6 +60,8 @@
   --color-hero-badge: #eaf5ff;
   --color-hero-ink: #2e5be8;
   --color-hero-lead: #6155f5;
+  /* Category pills (node 1360:8718), directly below the hero. */
+  --color-pill-lilac: rgba(214, 194, 240, 0.64);
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;
