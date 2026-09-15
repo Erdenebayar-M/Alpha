@@ -223,6 +223,17 @@ enum DraftStage {
   REJECTED
 }
 
+enum ArticleCategory {
+  READING     // Унших
+  ORTHOGRAPHY // Зөв бичих
+  SPELLING    // Үсэглэх
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
 // ─── Tables ──────────────────────────────────────────────────────────────────
 
 model Parent {
@@ -610,4 +621,36 @@ model ErrorLog {
   @@index([attempt_id])
   @@index([error_code, attempt_id])
   @@map("error_logs")
+}
+
+/// Parent-facing reading content, authored by staff (ADR 0001, 0002).
+/// The "at most one Featured Article" rule is enforced by a partial unique
+/// index on (is_featured) WHERE is_featured — hand-written in the migration
+/// SQL, since Prisma's schema DSL has no WHERE clause for @@unique/@@index.
+/// WARNING: because this index has no representation here, `prisma migrate
+/// dev` for a future Article change may propose DROPPING it (it exists in
+/// migration history but not in this file) — reject that line from any
+/// generated migration and keep the partial index.
+model Article {
+  id                    String          @id @default(uuid())
+  title                 String
+  slug                  String          @unique
+  excerpt               String?
+  category              ArticleCategory
+  body                  Json
+  thumbnail_url         String?
+  thumbnail_alt         String?
+  thumbnail_width       Int?
+  thumbnail_height      Int?
+  reading_time_minutes  Int
+  status                ArticleStatus   @default(DRAFT)
+  is_featured           Boolean         @default(false)
+  published_at          DateTime?       @db.Timestamptz(6)
+  version               Int             @default(1)
+  created_at            DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime        @updatedAt      @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([category])
+  @@map("articles")
 }
