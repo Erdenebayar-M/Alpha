@@ -177,6 +177,26 @@ html {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * /landing-new's lilac/mint gradient card surface (DiagnosticCard, node
+ * 1401:21880; Featured article, node 1401:22064) and the fluid-clamp
+ * heading/body treatment both cards share (same 26px/31px-leading heading
+ * and 18px/31px-leading body in Figma — see DiagnosticCard's own comment for
+ * the clamp derivation). Each card adds its own `relative`/aspect-ratio/
+ * shadow/lg-direction on top, since those genuinely differ between them.
+ * ------------------------------------------------------------------------- */
+@utility card-surface {
+  @apply flex flex-col items-center gap-6 rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to p-6 text-center sm:p-8 lg:w-full lg:gap-0 lg:text-left;
+}
+
+@utility card-heading {
+  @apply text-2xl leading-[1.3] font-bold text-card-ink lg:text-[clamp(18.49px,1.806vw,26px)] lg:leading-[1.1923];
+}
+
+@utility card-body {
+  @apply text-base leading-relaxed text-card-ink lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222];
+}
+
 body {
   background: var(--color-surface-page);
   color: var(--color-brand-blue);
