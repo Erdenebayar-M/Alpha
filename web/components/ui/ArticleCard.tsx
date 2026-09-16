@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { type Box, boxStyle } from "@/lib/box";
 import type { ArticleCardCopy } from "@/lib/content";
 import { cn } from "@/lib/cn";
@@ -7,6 +8,40 @@ import { cn } from "@/lib/cn";
 // 321x255 — everything in the panel is positioned in this coordinate space.
 const PANEL_WIDTH = 321;
 const PANEL_HEIGHT = 255;
+
+// Figma's own fill for "Rectangle 56" (identical on all three cards) is a
+// "diamond" gradient — mint nearly everywhere, lilac concentrated tightly
+// in one corner — which a plain CSS linear/radial gradient can't reproduce
+// (tried twice: a diagonal 2-stop and a vertical 2-stop both spread the
+// lilac far past where Figma actually shows it, since neither can express
+// a gradient that's concentrated toward one corner rather than ramping
+// across the whole box). This is Figma's own generated `background-image`
+// for that fill, copied verbatim from `get_design_context`'s output for
+// node 1401:20821 (get_variable_defs finds no bound variable, so there's no
+// token to point at instead) — a 255x321 SVG rotated 90deg to fill the
+// panel's 321x255 box, exactly reproducing Figma's own export hack for a
+// gradient CSS alone can't express. Ugly, but pixel-exact; a plain
+// 2-stop approximation is one component away in `art-panel-bg`
+// (globals.css) for panels this exact asset doesn't fit (FeaturedArticle's
+// own 389x303 one).
+const PANEL_GRADIENT_URL =
+  "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 255 321' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><g transform='matrix(-26.762 33.177 -22.247 -47.875 245.3 -0.000031602)' opacity='1'><rect height='80.407' width='54.64' fill='url(%23grad)' id='quad' shape-rendering='crispEdges'/><use href='%23quad' transform='scale(1 -1)'/><use href='%23quad' transform='scale(-1 1)'/><use href='%23quad' transform='scale(-1 -1)'/></g><defs><linearGradient id='grad' gradientUnits='userSpaceOnUse' x2='5' y2='5'><stop stop-color='rgba(227,228,242,1)' offset='0.10882'/><stop stop-color='rgba(234,251,244,1)' offset='0.67116'/><stop stop-color='rgba(234,251,245,1)' offset='0.99178'/></linearGradient></defs></svg>\")";
+
+// The panel scales with the viewport (`w-full aspect-[321/255]`), so the
+// pre-rotation box can't be sized in fixed pixels — it needs to track the
+// panel's own rendered size with its width/height swapped (since rotating
+// 90deg swaps which axis is which). Container query units do that: `cqw`/
+// `cqh` resolve against the nearest `container-type` ancestor exactly the
+// way `%` would, but same-named units resolve against the perpendicular
+// axis in this bracket-value form too, so `100cqh` in the *width* slot below
+// reads the panel's rendered *height*, and vice versa. (This is the exact
+// technique Figma's own generated code uses elsewhere for the same rotated-
+// square problem, e.g. Khishigee's own body/limb transforms.)
+const panelGradientContainerStyle: CSSProperties = { containerType: "size" };
+const panelGradientRotatedStyle: CSSProperties = {
+  transform: "rotate(90deg)",
+  backgroundImage: PANEL_GRADIENT_URL,
+};
 
 // The grass-hill silhouette's own height, shared by all three cards' scene
 // exports — Figma's alpha `<mask>` inside each "Mask group" node is
@@ -46,11 +81,10 @@ interface ArticleCardProps {
  * The frame reuses `card-frame` (globals.css) — the gradient/radius half of
  * `card-surface` split out on its own, since this card's flex layout
  * (footer stacked below the panel) doesn't fit `card-surface`'s own
- * flex/padding/alignment. The panel background reuses `art-panel-bg`
- * (globals.css), the Featured article illustration panel's own gradient
- * swatch approximated as a plain vertical ramp — see that utility's own
- * comment for why (Figma's real fill is a diamond gradient with no direct
- * CSS equivalent).
+ * flex/padding/alignment. The panel background is Figma's own exact
+ * gradient asset (`PANEL_GRADIENT_URL`, see its own comment) rather than a
+ * CSS approximation — two rounds of approximating it as a plain gradient
+ * both put the lilac in visibly the wrong place.
  *
  * The grass-hill + character illustration (`art.scene`) is a flattened,
  * exported SVG per card — Figma ships card 1's Khishigee instance fully
@@ -86,7 +120,15 @@ export default function ArticleCard({ card, art }: ArticleCardProps) {
         "transition-[filter] duration-150 hover:brightness-95"
       )}
     >
-      <div className="art-panel-bg relative aspect-[321/255] w-full overflow-hidden rounded-t-[32px]">
+      <div className="relative flex aspect-[321/255] w-full items-center justify-center overflow-hidden rounded-t-[32px]">
+        <div
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          style={panelGradientContainerStyle}
+          aria-hidden="true"
+        >
+          <div className="h-[100cqw] w-[100cqh]" style={panelGradientRotatedStyle} />
+        </div>
+
         <div className="pointer-events-none absolute" style={boxStyle(sceneBox, PANEL_WIDTH, PANEL_HEIGHT)}>
           <Image src={art.scene.src} alt="" aria-hidden="true" fill />
         </div>

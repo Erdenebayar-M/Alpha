@@ -213,18 +213,15 @@ html {
   @apply text-base leading-relaxed text-card-ink lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222];
 }
 
-/* The Featured article's illustration panel background (node 1401:22065)
- * and the Articles grid's own three panels (node 1371:9792) sample to the
- * same art-panel-from/-to swatch — see that token's own comment. Split out
- * once it became the grid's second copy of the same gradient.
- *
- * Figma's own fill is a diamond gradient (mint nearly everywhere, lilac
- * concentrated in one corner), which has no direct CSS equivalent; this
- * approximates it as a plain 2-stop vertical gradient instead — bright
- * mint at the bottom, darker lilac toward the top (`to-t`: the gradient
- * line points up, so `from` lands at the bottom and `to` at the top). */
+/* The Featured article illustration panel's own background (node
+ * 1401:22065) — its raw fill is Figma's same "diamond" gradient family as
+ * the Articles grid's panels (art-panel-from/-to's own comment), just at a
+ * different box size (389x303 vs. the grid's 321x255) than the grid's own
+ * pixel-exact asset (ArticleCard's `PANEL_GRADIENT_URL`) reproduces, so it
+ * isn't a straight reuse of that one. Approximated here as a plain diagonal
+ * 2-stop ramp instead — mint at the top-left, lilac at the bottom-right. */
 @utility art-panel-bg {
-  @apply bg-linear-to-t from-art-panel-from to-art-panel-to;
+  @apply bg-linear-to-br from-art-panel-from to-art-panel-to;
 }
 
 /* The bottom spacing under each /landing-new section that sits directly on
