@@ -93,6 +93,13 @@ scroll performance.
 - Don't add a dependency if native React/CSS/Tailwind/browser APIs suffice.
 - Copy lives in `lib/content.ts`; links/config in `lib/site-config.ts` —
   don't hardcode either in components.
+- Every content row lines up on the **Content column** — wrap its content in
+  `components/ui/Container.tsx` rather than giving the section its own gutter.
+  Figma hand-places each row on a different x, so those per-frame positions are
+  deliberately overridden here; see `docs/adr/0003-page-content-column.md`.
+  Inside the column, a percentage resolves against its own parent's content
+  box: numbers written as a fraction of 1440 are wrong as soon as an ancestor
+  carries padding.
 - This is a presentation/marketing site: no state management libraries,
   context providers, API layers, or custom hooks unless a section
   genuinely needs one. Reach for React/CSS state (useState, CSS, URL

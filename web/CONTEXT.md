@@ -43,6 +43,10 @@ _Avoid_: counting Оношилгоо as a Category — its pill and badge are a 
 A curated group of learning material around one theme ("Уншихад анхаарах", "Эцэг эхэд"), whose contents are exercises (Дасгалууд), advice (Зөвлөмжүүд) or **Articles**. A Collection is not a **Category**: it is curated, and its subtitle states what kind of material it holds.
 _Avoid_: Topic, when meaning a Category
 
+**Content column**:
+The single horizontal band every content row on the site lines up with — one shared left and right edge running down the page, whatever the row is made of: a card, a row of pills, or bare text on the sky. What sits on the column is the row's *painted* edge, so an unboxed row's text starts where a card's surface would.
+_Avoid_: treating each design frame's own x position as that row's alignment; "container"/"wrapper", which name the mechanism rather than the thing
+
 ## Relationships
 
 - An **Article** belongs to exactly one **Category**
@@ -52,3 +56,4 @@ _Avoid_: Topic, when meaning a Category
 - At most one Article is the **Featured article**, and it is always **Published**
 - A **Collection** holds exercises, advice, or **Articles**
 - The **Diagnostic** is reachable from the nav, a pill, and its own card, but is never a **Category**
+- Every content row lines up with the **Content column**
