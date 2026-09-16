@@ -35,4 +35,9 @@ export const siteConfig = {
   // have their own reading page. /landing-new's Featured article card links
   // here (see web/CONTEXT.md for the Article/Featured article glossary).
   featuredArticleUrl: "#",
+
+  // TODO: replace with the real per-Article destinations once Articles have
+  // their own reading page. /landing-new's Articles-for-parents grid cards
+  // all link here for now (see web/CONTEXT.md for the Article glossary).
+  articleUrl: "#",
 } as const;

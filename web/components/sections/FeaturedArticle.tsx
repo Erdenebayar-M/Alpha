@@ -61,7 +61,7 @@ export default function FeaturedArticle() {
   const { article } = featuredArticle;
 
   return (
-    <section aria-labelledby="featured-article-heading" className="relative pb-10 lg:pb-[45px]">
+    <section aria-labelledby="featured-article-heading" className="landing-section-gap-b">
       <Container>
         <div className="card-surface lg:aspect-[1119/401] lg:items-stretch lg:justify-center lg:px-[2.368%] lg:pt-[1.966%] lg:pb-[3.485%]">
           <SectionHeading id="featured-article-heading" className="lg:mb-[0.268%]">
@@ -69,7 +69,7 @@ export default function FeaturedArticle() {
           </SectionHeading>
 
           <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-0">
-            <div className="relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] bg-linear-to-br from-art-panel-from to-art-panel-to lg:w-[34.763%] lg:max-w-none">
+            <div className="art-panel-bg relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] lg:w-[34.763%] lg:max-w-none">
               <FeaturedArticleArt className="absolute inset-0 size-full" />
             </div>
 

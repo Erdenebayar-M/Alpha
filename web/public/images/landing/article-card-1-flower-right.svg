@@ -1,0 +1,36 @@
+<svg width="34" height="42" viewBox="0 0 34 42" fill="none" xmlns="http://www.w3.org/2000/svg"><defs>
+<filter id="filter0_d_0_1" x="-475.999" y="-2011" width="1568" height="2834" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="24"/>
+<feGaussianBlur stdDeviation="32"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.0627451 0 0 0 0 0.0941176 0 0 0 0 0.156863 0 0 0 0.0705882 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_0_1" x1="-75.499" y1="-244" x2="-75.499" y2="174" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0.1"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<clipPath id="clip0_0_1">
+<rect x="-411.999" y="-1971" width="1440" height="2706" rx="32" fill="white"/>
+</clipPath>
+</defs><g id="Mask group">
+<g id="&#209;&#133;&#208;&#190;&#209;&#129; &#209;&#134;&#209;&#141;&#209;&#134;&#209;&#141;&#208;&#179;">
+<g id="&#208;&#166;&#208;&#176;&#208;&#179;&#208;&#176;&#208;&#176;&#208;&#189; &#209;&#134;&#209;&#141;&#209;&#134;&#209;&#141;&#208;&#179;">
+<path id="Ellipse 77" d="M11.5243 34.3649C15.1194 37.7692 17.2015 40.1491 18.3015 39.5492C19.4015 38.9492 18.7315 37.8303 15.5076 32.1924C12.2837 26.5545 10.5918 27.4834 9.49184 28.0833C8.39188 28.6832 7.92917 30.9606 11.5243 34.3649Z" fill="#6A8C7F"/>
+<path id="Ellipse 78" d="M20.3216 32.6829C17.9021 36.7662 16.1426 39.2999 16.8429 39.8702C17.5433 40.4405 18.4194 39.4792 22.8578 34.7481C27.2962 30.0171 26.2136 29.1424 25.5132 28.5721C24.8129 28.0018 22.7411 28.5996 20.3216 32.6829Z" fill="#6A8C7F"/>
+<g id="&#208;&#184;&#209;&#136;">
+<path id="stem-3" d="M18.9293 15.19C18.9785 14.9768 19.1817 14.8364 19.4102 14.858C19.6609 14.8817 19.8571 15.0914 19.8552 15.3334L19.6836 36.6179L19.4853 38.2341C19.3601 39.254 18.4324 39.9676 17.3632 39.8665L17.1665 39.8479C15.9711 39.7349 15.0854 38.6581 15.254 37.5229L17.9196 19.5709L18.9293 15.19Z" fill="#7A9E7A"/>
+</g>
+<g id="&#208;&#180;&#209;&#141;&#208;&#187;&#208;&#177;&#209;&#141;&#209;&#141;">
+<ellipse id="Ellipse" cx="5.96495" cy="5.51198" rx="5.96495" ry="5.51198" transform="matrix(0.939992 -0.340935 0.397158 0.918453 3.49023 7.56055)" fill="white"/>
+<ellipse id="Ellipse_2" cx="6.55534" cy="5.5038" rx="6.55534" ry="5.5038" transform="matrix(0.939992 -0.340935 0.397158 0.918453 3.64941 16.8984)" fill="white"/>
+<ellipse id="Ellipse_3" cx="6.2687" cy="5.75326" rx="6.2687" ry="5.75326" transform="matrix(0.939992 -0.340935 0.397158 0.918453 13.915 7.43555)" fill="white"/>
+<ellipse id="Ellipse_4" cx="6.15584" cy="5.04825" rx="6.15584" ry="5.04825" transform="matrix(0.939992 -0.340935 0.397158 0.918453 15.8271 17.3848)" fill="white"/>
+<ellipse id="Ellipse_5" cx="4.44879" cy="4.9457" rx="4.44879" ry="4.9457" transform="matrix(-0.0505265 -0.963705 1.04281 0.014649 11.9951 18.0254)" fill="#FDE68A"/>
+</g>
+</g>
+</g>
+</g></svg>

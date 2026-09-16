@@ -84,6 +84,11 @@
    * clip artifacts at the literal corner pixels. */
   --color-art-panel-from: #e9faf4;
   --color-art-panel-to: #e0dcf1;
+  /* Articles-for-parents grid (node 1371:9792) card footer. The eyebrow
+   * label reuses --color-text-navy (same #24428f); only the title ink is
+   * new. Both are raw Figma fills, unbound to a variable
+   * (get_variable_defs on the card returns none for either). */
+  --color-article-title: #0f1f4d;
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;
@@ -188,8 +193,16 @@ html {
  * the clamp derivation). Each card adds its own `relative`/aspect-ratio/
  * shadow/lg-direction on top, since those genuinely differ between them.
  * ------------------------------------------------------------------------- */
+/* Just the gradient + radius `card-surface` wraps, split out so a caller
+ * whose own layout doesn't fit `card-surface`'s flex/padding/alignment
+ * (ArticleCard's own footer-below-panel layout) can still reuse the frame
+ * chrome itself instead of re-writing the gradient/radius literal. */
+@utility card-frame {
+  @apply rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to;
+}
+
 @utility card-surface {
-  @apply flex flex-col items-center gap-6 rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to p-6 text-center sm:p-8 lg:w-full lg:gap-0 lg:text-left;
+  @apply card-frame flex flex-col items-center gap-6 p-6 text-center sm:p-8 lg:w-full lg:gap-0 lg:text-left;
 }
 
 @utility card-heading {
@@ -198,6 +211,23 @@ html {
 
 @utility card-body {
   @apply text-base leading-relaxed text-card-ink lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222];
+}
+
+/* The Featured article's illustration panel background (node 1401:22065)
+ * and the Articles grid's own three panels (node 1371:9792) sample to the
+ * same diagonal art-panel-from/-to swatch — see that token's own comment.
+ * Split out once it became the grid's second copy of the same gradient. */
+@utility art-panel-bg {
+  @apply bg-linear-to-br from-art-panel-from to-art-panel-to;
+}
+
+/* The bottom spacing under each /landing-new section that sits directly on
+ * the sky/hill background (Diagnostic card, Featured article, Articles
+ * grid) — each section adds its own top spacing/`relative`-positioning
+ * needs on top, since those differ, but the gap to the next section is the
+ * same 40px/45px figure everywhere. */
+@utility landing-section-gap-b {
+  @apply relative pb-10 lg:pb-[45px];
 }
 
 body {
