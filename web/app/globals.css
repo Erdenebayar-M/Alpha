@@ -215,10 +215,16 @@ html {
 
 /* The Featured article's illustration panel background (node 1401:22065)
  * and the Articles grid's own three panels (node 1371:9792) sample to the
- * same diagonal art-panel-from/-to swatch — see that token's own comment.
- * Split out once it became the grid's second copy of the same gradient. */
+ * same art-panel-from/-to swatch — see that token's own comment. Split out
+ * once it became the grid's second copy of the same gradient.
+ *
+ * Figma's own fill is a diamond gradient (mint nearly everywhere, lilac
+ * concentrated in one corner), which has no direct CSS equivalent; this
+ * approximates it as a plain 2-stop vertical gradient instead — bright
+ * mint at the bottom, darker lilac toward the top (`to-t`: the gradient
+ * line points up, so `from` lands at the bottom and `to` at the top). */
 @utility art-panel-bg {
-  @apply bg-linear-to-br from-art-panel-from to-art-panel-to;
+  @apply bg-linear-to-t from-art-panel-from to-art-panel-to;
 }
 
 /* The bottom spacing under each /landing-new section that sits directly on

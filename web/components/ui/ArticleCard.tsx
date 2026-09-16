@@ -8,6 +8,16 @@ import { cn } from "@/lib/cn";
 const PANEL_WIDTH = 321;
 const PANEL_HEIGHT = 255;
 
+// The grass-hill silhouette's own height, shared by all three cards' scene
+// exports — Figma's alpha `<mask>` inside each "Mask group" node is
+// declared at exactly this height regardless of the export's own canvas
+// size. Cards 2/3's canvases are already cropped tight to it (their own
+// `scene.height` is 185), but card 1's export canvas is 321x196 — the extra
+// 11px is a tiny decorative dot trailing below the hill, not more hill — so
+// this constant, not `scene.height`, is what has to land flush with the
+// panel's bottom edge.
+const GRASS_HEIGHT = 185;
+
 export interface ArticleCardArt {
   /** The exported grass-hill + character illustration (Figma's own "Mask
    *  group" node under each card). Bottom-aligned and full-width inside the
@@ -36,12 +46,11 @@ interface ArticleCardProps {
  * The frame reuses `card-frame` (globals.css) — the gradient/radius half of
  * `card-surface` split out on its own, since this card's flex layout
  * (footer stacked below the panel) doesn't fit `card-surface`'s own
- * flex/padding/alignment. The panel background reuses `art-panel-bg`, the
- * Featured article illustration panel's own diagonal gradient:
- * get_variable_defs on this grid resolves no bound variable, and the
- * panel's raw diamond-gradient fill is (sampled the same way as that panel)
- * the identical swatch, so it's reused rather than re-deriving Figma's own
- * rotate/data-URI export hack for it.
+ * flex/padding/alignment. The panel background reuses `art-panel-bg`
+ * (globals.css), the Featured article illustration panel's own gradient
+ * swatch approximated as a plain vertical ramp — see that utility's own
+ * comment for why (Figma's real fill is a diamond gradient with no direct
+ * CSS equivalent).
  *
  * The grass-hill + character illustration (`art.scene`) is a flattened,
  * exported SVG per card — Figma ships card 1's Khishigee instance fully
@@ -51,9 +60,10 @@ interface ArticleCardProps {
  * hand-porting Khishigee's animated rig for a static decorative card) keeps
  * the three cards on equal footing, matches "no animation added" (the owner
  * is doing motion separately), and is what the ticket's "exported SVG"
- * phrasing calls for. Figma places the scene flush with the panel's own
- * left/right/bottom edges regardless of its height (card 1's taller export
- * vs. cards 2/3's shorter one) — local `(0, 255 - scene.height)`.
+ * phrasing calls for. Figma places the grass-hill silhouette flush with the
+ * panel's own left/right/bottom edges — local `(0, 255 - GRASS_HEIGHT)` —
+ * regardless of an export's own canvas height (see `GRASS_HEIGHT`'s own
+ * comment for why that's a shared constant rather than `scene.height`).
  *
  * The character art is a generic decorative mascot with no informational
  * content of its own (unlike the Featured article's хойн/хонь
@@ -63,7 +73,7 @@ interface ArticleCardProps {
 export default function ArticleCard({ card, art }: ArticleCardProps) {
   const sceneBox: Box = {
     x: 0,
-    y: PANEL_HEIGHT - art.scene.height,
+    y: PANEL_HEIGHT - GRASS_HEIGHT,
     width: PANEL_WIDTH,
     height: art.scene.height,
   };
