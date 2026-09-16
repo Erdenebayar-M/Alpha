@@ -1,0 +1,20 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="29.581" height="25.426" viewBox="0 0 29.581 25.426" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="&#209;&#143;&#208;&#179;&#208;&#176;&#208;&#176;&#208;&#189; &#208;&#180;&#209;&#141;&#208;&#187;&#208;&#177;&#209;&#141;&#209;&#141;">
+<ellipse id="Ellipse 66" cx="13.0101" cy="5.24207" rx="5.04586" ry="5.24207" fill="#A59FF1"/>
+<ellipse id="Ellipse 68" cx="5.15125" cy="10.4574" rx="5.15125" ry="4.06539" fill="#A59FF1"/>
+<ellipse id="Ellipse 69" cx="5.35418" cy="4.299" rx="5.35418" ry="4.299" transform="matrix(0.844759 -0.535146 0.560965 0.827839 0.493782 16.6592)" fill="#A59FF1"/>
+<ellipse id="Ellipse 67" cx="19.6074" cy="10.6195" rx="5.16475" ry="4.02811" fill="#A59FF1"/>
+<ellipse id="Ellipse 70" cx="4.66894" cy="5.19618" rx="4.66894" ry="5.19618" transform="matrix(0.787815 -0.615912 0.641511 0.767114 9.39554 16.1554)" fill="#A59FF1"/>
+<ellipse id="Ellipse 65" cx="12.1411" cy="11.6952" rx="2.77499" ry="2.8298" fill="white"/>
+<g id="leaf-2a" filter="url(#filter0_f_0_27)">
+<path d="M23.6687 18.233C24.0953 17.7692 23.8035 16.9748 22.7537 15.5561C21.9861 14.8149 20.5069 13.3634 20.0802 13.8272C20.1723 14.5094 20.3227 15.6235 21.2087 17.2358C22.2585 18.6545 23.2421 18.6969 23.6687 18.233Z" fill="#8F8DA9"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_f_0_27" x="15.5802" y="9.23761" width="12.7775" height="13.7591" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="2.25" result="effect1_foregroundBlur_0_27"/>
+</filter>
+</defs>
+</svg>

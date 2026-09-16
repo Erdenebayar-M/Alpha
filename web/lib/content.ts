@@ -145,6 +145,44 @@ export const articlesGrid = {
   ],
 } as const satisfies { heading: string; items: readonly [ArticleCardCopy, ArticleCardCopy, ArticleCardCopy] };
 
+export interface CollectionCardCopy {
+  readonly title: string;
+  readonly subtitle: string;
+  readonly href: string;
+}
+
+// /landing-new's Collections row (Figma node 1401:22290), the page's final
+// section — five Collections (see web/CONTEXT.md's Collection entry)
+// grouping material by theme. Each subtitle states the kind of material the
+// Collection holds, per the glossary. Cards 3 and 5 both title "Зөв
+// үсэглэх" on purpose (Figma's own copy): the same theme, two different
+// Collections (one of exercises, one of 18 articles) — kept verbatim rather
+// than deduped, the subtitle is what actually tells them apart.
+//
+// `items` is typed as an exact 5-tuple (not `readonly CollectionCardCopy[]`)
+// so that CollectionsRow.tsx's own per-card `art` config — a same-length
+// tuple zipped to this one by index — fails to typecheck the moment the two
+// drift out of sync, matching articlesGrid's own tuple above.
+export const collectionsRow = {
+  heading: "Сэдвээр нь судлаад илүү их ойлголттой болж аваарай",
+  items: [
+    { title: "Уншихад анхаарах", subtitle: "Дасгалууд", href: siteConfig.collectionUrl },
+    { title: "Зөв бичихэд туслах", subtitle: "Дасгалууд", href: siteConfig.collectionUrl },
+    { title: "Зөв үсэглэх", subtitle: "Дасгалууд", href: siteConfig.collectionUrl },
+    { title: "Эцэг эхэд", subtitle: "Зөвлөмжүүд", href: siteConfig.collectionUrl },
+    { title: "Зөв үсэглэх", subtitle: "18 нийтлэл", href: siteConfig.collectionUrl },
+  ],
+} as const satisfies {
+  heading: string;
+  items: readonly [
+    CollectionCardCopy,
+    CollectionCardCopy,
+    CollectionCardCopy,
+    CollectionCardCopy,
+    CollectionCardCopy,
+  ];
+};
+
 // /landing-new's Diagnostic card (Figma node 1401:21880), directly under the
 // Category pills. "Оношилгоо" badges the same Diagnostic the "Оношилгоо" nav
 // link and pill point at (see CONTEXT.md); "Үнэлгээг эхлүүлэх" is its

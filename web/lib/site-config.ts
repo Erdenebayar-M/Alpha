@@ -40,4 +40,9 @@ export const siteConfig = {
   // their own reading page. /landing-new's Articles-for-parents grid cards
   // all link here for now (see web/CONTEXT.md for the Article glossary).
   articleUrl: "#",
+
+  // TODO: replace with the real per-Collection destinations once Collections
+  // have their own pages. /landing-new's Collections row cards all link here
+  // for now (see web/CONTEXT.md for the Collection glossary).
+  collectionUrl: "#",
 } as const;

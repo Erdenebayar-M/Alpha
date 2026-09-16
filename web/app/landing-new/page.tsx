@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import ArticlesGrid from "@/components/sections/ArticlesGrid";
 import CategoryPills from "@/components/sections/CategoryPills";
+import CollectionsRow from "@/components/sections/CollectionsRow";
 import DiagnosticCard from "@/components/sections/DiagnosticCard";
 import FeaturedArticle from "@/components/sections/FeaturedArticle";
 import LandingHero from "@/components/sections/LandingHero";
@@ -29,6 +30,7 @@ export default function LandingNewPage() {
         <DiagnosticCard />
         <FeaturedArticle />
         <ArticlesGrid />
+        <CollectionsRow />
       </main>
     </div>
   );
