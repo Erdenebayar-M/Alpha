@@ -1,4 +1,5 @@
 import Badge from "@/components/ui/Badge";
+import Container from "@/components/ui/Container";
 import LandingHeroArt from "@/components/sections/LandingHeroArt";
 import { landingHero } from "@/lib/content";
 
@@ -12,20 +13,32 @@ import { landingHero } from "@/lib/content";
  * so the whole row scales down together between the `lg` breakpoint
  * (1024px) and 1440px instead of overflowing — the fixed-px numbers this
  * replaced summed to the full 1440px design width with no slack, so they
- * never fit below 1440px. Padding percentages are relative to the row's own
- * box, e.g. left padding 200/1440=13.889%; CSS resolves a flex child's
- * percentage width against what's left after padding (here
- * 1440-200-140.828=1099.172px), so the text/gap/art percentages are taken
- * against that instead, e.g. text 572/1099.172=52.038%. Together they
- * reproduce Figma's exact pixels once the row reaches its natural 1440px
- * width. Top padding (132px = the 106px header + 87px gap to the card +
- * 45px of the card's own padding) and bottom padding (45px) stay fixed —
- * they don't interact with the row's horizontal overflow.
+ * never fit below 1440px.
+ *
+ * The row fills the Content column (`Container`), so the three percentages
+ * below are fractions of it — and they sum to exactly 100.000%
+ * (52.038 + 2.184 + 45.778), because they were already fractions of the span
+ * from the h1's left edge to the artwork's right edge rather than of 1440.
+ * They are therefore unchanged by the move onto the column; what changed is
+ * where that span starts and ends.
+ *
+ * This hero is the reason the column aligns *painted* edges rather than Figma
+ * frames. It has no card behind it — node 1360:8705 is an invisible grouping
+ * frame — so its leftmost visible pixel is the badge, which Figma insets 40px
+ * inside that frame. Honouring the frame would leave the h1 adrift of the
+ * card and pill rows below with nothing on screen to explain the gap, so the
+ * badge/h1 sit on the column edge instead: x=150 rather than Figma's x=200,
+ * and the artwork ends at 1290 rather than overflowing to 1299 as it does in
+ * the design. See docs/adr/0003-page-content-column.md.
+ *
+ * Top padding (132px = the 106px header + 87px gap to the card + 45px of the
+ * card's own padding) and bottom padding (45px) stay fixed — vertical
+ * measurements don't interact with the row's horizontal overflow.
  */
 export default function LandingHero() {
   return (
     <section id="top" aria-label={landingHero.sectionLabel} className="relative isolate">
-      <div className="relative mx-auto flex max-w-[1440px] flex-col items-center gap-10 px-5 pt-10 pb-16 text-center md:px-10 lg:flex-row lg:items-start lg:gap-[2.184%] lg:pt-[132px] lg:pr-[9.780%] lg:pb-[45px] lg:pl-[13.889%] lg:text-left">
+      <Container className="relative flex flex-col items-center gap-10 pt-10 pb-16 text-center lg:flex-row lg:items-start lg:gap-[2.184%] lg:pt-[132px] lg:pb-[45px] lg:text-left">
         <div className="flex w-full max-w-[554px] flex-col items-center gap-5 lg:w-[52.038%] lg:max-w-none lg:items-start lg:gap-[12px]">
           <Badge variant="flat">{landingHero.badge}</Badge>
           <h1 className="text-[26px] leading-[1.3] font-bold text-hero-ink lg:text-[32px] lg:leading-[44px] lg:tracking-[0.64px]">
@@ -37,7 +50,7 @@ export default function LandingHero() {
         </div>
 
         <LandingHeroArt className="order-first w-full max-w-[360px] lg:order-last lg:w-[45.778%] lg:max-w-none" />
-      </div>
+      </Container>
     </section>
   );
 }
