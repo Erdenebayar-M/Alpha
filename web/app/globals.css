@@ -74,6 +74,13 @@
    * repurposed from an unrelated component — its value, not its name, is
    * what's real here). */
   --color-card-ink: #090909;
+  /* Featured article card's illustration panel (node 1401:22065,
+   * "Rectangle 56"). Figma's own fill is a tiled/mirrored lilac-to-mint
+   * gradient pattern (a plaid of small rects, not a plain 2-stop ramp); at
+   * this rect's size that pattern renders as flat mint with the lilac stop
+   * only in imperceptible slivers (sampled from Figma's own render), so a
+   * solid mint fill reproduces it. */
+  --color-art-panel: #e9faf4;
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;

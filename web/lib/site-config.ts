@@ -30,4 +30,9 @@ export const siteConfig = {
     orthography: "#",
     spellingOut: "#",
   },
+
+  // TODO: replace with the real Featured article destination once Articles
+  // have their own reading page. /landing-new's Featured article card links
+  // here (see web/CONTEXT.md for the Article/Featured article glossary).
+  featuredArticleUrl: "#",
 } as const;

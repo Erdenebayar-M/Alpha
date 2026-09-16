@@ -79,6 +79,43 @@ export const categoryPills = {
   ],
 } as const satisfies { navLabel: string; items: readonly CategoryPill[] };
 
+// The three literacy areas an Article is tagged with (see web/CONTEXT.md's
+// Category glossary entry) — Оношилгоо is deliberately excluded, since it is
+// a Diagnostic shortcut rather than a Category.
+export type Category = "Унших" | "Зөв бичих" | "Үсэглэх";
+
+export interface Article {
+  readonly category: Category;
+  readonly title: string;
+  readonly excerpt: string;
+  readonly href: string;
+}
+
+// /landing-new's Featured article (Figma node 1401:22062), directly under the
+// Category pills — the one Published Article staff have promoted (see
+// web/CONTEXT.md). Modelled as an Article rather than a one-off shape so the
+// Articles-for-parents grid (a future ticket) can reuse the same interface.
+export const featuredArticle = {
+  heading: "Онцлох нийтлэл",
+  article: {
+    category: "Зөв бичих",
+    title: "Хүүхэд яагаад нэг үгийг дахин дахин өөрөөр бичдэг вэ?",
+    excerpt:
+      "Хүүхэд нэг үгийг өчигдөр зөв бичсэн атлаа өнөөдөр буруу бичихэд “мэдэж байгаа мөртлөө анхаарсангүй” гэж бодох амархан...",
+    href: siteConfig.featuredArticleUrl,
+  },
+  // Accessible name for the illustration (ORto, the хойн/хонь word clouds and
+  // arrow, and the books — nodes 1401:22076, 1401:22282), which carries no
+  // on-canvas text of its own beyond the two words it's demonstrating.
+  artLabel: "ОРто, «хойн» гэдэг үгийг «хонь» гэж дахин дахин буруу бичсэн, дэргэд нь ном үүрсэн байгаа зураг",
+  readMoreLabel: (title: string) => `«${title}» нийтлэлийг унших`,
+} as const satisfies {
+  heading: string;
+  article: Article;
+  artLabel: string;
+  readMoreLabel: (title: string) => string;
+};
+
 // /landing-new's Diagnostic card (Figma node 1401:21880), directly under the
 // Category pills. "Оношилгоо" badges the same Diagnostic the "Оношилгоо" nav
 // link and pill point at (see CONTEXT.md); "Үнэлгээг эхлүүлэх" is its
