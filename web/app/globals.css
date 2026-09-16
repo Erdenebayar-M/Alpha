@@ -256,6 +256,26 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes float-y {
   0%,
   100% {
@@ -611,15 +631,37 @@ body {
 }
 
 /* Scroll-reveal: Reveal.tsx toggles data-visible after IntersectionObserver
- * fires once, then disconnects. CSS drives the actual animation. */
-[data-reveal] {
+ * fires once, then disconnects. CSS drives the actual animation.
+ * `rise`: the wrapper itself fades and rises. */
+[data-reveal='rise'] {
   opacity: 0;
   transform: translateY(16px);
 }
 
-[data-reveal][data-visible='true'] {
+[data-reveal='rise'][data-visible='true'] {
   animation: rise-in 500ms var(--ease-entrance) both;
   animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* `sequence`: the wrapper stays put; Reveal.tsx flags each marked item (see
+ * components/animations/revealItem.ts) as it reaches the trigger line, and it
+ * plays after its step delay — a section's heading fades in, then the blocks
+ * under it slide in from the right, one step apart. */
+[data-reveal='sequence'] [data-reveal-item] {
+  opacity: 0;
+}
+
+[data-reveal='sequence'] [data-reveal-item='slide'] {
+  transform: translateX(40px);
+}
+
+[data-reveal='sequence'] [data-reveal-item][data-visible='true'] {
+  animation: fade-in 500ms var(--ease-entrance) both;
+  animation-delay: calc(var(--reveal-step, 0) * 90ms);
+}
+
+[data-reveal='sequence'] [data-reveal-item='slide'][data-visible='true'] {
+  animation-name: slide-in-left;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -659,7 +701,13 @@ body {
     transform: none;
   }
 
-  [data-reveal][data-visible='true'] {
+  [data-reveal][data-visible='true'],
+  [data-reveal-item] {
     animation: none !important;
+  }
+
+  [data-reveal='sequence'] [data-reveal-item] {
+    opacity: 1;
+    transform: none;
   }
 }

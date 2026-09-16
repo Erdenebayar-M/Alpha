@@ -1,3 +1,5 @@
+import Reveal from "@/components/animations/Reveal";
+import { revealItem } from "@/components/animations/revealItem";
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import FeaturedArticleArt from "@/components/sections/FeaturedArticleArt";
@@ -62,32 +64,43 @@ export default function FeaturedArticle() {
 
   return (
     <section aria-labelledby="featured-article-heading" className="landing-section-gap-b">
-      <Container>
-        <div className="card-surface lg:aspect-[1119/401] lg:items-stretch lg:justify-center lg:px-[2.368%] lg:pt-[1.966%] lg:pb-[3.485%]">
-          <SectionHeading id="featured-article-heading" className="lg:mb-[0.268%]">
-            {featuredArticle.heading}
-          </SectionHeading>
+      <Reveal mode="sequence">
+        <Container>
+          <div
+            className="card-surface lg:aspect-[1119/401] lg:items-stretch lg:justify-center lg:px-[2.368%] lg:pt-[1.966%] lg:pb-[3.485%]"
+            {...revealItem("fade", 0)}
+          >
+            <SectionHeading id="featured-article-heading" className="lg:mb-[0.268%]">
+              {featuredArticle.heading}
+            </SectionHeading>
 
-          <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-0">
-            <div className="art-panel-bg relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] lg:w-[34.763%] lg:max-w-none">
-              <FeaturedArticleArt className="absolute inset-0 size-full" />
-            </div>
-
-            <div className="flex flex-col items-center gap-4 lg:flex-1 lg:items-start lg:gap-[17px] lg:pl-[5.95%]">
-              <Badge variant="lilac">{article.category}</Badge>
-              <div className="flex flex-col gap-3 lg:gap-[15px]">
-                <h3 className="card-heading max-w-md lg:max-w-none">{article.title}</h3>
-                <p className="card-body max-w-md lg:max-w-[589px]">{article.excerpt}</p>
+            <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-0">
+              <div
+                className="art-panel-bg relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] lg:w-[34.763%] lg:max-w-none"
+                {...revealItem("slide", 1)}
+              >
+                <FeaturedArticleArt className="absolute inset-0 size-full" />
               </div>
-              <RoundArrowLink
-                href={article.href}
-                aria-label={featuredArticle.readMoreLabel(article.title)}
-                className="self-end"
-              />
+
+              <div
+                className="flex flex-col items-center gap-4 lg:flex-1 lg:items-start lg:gap-[17px] lg:pl-[5.95%]"
+                {...revealItem("slide", 2)}
+              >
+                <Badge variant="lilac">{article.category}</Badge>
+                <div className="flex flex-col gap-3 lg:gap-[15px]">
+                  <h3 className="card-heading max-w-md lg:max-w-none">{article.title}</h3>
+                  <p className="card-body max-w-md lg:max-w-[589px]">{article.excerpt}</p>
+                </div>
+                <RoundArrowLink
+                  href={article.href}
+                  aria-label={featuredArticle.readMoreLabel(article.title)}
+                  className="self-end"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      </Reveal>
     </section>
   );
 }
