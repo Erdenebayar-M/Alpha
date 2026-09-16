@@ -172,6 +172,12 @@ export const collectionsRow = {
     { title: "Эцэг эхэд", subtitle: "Зөвлөмжүүд", href: siteConfig.collectionUrl },
     { title: "Зөв үсэглэх", subtitle: "18 нийтлэл", href: siteConfig.collectionUrl },
   ],
+  // Accessible names for the row's prev/next scroll buttons (issue #93) —
+  // not in Figma (the design has no button chrome for this row), so this is
+  // placeholder-free but still invented UI copy, kept short to match the
+  // nav's own terse labelling rather than a full sentence.
+  prevLabel: "Өмнөх",
+  nextLabel: "Дараах",
 } as const satisfies {
   heading: string;
   items: readonly [
@@ -181,6 +187,8 @@ export const collectionsRow = {
     CollectionCardCopy,
     CollectionCardCopy,
   ];
+  prevLabel: string;
+  nextLabel: string;
 };
 
 // /landing-new's Diagnostic card (Figma node 1401:21880), directly under the

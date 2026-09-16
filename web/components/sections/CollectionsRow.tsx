@@ -1,3 +1,4 @@
+import CollectionsScroller from "@/components/sections/CollectionsScroller";
 import CollectionCard, { type CollectionCardArt } from "@/components/ui/CollectionCard";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -133,6 +134,12 @@ const art: readonly [
  * cards one at a time (the browser scrolls the container into view as each
  * card receives focus either way) — either path satisfies "reachable and
  * scrollable by keyboard".
+ *
+ * The scroll region and its optional prev/next buttons (issue #93, a
+ * follow-up to #73) live in `CollectionsScroller` — the only Client
+ * Component in this section, since the buttons need to read and drive the
+ * scroll container's state. The cards themselves stay server-rendered here
+ * and are passed straight through as `children`.
  */
 export default function CollectionsRow() {
   return (
@@ -140,16 +147,15 @@ export default function CollectionsRow() {
       <Container className="flex flex-col gap-6 lg:gap-[30px]">
         <SectionHeading id="collections-row-heading">{collectionsRow.heading}</SectionHeading>
 
-        <div
-          tabIndex={0}
-          role="group"
-          aria-labelledby="collections-row-heading"
-          className="focus-ring flex snap-x snap-mandatory gap-6 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        <CollectionsScroller
+          headingId="collections-row-heading"
+          prevLabel={collectionsRow.prevLabel}
+          nextLabel={collectionsRow.nextLabel}
         >
           {collectionsRow.items.map((card, index) => (
             <CollectionCard key={index} card={card} art={art[index]} />
           ))}
-        </div>
+        </CollectionsScroller>
       </Container>
     </section>
   );
