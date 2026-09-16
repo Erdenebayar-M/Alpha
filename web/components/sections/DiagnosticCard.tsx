@@ -13,6 +13,13 @@ import { siteConfig } from "@/lib/site-config";
  * Mascot.tsx already draws, positioned as a sibling overlay rather than a
  * card child in Figma) on the right.
  *
+ * The card's own gradient/radius/padding surface and its heading/body's
+ * fluid-clamp type are the `card-surface`/`card-heading`/`card-body`
+ * utilities (globals.css) — the Featured article card (Figma node 1401:22064)
+ * repeats this exact surface and the exact same 26px/31px-leading heading
+ * and 18px/31px-leading body type, so both cards share one definition rather
+ * than two hand-copies of the same Tailwind string.
+ *
  * The card fills the Content column, so it renders 1140px wide at the 1440px
  * design width rather than Figma's 1115px: the design places this card at
  * x=156, 6px off the centre line the hero and pills share, and the column
@@ -75,20 +82,15 @@ export default function DiagnosticCard() {
   return (
     <section aria-labelledby="diagnostic-heading" className="relative pb-10 lg:pb-[45px]">
       <Container>
-        <div className="relative flex flex-col items-center gap-6 rounded-[32px] bg-linear-to-b from-card-surface-from to-card-surface-to p-6 text-center shadow-card sm:p-8 lg:aspect-[1115/401] lg:w-full lg:items-stretch lg:gap-0 lg:p-0 lg:text-left lg:shadow-none">
+        <div className="relative card-surface shadow-card lg:aspect-[1115/401] lg:items-stretch lg:p-0 lg:shadow-none">
           <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[26.185%] lg:left-[71.735%] lg:w-[18.598%]" />
 
           <div className="flex flex-col items-center gap-4 lg:items-start lg:gap-0 lg:pt-[5.650%] lg:pr-[5.785%] lg:pl-[5.785%]">
             <Badge variant="lilac">{diagnosticCard.badge}</Badge>
-            <h2
-              id="diagnostic-heading"
-              className="max-w-md text-2xl leading-[1.3] font-bold text-card-ink lg:mt-[4.767%] lg:max-w-[61.56%] lg:text-[clamp(18.49px,1.806vw,26px)] lg:leading-[1.1923]"
-            >
+            <h2 id="diagnostic-heading" className="card-heading max-w-md lg:mt-[4.767%] lg:max-w-[61.56%]">
               {diagnosticCard.heading}
             </h2>
-            <p className="max-w-md text-base leading-relaxed font-normal text-card-ink lg:mt-[2.941%] lg:max-w-[59.74%] lg:text-[clamp(12.8px,1.25vw,18px)] lg:leading-[1.7222]">
-              {diagnosticCard.body}
-            </p>
+            <p className="card-body font-normal max-w-md lg:mt-[2.941%] lg:max-w-[59.74%]">{diagnosticCard.body}</p>
           </div>
 
           <div className="w-full max-w-sm lg:mt-[3.722%] lg:max-w-[58.161%] lg:pl-[5.785%]">
