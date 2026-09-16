@@ -89,6 +89,10 @@
    * new. Both are raw Figma fills, unbound to a variable
    * (get_variable_defs on the card returns none for either). */
   --color-article-title: #0f1f4d;
+  /* Collections row (node 1401:22290) card text — raw Figma fills, unbound
+   * to a variable (get_variable_defs on the row returns none for either). */
+  --color-collection-title: #1a2b6b;
+  --color-collection-meta: #7b8eba;
 
   /* --- Register-child setup cards (nodes 1268:18752, 1269:19617, 1269:20261) --- */
   --color-setup-border: #e7edf6;
