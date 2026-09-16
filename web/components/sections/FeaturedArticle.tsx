@@ -69,7 +69,7 @@ export default function FeaturedArticle() {
           </SectionHeading>
 
           <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-0">
-            <div className="relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] bg-art-panel lg:w-[34.763%] lg:max-w-none">
+            <div className="relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] bg-linear-to-br from-art-panel-from to-art-panel-to lg:w-[34.763%] lg:max-w-none">
               <FeaturedArticleArt className="absolute inset-0 size-full" />
             </div>
 
