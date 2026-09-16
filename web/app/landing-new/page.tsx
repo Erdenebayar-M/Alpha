@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import CategoryPills from "@/components/sections/CategoryPills";
+import DiagnosticCard from "@/components/sections/DiagnosticCard";
 import LandingHero from "@/components/sections/LandingHero";
 import LandingScene from "@/components/sections/LandingScene";
 import { landingNav } from "@/lib/content";
@@ -23,6 +24,7 @@ export default function LandingNewPage() {
       <main id="main" className="relative">
         <LandingHero />
         <CategoryPills />
+        <DiagnosticCard />
       </main>
     </div>
   );
