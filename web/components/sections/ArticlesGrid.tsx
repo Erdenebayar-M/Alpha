@@ -1,3 +1,5 @@
+import Reveal from "@/components/animations/Reveal";
+import { revealItem } from "@/components/animations/revealItem";
 import ArticleCard, { type ArticleCardArt } from "@/components/ui/ArticleCard";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -42,15 +44,22 @@ const art: readonly [ArticleCardArt, ArticleCardArt, ArticleCardArt] = [
 export default function ArticlesGrid() {
   return (
     <section aria-labelledby="articles-grid-heading" className="landing-section-gap-b">
-      <Container className="flex flex-col gap-6 lg:gap-[30px]">
-        <SectionHeading id="articles-grid-heading">{articlesGrid.heading}</SectionHeading>
+      <Reveal mode="sequence">
+        <Container className="flex flex-col gap-6 lg:gap-[30px]">
+          <div {...revealItem("fade", 0)}>
+            <SectionHeading id="articles-grid-heading">{articlesGrid.heading}</SectionHeading>
+          </div>
 
-        <div className="flex flex-col gap-5 lg:flex-row lg:gap-[20px]">
-          {articlesGrid.items.map((card, index) => (
-            <ArticleCard key={index} card={card} art={art[index]} />
-          ))}
-        </div>
-      </Container>
+          <div className="flex flex-col gap-5 lg:flex-row lg:gap-[20px]">
+            {articlesGrid.items.map((card, index) => (
+              // `flex w-full` lets the card's own `w-full` keep sizing it against the row.
+              <div key={index} className="flex w-full" {...revealItem("slide", index + 1)}>
+                <ArticleCard card={card} art={art[index]} />
+              </div>
+            ))}
+          </div>
+        </Container>
+      </Reveal>
     </section>
   );
 }

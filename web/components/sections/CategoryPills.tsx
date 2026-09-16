@@ -1,3 +1,5 @@
+import Reveal from "@/components/animations/Reveal";
+import { revealItem } from "@/components/animations/revealItem";
 import Container from "@/components/ui/Container";
 import { categoryPills } from "@/lib/content";
 import { cn } from "@/lib/cn";
@@ -34,23 +36,25 @@ export default function CategoryPills() {
       aria-label={categoryPills.navLabel}
       className="relative isolate pt-8 pb-10 lg:pt-[30px] lg:pb-[45px]"
     >
-      <Container>
-        <ul className="grid grid-cols-2 gap-[10px] lg:flex lg:gap-[0.9346%]">
-          {categoryPills.items.map((pill) => (
-            <li key={pill.label} className="lg:w-[24.299%]">
-              <a
-                href={pill.href}
-                className={cn(
-                  "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] bg-pill-lilac px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
-                  "lg:h-[85px] lg:min-h-0 lg:rounded-[32px] lg:px-[11.538%] lg:py-[16px] lg:text-[26px] lg:leading-[31px]"
-                )}
-              >
-                {pill.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </Container>
+      <Reveal mode="sequence">
+        <Container>
+          <ul className="grid grid-cols-2 gap-[10px] lg:flex lg:gap-[0.9346%]">
+            {categoryPills.items.map((pill, index) => (
+              <li key={pill.label} className="lg:w-[24.299%]" {...revealItem("slide", index)}>
+                <a
+                  href={pill.href}
+                  className={cn(
+                    "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] bg-pill-lilac px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
+                    "lg:h-[85px] lg:min-h-0 lg:rounded-[32px] lg:px-[11.538%] lg:py-[16px] lg:text-[26px] lg:leading-[31px]"
+                  )}
+                >
+                  {pill.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Reveal>
     </nav>
   );
 }

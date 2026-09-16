@@ -1,3 +1,5 @@
+import Reveal from "@/components/animations/Reveal";
+import { revealItem } from "@/components/animations/revealItem";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Container from "@/components/ui/Container";
@@ -81,25 +83,30 @@ import { siteConfig } from "@/lib/site-config";
 export default function DiagnosticCard() {
   return (
     <section aria-labelledby="diagnostic-heading" className="landing-section-gap-b">
-      <Container>
-        <div className="relative card-surface shadow-card lg:aspect-[1115/401] lg:items-stretch lg:p-0 lg:shadow-none">
-          <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[26.185%] lg:left-[71.735%] lg:w-[18.598%]" />
+      <Reveal mode="sequence">
+        <Container>
+          <div
+            className="relative card-surface shadow-card lg:aspect-[1115/401] lg:items-stretch lg:p-0 lg:shadow-none"
+            {...revealItem("slide", 0)}
+          >
+            <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[26.185%] lg:left-[71.735%] lg:w-[18.598%]" />
 
-          <div className="flex flex-col items-center gap-4 lg:items-start lg:gap-0 lg:pt-[5.650%] lg:pr-[5.785%] lg:pl-[5.785%]">
-            <Badge variant="lilac">{diagnosticCard.badge}</Badge>
-            <h2 id="diagnostic-heading" className="card-heading max-w-md lg:mt-[4.767%] lg:max-w-[61.56%]">
-              {diagnosticCard.heading}
-            </h2>
-            <p className="card-body font-normal max-w-md lg:mt-[2.941%] lg:max-w-[59.74%]">{diagnosticCard.body}</p>
-          </div>
+            <div className="flex flex-col items-center gap-4 lg:items-start lg:gap-0 lg:pt-[5.650%] lg:pr-[5.785%] lg:pl-[5.785%]">
+              <Badge variant="lilac">{diagnosticCard.badge}</Badge>
+              <h2 id="diagnostic-heading" className="card-heading max-w-md lg:mt-[4.767%] lg:max-w-[61.56%]">
+                {diagnosticCard.heading}
+              </h2>
+              <p className="card-body font-normal max-w-md lg:mt-[2.941%] lg:max-w-[59.74%]">{diagnosticCard.body}</p>
+            </div>
 
-          <div className="w-full max-w-sm lg:mt-[3.722%] lg:max-w-[58.161%] lg:pl-[5.785%]">
-            <Button variant="cardCta" href={siteConfig.assessmentUrl}>
-              {diagnosticCard.cta}
-            </Button>
+            <div className="w-full max-w-sm lg:mt-[3.722%] lg:max-w-[58.161%] lg:pl-[5.785%]">
+              <Button variant="cardCta" href={siteConfig.assessmentUrl}>
+                {diagnosticCard.cta}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      </Reveal>
     </section>
   );
 }

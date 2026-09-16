@@ -1,3 +1,5 @@
+import Reveal from "@/components/animations/Reveal";
+import { revealItem } from "@/components/animations/revealItem";
 import CollectionsScroller from "@/components/sections/CollectionsScroller";
 import CollectionCard, { type CollectionCardArt } from "@/components/ui/CollectionCard";
 import Container from "@/components/ui/Container";
@@ -144,19 +146,27 @@ const art: readonly [
 export default function CollectionsRow() {
   return (
     <section aria-labelledby="collections-row-heading" className="landing-section-gap-b">
-      <Container className="flex flex-col gap-6 lg:gap-[30px]">
-        <SectionHeading id="collections-row-heading">{collectionsRow.heading}</SectionHeading>
+      <Reveal mode="sequence">
+        <Container className="flex flex-col gap-6 lg:gap-[30px]">
+          <div {...revealItem("fade", 0)}>
+            <SectionHeading id="collections-row-heading">{collectionsRow.heading}</SectionHeading>
+          </div>
 
-        <CollectionsScroller
-          headingId="collections-row-heading"
-          prevLabel={collectionsRow.prevLabel}
-          nextLabel={collectionsRow.nextLabel}
-        >
-          {collectionsRow.items.map((card, index) => (
-            <CollectionCard key={index} card={card} art={art[index]} />
-          ))}
-        </CollectionsScroller>
-      </Container>
+          <CollectionsScroller
+            headingId="collections-row-heading"
+            prevLabel={collectionsRow.prevLabel}
+            nextLabel={collectionsRow.nextLabel}
+          >
+            {collectionsRow.items.map((card, index) => (
+              // `shrink-0` keeps the card at its literal 244px inside the scroller;
+              // the card's own `snap-start` still applies as a descendant snap area.
+              <div key={index} className="flex shrink-0" {...revealItem("slide", index + 1)}>
+                <CollectionCard card={card} art={art[index]} />
+              </div>
+            ))}
+          </CollectionsScroller>
+        </Container>
+      </Reveal>
     </section>
   );
 }
