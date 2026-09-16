@@ -1,23 +1,14 @@
 import Image from "next/image";
-import type { CSSProperties } from "react";
 import Mascot from "@/components/brand/Mascot";
+import { type Box, boxStyle } from "@/lib/box";
 import { featuredArticle } from "@/lib/content";
 
 // The illustration panel's own tight box (node 1401:22065, "Rectangle 56"),
 // 389x303 — everything below is positioned in this coordinate space, then
-// converted to percentages so the whole illustration scales with the panel.
+// converted to percentages (via boxStyle) so the whole illustration scales
+// with the panel.
 const PANEL_WIDTH = 389;
 const PANEL_HEIGHT = 303;
-
-const pctX = (px: number) => `${(px / PANEL_WIDTH) * 100}%`;
-const pctY = (px: number) => `${(px / PANEL_HEIGHT) * 100}%`;
-
-interface Box {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 // The mascot, cloud/word and book layers overlay the panel as a sibling group
 // in Figma (node 1401:22076, "Group 103") rather than sitting inside it, so
@@ -31,13 +22,8 @@ const HONI_BOX: Box = { x: 245, y: 178, width: 58, height: 15 };
 const ARROW_BOX: Box = { x: 245, y: 120, width: 42.709, height: 50.335 };
 const BOOKS_BOX: Box = { x: 248, y: 203, width: 110, height: 71 };
 
-function styleFor(box: Box): CSSProperties {
-  return {
-    left: pctX(box.x),
-    top: pctY(box.y),
-    width: pctX(box.width),
-    height: pctY(box.height),
-  };
+function styleFor(box: Box) {
+  return boxStyle(box, PANEL_WIDTH, PANEL_HEIGHT);
 }
 
 interface FeaturedArticleArtProps {

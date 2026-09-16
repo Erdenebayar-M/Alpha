@@ -80,7 +80,7 @@ import { siteConfig } from "@/lib/site-config";
  */
 export default function DiagnosticCard() {
   return (
-    <section aria-labelledby="diagnostic-heading" className="relative pb-10 lg:pb-[45px]">
+    <section aria-labelledby="diagnostic-heading" className="landing-section-gap-b">
       <Container>
         <div className="relative card-surface shadow-card lg:aspect-[1115/401] lg:items-stretch lg:p-0 lg:shadow-none">
           <Mascot className="w-40 sm:w-48 lg:absolute lg:top-[26.185%] lg:left-[71.735%] lg:w-[18.598%]" />

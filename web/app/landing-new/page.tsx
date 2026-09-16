@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
+import ArticlesGrid from "@/components/sections/ArticlesGrid";
 import CategoryPills from "@/components/sections/CategoryPills";
 import DiagnosticCard from "@/components/sections/DiagnosticCard";
 import FeaturedArticle from "@/components/sections/FeaturedArticle";
@@ -27,6 +28,7 @@ export default function LandingNewPage() {
         <CategoryPills />
         <DiagnosticCard />
         <FeaturedArticle />
+        <ArticlesGrid />
       </main>
     </div>
   );

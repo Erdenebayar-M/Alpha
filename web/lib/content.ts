@@ -116,6 +116,35 @@ export const featuredArticle = {
   readMoreLabel: (title: string) => string;
 };
 
+export interface ArticleCardCopy {
+  readonly label: string;
+  readonly title: string;
+  readonly href: string;
+}
+
+// /landing-new's Articles-for-parents grid (Figma node 1371:9792), directly
+// under the Featured article — three more Articles for parents to browse
+// (see web/CONTEXT.md's Article entry). Unlike the Featured article, each
+// card's own face shows a generic "Завгүй" eyebrow label rather than a
+// Category badge, so this doesn't model cards as `Article`s (no `category`
+// or `excerpt` is on canvas) — just the `label`/`title`/`href` Figma
+// actually shows. "Завгүй"/"Lorum" are Figma's own placeholders, repeated
+// verbatim per card rather than invented per-card copy.
+//
+// `items` is typed as an exact 3-tuple (not `readonly ArticleCardCopy[]`) so
+// that ArticlesGrid.tsx's own per-card `art` config — a same-length tuple
+// zipped to this one by index — fails to typecheck the moment the two drift
+// out of sync, rather than reading `undefined` off the end of a shorter
+// array at render.
+export const articlesGrid = {
+  heading: "Эцэг эхчүүдэд туслах нийтлэлүүд",
+  items: [
+    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
+    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
+    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
+  ],
+} as const satisfies { heading: string; items: readonly [ArticleCardCopy, ArticleCardCopy, ArticleCardCopy] };
+
 // /landing-new's Diagnostic card (Figma node 1401:21880), directly under the
 // Category pills. "Оношилгоо" badges the same Diagnostic the "Оношилгоо" nav
 // link and pill point at (see CONTEXT.md); "Үнэлгээг эхлүүлэх" is its
