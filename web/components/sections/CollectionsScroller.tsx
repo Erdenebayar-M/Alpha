@@ -160,6 +160,10 @@ interface ScrollButtonProps {
 // need a second asset. `ref` is forwarded (a plain prop under React 19) so
 // the parent can redirect focus off a button the instant it's about to
 // become `disabled` — see CollectionsScroller's own `updateEdges` comment.
+// No `disabled:pointer-events-none`: this button sits `absolute` over a
+// card, so making it click-*through* when disabled would hand the click to
+// that card's link — a native `disabled` button already blocks its own
+// click/focus without needing that, and still consumes the hit-test area.
 function ScrollButton({ ref, direction, label, disabled, onClick }: ScrollButtonProps) {
   const isPrev = direction === "prev";
   return (
@@ -172,7 +176,7 @@ function ScrollButton({ ref, direction, label, disabled, onClick }: ScrollButton
       className={cn(
         "focus-ring absolute top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-brand-green shadow-md transition-[opacity,filter] duration-150 lg:flex",
         isPrev ? "left-2" : "right-2",
-        "hover:brightness-95 disabled:pointer-events-none disabled:opacity-30"
+        "hover:brightness-95 disabled:opacity-30"
       )}
     >
       <Image
