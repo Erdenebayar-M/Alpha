@@ -22,7 +22,7 @@ jest.mock('../../lib/db/client', () => ({
       findUnique: jest.fn(),
       updateMany: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn(),
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
@@ -38,7 +38,7 @@ const mockCreate = prisma.article.create as jest.MockedFunction<any>;
 const mockFindUnique = prisma.article.findUnique as jest.MockedFunction<any>;
 const mockUpdateMany = prisma.article.updateMany as jest.MockedFunction<any>;
 const mockUpdate = prisma.article.update as jest.MockedFunction<any>;
-const mockDelete = prisma.article.delete as jest.MockedFunction<any>;
+const mockDeleteMany = prisma.article.deleteMany as jest.MockedFunction<any>;
 const mockFindMany = prisma.article.findMany as jest.MockedFunction<any>;
 const mockCount = prisma.article.count as jest.MockedFunction<any>;
 const mockTransaction = prisma.$transaction as jest.MockedFunction<any>;
@@ -141,7 +141,7 @@ beforeEach(() => {
   mockFindMany.mockResolvedValue([]);
   mockCount.mockResolvedValue(0);
   mockUpdate.mockResolvedValue({});
-  mockDelete.mockResolvedValue({});
+  mockDeleteMany.mockResolvedValue({ count: 1 });
   // The Feature transaction runs against the same article mocks the rest of
   // the suite already asserts on, so a test can check tx-scoped calls the
   // same way it checks any other write.
@@ -1186,7 +1186,7 @@ describe('DELETE /:id (issue #86)', () => {
     expect(res.status).toBe(200);
     const json = await body(res);
     expect(json.data).toEqual({ id: 'article-1', deleted: true });
-    expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'article-1' } });
+    expect(mockDeleteMany).toHaveBeenCalledWith({ where: { id: 'article-1', status: 'DRAFT' } });
   });
 
   it('refuses to delete a Published Article', async () => {
@@ -1195,7 +1195,7 @@ describe('DELETE /:id (issue #86)', () => {
     expect(res.status).toBe(422);
     const json = await body(res);
     expect(json.error.code).toBe('UNPROCESSABLE');
-    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockDeleteMany).not.toHaveBeenCalled();
   });
 
   it('returns NOT_FOUND for an unknown id', async () => {
@@ -1204,7 +1204,31 @@ describe('DELETE /:id (issue #86)', () => {
     expect(res.status).toBe(404);
     const json = await body(res);
     expect(json.error.code).toBe('NOT_FOUND');
-    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockDeleteMany).not.toHaveBeenCalled();
+  });
+
+  it('returns UNPROCESSABLE (not a silent success or a 500) when a concurrent Publish wins the race', async () => {
+    // The initial read sees a Draft, but by the time the guarded delete runs,
+    // a concurrent POST /:id/publish has already committed — the delete's
+    // `status: 'DRAFT'` guard matches nothing.
+    mockFindUnique.mockResolvedValueOnce({ status: 'DRAFT' });
+    mockDeleteMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({ status: 'PUBLISHED' });
+    const res = await deleteArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(json.error.message).toBe('Published Articles must be unpublished before they can be deleted');
+  });
+
+  it('returns NOT_FOUND when the guarded delete matches nothing because the row is already gone', async () => {
+    mockFindUnique.mockResolvedValueOnce({ status: 'DRAFT' });
+    mockDeleteMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await deleteArticle('article-1');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
   });
 
   it('rejects requests without the admin secret', async () => {

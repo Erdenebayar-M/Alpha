@@ -334,16 +334,28 @@ adminArticles.post('/:id/unpublish', withArticle(async (c, article) => {
 // Permanently removes a Draft. A Published Article must be unpublished first
 // — deleting it outright would break a link that may already be shared.
 
+const mustUnpublishBeforeDelete = (c: Context) =>
+  ERRORS.UNPROCESSABLE(c, 'Published Articles must be unpublished before they can be deleted');
+
 adminArticles.delete('/:id', async (c) => {
   const id = c.req.param('id');
   const article = await prisma.article.findUnique({ where: { id }, select: { status: true } });
   if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
 
   if (article.status === 'PUBLISHED') {
-    return ERRORS.UNPROCESSABLE(c, 'Published Articles must be unpublished before they can be deleted');
+    return mustUnpublishBeforeDelete(c);
   }
 
-  await prisma.article.delete({ where: { id } });
+  // Guarded on status, not just id: if a concurrent Publish committed between
+  // the read above and this delete, the delete matches nothing instead of
+  // destroying the now-Published (and possibly already-shared) Article.
+  const deleted = await prisma.article.deleteMany({ where: { id, status: 'DRAFT' } });
+  if (deleted.count === 0) {
+    const existing = await prisma.article.findUnique({ where: { id }, select: { status: true } });
+    if (!existing) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+    return mustUnpublishBeforeDelete(c);
+  }
+
   return ok(c, { id, deleted: true });
 });
 
