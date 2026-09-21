@@ -955,7 +955,11 @@ describe('PUT /:id', () => {
     // database; the mock can't evaluate it, so it stands in for a real
     // no-match by returning count: 0, and the follow-up findUnique explains why.
     mockUpdateMany.mockResolvedValueOnce({ count: 0 });
-    mockFindUnique.mockResolvedValueOnce({ slug: 'old-slug', published_at: '2026-01-01T00:00:00.000Z' });
+    mockFindUnique.mockResolvedValueOnce({
+      slug: 'old-slug',
+      published_at: '2026-01-01T00:00:00.000Z',
+      version: VALID_SAVE_BODY.version,
+    });
     const res = await saveArticle('article-1', { ...VALID_SAVE_BODY, slug: 'new-slug' });
     expect(res.status).toBe(422);
     const json = await body(res);
@@ -992,6 +996,101 @@ describe('PUT /:id', () => {
     const res = await saveArticle('article-1', VALID_SAVE_BODY);
     const json = await body(res);
     expect(json.data.article.was_published).toBe(true);
+  });
+});
+
+describe('PUT /:id — readiness check for a currently-Published Article (issue #105)', () => {
+  // The where clause's `status: 'DRAFT'` fold is what actually blocks these
+  // in a real database — the mock can't evaluate it — so each case stands
+  // in for a real no-match by returning count: 0, with the follow-up
+  // findUnique reporting the row as currently Published.
+  function mockPublishedNoMatch(overrides: Record<string, unknown> = {}) {
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({
+      slug: VALID_SAVE_BODY.slug,
+      published_at: '2026-01-01T00:00:00.000Z',
+      status: 'PUBLISHED',
+      version: VALID_SAVE_BODY.version,
+      ...overrides,
+    });
+  }
+
+  it.each([
+    ['thumbnail', { thumbnail: undefined }, ['thumbnail']],
+    ['excerpt', { excerpt: undefined }, ['excerpt']],
+    ['body', { body: [] }, ['body']],
+  ] as const)('rejects a save that would blank the %s on a Published Article', async (_field, patch, expected) => {
+    mockPublishedNoMatch();
+    const res = await saveArticle('article-1', { ...VALID_SAVE_BODY, ...patch });
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(json.error.details.missing).toEqual(expected);
+  });
+
+  it('reports every missing field at once, in publish-check order', async () => {
+    mockPublishedNoMatch();
+    const { excerpt, thumbnail, ...rest } = VALID_SAVE_BODY;
+    const res = await saveArticle('article-1', { ...rest, body: [] });
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.details.missing).toEqual(['excerpt', 'thumbnail', 'body']);
+  });
+
+  it('folds status: DRAFT into the write so a Published Article with an incomplete payload matches nothing', async () => {
+    mockPublishedNoMatch();
+    const { thumbnail, ...rest } = VALID_SAVE_BODY;
+    await saveArticle('article-1', rest);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'DRAFT' }),
+      }),
+    );
+  });
+
+  it('reports CONFLICT, not a readiness failure, when a save on stale data also happens to be incomplete', async () => {
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({
+      slug: VALID_SAVE_BODY.slug,
+      published_at: '2026-01-01T00:00:00.000Z',
+      status: 'PUBLISHED',
+      version: VALID_SAVE_BODY.version + 1,
+    });
+    const { thumbnail, ...rest } = VALID_SAVE_BODY;
+    const res = await saveArticle('article-1', rest);
+    expect(res.status).toBe(409);
+    const json = await body(res);
+    expect(json.error.code).toBe('CONFLICT');
+  });
+
+  it('saves a Draft with the same blanks (thumbnail, excerpt, body all missing) unaffected by the check', async () => {
+    const { excerpt, thumbnail, ...rest } = VALID_SAVE_BODY;
+    const res = await saveArticle('article-1', { ...rest, body: [] });
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ status: 'DRAFT' }),
+        data: expect.objectContaining({
+          excerpt: null,
+          thumbnail_url: null,
+          body: [],
+        }),
+      }),
+    );
+  });
+
+  it('allows saving a Published Article whose payload keeps every required field present', async () => {
+    const res = await saveArticle('article-1', VALID_SAVE_BODY);
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'article-1',
+          version: 1,
+          OR: [{ published_at: null }, { slug: VALID_SAVE_BODY.slug }],
+        },
+      }),
+    );
   });
 });
 

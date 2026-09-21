@@ -236,14 +236,34 @@ adminArticles.put('/:id', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid body', { body: assetErrors });
   }
 
+  // Same readiness check `POST /:id/publish` runs, applied to the incoming
+  // payload rather than the stored row. A Draft save is never blocked by
+  // this — see the `status: 'DRAFT'` fold into the where clause below.
+  const missing = getArticlePublishIssues({
+    title,
+    slug,
+    excerpt: excerpt ?? null,
+    thumbnail_url: thumbnail?.url ?? null,
+    body: articleBody,
+  });
+
   try {
-    // The where clause makes both the version check and the published-slug
-    // lock part of the write itself — a separate `findUnique` read-then-write
-    // for either would leave a window where a concurrent change (a second
-    // save, or a Publish setting published_at) lands between the read and
-    // the write and slips past a check that already passed.
+    // The where clause makes the version check, the published-slug lock,
+    // and (when the payload would leave required fields missing) a
+    // currently-Draft requirement all part of the write itself — a separate
+    // `findUnique` read-then-write for any of these would leave a window
+    // where a concurrent change (a second save, or a Publish flipping the
+    // status) lands between the read and the write and slips past a check
+    // that already passed. When the payload is incomplete, this condition
+    // only ever excludes a row that's actually Published, so a Draft save
+    // still matches and writes exactly as before.
     const updated = await prisma.article.updateMany({
-      where: { id, version, OR: [{ published_at: null }, { slug }] },
+      where: {
+        id,
+        version,
+        OR: [{ published_at: null }, { slug }],
+        ...(missing.length > 0 ? { status: 'DRAFT' as const } : {}),
+      },
       data: {
         title,
         slug,
@@ -260,16 +280,26 @@ adminArticles.put('/:id', async (c) => {
     });
 
     if (updated.count === 0) {
-      // Distinguish why nothing matched: gone, slug-locked, or stale version.
+      // Distinguish why nothing matched: gone, stale version, slug-locked, or
+      // would break a live Published Article. Checked in that order because
+      // a stale version fails the write independently of every other
+      // condition — reporting it first means an incomplete payload that also
+      // happens to be behind never gets misreported as a readiness failure.
       const existing = await prisma.article.findUnique({
         where: { id },
-        select: { slug: true, published_at: true },
+        select: { slug: true, published_at: true, status: true, version: true },
       });
       if (!existing) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+      if (existing.version !== version) {
+        return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
+      }
       if (existing.published_at && slug !== existing.slug) {
         return ERRORS.UNPROCESSABLE(c, 'Slug cannot be changed once an Article has been published', {
           slug: ['Slug cannot be changed after publishing'],
         });
+      }
+      if (missing.length > 0 && existing.status === 'PUBLISHED') {
+        return ERRORS.UNPROCESSABLE(c, 'Article is missing required fields to publish', { missing });
       }
       return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
     }
