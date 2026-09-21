@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
+import * as crypto from 'crypto';
 import { withAdmin } from '../lib/auth/adminMiddleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
@@ -7,6 +8,10 @@ import { prisma } from '../lib/db/client';
 import { Prisma } from '../../generated/prisma';
 import { assetUrlSchema } from '../lib/asset-url';
 import { createArticleSchema, saveArticleSchema, computeReadingTimeMinutes } from '@app/shared';
+import { r2Enabled, r2Upload } from '../lib/r2';
+import { EXT_FOR_TYPE } from '../lib/media-type';
+import { readImageDimensions } from '../lib/image-size';
+import { parseUploadedFile } from '../lib/upload';
 
 const thumbnailUrlSchema = z.object({ url: assetUrlSchema });
 
@@ -156,6 +161,40 @@ adminArticles.put('/:id', async (c) => {
   } catch (err) {
     return slugConflictOrRethrow(c, err);
   }
+});
+
+// ─── POST /api/admin/articles/images ───────────────────────────────────────────
+// Uploads a standalone image for use in an image Block, a link-card image or a
+// Thumbnail. The type is read from the file's own bytes — never the filename or
+// the multipart-declared type — so a mislabelled or renamed file can't get through.
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+adminArticles.post('/images', async (c) => {
+  if (!r2Enabled()) {
+    return ERRORS.SERVICE_UNAVAILABLE(c, 'Image storage is not configured');
+  }
+
+  const uploaded = await parseUploadedFile(c, MAX_IMAGE_BYTES);
+  if (!uploaded.ok) {
+    return ERRORS.VALIDATION_ERROR(c, uploaded.message);
+  }
+  const { buf, sniffed } = uploaded;
+
+  // Guard on the actual bytes, not the filename or the browser-declared type.
+  if (!sniffed || !sniffed.startsWith('image/')) {
+    return ERRORS.VALIDATION_ERROR(c, 'Unrecognized image format. Upload JPEG, PNG, WebP or GIF.');
+  }
+
+  const dimensions = readImageDimensions(buf, sniffed);
+  if (!dimensions) {
+    return ERRORS.VALIDATION_ERROR(c, 'Could not read image dimensions');
+  }
+
+  const filename = `${crypto.randomUUID()}.${EXT_FOR_TYPE[sniffed]}`;
+  const url = await r2Upload(`articles/${filename}`, buf, sniffed);
+
+  return ok(c, { url, width: dimensions.width, height: dimensions.height, content_type: sniffed }, undefined, 201);
 });
 
 export default adminArticles;

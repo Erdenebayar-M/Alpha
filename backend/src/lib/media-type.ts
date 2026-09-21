@@ -14,6 +14,8 @@
 export type SniffedType =
   | 'image/png'
   | 'image/jpeg'
+  | 'image/webp'
+  | 'image/gif'
   | 'audio/wav'
   | 'audio/mp4'
   | 'audio/mpeg'
@@ -31,6 +33,8 @@ export const IOS_PLAYABLE_AUDIO: readonly SniffedType[] = [
 export const EXT_FOR_TYPE: Record<SniffedType, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
   'audio/wav': 'wav',
   'audio/mp4': 'm4a',
   'audio/mpeg': 'mp3',
@@ -61,6 +65,20 @@ export function sniffContentType(buf: Buffer): SniffedType | null {
   // RIFF....WAVE  →  WAV (offset 0 "RIFF", offset 8 "WAVE")
   if (has(buf, 0, [0x52, 0x49, 0x46, 0x46]) && has(buf, 8, [0x57, 0x41, 0x56, 0x45])) {
     return 'audio/wav';
+  }
+
+  // RIFF....WEBP  →  WebP (offset 0 "RIFF", offset 8 "WEBP")
+  if (has(buf, 0, [0x52, 0x49, 0x46, 0x46]) && has(buf, 8, [0x57, 0x45, 0x42, 0x50])) {
+    return 'image/webp';
+  }
+
+  // GIF87a / GIF89a
+  if (
+    has(buf, 0, [0x47, 0x49, 0x46, 0x38]) &&
+    (buf[4] === 0x37 || buf[4] === 0x39) &&
+    buf[5] === 0x61
+  ) {
+    return 'image/gif';
   }
 
   // OggS  →  Ogg container (typically Opus/Vorbis audio)

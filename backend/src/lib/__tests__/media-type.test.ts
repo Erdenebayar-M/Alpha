@@ -47,6 +47,29 @@ describe('sniffContentType', () => {
     expect(sniffContentType(header([0x1a, 0x45, 0xdf, 0xa3]))).toBe('audio/webm');
   });
 
+  it('detects WebP (RIFF....WEBP)', () => {
+    const buf = header([...ascii('RIFF'), 0x24, 0x08, 0x00, 0x00, ...ascii('WEBP')]);
+    expect(sniffContentType(buf)).toBe('image/webp');
+  });
+
+  it('does NOT treat a RIFF/WAVE container as WebP', () => {
+    const buf = header([...ascii('RIFF'), 0x24, 0x08, 0x00, 0x00, ...ascii('WAVE')]);
+    expect(sniffContentType(buf)).not.toBe('image/webp');
+  });
+
+  it('detects GIF87a', () => {
+    expect(sniffContentType(header(ascii('GIF87a')))).toBe('image/gif');
+  });
+
+  it('detects GIF89a', () => {
+    expect(sniffContentType(header(ascii('GIF89a')))).toBe('image/gif');
+  });
+
+  it('does NOT treat an SVG (text/XML) as a known image type', () => {
+    const buf = header(ascii('<svg xmlns="http://www.w3.org/2000/svg">'));
+    expect(sniffContentType(buf)).toBeNull();
+  });
+
   it('detects Ogg/Opus (OggS)', () => {
     expect(sniffContentType(header(ascii('OggS')))).toBe('audio/ogg');
   });
@@ -90,5 +113,12 @@ describe('EXT_FOR_TYPE', () => {
     expect(EXT_FOR_TYPE['audio/mp4']).toBe('m4a');
     expect(EXT_FOR_TYPE['audio/wav']).toBe('wav');
     expect(EXT_FOR_TYPE['audio/mpeg']).toBe('mp3');
+  });
+
+  it('maps image types to extensions', () => {
+    expect(EXT_FOR_TYPE['image/png']).toBe('png');
+    expect(EXT_FOR_TYPE['image/jpeg']).toBe('jpg');
+    expect(EXT_FOR_TYPE['image/webp']).toBe('webp');
+    expect(EXT_FOR_TYPE['image/gif']).toBe('gif');
   });
 });

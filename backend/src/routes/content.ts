@@ -12,7 +12,8 @@ import { ok } from '../lib/response';
 import { env } from '../config/env';
 import { r2Enabled, r2Upload, r2Move } from '../lib/r2';
 import { assetUrlSchema } from '../lib/asset-url';
-import { sniffContentType, isIosPlayableAudio, EXT_FOR_TYPE } from '../lib/media-type';
+import { isIosPlayableAudio, EXT_FOR_TYPE } from '../lib/media-type';
+import { parseUploadedFile } from '../lib/upload';
 import { prisma } from '../lib/db/client';
 import {
   DraftStage,
@@ -819,10 +820,11 @@ const uploadAudioFieldsSchema = z.object({
 });
 
 content.post('/upload-audio', async (c) => {
-  const form = await c.req.parseBody().catch(() => null);
-  if (!form) {
-    return ERRORS.VALIDATION_ERROR(c, 'Expected multipart/form-data body');
+  const uploaded = await parseUploadedFile(c, MAX_AUDIO_BYTES);
+  if (!uploaded.ok) {
+    return ERRORS.VALIDATION_ERROR(c, uploaded.message);
   }
+  const { form, buf, sniffed } = uploaded;
 
   const parsed = uploadAudioFieldsSchema.safeParse({
     variant_id: form['variant_id'],
@@ -833,20 +835,6 @@ content.post('/upload-audio', async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid fields', parsed.error.flatten().fieldErrors);
   }
   const { variant_id, slot, stage } = parsed.data;
-
-  const file = form['file'];
-  if (!(file instanceof File)) {
-    return ERRORS.VALIDATION_ERROR(c, 'Missing "file" upload field');
-  }
-  if (file.size === 0) {
-    return ERRORS.VALIDATION_ERROR(c, 'Uploaded file is empty');
-  }
-  if (file.size > MAX_AUDIO_BYTES) {
-    return ERRORS.VALIDATION_ERROR(c, `File exceeds ${MAX_AUDIO_BYTES} byte limit`);
-  }
-
-  const buf = Buffer.from(await file.arrayBuffer());
-  const sniffed = sniffContentType(buf);
 
   // Guard on the actual bytes, not the filename or the browser-declared type.
   if (!sniffed || !sniffed.startsWith('audio/')) {
