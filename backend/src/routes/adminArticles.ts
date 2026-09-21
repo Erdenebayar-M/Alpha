@@ -7,11 +7,13 @@ import { ok } from '../lib/response';
 import { prisma } from '../lib/db/client';
 import { Prisma } from '../../generated/prisma';
 import { assetUrlSchema } from '../lib/asset-url';
+import { paginationSkipTake, paginationMeta } from '../lib/pagination';
 import {
   createArticleSchema,
   saveArticleSchema,
   adminArticleListQuerySchema,
   computeReadingTimeMinutes,
+  getArticlePublishIssues,
 } from '@app/shared';
 import { r2Enabled, r2Upload } from '../lib/r2';
 import { EXT_FOR_TYPE } from '../lib/media-type';
@@ -102,14 +104,13 @@ adminArticles.get('/', async (c) => {
     prisma.article.findMany({
       where,
       orderBy: { updated_at: 'desc' },
-      skip: (page - 1) * per_page,
-      take: per_page,
+      ...paginationSkipTake(page, per_page),
       select: ARTICLE_LIST_SELECT,
     }),
     prisma.article.count({ where }),
   ]);
 
-  return ok(c, { articles, meta: { page, per_page, total, has_next: page * per_page < total } });
+  return ok(c, { articles, meta: paginationMeta(page, per_page, total) });
 });
 
 // ─── POST /api/admin/articles ─────────────────────────────────────────────────
@@ -177,12 +178,13 @@ adminArticles.put('/:id', async (c) => {
   }
 
   try {
-    // The where clause makes the version check part of the write itself —
-    // a `findUnique` followed by a separate `update` would leave a window
-    // where two concurrent saves both read the same version, both pass the
-    // check, and the second silently clobbers the first.
+    // The where clause makes both the version check and the published-slug
+    // lock part of the write itself — a separate `findUnique` read-then-write
+    // for either would leave a window where a concurrent change (a second
+    // save, or a Publish setting published_at) lands between the read and
+    // the write and slips past a check that already passed.
     const updated = await prisma.article.updateMany({
-      where: { id, version },
+      where: { id, version, OR: [{ published_at: null }, { slug }] },
       data: {
         title,
         slug,
@@ -199,8 +201,17 @@ adminArticles.put('/:id', async (c) => {
     });
 
     if (updated.count === 0) {
-      const exists = await prisma.article.findUnique({ where: { id }, select: { id: true } });
-      if (!exists) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+      // Distinguish why nothing matched: gone, slug-locked, or stale version.
+      const existing = await prisma.article.findUnique({
+        where: { id },
+        select: { slug: true, published_at: true },
+      });
+      if (!existing) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+      if (existing.published_at && slug !== existing.slug) {
+        return ERRORS.UNPROCESSABLE(c, 'Slug cannot be changed once an Article has been published', {
+          slug: ['Slug cannot be changed after publishing'],
+        });
+      }
       return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
     }
 
@@ -209,6 +220,41 @@ adminArticles.put('/:id', async (c) => {
   } catch (err) {
     return slugConflictOrRethrow(c, err);
   }
+});
+
+// ─── POST /api/admin/articles/:id/publish ──────────────────────────────────
+// Runs the shared readiness check (title, valid slug, excerpt, Thumbnail, at
+// least one Block). Publishing an already-Published Article is a no-op that
+// returns it unchanged; `published_at` is set only the first time.
+
+adminArticles.post('/:id/publish', async (c) => {
+  const id = c.req.param('id');
+  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
+  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+
+  if (article.status === 'PUBLISHED') {
+    return ok(c, { article });
+  }
+
+  const missing = getArticlePublishIssues(article);
+  if (missing.length > 0) {
+    return ERRORS.UNPROCESSABLE(c, 'Article is missing required fields to publish', { missing });
+  }
+
+  // Guarded on status, not just id: if a concurrent Publish call already
+  // flipped this Draft to Published, this write is a no-op and the refetch
+  // below returns that already-published row instead of racing to overwrite
+  // its published_at.
+  await prisma.article.updateMany({
+    where: { id, status: 'DRAFT' },
+    data: {
+      status: 'PUBLISHED',
+      published_at: article.published_at ?? new Date(),
+    },
+  });
+
+  const published = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
+  return ok(c, { article: published });
 });
 
 // ─── POST /api/admin/articles/images ───────────────────────────────────────────

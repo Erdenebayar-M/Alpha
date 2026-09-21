@@ -20,6 +20,7 @@ import content from './routes/content';
 import adminStats from './routes/adminStats';
 import adminLearners from './routes/adminLearners';
 import adminArticles from './routes/adminArticles';
+import articles from './routes/articles';
 
 const app = new Hono();
 
@@ -77,6 +78,7 @@ app.route('/api/admin/content', content);
 app.route('/api/admin/stats', adminStats);
 app.route('/api/admin/learners', adminLearners);
 app.route('/api/admin/articles', adminArticles);
+app.route('/api/articles', articles);
 
 if (require.main === module) {
   serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, () => {

@@ -79,6 +79,10 @@ function saveArticle(
   });
 }
 
+function publishArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${id}/publish`, { method: 'POST', headers });
+}
+
 const VALID_BODY = {
   title: 'Уншихад анхаарах зөвлөгөө',
   slug: 'reading-tips-1',
@@ -449,7 +453,7 @@ describe('PUT /:id', () => {
     // read-then-write, which would leave a window for a lost update.
     expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'article-1', version: 1 },
+        where: { id: 'article-1', version: 1, OR: [{ published_at: null }, { slug: VALID_SAVE_BODY.slug }] },
         data: expect.objectContaining({
           title: VALID_SAVE_BODY.title,
           slug: VALID_SAVE_BODY.slug,
@@ -474,7 +478,9 @@ describe('PUT /:id', () => {
     const json = await body(res);
     expect(json.error.code).toBe('CONFLICT');
     expect(mockUpdateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'article-1', version: 2 } }),
+      expect.objectContaining({
+        where: { id: 'article-1', version: 2, OR: [{ published_at: null }, { slug: VALID_SAVE_BODY.slug }] },
+      }),
     );
   });
 
@@ -566,5 +572,155 @@ describe('PUT /:id', () => {
     const res = await saveArticle('article-1', VALID_SAVE_BODY, {});
     expect(res.status).toBe(401);
     expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a slug change once the Article has been published', async () => {
+    // The atomic write's OR clause is what actually blocks this in a real
+    // database; the mock can't evaluate it, so it stands in for a real
+    // no-match by returning count: 0, and the follow-up findUnique explains why.
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({ slug: 'old-slug', published_at: '2026-01-01T00:00:00.000Z' });
+    const res = await saveArticle('article-1', { ...VALID_SAVE_BODY, slug: 'new-slug' });
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(json.error.details.slug).toBeDefined();
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'article-1', version: 1, OR: [{ published_at: null }, { slug: 'new-slug' }] },
+      }),
+    );
+  });
+
+  it('allows a save that keeps the same slug once the Article has been published', async () => {
+    const res = await saveArticle('article-1', VALID_SAVE_BODY);
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'article-1',
+          version: 1,
+          OR: [{ published_at: null }, { slug: VALID_SAVE_BODY.slug }],
+        },
+      }),
+    );
+  });
+});
+
+describe('POST /:id/publish', () => {
+  const COMPLETE_ARTICLE = {
+    id: 'article-1',
+    title: 'Уншихад анхаарах зөвлөгөө',
+    slug: 'reading-tips-1',
+    excerpt: 'A short summary',
+    category: 'READING',
+    body: PARAGRAPH_AND_HEADING_BODY,
+    thumbnail_url: '/content/articles/thumb.png',
+    thumbnail_alt: 'A child reading',
+    thumbnail_width: 800,
+    thumbnail_height: 600,
+    reading_time_minutes: 1,
+    status: 'DRAFT',
+    is_featured: false,
+    published_at: null,
+    version: 1,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
+  };
+
+  it('publishes a complete Draft, setting status and published_at', async () => {
+    mockFindUnique.mockResolvedValueOnce(COMPLETE_ARTICLE);
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      status: 'PUBLISHED',
+      published_at: '2026-02-01T00:00:00.000Z',
+    });
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.status).toBe('PUBLISHED');
+    expect(json.data.article.published_at).toBeTruthy();
+    // Guarded on status, not just id: a concurrent Publish that already
+    // flipped the row is a no-op here rather than a second, racing write.
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'article-1', status: 'DRAFT' },
+        data: expect.objectContaining({ status: 'PUBLISHED', published_at: expect.any(Date) }),
+      }),
+    );
+  });
+
+  it('returns the already-published row when a concurrent Publish wins the race', async () => {
+    mockFindUnique.mockResolvedValueOnce(COMPLETE_ARTICLE);
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      status: 'PUBLISHED',
+      published_at: '2026-03-01T00:00:00.000Z',
+    });
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.status).toBe('PUBLISHED');
+    expect(json.data.article.published_at).toBe('2026-03-01T00:00:00.000Z');
+  });
+
+  it('returns UNPROCESSABLE listing every missing item', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      excerpt: null,
+      thumbnail_url: null,
+      body: [],
+    });
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(json.error.details.missing).toEqual(['excerpt', 'thumbnail', 'body']);
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps the original published_at when publishing again', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      status: 'PUBLISHED',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.published_at).toBe('2026-01-01T00:00:00.000Z');
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps an existing published_at instead of overwriting it on a re-publish', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      status: 'DRAFT',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      status: 'PUBLISHED',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    await publishArticle('article-1');
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ published_at: '2026-01-01T00:00:00.000Z' }) }),
+    );
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await publishArticle('missing-id');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await publishArticle('article-1', {});
+    expect(res.status).toBe(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
   });
 });

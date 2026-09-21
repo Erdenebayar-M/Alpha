@@ -170,6 +170,47 @@ export const adminArticleListQuerySchema = z.object({
 
 export type AdminArticleListQuery = z.infer<typeof adminArticleListQuerySchema>;
 
+// ── Public list query ───────────────────────────────────────────────────────
+// Same page/per_page/meta shape as the admin list, but a smaller default and
+// cap — this is served to anonymous site visitors, not staff browsing a
+// back office.
+
+export const publicArticleListQuerySchema = z.object({
+  category: articleCategorySchema.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  per_page: z.coerce.number().int().min(1).max(50).default(12),
+});
+
+export type PublicArticleListQuery = z.infer<typeof publicArticleListQuerySchema>;
+
+// ── Publish readiness ────────────────────────────────────────────────────
+// Single source of truth for what "ready to publish" means, per ADR-backed
+// spec #77: title, a valid slug, excerpt, Thumbnail and at least one Block.
+// Consumed by POST /:id/publish and, later, the admin editor to pre-flight
+// the same rule before the button is even clickable.
+
+export const ARTICLE_PUBLISH_FIELDS = ['title', 'slug', 'excerpt', 'thumbnail', 'body'] as const;
+export type ArticlePublishField = (typeof ARTICLE_PUBLISH_FIELDS)[number];
+
+export interface ArticlePublishCheckInput {
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  thumbnail_url: string | null;
+  body: unknown;
+}
+
+/** Missing fields blocking Publish, in a fixed order — empty when ready. */
+export function getArticlePublishIssues(article: ArticlePublishCheckInput): ArticlePublishField[] {
+  const missing: ArticlePublishField[] = [];
+  if (!article.title.trim()) missing.push('title');
+  if (!SLUG_RE.test(article.slug)) missing.push('slug');
+  if (!article.excerpt || !article.excerpt.trim()) missing.push('excerpt');
+  if (!article.thumbnail_url) missing.push('thumbnail');
+  if (!Array.isArray(article.body) || article.body.length === 0) missing.push('body');
+  return missing;
+}
+
 // ── Reading time ──────────────────────────────────────────────────────────
 
 const WORDS_PER_MINUTE = 200;
