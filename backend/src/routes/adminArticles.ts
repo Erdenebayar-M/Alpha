@@ -7,7 +7,12 @@ import { ok } from '../lib/response';
 import { prisma } from '../lib/db/client';
 import { Prisma } from '../../generated/prisma';
 import { assetUrlSchema } from '../lib/asset-url';
-import { createArticleSchema, saveArticleSchema, computeReadingTimeMinutes } from '@app/shared';
+import {
+  createArticleSchema,
+  saveArticleSchema,
+  adminArticleListQuerySchema,
+  computeReadingTimeMinutes,
+} from '@app/shared';
 import { r2Enabled, r2Upload } from '../lib/r2';
 import { EXT_FOR_TYPE } from '../lib/media-type';
 import { readImageDimensions } from '../lib/image-size';
@@ -63,6 +68,49 @@ function slugConflictOrRethrow(c: Context, err: unknown) {
   }
   throw err;
 }
+
+// Summary shape for the list route — no body, matching the spec's "items
+// are summaries" rule.
+const ARTICLE_LIST_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  category: true,
+  status: true,
+  is_featured: true,
+  published_at: true,
+  updated_at: true,
+} satisfies Record<string, true>;
+
+// ─── GET /api/admin/articles ────────────────────────────────────────────────
+// Defaults to Drafts and Published together, most recently updated first.
+
+adminArticles.get('/', async (c) => {
+  const parsed = adminArticleListQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
+  }
+  const { status, category, q, page, per_page } = parsed.data;
+
+  const where = {
+    ...(status ? { status } : {}),
+    ...(category ? { category } : {}),
+    ...(q ? { title: { contains: q, mode: 'insensitive' as const } } : {}),
+  };
+
+  const [articles, total] = await Promise.all([
+    prisma.article.findMany({
+      where,
+      orderBy: { updated_at: 'desc' },
+      skip: (page - 1) * per_page,
+      take: per_page,
+      select: ARTICLE_LIST_SELECT,
+    }),
+    prisma.article.count({ where }),
+  ]);
+
+  return ok(c, { articles, meta: { page, per_page, total, has_next: page * per_page < total } });
+});
 
 // ─── POST /api/admin/articles ─────────────────────────────────────────────────
 

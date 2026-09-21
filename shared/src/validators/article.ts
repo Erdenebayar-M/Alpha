@@ -155,6 +155,21 @@ export const saveArticleSchema = createArticleSchema.extend({
 
 export type SaveArticleInput = z.infer<typeof saveArticleSchema>;
 
+// ── Admin list query ────────────────────────────────────────────────────────
+// Pagination names and defaults match the other admin list routes
+// (content.ts's /words, /admin/content routes): page/per_page in, meta with
+// page/per_page/total/has_next out.
+
+export const adminArticleListQuerySchema = z.object({
+  status: articleStatusSchema.optional(),
+  category: articleCategorySchema.optional(),
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  per_page: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+export type AdminArticleListQuery = z.infer<typeof adminArticleListQuerySchema>;
+
 // ── Reading time ──────────────────────────────────────────────────────────
 
 const WORDS_PER_MINUTE = 200;

@@ -17,7 +17,13 @@ jest.mock('../../config/env', () => ({
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
-    article: { create: jest.fn(), findUnique: jest.fn(), updateMany: jest.fn() },
+    article: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      updateMany: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
   },
 }));
 
@@ -28,6 +34,8 @@ import adminArticles from '../adminArticles';
 const mockCreate = prisma.article.create as jest.MockedFunction<any>;
 const mockFindUnique = prisma.article.findUnique as jest.MockedFunction<any>;
 const mockUpdateMany = prisma.article.updateMany as jest.MockedFunction<any>;
+const mockFindMany = prisma.article.findMany as jest.MockedFunction<any>;
+const mockCount = prisma.article.count as jest.MockedFunction<any>;
 
 // Matches the real shape thrown by the pg driver adapter this app uses
 // (src/lib/db/client.ts), confirmed against a live duplicate-slug insert —
@@ -53,6 +61,10 @@ function createArticle(payload: Record<string, unknown>, headers: Record<string,
 
 function getArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
   return adminArticles.request(`/${id}`, { method: 'GET', headers });
+}
+
+function listArticles(query = '', headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${query}`, { method: 'GET', headers });
 }
 
 function saveArticle(
@@ -100,6 +112,8 @@ beforeEach(() => {
   mockFindUnique.mockImplementation(() =>
     Promise.resolve({ id: 'article-1', version: 2, status: 'DRAFT', is_featured: false }),
   );
+  mockFindMany.mockResolvedValue([]);
+  mockCount.mockResolvedValue(0);
 });
 
 describe('POST /', () => {
@@ -269,6 +283,121 @@ describe('POST /', () => {
     const res = await createArticle(VALID_BODY, {});
     expect(res.status).toBe(401);
     expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /', () => {
+  const SUMMARY = {
+    id: 'article-1',
+    title: 'Уншихад анхаарах зөвлөгөө',
+    slug: 'reading-tips-1',
+    category: 'READING',
+    status: 'DRAFT',
+    is_featured: false,
+    published_at: null,
+    updated_at: '2026-01-01T00:00:00.000Z',
+  };
+
+  it('lists Drafts and Published together, most recently updated first, with no Body', async () => {
+    mockFindMany.mockResolvedValueOnce([SUMMARY]);
+    mockCount.mockResolvedValueOnce(1);
+    const res = await listArticles();
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.success).toBe(true);
+    expect(json.data.articles).toEqual([SUMMARY]);
+    expect(json.data.articles[0].body).toBeUndefined();
+    expect(json.data.meta).toEqual({ page: 1, per_page: 50, total: 1, has_next: false });
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {},
+        orderBy: { updated_at: 'desc' },
+        skip: 0,
+        take: 50,
+        select: expect.objectContaining({ id: true, title: true, slug: true, category: true, status: true }),
+      }),
+    );
+    const selectArg = mockFindMany.mock.calls[0][0].select;
+    expect(selectArg.body).toBeUndefined();
+  });
+
+  it('filters by status', async () => {
+    await listArticles('?status=PUBLISHED');
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { status: 'PUBLISHED' } }));
+    expect(mockCount).toHaveBeenCalledWith({ where: { status: 'PUBLISHED' } });
+  });
+
+  it('filters by category', async () => {
+    await listArticles('?category=SPELLING');
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { category: 'SPELLING' } }));
+  });
+
+  it('filters by q, a case-insensitive title search', async () => {
+    await listArticles('?q=reading');
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { title: { contains: 'reading', mode: 'insensitive' } } }),
+    );
+  });
+
+  it('combines status, category and q filters', async () => {
+    await listArticles('?status=DRAFT&category=READING&q=tips');
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          status: 'DRAFT',
+          category: 'READING',
+          title: { contains: 'tips', mode: 'insensitive' },
+        },
+      }),
+    );
+  });
+
+  it('paginates with page/per_page and computes has_next', async () => {
+    mockCount.mockResolvedValueOnce(30);
+    const res = await listArticles('?page=2&per_page=10');
+    const json = await body(res);
+    expect(json.data.meta).toEqual({ page: 2, per_page: 10, total: 30, has_next: true });
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 10, take: 10 }));
+  });
+
+  it('rejects an invalid status', async () => {
+    const res = await listArticles('?status=ARCHIVED');
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.status).toBeDefined();
+    expect(mockFindMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid category', async () => {
+    const res = await listArticles('?category=MATH');
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.category).toBeDefined();
+    expect(mockFindMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid page number', async () => {
+    const res = await listArticles('?page=0');
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.page).toBeDefined();
+  });
+
+  it('rejects a per_page over the max', async () => {
+    const res = await listArticles('?per_page=500');
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.per_page).toBeDefined();
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await listArticles('', {});
+    expect(res.status).toBe(401);
+    expect(mockFindMany).not.toHaveBeenCalled();
   });
 });
 
