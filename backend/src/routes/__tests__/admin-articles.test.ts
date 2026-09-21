@@ -1258,6 +1258,61 @@ describe('POST /:id/feature (issue #86)', () => {
     expect(json.error.code).toBe('UNPROCESSABLE');
   });
 
+  it('rolls back the clear step when the set step matches no rows, keeping the old Featured Article (issue #102)', async () => {
+    // A tiny commit-or-rollback stand-in for Postgres: tx writes land on a
+    // copy of the rows, which replaces the committed rows only if the
+    // callback resolves — the same all-or-nothing contract $transaction has.
+    let committed: Record<string, { status: string; is_featured: boolean }> = {
+      'old-featured': { status: 'PUBLISHED', is_featured: true },
+      'article-1': { status: 'DRAFT', is_featured: false }, // unpublished concurrently
+    };
+    mockTransaction.mockImplementationOnce(async (fn: any) => {
+      const working = structuredClone(committed);
+      const updateMany = async ({ where, data }: any) => {
+        const matches = Object.entries(working).filter(([id, row]) =>
+          (where.id === undefined || where.id === id) &&
+          (where.status === undefined || where.status === row.status) &&
+          (where.is_featured === undefined || where.is_featured === row.is_featured),
+        );
+        for (const [, row] of matches) Object.assign(row, data);
+        return { count: matches.length };
+      };
+      const result = await fn({ article: { updateMany } });
+      committed = working;
+      return result;
+    });
+
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(json.error.message).toBe('Only Published Articles can be Featured');
+    expect(committed['old-featured'].is_featured).toBe(true);
+  });
+
+  it('answers a concurrent Feature that trips the one-Featured-Article index with CONFLICT, not a 500 (issue #102)', async () => {
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockTransaction.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed on the fields: (`is_featured`)', {
+        code: 'P2002',
+        clientVersion: '7.8.0',
+        meta: { modelName: 'Article', driverAdapterError: { cause: { constraint: { fields: ['is_featured'] } } } },
+      }),
+    );
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(409);
+    const json = await body(res);
+    expect(json.error.code).toBe('CONFLICT');
+  });
+
+  it('still lets an unrelated transaction error propagate', async () => {
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockTransaction.mockRejectedValueOnce(new Error('connection reset'));
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(500);
+  });
+
   it('returns NOT_FOUND for an unknown id', async () => {
     mockFindUnique.mockResolvedValueOnce(null);
     const res = await featureArticle('missing-id');

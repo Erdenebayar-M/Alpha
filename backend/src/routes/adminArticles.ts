@@ -353,22 +353,40 @@ adminArticles.delete('/:id', async (c) => {
 // flag and setting this one's happens in a single transaction so a reader
 // can never observe two Featured Articles at once.
 
+// Thrown inside the Feature transaction to roll it back when the set step
+// matches nothing; never escapes the route.
+class FeatureTargetNotPublished extends Error {}
+
 adminArticles.post('/:id/feature', withArticle(async (c, article) => {
   if (article.status !== 'PUBLISHED') {
     return ERRORS.UNPROCESSABLE(c, 'Only Published Articles can be Featured');
   }
 
-  // The status re-check on the set half of the write (not just the initial
-  // read above) closes the window where a concurrent Unpublish flips this
-  // Article to Draft between the read and the transaction — without it,
-  // that race would leave a Draft marked Featured.
-  const result = await prisma.$transaction(async (tx) => {
-    await tx.article.updateMany({ where: { is_featured: true }, data: { is_featured: false } });
-    return tx.article.updateMany({ where: { id: article.id, status: 'PUBLISHED' }, data: { is_featured: true } });
-  });
-
-  if (result.count === 0) {
-    return ERRORS.UNPROCESSABLE(c, 'Only Published Articles can be Featured');
+  try {
+    // The status re-check on the set half of the write (not just the initial
+    // read above) closes the window where a concurrent Unpublish flips this
+    // Article to Draft between the read and the transaction. When it matches
+    // nothing, throwing rolls back the clear half too, so the previously
+    // Featured Article keeps its flag instead of the site losing its pick.
+    await prisma.$transaction(async (tx) => {
+      await tx.article.updateMany({ where: { is_featured: true }, data: { is_featured: false } });
+      const set = await tx.article.updateMany({
+        where: { id: article.id, status: 'PUBLISHED' },
+        data: { is_featured: true },
+      });
+      if (set.count === 0) throw new FeatureTargetNotPublished();
+    });
+  } catch (err) {
+    if (err instanceof FeatureTargetNotPublished) {
+      return ERRORS.UNPROCESSABLE(c, 'Only Published Articles can be Featured');
+    }
+    // Both writes touch only is_featured, so the one unique constraint they
+    // can trip is the at-most-one-Featured index (ADR 0002) — a concurrent
+    // Feature of another Article committed first.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return ERRORS.CONFLICT(c, 'Another Article was Featured at the same time');
+    }
+    throw err;
   }
 
   return respondWithArticle(c);
