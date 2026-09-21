@@ -71,17 +71,241 @@ export const headingBlockSchema = z.object({
   text: z.string().min(1),
 });
 
-export const blockSchema = z.discriminatedUnion('type', [paragraphBlockSchema, headingBlockSchema], {
-  error: 'Unknown block type',
+// One level only: an item is an array of inline spans, never another list —
+// there is no schema shape a nested list could take that would parse here.
+export const LIST_STYLES = ['bullet', 'ordered'] as const;
+export const listStyleSchema = z.enum(LIST_STYLES);
+export type ListStyle = (typeof LIST_STYLES)[number];
+
+export const listBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('list'),
+  style: listStyleSchema,
+  items: z
+    .array(z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'))
+    .min(1, 'list needs at least one item'),
 });
 
-export const articleBodySchema = z.array(blockSchema);
+export const quoteBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('quote'),
+  content: z.array(inlineSpanSchema).min(1),
+  attribution: z.string().min(1).optional(),
+});
+
+export const calloutBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('callout'),
+  content: z.array(inlineSpanSchema).min(1),
+});
+
+export const dividerBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('divider'),
+});
+
+// Shape only — like the Thumbnail below, the asset-host allowlist depends on
+// server config (R2 origin) that @app/shared can't see, so the backend
+// re-checks every image url (this Block's, and a link card's) itself.
+export const imageBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('image'),
+  url: z.string().min(1, 'url is required'),
+  alt: z.string().min(1, 'alt is required'),
+  caption: z.string().min(1).optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export const httpUrlSchema = z.string().refine(isHttpUrl, { message: 'url must be an http(s) link' });
+
+export const linkCardImageSchema = z.object({
+  url: z.string().min(1, 'url is required'),
+  alt: z.string().min(1, 'alt is required'),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
+// The server never fetches this url — title/description/image are typed in
+// by hand, per ADR 0001.
+export const linkCardBlockSchema = z.object({
+  id: z.string().min(1),
+  type: z.literal('link_card'),
+  url: httpUrlSchema,
+  title: z.string().min(1, 'title is required'),
+  description: z.string().min(1).optional(),
+  image: linkCardImageSchema.optional(),
+});
+
+// ── Video links ──────────────────────────────────────────────────────────
+// Only provider + video_id are ever stored or returned — never the pasted
+// url — so a video Block can't carry an arbitrary embed target.
+
+export const VIDEO_PROVIDERS = ['youtube', 'vimeo'] as const;
+export const videoProviderSchema = z.enum(VIDEO_PROVIDERS);
+export type VideoProvider = (typeof VIDEO_PROVIDERS)[number];
+
+export interface ParsedVideoLink {
+  provider: VideoProvider;
+  video_id: string;
+}
+
+const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
+const VIMEO_HOSTS = new Set(['vimeo.com', 'www.vimeo.com', 'player.vimeo.com']);
+const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{6,}$/;
+const VIMEO_ID_RE = /^\d+$/;
+
+/**
+ * Parse a pasted YouTube or Vimeo url into `{ provider, video_id }`, or
+ * `null` for any other host (or a link on a known host this can't read).
+ * Exported so the admin editor can preview a pasted link before it's ever
+ * sent to the server.
+ */
+export function parseVideoUrl(raw: string): ParsedVideoLink | null {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+  const host = url.hostname.toLowerCase();
+
+  if (YOUTUBE_HOSTS.has(host)) {
+    if (host === 'youtu.be') {
+      const id = url.pathname.slice(1).split('/')[0] ?? '';
+      return YOUTUBE_ID_RE.test(id) ? { provider: 'youtube', video_id: id } : null;
+    }
+    if (url.pathname === '/watch') {
+      const id = url.searchParams.get('v') ?? '';
+      return YOUTUBE_ID_RE.test(id) ? { provider: 'youtube', video_id: id } : null;
+    }
+    const embedMatch = /^\/embed\/([^/?]+)/.exec(url.pathname);
+    if (embedMatch && YOUTUBE_ID_RE.test(embedMatch[1])) {
+      return { provider: 'youtube', video_id: embedMatch[1] };
+    }
+    const shortsMatch = /^\/shorts\/([^/?]+)/.exec(url.pathname);
+    if (shortsMatch && YOUTUBE_ID_RE.test(shortsMatch[1])) {
+      return { provider: 'youtube', video_id: shortsMatch[1] };
+    }
+    return null;
+  }
+
+  if (VIMEO_HOSTS.has(host)) {
+    const segments = url.pathname.split('/').filter(Boolean);
+    // `/album/2222/video/1111` and `player.vimeo.com/video/1111` both name
+    // the actual video id right after a literal "video" segment — checked
+    // first, since the *first* numeric segment in an album/showcase link is
+    // the album id, not the video.
+    const videoIdx = segments.indexOf('video');
+    if (videoIdx !== -1 && VIMEO_ID_RE.test(segments[videoIdx + 1] ?? '')) {
+      return { provider: 'vimeo', video_id: segments[videoIdx + 1] };
+    }
+    // Otherwise (`/76979871`, `/channels/staffpicks/76979871`) the video id
+    // is the last numeric segment, not the first.
+    const numeric = segments.filter((segment) => VIMEO_ID_RE.test(segment));
+    const id = numeric[numeric.length - 1];
+    return id ? { provider: 'vimeo', video_id: id } : null;
+  }
+
+  return null;
+}
+
+// The client sends a pasted `url`; only the parsed `provider` + `video_id`
+// ever reach the union's output type, per ADR 0001.
+export const videoBlockSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.literal('video'),
+    url: z.string().min(1, 'url is required'),
+  })
+  .transform((val, ctx) => {
+    const parsed = parseVideoUrl(val.url);
+    if (!parsed) {
+      ctx.addIssue({ code: 'custom', message: 'url must be a YouTube or Vimeo link', path: ['url'] });
+      return z.NEVER;
+    }
+    return { id: val.id, type: 'video' as const, provider: parsed.provider, video_id: parsed.video_id };
+  });
+
+export const blockSchema = z.discriminatedUnion(
+  'type',
+  [
+    paragraphBlockSchema,
+    headingBlockSchema,
+    listBlockSchema,
+    quoteBlockSchema,
+    calloutBlockSchema,
+    dividerBlockSchema,
+    imageBlockSchema,
+    videoBlockSchema,
+    linkCardBlockSchema,
+  ],
+  { error: 'Unknown block type' },
+);
+
+export const MAX_BODY_BLOCKS = 200;
+
+export const articleBodySchema = z
+  .array(blockSchema)
+  .max(MAX_BODY_BLOCKS, { message: `Body cannot have more than ${MAX_BODY_BLOCKS} Blocks` })
+  .superRefine((blocks, ctx) => {
+    const seen = new Set<string>();
+    blocks.forEach((block, index) => {
+      if (seen.has(block.id)) {
+        ctx.addIssue({ code: 'custom', message: `Block id "${block.id}" is used more than once`, path: [index, 'id'] });
+      }
+      seen.add(block.id);
+    });
+  });
 
 export type InlineSpan = z.infer<typeof inlineSpanSchema>;
 export type ParagraphBlock = z.infer<typeof paragraphBlockSchema>;
 export type HeadingBlock = z.infer<typeof headingBlockSchema>;
+export type ListBlock = z.infer<typeof listBlockSchema>;
+export type QuoteBlock = z.infer<typeof quoteBlockSchema>;
+export type CalloutBlock = z.infer<typeof calloutBlockSchema>;
+export type DividerBlock = z.infer<typeof dividerBlockSchema>;
+export type ImageBlock = z.infer<typeof imageBlockSchema>;
+export type VideoBlock = z.infer<typeof videoBlockSchema>;
+export type LinkCardBlock = z.infer<typeof linkCardBlockSchema>;
 export type ArticleBlock = z.infer<typeof blockSchema>;
 export type ArticleBody = z.infer<typeof articleBodySchema>;
+
+// ── Body asset urls ──────────────────────────────────────────────────────
+// Every url in a Body that points at an uploaded asset (an image Block, or a
+// link card's image) rather than an arbitrary external link. @app/shared
+// can't check these against the R2 allowlist (server config), so it hands
+// the backend exactly the urls that need that check, each tagged with the
+// Block position and field for an error message that names both.
+
+export interface ArticleBodyAssetRef {
+  position: number;
+  field: string;
+  url: string;
+}
+
+export function getArticleBodyAssetUrls(body: ArticleBody): ArticleBodyAssetRef[] {
+  const refs: ArticleBodyAssetRef[] = [];
+  body.forEach((block, position) => {
+    if (block.type === 'image') {
+      refs.push({ position, field: 'url', url: block.url });
+    }
+    if (block.type === 'link_card' && block.image) {
+      refs.push({ position, field: 'image.url', url: block.image.url });
+    }
+  });
+  return refs;
+}
 
 /**
  * Validate a raw Body value, returning either the typed Blocks or a list of
@@ -220,14 +444,35 @@ function countWords(text: string): number {
   return trimmed === '' ? 0 : trimmed.split(/\s+/).length;
 }
 
-/** Word count across paragraph/heading text, at ~200 wpm, min 1 minute for any non-empty Body. */
+/**
+ * Word count across every Block the reader actually reads (paragraph,
+ * heading, list, quote, callout text), at ~200 wpm, min 1 minute for any
+ * non-empty Body. A quote's attribution, a caption, and a link card's
+ * title/description are labels, not reading content, so they don't count —
+ * divider, image and video carry no text at all.
+ */
 export function computeReadingTimeMinutes(body: ArticleBody): number {
   let wordCount = 0;
   for (const block of body) {
-    if (block.type === 'paragraph') {
-      for (const span of block.content) wordCount += countWords(span.text);
-    } else {
-      wordCount += countWords(block.text);
+    switch (block.type) {
+      case 'paragraph':
+      case 'quote':
+      case 'callout':
+        for (const span of block.content) wordCount += countWords(span.text);
+        break;
+      case 'heading':
+        wordCount += countWords(block.text);
+        break;
+      case 'list':
+        for (const item of block.items) {
+          for (const span of item) wordCount += countWords(span.text);
+        }
+        break;
+      case 'divider':
+      case 'image':
+      case 'video':
+      case 'link_card':
+        break;
     }
   }
   if (wordCount === 0) return 0;

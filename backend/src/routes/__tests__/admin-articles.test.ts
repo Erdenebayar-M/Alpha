@@ -290,6 +290,288 @@ describe('POST /', () => {
   });
 });
 
+describe('POST / — new Block kinds (issue #85)', () => {
+  it('accepts a bullet list Block', async () => {
+    const listBlock = {
+      id: 'b1',
+      type: 'list',
+      style: 'bullet',
+      items: [[{ text: 'one' }], [{ text: 'two' }]],
+    };
+    const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [listBlock] }) }),
+    );
+  });
+
+  it('accepts an ordered list Block', async () => {
+    const listBlock = { id: 'b1', type: 'list', style: 'ordered', items: [[{ text: 'first' }]] };
+    const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects a nested list, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [
+        {
+          id: 'b1',
+          type: 'list',
+          style: 'bullet',
+          items: [[{ id: 'nested', type: 'list', style: 'bullet', items: [[{ text: 'inner' }]] }]],
+        },
+      ],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a quote Block with an optional attribution', async () => {
+    const quoteBlock = { id: 'b1', type: 'quote', content: [{ text: 'Well said' }], attribution: 'A parent' };
+    const res = await createArticle({ ...VALID_BODY, body: [quoteBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [quoteBlock] }) }),
+    );
+  });
+
+  it('accepts a quote Block without an attribution', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'quote', content: [{ text: 'Well said' }] }],
+    });
+    expect(res.status).toBe(201);
+  });
+
+  it('accepts a callout Block', async () => {
+    const calloutBlock = { id: 'b1', type: 'callout', content: [{ text: 'Tip: read together' }] };
+    const res = await createArticle({ ...VALID_BODY, body: [calloutBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [calloutBlock] }) }),
+    );
+  });
+
+  it('accepts a divider Block', async () => {
+    const dividerBlock = { id: 'b1', type: 'divider' };
+    const res = await createArticle({ ...VALID_BODY, body: [dividerBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [dividerBlock] }) }),
+    );
+  });
+
+  it('accepts an image Block whose url passes the asset URL rule', async () => {
+    const imageBlock = { id: 'b1', type: 'image', url: '/content/articles/pic.png', alt: 'A child reading' };
+    const res = await createArticle({ ...VALID_BODY, body: [imageBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [imageBlock] }) }),
+    );
+  });
+
+  it('accepts an image Block url from the R2 CDN origin, matching what the upload endpoint returns', async () => {
+    const imageBlock = {
+      id: 'b1',
+      type: 'image',
+      url: 'https://cdn.example.dev/articles/pic.png',
+      alt: 'A child reading',
+      caption: 'Reading together',
+      width: 800,
+      height: 600,
+    };
+    const res = await createArticle({ ...VALID_BODY, body: [imageBlock] });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects an image Block without alt text, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'image', url: '/content/articles/pic.png' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects an image Block whose url fails the asset URL rule, naming the Block and field', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'image', url: 'https://evil.example.com/pic.png', alt: 'A child reading' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: url /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a link_card Block with an http(s) url, title and no image', async () => {
+    const linkCard = { id: 'b1', type: 'link_card', url: 'https://example.com/guide', title: 'A helpful guide' };
+    const res = await createArticle({ ...VALID_BODY, body: [linkCard] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [linkCard] }) }),
+    );
+  });
+
+  it('accepts a link_card Block with a description and an image whose url passes the asset rule', async () => {
+    const linkCard = {
+      id: 'b1',
+      type: 'link_card',
+      url: 'https://example.com/guide',
+      title: 'A helpful guide',
+      description: 'Tips for parents',
+      image: { url: '/content/articles/card.png', alt: 'Card art', width: 400, height: 300 },
+    };
+    const res = await createArticle({ ...VALID_BODY, body: [linkCard] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [linkCard] }) }),
+    );
+  });
+
+  it("rejects a link_card url that isn't http(s), naming the Block position", async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'link_card', url: 'javascript:alert(1)', title: 'Bad' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a link_card image whose url fails the asset URL rule, naming the Block and field', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [
+        {
+          id: 'b1',
+          type: 'link_card',
+          url: 'https://example.com/guide',
+          title: 'A helpful guide',
+          image: { url: 'https://evil.example.com/card.png', alt: 'Card art' },
+        },
+      ],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: image\.url /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['watch', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'youtube', 'dQw4w9WgXcQ'],
+    ['short link', 'https://youtu.be/dQw4w9WgXcQ', 'youtube', 'dQw4w9WgXcQ'],
+    ['embed', 'https://www.youtube.com/embed/dQw4w9WgXcQ', 'youtube', 'dQw4w9WgXcQ'],
+    ['vimeo', 'https://vimeo.com/76979871', 'vimeo', '76979871'],
+    ['vimeo channel link', 'https://vimeo.com/channels/staffpicks/76979871', 'vimeo', '76979871'],
+    ['vimeo player embed', 'https://player.vimeo.com/video/76979871', 'vimeo', '76979871'],
+    ['vimeo album link', 'https://vimeo.com/album/2222/video/1111', 'vimeo', '1111'],
+  ])('converts a pasted %s video url to provider + video_id, storing neither the raw url', async (_label, url, provider, video_id) => {
+    const res = await createArticle({ ...VALID_BODY, body: [{ id: 'b1', type: 'video', url }] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ body: [{ id: 'b1', type: 'video', provider, video_id }] }),
+      }),
+    );
+    const storedBody = mockCreate.mock.calls[0][0].data.body;
+    expect(storedBody[0].url).toBeUndefined();
+  });
+
+  it('rejects a video link from an unsupported host, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'video', url: 'https://www.dailymotion.com/video/x123' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a Body over 200 Blocks', async () => {
+    const bigBody = Array.from({ length: 201 }, (_, i) => ({ id: `b${i}`, type: 'divider' }));
+    const res = await createArticle({ ...VALID_BODY, body: bigBody });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body).toBeDefined();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts a Body with exactly 200 Blocks', async () => {
+    const maxBody = Array.from({ length: 200 }, (_, i) => ({ id: `b${i}`, type: 'divider' }));
+    const res = await createArticle({ ...VALID_BODY, body: maxBody });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects duplicate Block ids, naming the offending position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [
+        { id: 'dupe', type: 'divider' },
+        { id: 'dupe', type: 'divider' },
+      ],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 1: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('includes list, quote and callout text in reading time', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [
+        { id: 'b1', type: 'list', style: 'bullet', items: [[{ text: 'one two three four five' }]] },
+        { id: 'b2', type: 'quote', content: [{ text: 'six seven eight nine ten' }] },
+        { id: 'b3', type: 'callout', content: [{ text: 'eleven twelve thirteen fourteen fifteen' }] },
+      ],
+    });
+    expect(res.status).toBe(201);
+    // 15 words at 200 wpm rounds to the 1-minute floor, but the count must
+    // still flow through — a paragraph-only reading beats this on its own.
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 1 }) }),
+    );
+  });
+
+  it('reading time grows with list/quote/callout word count, not just paragraphs', async () => {
+    const words = Array.from({ length: 250 }, (_, i) => `word${i}`).join(' ');
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'list', style: 'bullet', items: [[{ text: words }]] }],
+    });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 1 }) }),
+    );
+    // 250 words / 200 wpm rounds to 1 (Math.round(1.25) === 1); bump past the
+    // rounding boundary to prove list text is actually being counted.
+    const words2 = Array.from({ length: 400 }, (_, i) => `word${i}`).join(' ');
+    const res2 = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'list', style: 'bullet', items: [[{ text: words2 }]] }],
+    });
+    expect(mockCreate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 2 }) }),
+    );
+  });
+});
+
 describe('GET /', () => {
   const SUMMARY = {
     id: 'article-1',
@@ -440,6 +722,31 @@ describe('GET /:id', () => {
     expect(res.status).toBe(401);
     expect(mockFindUnique).not.toHaveBeenCalled();
   });
+
+  it('returns every new Block kind unchanged (issue #85)', async () => {
+    const richBody = [
+      { id: 'b1', type: 'list', style: 'bullet', items: [[{ text: 'one' }]] },
+      { id: 'b2', type: 'quote', content: [{ text: 'Well said' }], attribution: 'A parent' },
+      { id: 'b3', type: 'callout', content: [{ text: 'Tip' }] },
+      { id: 'b4', type: 'divider' },
+      { id: 'b5', type: 'image', url: '/content/articles/pic.png', alt: 'Alt text' },
+      { id: 'b6', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ' },
+      { id: 'b7', type: 'link_card', url: 'https://example.com', title: 'A guide' },
+    ];
+    mockFindUnique.mockResolvedValueOnce({
+      id: 'article-1',
+      title: 'Title',
+      slug: 'title',
+      category: 'READING',
+      body: richBody,
+      status: 'DRAFT',
+      version: 1,
+    });
+    const res = await getArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.body).toEqual(richBody);
+  });
 });
 
 describe('PUT /:id', () => {
@@ -502,6 +809,18 @@ describe('PUT /:id', () => {
     const json = await body(res);
     expect(json.error.code).toBe('VALIDATION_ERROR');
     expect(json.error.details.thumbnail).toBeDefined();
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects an image Block whose url fails the asset URL rule on save, naming the Block and field', async () => {
+    const res = await saveArticle('article-1', {
+      ...VALID_SAVE_BODY,
+      body: [{ id: 'b1', type: 'image', url: 'https://evil.example.com/pic.png', alt: 'Alt text' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: url /);
     expect(mockUpdateMany).not.toHaveBeenCalled();
   });
 

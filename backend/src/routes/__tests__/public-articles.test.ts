@@ -152,6 +152,20 @@ describe('GET /:slug', () => {
     );
   });
 
+  it('returns the new Block kinds unchanged (issue #85)', async () => {
+    const richBody = [
+      { id: 'b1', type: 'list', style: 'bullet', items: [[{ text: 'one' }]] },
+      { id: 'b2', type: 'image', url: '/content/articles/pic.png', alt: 'Alt text' },
+      { id: 'b3', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ' },
+      { id: 'b4', type: 'link_card', url: 'https://example.com', title: 'A guide' },
+    ];
+    mockFindFirst.mockResolvedValueOnce({ ...SUMMARY, body: richBody });
+    const res = await getArticle('reading-tips-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.body).toEqual(richBody);
+  });
+
   it('returns NOT_FOUND for a Draft slug', async () => {
     mockFindFirst.mockResolvedValueOnce(null);
     const res = await getArticle('draft-only-slug');

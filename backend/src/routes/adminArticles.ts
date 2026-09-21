@@ -14,6 +14,8 @@ import {
   adminArticleListQuerySchema,
   computeReadingTimeMinutes,
   getArticlePublishIssues,
+  getArticleBodyAssetUrls,
+  type ArticleBody,
 } from '@app/shared';
 import { r2Enabled, r2Upload } from '../lib/r2';
 import { EXT_FOR_TYPE } from '../lib/media-type';
@@ -21,6 +23,22 @@ import { readImageDimensions } from '../lib/image-size';
 import { parseUploadedFile } from '../lib/upload';
 
 const thumbnailUrlSchema = z.object({ url: assetUrlSchema });
+
+// @app/shared validates every Block's shape but can't check an image url
+// against the R2 allowlist — that depends on server config it can't see. It
+// hands back every asset url in the Body (an image Block's, a link card's)
+// tagged with the Block's position and field; this re-checks each one the
+// same way the Thumbnail's url is checked above.
+function findBodyAssetUrlErrors(articleBody: ArticleBody): string[] {
+  const errors: string[] = [];
+  for (const { position, field, url } of getArticleBodyAssetUrls(articleBody)) {
+    const check = assetUrlSchema.safeParse(url);
+    if (!check.success) {
+      errors.push(`Block ${position}: ${field} ${check.error.issues[0]?.message ?? 'is invalid'}`);
+    }
+  }
+  return errors;
+}
 
 const adminArticles = new Hono();
 adminArticles.use('/*', withAdmin);
@@ -123,6 +141,11 @@ adminArticles.post('/', async (c) => {
   }
   const { title, slug, category, excerpt, body: articleBody } = parsed.data;
 
+  const assetErrors = findBodyAssetUrlErrors(articleBody);
+  if (assetErrors.length > 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', { body: assetErrors });
+  }
+
   try {
     const article = await prisma.article.create({
       data: {
@@ -175,6 +198,11 @@ adminArticles.put('/:id', async (c) => {
         thumbnail: urlCheck.error.flatten().fieldErrors.url,
       });
     }
+  }
+
+  const assetErrors = findBodyAssetUrlErrors(articleBody);
+  if (assetErrors.length > 0) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', { body: assetErrors });
   }
 
   try {
