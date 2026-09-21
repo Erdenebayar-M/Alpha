@@ -397,10 +397,13 @@ export type AdminArticleListQuery = z.infer<typeof adminArticleListQuerySchema>;
 // ── Public list query ───────────────────────────────────────────────────────
 // Same page/per_page/meta shape as the admin list, but a smaller default and
 // cap — this is served to anonymous site visitors, not staff browsing a
-// back office.
+// back office. `featured=true` narrows to the single hand-picked Featured
+// Article (ADR 0002) — there is never more than one, so this returns zero or
+// one item, not a ranked page.
 
 export const publicArticleListQuerySchema = z.object({
   category: articleCategorySchema.optional(),
+  featured: z.enum(['true']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(50).default(12),
 });

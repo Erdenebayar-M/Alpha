@@ -136,6 +136,40 @@ describe('GET /', () => {
     const json = await body(res);
     expect(json.error.details.page).toBeDefined();
   });
+
+  it('featured=true returns only the Featured Article (issue #86)', async () => {
+    mockFindMany.mockResolvedValueOnce([{ ...SUMMARY, is_featured: true }]);
+    mockCount.mockResolvedValueOnce(1);
+    const res = await listArticles('?featured=true');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.articles).toEqual([{ ...SUMMARY, is_featured: true }]);
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'PUBLISHED', is_featured: true } }),
+    );
+  });
+
+  it('featured=true returns an empty list when nothing is Featured', async () => {
+    const res = await listArticles('?featured=true');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.articles).toEqual([]);
+  });
+
+  it('combines featured=true with a category filter', async () => {
+    await listArticles('?featured=true&category=SPELLING');
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'PUBLISHED', category: 'SPELLING', is_featured: true } }),
+    );
+  });
+
+  it('rejects an invalid featured value', async () => {
+    const res = await listArticles('?featured=1');
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(mockFindMany).not.toHaveBeenCalled();
+  });
 });
 
 describe('GET /:slug', () => {

@@ -37,9 +37,13 @@ articles.get('/', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { category, page, per_page } = parsed.data;
+  const { category, featured, page, per_page } = parsed.data;
 
-  const where = { status: 'PUBLISHED' as const, ...(category ? { category } : {}) };
+  const where = {
+    status: 'PUBLISHED' as const,
+    ...(category ? { category } : {}),
+    ...(featured === 'true' ? { is_featured: true } : {}),
+  };
 
   const [items, total] = await Promise.all([
     prisma.article.findMany({

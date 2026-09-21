@@ -21,9 +21,12 @@ jest.mock('../../lib/db/client', () => ({
       create: jest.fn(),
       findUnique: jest.fn(),
       updateMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -34,8 +37,11 @@ import adminArticles from '../adminArticles';
 const mockCreate = prisma.article.create as jest.MockedFunction<any>;
 const mockFindUnique = prisma.article.findUnique as jest.MockedFunction<any>;
 const mockUpdateMany = prisma.article.updateMany as jest.MockedFunction<any>;
+const mockUpdate = prisma.article.update as jest.MockedFunction<any>;
+const mockDelete = prisma.article.delete as jest.MockedFunction<any>;
 const mockFindMany = prisma.article.findMany as jest.MockedFunction<any>;
 const mockCount = prisma.article.count as jest.MockedFunction<any>;
+const mockTransaction = prisma.$transaction as jest.MockedFunction<any>;
 
 // Matches the real shape thrown by the pg driver adapter this app uses
 // (src/lib/db/client.ts), confirmed against a live duplicate-slug insert —
@@ -83,6 +89,22 @@ function publishArticle(id: string, headers: Record<string, string> = { Authoriz
   return adminArticles.request(`/${id}/publish`, { method: 'POST', headers });
 }
 
+function unpublishArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${id}/unpublish`, { method: 'POST', headers });
+}
+
+function deleteArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${id}`, { method: 'DELETE', headers });
+}
+
+function featureArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${id}/feature`, { method: 'POST', headers });
+}
+
+function unfeatureArticle(id: string, headers: Record<string, string> = { Authorization: BEARER }) {
+  return adminArticles.request(`/${id}/feature`, { method: 'DELETE', headers });
+}
+
 const VALID_BODY = {
   title: 'Уншихад анхаарах зөвлөгөө',
   slug: 'reading-tips-1',
@@ -118,6 +140,12 @@ beforeEach(() => {
   );
   mockFindMany.mockResolvedValue([]);
   mockCount.mockResolvedValue(0);
+  mockUpdate.mockResolvedValue({});
+  mockDelete.mockResolvedValue({});
+  // The Feature transaction runs against the same article mocks the rest of
+  // the suite already asserts on, so a test can check tx-scoped calls the
+  // same way it checks any other write.
+  mockTransaction.mockImplementation((fn: any) => fn({ article: { updateMany: mockUpdateMany } }));
 });
 
 describe('POST /', () => {
@@ -747,6 +775,35 @@ describe('GET /:id', () => {
     const json = await body(res);
     expect(json.data.article.body).toEqual(richBody);
   });
+
+  it('sets was_published for a Draft that has a published_at (issue #86)', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      id: 'article-1',
+      status: 'DRAFT',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    const res = await getArticle('article-1');
+    const json = await body(res);
+    expect(json.data.article.was_published).toBe(true);
+  });
+
+  it('clears was_published for a Draft that has never been published', async () => {
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'DRAFT', published_at: null });
+    const res = await getArticle('article-1');
+    const json = await body(res);
+    expect(json.data.article.was_published).toBe(false);
+  });
+
+  it('clears was_published for a Published Article', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      id: 'article-1',
+      status: 'PUBLISHED',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    const res = await getArticle('article-1');
+    const json = await body(res);
+    expect(json.data.article.was_published).toBe(false);
+  });
 });
 
 describe('PUT /:id', () => {
@@ -924,6 +981,18 @@ describe('PUT /:id', () => {
       }),
     );
   });
+
+  it('includes was_published in the response, like every other full-Article route (issue #86)', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      id: 'article-1',
+      version: 2,
+      status: 'DRAFT',
+      published_at: '2026-01-01T00:00:00.000Z',
+    });
+    const res = await saveArticle('article-1', VALID_SAVE_BODY);
+    const json = await body(res);
+    expect(json.data.article.was_published).toBe(true);
+  });
 });
 
 describe('POST /:id/publish', () => {
@@ -1039,6 +1108,199 @@ describe('POST /:id/publish', () => {
 
   it('rejects requests without the admin secret', async () => {
     const res = await publishArticle('article-1', {});
+    expect(res.status).toBe(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /:id/unpublish (issue #86)', () => {
+  const PUBLISHED_ARTICLE = {
+    id: 'article-1',
+    status: 'PUBLISHED',
+    is_featured: true,
+    published_at: '2026-01-01T00:00:00.000Z',
+  };
+
+  it('returns a Published Article to Draft and clears Featured', async () => {
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockFindUnique.mockResolvedValueOnce({
+      ...PUBLISHED_ARTICLE,
+      status: 'DRAFT',
+      is_featured: false,
+    });
+    const res = await unpublishArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.status).toBe('DRAFT');
+    expect(json.data.article.is_featured).toBe(false);
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'article-1', status: 'PUBLISHED' },
+      data: { status: 'DRAFT', is_featured: false },
+    });
+  });
+
+  it('keeps published_at so a re-fetch still shows was_published', async () => {
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockFindUnique.mockResolvedValueOnce({
+      ...PUBLISHED_ARTICLE,
+      status: 'DRAFT',
+      is_featured: false,
+    });
+    const res = await unpublishArticle('article-1');
+    const json = await body(res);
+    expect(json.data.article.was_published).toBe(true);
+    expect(json.data.article.published_at).toBe('2026-01-01T00:00:00.000Z');
+  });
+
+  it('unpublishing a Draft succeeds without error and writes nothing', async () => {
+    mockFindUnique.mockResolvedValueOnce({
+      id: 'article-1',
+      status: 'DRAFT',
+      is_featured: false,
+      published_at: null,
+    });
+    const res = await unpublishArticle('article-1');
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await unpublishArticle('missing-id');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await unpublishArticle('article-1', {});
+    expect(res.status).toBe(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('DELETE /:id (issue #86)', () => {
+  it('permanently deletes a Draft', async () => {
+    mockFindUnique.mockResolvedValueOnce({ status: 'DRAFT' });
+    const res = await deleteArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data).toEqual({ id: 'article-1', deleted: true });
+    expect(mockDelete).toHaveBeenCalledWith({ where: { id: 'article-1' } });
+  });
+
+  it('refuses to delete a Published Article', async () => {
+    mockFindUnique.mockResolvedValueOnce({ status: 'PUBLISHED' });
+    const res = await deleteArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await deleteArticle('missing-id');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await deleteArticle('article-1', {});
+    expect(res.status).toBe(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /:id/feature (issue #86)', () => {
+  const PUBLISHED_ARTICLE = { id: 'article-1', status: 'PUBLISHED', is_featured: false };
+
+  it('features a Published Article, clearing every other Featured Article in one transaction', async () => {
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockFindUnique.mockResolvedValueOnce({ ...PUBLISHED_ARTICLE, is_featured: true });
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.is_featured).toBe(true);
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { is_featured: true },
+      data: { is_featured: false },
+    });
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'article-1', status: 'PUBLISHED' },
+      data: { is_featured: true },
+    });
+  });
+
+  it('rejects featuring a Draft', async () => {
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'DRAFT', is_featured: false });
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects if the Article is unpublished between the read and the transaction', async () => {
+    // The initial read sees PUBLISHED, but the status-guarded write inside
+    // the transaction is what actually decides — this stands in for a
+    // concurrent Unpublish landing in between, which a real database's
+    // status-guarded update would also reject.
+    mockFindUnique.mockResolvedValueOnce(PUBLISHED_ARTICLE);
+    mockUpdateMany.mockResolvedValueOnce({ count: 1 });
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    const res = await featureArticle('article-1');
+    expect(res.status).toBe(422);
+    const json = await body(res);
+    expect(json.error.code).toBe('UNPROCESSABLE');
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await featureArticle('missing-id');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await featureArticle('article-1', {});
+    expect(res.status).toBe(401);
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('DELETE /:id/feature (issue #86)', () => {
+  it('clears Featured', async () => {
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: true });
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: false });
+    const res = await unfeatureArticle('article-1');
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.data.article.is_featured).toBe(false);
+    expect(mockUpdate).toHaveBeenCalledWith({ where: { id: 'article-1' }, data: { is_featured: false } });
+  });
+
+  it('calling it again on an already-unfeatured Article is harmless and writes nothing', async () => {
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: false });
+    const res = await unfeatureArticle('article-1');
+    expect(res.status).toBe(200);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await unfeatureArticle('missing-id');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await unfeatureArticle('article-1', {});
     expect(res.status).toBe(401);
     expect(mockFindUnique).not.toHaveBeenCalled();
   });
