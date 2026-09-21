@@ -32,8 +32,15 @@ _Avoid_: "deleting" a Published Article, archive, trash
 An **Article**'s content: an ordered sequence of **Blocks**, freely arranged by the author — there is no fixed article template.
 
 **Block**:
-One unit of an Article's **Body** — a paragraph, subheading (дэд гарчиг), list, quote, image, video, link, and so on. Images, videos and subheadings sit between paragraphs wherever the author puts them. Every Block is one of a fixed set of kinds; the site decides how each kind looks.
+One unit of an Article's **Body** — a paragraph, subheading (дэд гарчиг), list, quote, image, video, link, and so on. Images, videos and subheadings sit between paragraphs wherever the author puts them. Every Block is one of a fixed set of kinds; the site decides how each kind looks, apart from any **Colour** the author gives it.
 _Avoid_: Section (that word already means a page section of the site)
+
+**Colour** (Өнгө):
+An author's choice of colour in an **Article**'s **Body**, in one of three places: a *text colour* on some words, a *highlight* behind some words, or a *background* on a whole text **Block** (paragraph, subheading, list, quote, callout). Words carry a text colour or a highlight, never both; links are never coloured; a subheading is coloured as a whole. A Colour is either one from the **Palette** or a custom colour the author picks freely.
+_Avoid_: theme, style (the site's own look is not an author's Colour)
+
+**Palette**:
+The named Colours offered first when colouring: the site's brand colours (blue, indigo, green, navy, violet) followed by gray, brown, orange, yellow, purple, pink and red. A Palette colour is stored by name, so the site can retune its shade later; a custom colour is stored as the exact colour picked.
 
 **Category**:
 One of the three literacy areas an **Article** is tagged with: Унших (reading), Зөв бичих (orthography), Үсэглэх (spelling out). Shown as the large pills and as an Article's badge.
@@ -51,6 +58,7 @@ _Avoid_: treating each design frame's own x position as that row's alignment; "c
 
 - An **Article** belongs to exactly one **Category**
 - An **Article** has one **Body**, made of one or more **Blocks**
+- A text **Block** may carry a **Colour**; image, video, link card and divider **Blocks** never do
 - Only **Published** Articles appear on the site
 - Every **Published** Article has a **Thumbnail**; a Draft may not yet
 - At most one Article is the **Featured article**, and it is always **Published**

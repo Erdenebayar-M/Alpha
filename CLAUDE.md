@@ -163,3 +163,17 @@ The `TaskSource` enum (`HUMAN` | `AI`) is set automatically: hand-created and pi
 3. **Never write directly to `seed-data/`.** That folder is read-only reference. Scripts may read from it but must never modify or overwrite its files.
 4. **Rejected tasks stay.** Move to `rejected/` with a rejection note — do not delete, as they form the audit trail.
 5. **Never commit changes in `../docs/` or `../words/`.** `docs/` isn't version-controlled. `words/` is a git clone of the external `unimorph/khk` repo (plus a nested `monwn/` repo) — local edits there are working-copy reference data, not part of this project's history.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (github.com/Erdenebayar-M/Alpha), managed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five canonical labels (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context: root `CONTEXT-MAP.md` points to per-package `CONTEXT.md`/`docs/adr/` (backend, shared, mobile, web). See `docs/agents/domain.md`.
