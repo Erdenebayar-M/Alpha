@@ -11,12 +11,13 @@ jest.mock('../../config/env', () => ({
     JWT_SECRET: 'x'.repeat(64),
     CORS_ORIGIN: 'http://localhost:3000',
     RATE_LIMIT_DISABLED: 'true',
+    R2_PUBLIC_URL: 'https://cdn.example.dev',
   },
 }));
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
-    article: { create: jest.fn(), findUnique: jest.fn() },
+    article: { create: jest.fn(), findUnique: jest.fn(), updateMany: jest.fn() },
   },
 }));
 
@@ -26,6 +27,7 @@ import adminArticles from '../adminArticles';
 
 const mockCreate = prisma.article.create as jest.MockedFunction<any>;
 const mockFindUnique = prisma.article.findUnique as jest.MockedFunction<any>;
+const mockUpdateMany = prisma.article.updateMany as jest.MockedFunction<any>;
 
 // Matches the real shape thrown by the pg driver adapter this app uses
 // (src/lib/db/client.ts), confirmed against a live duplicate-slug insert —
@@ -53,6 +55,18 @@ function getArticle(id: string, headers: Record<string, string> = { Authorizatio
   return adminArticles.request(`/${id}`, { method: 'GET', headers });
 }
 
+function saveArticle(
+  id: string,
+  payload: Record<string, unknown>,
+  headers: Record<string, string> = { Authorization: BEARER },
+) {
+  return adminArticles.request(`/${id}`, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
 const VALID_BODY = {
   title: 'Уншихад анхаарах зөвлөгөө',
   slug: 'reading-tips-1',
@@ -64,10 +78,27 @@ const PARAGRAPH_AND_HEADING_BODY = [
   { id: 'b2', type: 'paragraph', content: [{ text: 'one two three', bold: true }] },
 ];
 
+const VALID_SAVE_BODY = {
+  title: 'Уншихад анхаарах зөвлөгөө',
+  slug: 'reading-tips-1',
+  category: 'READING',
+  excerpt: 'A short summary',
+  thumbnail: { url: '/content/articles/thumb.png', alt: 'A child reading', width: 800, height: 600 },
+  body: PARAGRAPH_AND_HEADING_BODY,
+  version: 1,
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockCreate.mockImplementation(({ data }: any) =>
     Promise.resolve({ id: 'new-article-id', version: 1, status: 'DRAFT', is_featured: false, ...data }),
+  );
+  // Default: the version-guarded write matches a row (count: 1) and the
+  // follow-up findUnique refetches it. Individual tests override either
+  // call with a `*Once` mock for the conflict/not-found paths.
+  mockUpdateMany.mockResolvedValue({ count: 1 });
+  mockFindUnique.mockImplementation(() =>
+    Promise.resolve({ id: 'article-1', version: 2, status: 'DRAFT', is_featured: false }),
   );
 });
 
@@ -275,5 +306,136 @@ describe('GET /:id', () => {
     const res = await getArticle('article-1', {});
     expect(res.status).toBe(401);
     expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('PUT /:id', () => {
+  it('stores all fields, increments version and returns the updated Article for a current version', async () => {
+    const res = await saveArticle('article-1', VALID_SAVE_BODY);
+    expect(res.status).toBe(200);
+    const json = await body(res);
+    expect(json.success).toBe(true);
+    expect(json.data.article).toMatchObject({ version: 2 });
+    // The where clause guards the write itself — no separate findUnique
+    // read-then-write, which would leave a window for a lost update.
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'article-1', version: 1 },
+        data: expect.objectContaining({
+          title: VALID_SAVE_BODY.title,
+          slug: VALID_SAVE_BODY.slug,
+          category: 'READING',
+          excerpt: 'A short summary',
+          body: PARAGRAPH_AND_HEADING_BODY,
+          thumbnail_url: '/content/articles/thumb.png',
+          thumbnail_alt: 'A child reading',
+          thumbnail_width: 800,
+          thumbnail_height: 600,
+          reading_time_minutes: 1,
+          version: { increment: 1 },
+        }),
+      }),
+    );
+  });
+
+  it('returns CONFLICT and writes nothing for an outdated version', async () => {
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    const res = await saveArticle('article-1', { ...VALID_SAVE_BODY, version: 2 });
+    expect(res.status).toBe(409);
+    const json = await body(res);
+    expect(json.error.code).toBe('CONFLICT');
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'article-1', version: 2 } }),
+    );
+  });
+
+  it('rejects a slug already used by another Article', async () => {
+    mockUpdateMany.mockRejectedValueOnce(slugConflictError());
+    const res = await saveArticle('article-1', VALID_SAVE_BODY);
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.slug).toBeDefined();
+  });
+
+  it('rejects a Thumbnail URL that fails the asset URL rule', async () => {
+    const res = await saveArticle('article-1', {
+      ...VALID_SAVE_BODY,
+      thumbnail: { ...VALID_SAVE_BODY.thumbnail, url: 'https://evil.example.com/thumb.png' },
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.thumbnail).toBeDefined();
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects a Thumbnail without alt text', async () => {
+    const { alt, ...thumbnailWithoutAlt } = VALID_SAVE_BODY.thumbnail;
+    const res = await saveArticle('article-1', { ...VALID_SAVE_BODY, thumbnail: thumbnailWithoutAlt });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.thumbnail).toBeDefined();
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('recalculates reading time from the Body on save', async () => {
+    const res = await saveArticle('article-1', {
+      ...VALID_SAVE_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'one two three four five' }] }],
+    });
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 1 }) }),
+    );
+  });
+
+  it('saves an incomplete Draft successfully (no excerpt, no Thumbnail, empty Body)', async () => {
+    const { excerpt, thumbnail, body: _body, ...rest } = VALID_SAVE_BODY;
+    const res = await saveArticle('article-1', rest);
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          excerpt: null,
+          thumbnail_url: null,
+          thumbnail_alt: null,
+          thumbnail_width: null,
+          thumbnail_height: null,
+          body: [],
+          reading_time_minutes: 0,
+        }),
+      }),
+    );
+  });
+
+  it("can't change status or is_featured through a save", async () => {
+    const res = await saveArticle('article-1', {
+      ...VALID_SAVE_BODY,
+      status: 'PUBLISHED',
+      is_featured: true,
+    });
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ status: expect.anything(), is_featured: expect.anything() }),
+      }),
+    );
+  });
+
+  it('returns NOT_FOUND for an unknown id', async () => {
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await saveArticle('missing-id', VALID_SAVE_BODY);
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('rejects requests without the admin secret', async () => {
+    const res = await saveArticle('article-1', VALID_SAVE_BODY, {});
+    expect(res.status).toBe(401);
+    expect(mockUpdateMany).not.toHaveBeenCalled();
   });
 });

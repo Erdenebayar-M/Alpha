@@ -102,6 +102,36 @@ export function validateArticleBody(
   return { ok: false, errors };
 }
 
+// ── Body field (shared by every write schema) ────────────────────────────
+// One pass: validateArticleBody both reports position-aware issues and
+// supplies the typed, key-stripped Blocks that get persisted — a caller
+// can't smuggle extra fields into a Block past this transform.
+
+const articleBodyFieldSchema = z
+  .array(z.unknown())
+  .default([])
+  .transform((raw, ctx) => {
+    const result = validateArticleBody(raw);
+    if (!result.ok) {
+      for (const message of result.errors) ctx.addIssue({ code: 'custom', message });
+      return z.NEVER;
+    }
+    return result.data;
+  });
+
+// ── Thumbnail ─────────────────────────────────────────────────────────────
+// Shape only — the URL allowlist depends on server config (R2 origin) that
+// @app/shared can't see, so the backend re-checks `thumbnail.url` itself.
+
+export const articleThumbnailSchema = z.object({
+  url: z.string().min(1),
+  alt: z.string().min(1),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
+export type ArticleThumbnail = z.infer<typeof articleThumbnailSchema>;
+
 // ── Create schema ─────────────────────────────────────────────────────────
 
 export const createArticleSchema = z.object({
@@ -109,23 +139,21 @@ export const createArticleSchema = z.object({
   slug: articleSlugSchema,
   category: articleCategorySchema,
   excerpt: z.string().max(500).optional(),
-  // One pass: validateArticleBody both reports position-aware issues and
-  // supplies the typed, key-stripped Blocks that get persisted — a caller
-  // can't smuggle extra fields into a Block past this transform.
-  body: z
-    .array(z.unknown())
-    .default([])
-    .transform((raw, ctx) => {
-      const result = validateArticleBody(raw);
-      if (!result.ok) {
-        for (const message of result.errors) ctx.addIssue({ code: 'custom', message });
-        return z.NEVER;
-      }
-      return result.data;
-    }),
+  body: articleBodyFieldSchema,
 });
 
 export type CreateArticleInput = z.infer<typeof createArticleSchema>;
+
+// ── Save schema (PUT — replaces the whole editable Article) ────────────────
+// Never carries status or is_featured: those change only through the
+// publish/unpublish/feature actions, not a content save.
+
+export const saveArticleSchema = createArticleSchema.extend({
+  thumbnail: articleThumbnailSchema.nullable().optional(),
+  version: z.number().int().positive(),
+});
+
+export type SaveArticleInput = z.infer<typeof saveArticleSchema>;
 
 // ── Reading time ──────────────────────────────────────────────────────────
 

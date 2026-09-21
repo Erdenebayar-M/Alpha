@@ -1,10 +1,14 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { z } from 'zod';
 import { withAdmin } from '../lib/auth/adminMiddleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { prisma } from '../lib/db/client';
 import { Prisma } from '../../generated/prisma';
-import { createArticleSchema, computeReadingTimeMinutes } from '@app/shared';
+import { assetUrlSchema } from '../lib/asset-url';
+import { createArticleSchema, saveArticleSchema, computeReadingTimeMinutes } from '@app/shared';
+
+const thumbnailUrlSchema = z.object({ url: assetUrlSchema });
 
 const adminArticles = new Hono();
 adminArticles.use('/*', withAdmin);
@@ -46,6 +50,15 @@ function isUniqueSlugViolation(err: unknown): boolean {
   return Array.isArray(fields) && fields.includes('slug');
 }
 
+// Shared by every write path (create, save): a duplicate-slug write is
+// reported as a field error; anything else propagates to app.onError.
+function slugConflictOrRethrow(c: Context, err: unknown) {
+  if (isUniqueSlugViolation(err)) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', { slug: ['Slug is already in use'] });
+  }
+  throw err;
+}
+
 // ─── POST /api/admin/articles ─────────────────────────────────────────────────
 
 adminArticles.post('/', async (c) => {
@@ -73,10 +86,7 @@ adminArticles.post('/', async (c) => {
     // Relying on the DB's unique constraint (rather than a findUnique
     // pre-check) closes the race where two requests for the same slug
     // both pass a pre-check before either insert commits.
-    if (isUniqueSlugViolation(err)) {
-      return ERRORS.VALIDATION_ERROR(c, 'Invalid body', { slug: ['Slug is already in use'] });
-    }
-    throw err;
+    return slugConflictOrRethrow(c, err);
   }
 });
 
@@ -87,6 +97,65 @@ adminArticles.get('/:id', async (c) => {
   const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
   if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
   return ok(c, { article });
+});
+
+// ─── PUT /api/admin/articles/:id ───────────────────────────────────────────────
+// Replaces the whole editable Article. Guarded by `version`: the client sends
+// the version it last read, and a stale version is refused with nothing
+// written — never status or is_featured, which only change via the
+// publish/unpublish/feature actions.
+
+adminArticles.put('/:id', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json().catch(() => null);
+  const parsed = saveArticleSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid body', parsed.error.flatten().fieldErrors);
+  }
+  const { title, slug, category, excerpt, thumbnail, body: articleBody, version } = parsed.data;
+
+  if (thumbnail) {
+    const urlCheck = thumbnailUrlSchema.safeParse(thumbnail);
+    if (!urlCheck.success) {
+      return ERRORS.VALIDATION_ERROR(c, 'Invalid body', {
+        thumbnail: urlCheck.error.flatten().fieldErrors.url,
+      });
+    }
+  }
+
+  try {
+    // The where clause makes the version check part of the write itself —
+    // a `findUnique` followed by a separate `update` would leave a window
+    // where two concurrent saves both read the same version, both pass the
+    // check, and the second silently clobbers the first.
+    const updated = await prisma.article.updateMany({
+      where: { id, version },
+      data: {
+        title,
+        slug,
+        category,
+        excerpt: excerpt ?? null,
+        body: articleBody,
+        thumbnail_url: thumbnail?.url ?? null,
+        thumbnail_alt: thumbnail?.alt ?? null,
+        thumbnail_width: thumbnail?.width ?? null,
+        thumbnail_height: thumbnail?.height ?? null,
+        reading_time_minutes: computeReadingTimeMinutes(articleBody),
+        version: { increment: 1 },
+      },
+    });
+
+    if (updated.count === 0) {
+      const exists = await prisma.article.findUnique({ where: { id }, select: { id: true } });
+      if (!exists) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+      return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
+    }
+
+    const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
+    return ok(c, { article });
+  } catch (err) {
+    return slugConflictOrRethrow(c, err);
+  }
 });
 
 export default adminArticles;
