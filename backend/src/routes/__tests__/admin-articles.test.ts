@@ -1180,11 +1180,12 @@ describe('POST /:id/publish', () => {
     const json = await body(res);
     expect(json.data.article.status).toBe('PUBLISHED');
     expect(json.data.article.published_at).toBeTruthy();
-    // Guarded on status, not just id: a concurrent Publish that already
-    // flipped the row is a no-op here rather than a second, racing write.
+    // Guarded on status AND version: a concurrent Publish that already
+    // flipped the row, or a concurrent Draft save that changed it, is a
+    // no-op here rather than a second, racing write (issue #107).
     expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'article-1', status: 'DRAFT' },
+        where: { id: 'article-1', status: 'DRAFT', version: 1 },
         data: expect.objectContaining({ status: 'PUBLISHED', published_at: expect.any(Date) }),
       }),
     );
@@ -1203,6 +1204,39 @@ describe('POST /:id/publish', () => {
     const json = await body(res);
     expect(json.data.article.status).toBe('PUBLISHED');
     expect(json.data.article.published_at).toBe('2026-03-01T00:00:00.000Z');
+  });
+
+  it('answers CONFLICT (not a Published row missing a field) when a concurrent Draft save wins the race (issue #107)', async () => {
+    // Read sees a complete Draft and passes the readiness check...
+    mockFindUnique.mockResolvedValueOnce(COMPLETE_ARTICLE);
+    // ...but a concurrent PUT lands first, blanking the thumbnail and
+    // bumping version, so the version-guarded write matches nothing.
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce({
+      ...COMPLETE_ARTICLE,
+      thumbnail_url: null,
+      thumbnail_alt: null,
+      thumbnail_width: null,
+      thumbnail_height: null,
+      version: 2,
+    });
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(409);
+    const json = await body(res);
+    expect(json.error.code).toBe('CONFLICT');
+    // The row must still be exactly what the concurrent save left behind —
+    // never flipped to PUBLISHED, and no third write was attempted.
+    expect(mockUpdateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns NOT_FOUND when the version-guarded write matches nothing because the row was deleted concurrently (issue #107)', async () => {
+    mockFindUnique.mockResolvedValueOnce(COMPLETE_ARTICLE);
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await publishArticle('article-1');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
   });
 
   it('returns UNPROCESSABLE listing every missing item', async () => {

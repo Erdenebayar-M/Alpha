@@ -325,17 +325,35 @@ adminArticles.post('/:id/publish', withArticle(async (c, article) => {
     return ERRORS.UNPROCESSABLE(c, 'Article is missing required fields to publish', { missing });
   }
 
-  // Guarded on status, not just id: if a concurrent Publish call already
-  // flipped this Draft to Published, this write is a no-op and the refetch
-  // below returns that already-published row instead of racing to overwrite
-  // its published_at.
-  await prisma.article.updateMany({
-    where: { id: article.id, status: 'DRAFT' },
+  // Guarded on status AND version: status alone (as before #107) only
+  // stops a second concurrent Publish from double-writing — it does nothing
+  // to protect against a concurrent Draft save landing between the
+  // readiness check above and this write, which could blank a required
+  // field on the very row this write is about to mark Published. Folding
+  // `version` in means any write that changed the row (a save bumps it)
+  // since the readiness check ran makes this update match nothing, so a
+  // Published Article can never end up missing a field the check saw.
+  const updated = await prisma.article.updateMany({
+    where: { id: article.id, status: 'DRAFT', version: article.version },
     data: {
       status: 'PUBLISHED',
       published_at: article.published_at ?? new Date(),
     },
   });
+
+  if (updated.count === 0) {
+    // Distinguish why nothing matched: a concurrent Publish already won (the
+    // refetch will show PUBLISHED, safe to return as-is) from a concurrent
+    // Draft save changing the row (still DRAFT, but on a version the
+    // readiness check above never actually saw — reusing it would risk
+    // publishing content that's since become incomplete).
+    const existing = await findArticle(article.id);
+    if (!existing) return ERRORS.NOT_FOUND(c, `Article ${article.id} not found`);
+    if (existing.status === 'DRAFT') {
+      return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
+    }
+    return articleResponse(c, existing);
+  }
 
   return respondWithArticle(c);
 }));
