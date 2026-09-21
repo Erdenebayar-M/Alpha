@@ -99,6 +99,32 @@ function decorateArticle<T extends { status: string; published_at: unknown }>(
   return { ...article, was_published: article.status === 'DRAFT' && article.published_at != null };
 }
 
+type AdminArticle = NonNullable<Awaited<ReturnType<typeof findArticle>>>;
+
+function findArticle(id: string) {
+  return prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
+}
+
+function articleResponse(c: Context, article: AdminArticle) {
+  return ok(c, { article: decorateArticle(article) });
+}
+
+// Wraps an `/:id` handler: looks the Article up and answers NOT_FOUND if it
+// doesn't exist, so the handler only ever sees a real row.
+function withArticle(handler: (c: Context<any, '/:id'>, article: AdminArticle) => Response | Promise<Response>) {
+  return async (c: Context<any, '/:id'>) => {
+    const id = c.req.param('id');
+    const article = await findArticle(id);
+    if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
+    return handler(c, article);
+  };
+}
+
+// Reads the Article fresh and returns it. Every write route ends here: the
+// row can be gone by the time it's refetched (a concurrent Delete landing
+// between the write and this read), which is a NOT_FOUND, not a crash.
+const respondWithArticle = withArticle(articleResponse);
+
 // Summary shape for the list route — no body, matching the spec's "items
 // are summaries" rule.
 const ARTICLE_LIST_SELECT = {
@@ -179,12 +205,7 @@ adminArticles.post('/', async (c) => {
 
 // ─── GET /api/admin/articles/:id ───────────────────────────────────────────────
 
-adminArticles.get('/:id', async (c) => {
-  const id = c.req.param('id');
-  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
-  return ok(c, { article: decorateArticle(article) });
-});
+adminArticles.get('/:id', respondWithArticle);
 
 // ─── PUT /api/admin/articles/:id ───────────────────────────────────────────────
 // Replaces the whole editable Article. Guarded by `version`: the client sends
@@ -253,8 +274,7 @@ adminArticles.put('/:id', async (c) => {
       return ERRORS.CONFLICT(c, 'Article was changed since it was last read');
     }
 
-    const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-    return ok(c, { article: decorateArticle(article!) });
+    return respondWithArticle(c);
   } catch (err) {
     return slugConflictOrRethrow(c, err);
   }
@@ -265,13 +285,9 @@ adminArticles.put('/:id', async (c) => {
 // least one Block). Publishing an already-Published Article is a no-op that
 // returns it unchanged; `published_at` is set only the first time.
 
-adminArticles.post('/:id/publish', async (c) => {
-  const id = c.req.param('id');
-  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
-
+adminArticles.post('/:id/publish', withArticle(async (c, article) => {
   if (article.status === 'PUBLISHED') {
-    return ok(c, { article: decorateArticle(article) });
+    return articleResponse(c, article);
   }
 
   const missing = getArticlePublishIssues(article);
@@ -284,16 +300,15 @@ adminArticles.post('/:id/publish', async (c) => {
   // below returns that already-published row instead of racing to overwrite
   // its published_at.
   await prisma.article.updateMany({
-    where: { id, status: 'DRAFT' },
+    where: { id: article.id, status: 'DRAFT' },
     data: {
       status: 'PUBLISHED',
       published_at: article.published_at ?? new Date(),
     },
   });
 
-  const published = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  return ok(c, { article: decorateArticle(published!) });
-});
+  return respondWithArticle(c);
+}));
 
 // ─── POST /api/admin/articles/:id/unpublish ────────────────────────────────
 // Returns a Published Article to Draft and clears Featured (ADR 0002: an
@@ -301,24 +316,19 @@ adminArticles.post('/:id/publish', async (c) => {
 // is left untouched so `was_published` keeps remembering that this Draft's
 // slug was once a live link. Unpublishing a Draft is a no-op.
 
-adminArticles.post('/:id/unpublish', async (c) => {
-  const id = c.req.param('id');
-  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
-
+adminArticles.post('/:id/unpublish', withArticle(async (c, article) => {
   if (article.status === 'DRAFT') {
-    return ok(c, { article: decorateArticle(article) });
+    return articleResponse(c, article);
   }
 
   // Guarded on status, not just id, for the same race-safety reason as Publish.
   await prisma.article.updateMany({
-    where: { id, status: 'PUBLISHED' },
+    where: { id: article.id, status: 'PUBLISHED' },
     data: { status: 'DRAFT', is_featured: false },
   });
 
-  const updated = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  return ok(c, { article: decorateArticle(updated!) });
-});
+  return respondWithArticle(c);
+}));
 
 // ─── DELETE /api/admin/articles/:id ─────────────────────────────────────────
 // Permanently removes a Draft. A Published Article must be unpublished first
@@ -343,11 +353,7 @@ adminArticles.delete('/:id', async (c) => {
 // flag and setting this one's happens in a single transaction so a reader
 // can never observe two Featured Articles at once.
 
-adminArticles.post('/:id/feature', async (c) => {
-  const id = c.req.param('id');
-  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
-
+adminArticles.post('/:id/feature', withArticle(async (c, article) => {
   if (article.status !== 'PUBLISHED') {
     return ERRORS.UNPROCESSABLE(c, 'Only Published Articles can be Featured');
   }
@@ -358,35 +364,29 @@ adminArticles.post('/:id/feature', async (c) => {
   // that race would leave a Draft marked Featured.
   const result = await prisma.$transaction(async (tx) => {
     await tx.article.updateMany({ where: { is_featured: true }, data: { is_featured: false } });
-    return tx.article.updateMany({ where: { id, status: 'PUBLISHED' }, data: { is_featured: true } });
+    return tx.article.updateMany({ where: { id: article.id, status: 'PUBLISHED' }, data: { is_featured: true } });
   });
 
   if (result.count === 0) {
     return ERRORS.UNPROCESSABLE(c, 'Only Published Articles can be Featured');
   }
 
-  const updated = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  return ok(c, { article: decorateArticle(updated!) });
-});
+  return respondWithArticle(c);
+}));
 
 // ─── DELETE /api/admin/articles/:id/feature ─────────────────────────────────
 // Clears Featured, leaving the site with no Featured article. Calling this
 // again — or on an Article that was never Featured — is a no-op.
 
-adminArticles.delete('/:id/feature', async (c) => {
-  const id = c.req.param('id');
-  const article = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  if (!article) return ERRORS.NOT_FOUND(c, `Article ${id} not found`);
-
+adminArticles.delete('/:id/feature', withArticle(async (c, article) => {
   if (!article.is_featured) {
-    return ok(c, { article: decorateArticle(article) });
+    return articleResponse(c, article);
   }
 
-  await prisma.article.update({ where: { id }, data: { is_featured: false } });
+  await prisma.article.update({ where: { id: article.id }, data: { is_featured: false } });
 
-  const updated = await prisma.article.findUnique({ where: { id }, select: ARTICLE_SELECT });
-  return ok(c, { article: decorateArticle(updated!) });
-});
+  return respondWithArticle(c);
+}));
 
 // ─── POST /api/admin/articles/images ───────────────────────────────────────────
 // Uploads a standalone image for use in an image Block, a link-card image or a

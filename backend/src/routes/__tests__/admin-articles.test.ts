@@ -1305,3 +1305,46 @@ describe('DELETE /:id/feature (issue #86)', () => {
     expect(mockFindUnique).not.toHaveBeenCalled();
   });
 });
+
+describe('post-write refetch finds the Article deleted concurrently (issue #101)', () => {
+  // A row complete enough to pass every route's pre-write checks, so each
+  // case below reaches its write before the refetch comes back empty.
+  const PUBLISHABLE_DRAFT = {
+    id: 'article-1',
+    title: 'Уншихад анхаарах зөвлөгөө',
+    slug: 'reading-tips-1',
+    excerpt: 'A short summary',
+    category: 'READING',
+    body: PARAGRAPH_AND_HEADING_BODY,
+    thumbnail_url: '/content/articles/thumb.png',
+    thumbnail_alt: 'A child reading',
+    thumbnail_width: 800,
+    thumbnail_height: 600,
+    reading_time_minutes: 1,
+    status: 'DRAFT',
+    is_featured: false,
+    published_at: null,
+    version: 1,
+  };
+  const PUBLISHED = { ...PUBLISHABLE_DRAFT, status: 'PUBLISHED', published_at: '2026-01-01T00:00:00.000Z' };
+  const FEATURED = { ...PUBLISHED, is_featured: true };
+
+  // `before` is the initial read (null for PUT, which writes without one).
+  const cases: Array<[string, Record<string, unknown> | null, () => Response | Promise<Response>]> = [
+    ['PUT /:id', null, () => saveArticle('article-1', VALID_SAVE_BODY)],
+    ['POST /:id/publish', PUBLISHABLE_DRAFT, () => publishArticle('article-1')],
+    ['POST /:id/unpublish', PUBLISHED, () => unpublishArticle('article-1')],
+    ['POST /:id/feature', PUBLISHED, () => featureArticle('article-1')],
+    ['DELETE /:id/feature', FEATURED, () => unfeatureArticle('article-1')],
+  ];
+
+  it.each(cases)('%s returns NOT_FOUND instead of crashing', async (_route, before, send) => {
+    if (before) mockFindUnique.mockResolvedValueOnce(before);
+    mockFindUnique.mockResolvedValueOnce(null);
+    const res = await send();
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.success).toBe(false);
+    expect(json.error.code).toBe('NOT_FOUND');
+  });
+});
