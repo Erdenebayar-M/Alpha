@@ -220,21 +220,47 @@ export function parseVideoUrl(raw: string): ParsedVideoLink | null {
   return null;
 }
 
-// The client sends a pasted `url`; only the parsed `provider` + `video_id`
-// ever reach the union's output type, per ADR 0001.
+// A newly-added or newly-edited video Block sends a pasted `url`, parsed
+// below into `{ provider, video_id }`. An untouched video Block round-tripped
+// through GET -> PUT instead carries the already-stored `{ provider,
+// video_id }` pair (the API never returns `url`) — that shape is re-validated
+// against the same per-provider id pattern and passed through unchanged, so
+// round-tripping an unrelated edit elsewhere in the Body can't fail on a
+// video Block the client never touched. Only `provider` + `video_id` ever
+// reach the output type; the pasted url itself is never stored, per ADR 0001.
 export const videoBlockSchema = z
   .object({
     id: z.string().min(1),
     type: z.literal('video'),
-    url: z.string().min(1, 'url is required'),
+    url: z.string().min(1).optional(),
+    provider: videoProviderSchema.optional(),
+    video_id: z.string().min(1).optional(),
   })
   .transform((val, ctx) => {
-    const parsed = parseVideoUrl(val.url);
-    if (!parsed) {
-      ctx.addIssue({ code: 'custom', message: 'url must be a YouTube or Vimeo link', path: ['url'] });
-      return z.NEVER;
+    if (val.url !== undefined) {
+      const parsed = parseVideoUrl(val.url);
+      if (!parsed) {
+        ctx.addIssue({ code: 'custom', message: 'url must be a YouTube or Vimeo link', path: ['url'] });
+        return z.NEVER;
+      }
+      return { id: val.id, type: 'video' as const, provider: parsed.provider, video_id: parsed.video_id };
     }
-    return { id: val.id, type: 'video' as const, provider: parsed.provider, video_id: parsed.video_id };
+    if (val.provider !== undefined && val.video_id !== undefined) {
+      const idPattern = val.provider === 'youtube' ? YOUTUBE_ID_RE : VIMEO_ID_RE;
+      if (!idPattern.test(val.video_id)) {
+        ctx.addIssue({ code: 'custom', message: 'video_id is not valid for this provider', path: ['video_id'] });
+        return z.NEVER;
+      }
+      return { id: val.id, type: 'video' as const, provider: val.provider, video_id: val.video_id };
+    }
+    if (val.provider !== undefined) {
+      ctx.addIssue({ code: 'custom', message: 'video_id is required', path: ['video_id'] });
+    } else if (val.video_id !== undefined) {
+      ctx.addIssue({ code: 'custom', message: 'provider is required', path: ['provider'] });
+    } else {
+      ctx.addIssue({ code: 'custom', message: 'url is required', path: ['url'] });
+    }
+    return z.NEVER;
   });
 
 export const blockSchema = z.discriminatedUnion(

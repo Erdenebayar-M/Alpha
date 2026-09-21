@@ -529,6 +529,45 @@ describe('POST / — new Block kinds (issue #85)', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it('accepts an already-stored { provider, video_id } video Block unchanged (issue #106)', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ' }],
+    });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          body: [{ id: 'b1', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ' }],
+        }),
+      }),
+    );
+  });
+
+  it('rejects a { provider, video_id } video Block with a malformed video_id, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'video', provider: 'vimeo', video_id: 'not-numeric' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a video Block with a provider but no video_id, naming the missing field', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'video', provider: 'youtube' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: video_id is required$/);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it('rejects a Body over 200 Blocks', async () => {
     const bigBody = Array.from({ length: 201 }, (_, i) => ({ id: `b${i}`, type: 'divider' }));
     const res = await createArticle({ ...VALID_BODY, body: bigBody });
@@ -844,6 +883,20 @@ describe('PUT /:id', () => {
     expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'article-1', version: 2, OR: [{ published_at: null }, { slug: VALID_SAVE_BODY.slug }] },
+      }),
+    );
+  });
+
+  it('accepts an untouched { provider, video_id } video Block on a GET->PUT round trip (issue #106)', async () => {
+    const videoBlock = { id: 'b3', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ' };
+    const res = await saveArticle('article-1', {
+      ...VALID_SAVE_BODY,
+      body: [...PARAGRAPH_AND_HEADING_BODY, videoBlock],
+    });
+    expect(res.status).toBe(200);
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ body: [...PARAGRAPH_AND_HEADING_BODY, videoBlock] }),
       }),
     );
   });
