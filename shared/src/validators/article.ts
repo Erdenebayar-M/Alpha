@@ -49,19 +49,63 @@ export const inlineHrefSchema = z
   .string()
   .refine(isAllowedHref, { message: 'href must be https:, http:, mailto: or a path starting with /' });
 
+// ── Colours (issue #108) ─────────────────────────────────────────────────
+// A Colour is either a Palette name — stored by name so the site can retune
+// the shade later, per ADR 0003 — or a custom hex the author picked freely,
+// stored exactly as given. Lowercase-only hex keeps stored values canonical
+// (`#FFFFFF`/`#fff` are rejected, not normalized) so two authors' identical
+// colour always round-trips to the same string.
+
+export const PALETTE_COLORS = [
+  'brand-blue',
+  'brand-indigo',
+  'brand-green',
+  'brand-navy',
+  'brand-violet',
+  'gray',
+  'brown',
+  'orange',
+  'yellow',
+  'purple',
+  'pink',
+  'red',
+] as const;
+export const paletteColorSchema = z.enum(PALETTE_COLORS);
+export type PaletteColor = (typeof PALETTE_COLORS)[number];
+
+export const HEX_COLOR_RE = /^#[0-9a-f]{6}$/;
+export const customColorSchema = z
+  .string()
+  .regex(HEX_COLOR_RE, 'Custom colour must be a lowercase #rrggbb hex value');
+
+export const colorValueSchema = z.union([paletteColorSchema, customColorSchema]);
+export type ColorValue = z.infer<typeof colorValueSchema>;
+
 // ── Blocks ────────────────────────────────────────────────────────────────
 
-export const inlineSpanSchema = z.object({
-  text: z.string().min(1),
-  bold: z.boolean().optional(),
-  italic: z.boolean().optional(),
-  href: inlineHrefSchema.optional(),
-});
+export const inlineSpanSchema = z
+  .object({
+    text: z.string().min(1),
+    bold: z.boolean().optional(),
+    italic: z.boolean().optional(),
+    href: inlineHrefSchema.optional(),
+    color: colorValueSchema.optional(),
+    highlight: colorValueSchema.optional(),
+  })
+  .superRefine((span, ctx) => {
+    if (span.color !== undefined && span.highlight !== undefined) {
+      ctx.addIssue({ code: 'custom', message: 'A span cannot have both color and highlight', path: ['highlight'] });
+    }
+    if (span.href !== undefined && (span.color !== undefined || span.highlight !== undefined)) {
+      ctx.addIssue({ code: 'custom', message: 'A link span cannot have a color or highlight', path: ['href'] });
+    }
+  });
 
 export const paragraphBlockSchema = z.object({
   id: z.string().min(1),
   type: z.literal('paragraph'),
   content: z.array(inlineSpanSchema).min(1),
+  background: colorValueSchema.optional(),
 });
 
 export const headingBlockSchema = z.object({
@@ -69,6 +113,8 @@ export const headingBlockSchema = z.object({
   type: z.literal('heading'),
   level: z.union([z.literal(2), z.literal(3)], { error: 'Heading level must be 2 or 3' }),
   text: z.string().min(1),
+  color: colorValueSchema.optional(),
+  background: colorValueSchema.optional(),
 });
 
 // One level only: an item is an array of inline spans, never another list —
@@ -84,6 +130,7 @@ export const listBlockSchema = z.object({
   items: z
     .array(z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'))
     .min(1, 'list needs at least one item'),
+  background: colorValueSchema.optional(),
 });
 
 export const quoteBlockSchema = z.object({
@@ -91,17 +138,24 @@ export const quoteBlockSchema = z.object({
   type: z.literal('quote'),
   content: z.array(inlineSpanSchema).min(1),
   attribution: z.string().min(1).optional(),
+  background: colorValueSchema.optional(),
 });
 
 export const calloutBlockSchema = z.object({
   id: z.string().min(1),
   type: z.literal('callout'),
   content: z.array(inlineSpanSchema).min(1),
+  background: colorValueSchema.optional(),
 });
 
+// `background` is declared (rather than left undeclared and silently
+// stripped, like an unrecognized key) so a client that sends one on a Block
+// kind that can't carry it gets a validation error naming the field, per the
+// acceptance criteria — not a silent no-op that looks like it worked.
 export const dividerBlockSchema = z.object({
   id: z.string().min(1),
   type: z.literal('divider'),
+  background: z.never().optional(),
 });
 
 // Shape only — like the Thumbnail below, the asset-host allowlist depends on
@@ -115,6 +169,7 @@ export const imageBlockSchema = z.object({
   caption: z.string().min(1).optional(),
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
+  background: z.never().optional(),
 });
 
 function isHttpUrl(value: string): boolean {
@@ -144,6 +199,7 @@ export const linkCardBlockSchema = z.object({
   title: z.string().min(1, 'title is required'),
   description: z.string().min(1).optional(),
   image: linkCardImageSchema.optional(),
+  background: z.never().optional(),
 });
 
 // ── Video links ──────────────────────────────────────────────────────────
@@ -235,6 +291,7 @@ export const videoBlockSchema = z
     url: z.string().min(1).optional(),
     provider: videoProviderSchema.optional(),
     video_id: z.string().min(1).optional(),
+    background: z.never().optional(),
   })
   .transform((val, ctx) => {
     if (val.url !== undefined) {

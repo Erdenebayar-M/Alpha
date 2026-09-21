@@ -166,6 +166,58 @@
   );
 }
 
+/* --- Article Body author Colours (issue #108, shared/docs/adr/0003) ---
+ * Plain :root custom properties, deliberately outside @theme: nothing here
+ * needs a generated Tailwind utility class (every reference is a runtime
+ * `var(--color-palette-${name})`/`var(--color-palette-${name}-tint)` inline
+ * style, keyed by the exact PALETTE_COLORS name from
+ * shared/src/validators/article.ts, per web/components/article/colors.ts).
+ * A var()-only reference doesn't count as "used" for Tailwind's @theme
+ * content-scan, which prunes any theme token with no matching utility-class
+ * usage from the build output — inside @theme, every token here would be
+ * silently dropped. Keep it outside @theme rather than adding a matching
+ * set of unused utility classes just to keep the scanner satisfied.
+ *
+ * No Figma source: the article reading page hasn't been designed yet, and
+ * the issue names the Palette by word ("gray", "orange", …) not by value.
+ * The five brand entries alias existing tokens above, per the issue's own
+ * mapping (navy → --color-text-navy, violet → --color-hero-lead); the other
+ * seven are new, chosen at roughly Tailwind's 600–700 weight so each reads
+ * at AA contrast as body text on white. Every name also gets a `-tint`: a
+ * low-alpha version of the same colour over white, for `highlight` (behind
+ * a run of text) and Block `background` — literal rgba rather than
+ * `color-mix()` to match this file's existing tint tokens
+ * (`--color-sky-tint`, `--color-badge-lilac`). brand-green's tint uses a
+ * higher alpha than its siblings because the base swatch is already a pale
+ * pastel and would all but disappear at the same 0.14–0.16 used elsewhere. */
+:root {
+  --color-palette-brand-blue: var(--color-brand-blue);
+  --color-palette-brand-indigo: var(--color-brand-indigo);
+  --color-palette-brand-green: var(--color-brand-green);
+  --color-palette-brand-navy: var(--color-text-navy);
+  --color-palette-brand-violet: var(--color-hero-lead);
+  --color-palette-gray: #4b5563;
+  --color-palette-brown: #8a5a2c;
+  --color-palette-orange: #c2410c;
+  --color-palette-yellow: #a16207;
+  --color-palette-purple: #7e22ce;
+  --color-palette-pink: #be185d;
+  --color-palette-red: #b91c1c;
+
+  --color-palette-brand-blue-tint: rgba(47, 91, 228, 0.16);
+  --color-palette-brand-indigo-tint: rgba(79, 110, 247, 0.16);
+  --color-palette-brand-green-tint: rgba(164, 220, 106, 0.28);
+  --color-palette-brand-navy-tint: rgba(36, 66, 143, 0.14);
+  --color-palette-brand-violet-tint: rgba(97, 85, 245, 0.14);
+  --color-palette-gray-tint: rgba(75, 85, 99, 0.14);
+  --color-palette-brown-tint: rgba(138, 90, 44, 0.18);
+  --color-palette-orange-tint: rgba(194, 65, 12, 0.16);
+  --color-palette-yellow-tint: rgba(161, 98, 7, 0.2);
+  --color-palette-purple-tint: rgba(126, 34, 206, 0.14);
+  --color-palette-pink-tint: rgba(190, 24, 93, 0.16);
+  --color-palette-red-tint: rgba(185, 28, 28, 0.14);
+}
+
 html {
   overflow-x: hidden;
 }

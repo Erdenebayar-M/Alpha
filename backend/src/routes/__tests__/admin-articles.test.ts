@@ -639,6 +639,126 @@ describe('POST / — new Block kinds (issue #85)', () => {
   });
 });
 
+describe('POST / — author Colours (issue #108)', () => {
+  it('accepts a Palette name as a span color', async () => {
+    const paragraph = { id: 'b1', type: 'paragraph', content: [{ text: 'hi', color: 'brand-blue' }] };
+    const res = await createArticle({ ...VALID_BODY, body: [paragraph] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: [paragraph] }) }),
+    );
+  });
+
+  it('accepts a custom lowercase hex color', async () => {
+    const paragraph = { id: 'b1', type: 'paragraph', content: [{ text: 'hi', color: '#a1b2c3' }] };
+    const res = await createArticle({ ...VALID_BODY, body: [paragraph] });
+    expect(res.status).toBe(201);
+  });
+
+  it('accepts a span highlight, a heading color, and Block backgrounds together', async () => {
+    const body = [
+      { id: 'b1', type: 'heading', level: 2, text: 'Intro', color: 'brand-navy' },
+      { id: 'b2', type: 'paragraph', content: [{ text: 'hi', highlight: 'yellow' }], background: '#fefefe' },
+      { id: 'b3', type: 'list', style: 'bullet', items: [[{ text: 'one' }]], background: 'gray' },
+      { id: 'b4', type: 'quote', content: [{ text: 'well said' }], background: 'brown' },
+      { id: 'b5', type: 'callout', content: [{ text: 'tip' }], background: 'brand-violet' },
+    ];
+    const res = await createArticle({ ...VALID_BODY, body });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ body }) }));
+  });
+
+  it('rejects an unknown Palette name, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'hi', color: 'blue' }] }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['too short', '#fff'],
+    ['uppercase', '#FFFFFF'],
+    ['functional notation', 'rgb(255, 255, 255)'],
+    ['trailing space', 'red '],
+  ])('rejects a malformed color value (%s), naming the Block position', async (_label, color) => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'hi', color }] }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a span with both color and highlight', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'hi', color: 'red', highlight: 'brand-blue' }] }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a colored link span', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'click', href: '/x', color: 'red' }] }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a highlighted link span', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'click', href: '/x', highlight: 'red' }] }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['image', { id: 'b1', type: 'image', url: '/content/articles/pic.png', alt: 'A child reading', background: 'red' }],
+    ['video', { id: 'b1', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ', background: 'red' }],
+    [
+      'link_card',
+      { id: 'b1', type: 'link_card', url: 'https://example.com/guide', title: 'A guide', background: 'red' },
+    ],
+    ['divider', { id: 'b1', type: 'divider', background: 'red' }],
+  ])('rejects a background on a %s Block, naming the Block position', async (_label, block) => {
+    const res = await createArticle({ ...VALID_BODY, body: [block] });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts an existing Body without any Colour fields unchanged', async () => {
+    const res = await createArticle({ ...VALID_BODY, body: PARAGRAPH_AND_HEADING_BODY });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: PARAGRAPH_AND_HEADING_BODY }) }),
+    );
+  });
+});
+
 describe('GET /', () => {
   const SUMMARY = {
     id: 'article-1',

@@ -1,0 +1,224 @@
+import type { CSSProperties } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/cn";
+import { InlineContent } from "./InlineContent";
+import { colorCss, tintCss } from "./colors";
+import type {
+  ArticleBlock,
+  ArticleBody as ArticleBodyBlocks,
+  CalloutBlock,
+  ColorValue,
+  HeadingBlock,
+  ImageBlock,
+  LinkCardBlock,
+  ListBlock,
+  ParagraphBlock,
+  QuoteBlock,
+  VideoBlock,
+} from "./types";
+
+// A Block `background` always renders as a tinted, padded surface — the
+// padding is what makes the tint read as a surface rather than a stray
+// rectangle behind text that already had its own margin. Shared by every
+// text Block kind so the padding/radius treatment can't drift between them.
+function backgroundClass(background: ColorValue | undefined): string | undefined {
+  return background ? "rounded-2xl px-5 py-4" : undefined;
+}
+
+function backgroundStyle(background: ColorValue | undefined): CSSProperties | undefined {
+  return background ? { backgroundColor: tintCss(background) } : undefined;
+}
+
+// No Figma frame exists yet for an article reading page (web/AGENTS.md: no
+// route is wired to this component — see the ArticleBody doc comment below),
+// so these are plain, generic tokens already used elsewhere on the site for
+// the same job (Header/Button's default UI ink, the card family's heading
+// ink) rather than anything designed specifically for this component.
+const BODY_TEXT_CLASS = "text-base leading-relaxed text-text-nav-strong";
+const HEADING_TEXT_CLASS = "font-extrabold text-text-navy";
+
+function Paragraph({ block }: { block: ParagraphBlock }) {
+  return (
+    <p className={cn(BODY_TEXT_CLASS, backgroundClass(block.background))} style={backgroundStyle(block.background)}>
+      <InlineContent spans={block.content} />
+    </p>
+  );
+}
+
+function Heading({ block }: { block: HeadingBlock }) {
+  const Tag = block.level === 2 ? "h2" : "h3";
+  const style: CSSProperties = {
+    ...(block.color ? { color: colorCss(block.color) } : undefined),
+    ...backgroundStyle(block.background),
+  };
+  return (
+    <Tag
+      className={cn(
+        HEADING_TEXT_CLASS,
+        block.level === 2 ? "text-2xl" : "text-xl",
+        backgroundClass(block.background)
+      )}
+      style={style}
+    >
+      {block.text}
+    </Tag>
+  );
+}
+
+function List({ block }: { block: ListBlock }) {
+  const Tag = block.style === "ordered" ? "ol" : "ul";
+  return (
+    <Tag
+      className={cn(
+        BODY_TEXT_CLASS,
+        "flex flex-col gap-2 pl-6",
+        block.style === "ordered" ? "list-decimal" : "list-disc",
+        backgroundClass(block.background)
+      )}
+      style={backgroundStyle(block.background)}
+    >
+      {block.items.map((item, index) => (
+        <li key={index}>
+          <InlineContent spans={item} />
+        </li>
+      ))}
+    </Tag>
+  );
+}
+
+function Quote({ block }: { block: QuoteBlock }) {
+  return (
+    <blockquote
+      className={cn(BODY_TEXT_CLASS, "border-l-4 border-border-card pl-4 italic", backgroundClass(block.background))}
+      style={backgroundStyle(block.background)}
+    >
+      <p>
+        <InlineContent spans={block.content} />
+      </p>
+      {block.attribution && <footer className="mt-2 text-sm text-text-nav not-italic">— {block.attribution}</footer>}
+    </blockquote>
+  );
+}
+
+function Callout({ block }: { block: CalloutBlock }) {
+  return (
+    <div
+      role="note"
+      className={cn(BODY_TEXT_CLASS, "rounded-2xl border border-border-soft bg-surface-page px-5 py-4")}
+      style={backgroundStyle(block.background)}
+    >
+      <InlineContent spans={block.content} />
+    </div>
+  );
+}
+
+function Divider() {
+  return <hr className="border-border-card" />;
+}
+
+function ImageBlockView({ block }: { block: ImageBlock }) {
+  return (
+    <figure className="flex flex-col gap-2">
+      {block.width && block.height ? (
+        <Image
+          src={block.url}
+          alt={block.alt}
+          width={block.width}
+          height={block.height}
+          className="h-auto w-full rounded-2xl object-cover"
+        />
+      ) : (
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl">
+          <Image src={block.url} alt={block.alt} fill className="object-cover" />
+        </div>
+      )}
+      {block.caption && <figcaption className="text-sm text-text-nav">{block.caption}</figcaption>}
+    </figure>
+  );
+}
+
+const VIDEO_EMBED_SRC: Record<VideoBlock["provider"], (id: string) => string> = {
+  youtube: (id) => `https://www.youtube-nocookie.com/embed/${id}`,
+  vimeo: (id) => `https://player.vimeo.com/video/${id}`,
+};
+
+function VideoBlockView({ block }: { block: VideoBlock }) {
+  return (
+    <div className="aspect-video w-full overflow-hidden rounded-2xl">
+      <iframe
+        src={VIDEO_EMBED_SRC[block.provider](block.video_id)}
+        title="Embedded video"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        className="h-full w-full"
+      />
+    </div>
+  );
+}
+
+function LinkCardView({ block }: { block: LinkCardBlock }) {
+  return (
+    <a
+      href={block.url}
+      className="flex gap-4 rounded-2xl border border-border-card p-4 transition-colors hover:bg-surface-page"
+    >
+      {block.image && (
+        <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl">
+          <Image src={block.image.url} alt={block.image.alt} fill className="object-cover" />
+        </div>
+      )}
+      <div className="flex flex-col gap-1">
+        <p className="font-bold text-article-title">{block.title}</p>
+        {block.description && <p className="text-sm text-text-nav">{block.description}</p>}
+        <p className="text-xs text-text-nav">{block.url}</p>
+      </div>
+    </a>
+  );
+}
+
+function BlockView({ block }: { block: ArticleBlock }) {
+  switch (block.type) {
+    case "paragraph":
+      return <Paragraph block={block} />;
+    case "heading":
+      return <Heading block={block} />;
+    case "list":
+      return <List block={block} />;
+    case "quote":
+      return <Quote block={block} />;
+    case "callout":
+      return <Callout block={block} />;
+    case "divider":
+      return <Divider />;
+    case "image":
+      return <ImageBlockView block={block} />;
+    case "video":
+      return <VideoBlockView block={block} />;
+    case "link_card":
+      return <LinkCardView block={block} />;
+    default: {
+      const exhaustive: never = block;
+      return exhaustive;
+    }
+  }
+}
+
+/**
+ * Renders a validated Article Body (shared/src/validators/article.ts) —
+ * every Block kind, plain semantic typography per-kind, with author Colours
+ * applied (issue #108, shared/docs/adr/0003): a span's `color`/`highlight`,
+ * a heading's `color`, and any text Block's `background` as a tinted padded
+ * surface. Not mounted on a route yet — no Figma frame exists for an
+ * article reading page, so this is a standalone piece for a future page to
+ * render into, not a page itself (web/AGENTS.md: no invented layout without
+ * a design source).
+ */
+export function ArticleBody({ blocks }: { blocks: ArticleBodyBlocks }) {
+  return (
+    <div className="flex flex-col gap-6">
+      {blocks.map((block) => (
+        <BlockView key={block.id} block={block} />
+      ))}
+    </div>
+  );
+}

@@ -84,6 +84,31 @@ for (const [, num, label] of skillLabelMatches) {
   assert(skillsTs.includes(label), `mobile's SKILL_LABELS[${num}] = "${label}" has no match in web/lib/skills.ts — the copied labels have drifted.`);
 }
 
+// ── 4. Article Colour Palette (issue #108) ──────────────────────────────
+
+const sharedArticleTs = read("shared/src/validators/article.ts");
+const articleTypesTs = read("web/components/article/types.ts");
+const globalsCss = read("web/app/globals.css");
+
+const paletteMatch = sharedArticleTs.match(/export const PALETTE_COLORS = \[([\s\S]*?)\] as const;/);
+assert(paletteMatch, "Could not find PALETTE_COLORS in shared/src/validators/article.ts — has it moved or been renamed?");
+
+if (paletteMatch) {
+  const paletteColors = [...paletteMatch[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1]);
+  assert(paletteColors.length === 12, `Expected 12 Palette colours in shared/, found ${paletteColors.length} — web's mirror and globals.css tokens need re-checking too.`);
+  for (const color of paletteColors) {
+    assert(articleTypesTs.includes(`"${color}"`), `Palette colour "${color}" is live in shared/ but missing from web/components/article/types.ts's mirrored PALETTE_COLORS.`);
+    assert(globalsCss.includes(`--color-palette-${color}:`), `Palette colour "${color}" has no --color-palette-${color} token in web/app/globals.css.`);
+    assert(globalsCss.includes(`--color-palette-${color}-tint:`), `Palette colour "${color}" has no --color-palette-${color}-tint token in web/app/globals.css.`);
+  }
+}
+
+const colourFields = ["color", "highlight", "background"];
+for (const field of colourFields) {
+  assert(sharedArticleTs.includes(field), `Colour field "${field}" (mirrored in web/components/article/types.ts) is missing from shared/src/validators/article.ts.`);
+  assert(articleTypesTs.includes(field), `Colour field "${field}" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {
