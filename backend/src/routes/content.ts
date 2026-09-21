@@ -11,6 +11,7 @@ import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { env } from '../config/env';
 import { r2Enabled, r2Upload, r2Move } from '../lib/r2';
+import { assetUrlSchema } from '../lib/asset-url';
 import { sniffContentType, isIosPlayableAudio, EXT_FOR_TYPE } from '../lib/media-type';
 import { prisma } from '../lib/db/client';
 import {
@@ -901,24 +902,6 @@ content.post('/upload-audio', async (c) => {
 
   return ok(c, { action: 'audio_uploaded', variant_id, slot, content_type: sniffed, [field]: audioUrl });
 });
-
-// ─── Asset URL allowlist ──────────────────────────────────────────────────────
-// Only allow relative /content/ paths (local serve) or the configured R2 CDN origin.
-// This prevents storing arbitrary URLs (including private IPs) in the database.
-const assetUrlSchema = z.string().refine(
-  (url) => {
-    if (url.startsWith('/content/')) return true;
-    if (!env.R2_PUBLIC_URL) return false;
-    try {
-      const allowed = new URL(env.R2_PUBLIC_URL);
-      const given   = new URL(url);
-      return given.origin === allowed.origin;
-    } catch {
-      return false;
-    }
-  },
-  { message: 'URL must be a relative /content/ path or an R2 CDN URL' },
-);
 
 // ─── POST /api/admin/content/update-image ────────────────────────────────────
 
