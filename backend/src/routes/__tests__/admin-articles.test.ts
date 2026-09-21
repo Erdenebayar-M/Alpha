@@ -1329,21 +1329,36 @@ describe('POST /:id/feature (issue #86)', () => {
 });
 
 describe('DELETE /:id/feature (issue #86)', () => {
-  it('clears Featured', async () => {
+  it('clears Featured with a single guarded write and no second read', async () => {
     mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: true });
-    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: false });
     const res = await unfeatureArticle('article-1');
     expect(res.status).toBe(200);
     const json = await body(res);
     expect(json.data.article.is_featured).toBe(false);
-    expect(mockUpdate).toHaveBeenCalledWith({ where: { id: 'article-1' }, data: { is_featured: false } });
+    expect(mockUpdateMany).toHaveBeenCalledWith({
+      where: { id: 'article-1' },
+      data: { is_featured: false, updated_at: expect.any(Date) },
+    });
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockFindUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it('guards on id alone, so a concurrent second Unfeature is a harmless no-op rather than a false NOT_FOUND', async () => {
+    // The where clause must not also filter on is_featured: true — the row
+    // still exists here (a real DB would match it by id regardless of which
+    // request already flipped the flag), so this must succeed, not 404.
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: true });
+    const res = await unfeatureArticle('article-1');
+    expect(res.status).toBe(200);
+    const [[{ where }]] = mockUpdateMany.mock.calls;
+    expect(where).not.toHaveProperty('is_featured');
   });
 
   it('calling it again on an already-unfeatured Article is harmless and writes nothing', async () => {
     mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: false });
     const res = await unfeatureArticle('article-1');
     expect(res.status).toBe(200);
-    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockUpdateMany).not.toHaveBeenCalled();
   });
 
   it('returns NOT_FOUND for an unknown id', async () => {
@@ -1352,6 +1367,19 @@ describe('DELETE /:id/feature (issue #86)', () => {
     expect(res.status).toBe(404);
     const json = await body(res);
     expect(json.error.code).toBe('NOT_FOUND');
+  });
+
+  it('returns NOT_FOUND, not a thrown error, when the guarded write matches no rows (issue #103)', async () => {
+    mockFindUnique.mockResolvedValueOnce({ id: 'article-1', status: 'PUBLISHED', is_featured: true });
+    mockUpdateMany.mockResolvedValueOnce({ count: 0 });
+    const res = await unfeatureArticle('article-1');
+    expect(res.status).toBe(404);
+    const json = await body(res);
+    expect(json.error.code).toBe('NOT_FOUND');
+    // One read to find the row, one guarded write to change it — no second
+    // `prisma.article.*` call is needed to learn the row is gone.
+    expect(mockFindUnique).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMany).toHaveBeenCalledTimes(1);
   });
 
   it('rejects requests without the admin secret', async () => {
@@ -1382,15 +1410,16 @@ describe('post-write refetch finds the Article deleted concurrently (issue #101)
     version: 1,
   };
   const PUBLISHED = { ...PUBLISHABLE_DRAFT, status: 'PUBLISHED', published_at: '2026-01-01T00:00:00.000Z' };
-  const FEATURED = { ...PUBLISHED, is_featured: true };
 
   // `before` is the initial read (null for PUT, which writes without one).
+  // DELETE /:id/feature isn't here: it no longer does a post-write refetch
+  // (issue #103), so its concurrent-delete case is covered in its own
+  // describe block by mocking the guarded write to match zero rows instead.
   const cases: Array<[string, Record<string, unknown> | null, () => Response | Promise<Response>]> = [
     ['PUT /:id', null, () => saveArticle('article-1', VALID_SAVE_BODY)],
     ['POST /:id/publish', PUBLISHABLE_DRAFT, () => publishArticle('article-1')],
     ['POST /:id/unpublish', PUBLISHED, () => unpublishArticle('article-1')],
     ['POST /:id/feature', PUBLISHED, () => featureArticle('article-1')],
-    ['DELETE /:id/feature', FEATURED, () => unfeatureArticle('article-1')],
   ];
 
   it.each(cases)('%s returns NOT_FOUND instead of crashing', async (_route, before, send) => {

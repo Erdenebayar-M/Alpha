@@ -401,9 +401,24 @@ adminArticles.delete('/:id/feature', withArticle(async (c, article) => {
     return articleResponse(c, article);
   }
 
-  await prisma.article.update({ where: { id: article.id }, data: { is_featured: false } });
+  // Guarded on id alone — not is_featured too — so a concurrent second
+  // Unfeature (its write landing between this request's read and its own
+  // write) still matches the row and harmlessly re-applies the same value,
+  // instead of matching zero rows and being mistaken for the row having
+  // vanished. Only a row deleted concurrently matches nothing here.
+  //
+  // updated_at is set explicitly (overriding Prisma's implicit @updatedAt)
+  // so the response can reuse the already-fetched `article` for every other
+  // field without a second read, while still reporting this write's real
+  // timestamp instead of the pre-write one.
+  const updated_at = new Date();
+  const updated = await prisma.article.updateMany({
+    where: { id: article.id },
+    data: { is_featured: false, updated_at },
+  });
+  if (updated.count === 0) return ERRORS.NOT_FOUND(c, `Article ${article.id} not found`);
 
-  return respondWithArticle(c);
+  return articleResponse(c, { ...article, is_featured: false, updated_at });
 }));
 
 // ─── POST /api/admin/articles/images ───────────────────────────────────────────
