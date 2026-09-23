@@ -113,7 +113,7 @@ The codebase applies these principles consistently. New routes and features must
 - **Always** re-verify ownership (`learner.parent_id === parent_id`) in every learner-scoped handler
 - **Never** return a full Prisma model — select only the fields the caller needs
 - **Never** add a fallback default for a required secret — fail fast in `env.ts`
-- **Never** store user-supplied URLs without validating against the `assetUrlSchema` allowlist
+- **Never** store user-supplied URLs without validating against the `assetUrlSchema` allowlist — with one documented, scoped exception: an Article `image` Block with `source: 'link'` stores an arbitrary `http(s)` url unchecked against the allowlist. This is safe under the same reasoning as `link_card.url` (also unchecked): the server never fetches either url — only `@app/shared`'s shape check runs (`isHttpUrl` in `article.ts`) — so there's no SSRF surface and no attacker-controlled content ever passes through the server as if it were trusted. Do not extend this carve-out to a url the backend does fetch or proxy.
 
 ### Known intentional gaps (do not re-investigate)
 

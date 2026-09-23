@@ -393,13 +393,42 @@ describe('POST / — new Block kinds (issue #85)', () => {
     );
   });
 
-  it('accepts an image Block whose url passes the asset URL rule', async () => {
+  it('accepts an image Block whose url passes the asset URL rule, defaulting source to upload', async () => {
     const imageBlock = { id: 'b1', type: 'image', url: '/content/articles/pic.png', alt: 'A child reading' };
+    const res = await createArticle({ ...VALID_BODY, body: [imageBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ body: [{ ...imageBlock, source: 'upload' }] }),
+      }),
+    );
+  });
+
+  it('accepts an image Block with source: link and an arbitrary http(s) url, storing it unchanged', async () => {
+    const imageBlock = {
+      id: 'b1',
+      type: 'image',
+      source: 'link',
+      url: 'https://images.example.com/pic.png',
+      alt: 'A child reading',
+    };
     const res = await createArticle({ ...VALID_BODY, body: [imageBlock] });
     expect(res.status).toBe(201);
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ body: [imageBlock] }) }),
     );
+  });
+
+  it('rejects an image Block with source: link whose url is not http(s), naming the Block and field', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'image', source: 'link', url: 'javascript:alert(1)', alt: 'A child reading' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: url /);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it('accepts an image Block url from the R2 CDN origin, matching what the upload endpoint returns', async () => {
