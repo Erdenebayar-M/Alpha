@@ -759,6 +759,58 @@ describe('POST / — author Colours (issue #108)', () => {
   });
 });
 
+describe('POST / — Text alignment (issue #110)', () => {
+  it('accepts center and right alignment on each text Block kind', async () => {
+    const body = [
+      { id: 'b1', type: 'paragraph', content: [{ text: 'hi' }], alignment: 'center' },
+      { id: 'b2', type: 'heading', level: 2, text: 'Intro', alignment: 'right' },
+      { id: 'b3', type: 'list', style: 'bullet', items: [[{ text: 'one' }]], alignment: 'center' },
+      { id: 'b4', type: 'quote', content: [{ text: 'well said' }], alignment: 'right' },
+      { id: 'b5', type: 'callout', content: [{ text: 'tip' }], alignment: 'center' },
+    ];
+    const res = await createArticle({ ...VALID_BODY, body });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ body }) }));
+  });
+
+  it('rejects an invalid alignment value, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'paragraph', content: [{ text: 'hi' }], alignment: 'justify' }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['image', { id: 'b1', type: 'image', url: '/content/articles/pic.png', alt: 'A child reading', alignment: 'center' }],
+    ['video', { id: 'b1', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ', alignment: 'center' }],
+    [
+      'link_card',
+      { id: 'b1', type: 'link_card', url: 'https://example.com/guide', title: 'A guide', alignment: 'center' },
+    ],
+    ['divider', { id: 'b1', type: 'divider', alignment: 'center' }],
+  ])('rejects an alignment on a %s Block, naming the Block position', async (_label, block) => {
+    const res = await createArticle({ ...VALID_BODY, body: [block] });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('accepts an existing Body without any alignment fields unchanged', async () => {
+    const res = await createArticle({ ...VALID_BODY, body: PARAGRAPH_AND_HEADING_BODY });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: PARAGRAPH_AND_HEADING_BODY }) }),
+    );
+  });
+});
+
 describe('GET /', () => {
   const SUMMARY = {
     id: 'article-1',

@@ -39,6 +39,10 @@ _Avoid_: Section (that word already means a page section of the site)
 An author's choice of colour in an **Article**'s **Body**, in one of three places: a *text colour* on some words, a *highlight* behind some words, or a *background* on a whole text **Block** (paragraph, subheading, list, quote, callout). Words carry a text colour or a highlight, never both; links are never coloured; a subheading is coloured as a whole. A Colour is either one from the **Palette** or a custom colour the author picks freely.
 _Avoid_: theme, style (the site's own look is not an author's Colour)
 
+**Text alignment**:
+A second author-controlled appearance choice in an **Article**'s **Body**, alongside **Colour**: the left/center/right horizontal alignment of a whole text **Block** (paragraph, subheading, list, quote, callout). Image, video, link card and divider **Blocks** never carry it — the site decides their layout, as with everything but **Colour** and Text alignment. Left is the default and is never stored explicitly; only center/right are recorded.
+_Avoid_: "alignment" alone, which is ambiguous with the **Content column** — that is a fixed, non-author-editable page-layout rule for how rows line up on the site, unrelated to a Block's own text alignment; justify or any fourth value (only left/center/right are offered)
+
 **Palette**:
 The named Colours offered first when colouring: the site's brand colours (blue, indigo, green, navy, violet) followed by gray, brown, orange, yellow, purple, pink and red. A Palette colour is stored by name, so the site can retune its shade later; a custom colour is stored as the exact colour picked.
 
@@ -59,6 +63,7 @@ _Avoid_: treating each design frame's own x position as that row's alignment; "c
 - An **Article** belongs to exactly one **Category**
 - An **Article** has one **Body**, made of one or more **Blocks**
 - A text **Block** may carry a **Colour**; image, video, link card and divider **Blocks** never do
+- A text **Block** may carry a **Text alignment**; image, video, link card and divider **Blocks** never do, and it is unrelated to the **Content column**
 - Only **Published** Articles appear on the site
 - Every **Published** Article has a **Thumbnail**; a Draft may not yet
 - At most one Article is the **Featured article**, and it is always **Published**

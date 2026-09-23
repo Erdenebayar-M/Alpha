@@ -81,6 +81,16 @@ export const customColorSchema = z
 export const colorValueSchema = z.union([paletteColorSchema, customColorSchema]);
 export type ColorValue = z.infer<typeof colorValueSchema>;
 
+// ── Text alignment (issue #110) ──────────────────────────────────────────
+// A second, narrower exception to ADR 0001 (ADR 0004): scoped identically to
+// `background` — same five text Block kinds, same reject-not-strip on the
+// other four. Left is the default and is never stored, so only
+// `center`/`right` are valid values here.
+
+export const TEXT_ALIGNMENTS = ['center', 'right'] as const;
+export const textAlignmentSchema = z.enum(TEXT_ALIGNMENTS);
+export type TextAlignment = (typeof TEXT_ALIGNMENTS)[number];
+
 // ── Blocks ────────────────────────────────────────────────────────────────
 
 export const inlineSpanSchema = z
@@ -106,6 +116,7 @@ export const paragraphBlockSchema = z.object({
   type: z.literal('paragraph'),
   content: z.array(inlineSpanSchema).min(1),
   background: colorValueSchema.optional(),
+  alignment: textAlignmentSchema.optional(),
 });
 
 export const headingBlockSchema = z.object({
@@ -115,6 +126,7 @@ export const headingBlockSchema = z.object({
   text: z.string().min(1),
   color: colorValueSchema.optional(),
   background: colorValueSchema.optional(),
+  alignment: textAlignmentSchema.optional(),
 });
 
 // One level only: an item is an array of inline spans, never another list —
@@ -131,6 +143,7 @@ export const listBlockSchema = z.object({
     .array(z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'))
     .min(1, 'list needs at least one item'),
   background: colorValueSchema.optional(),
+  alignment: textAlignmentSchema.optional(),
 });
 
 export const quoteBlockSchema = z.object({
@@ -139,6 +152,7 @@ export const quoteBlockSchema = z.object({
   content: z.array(inlineSpanSchema).min(1),
   attribution: z.string().min(1).optional(),
   background: colorValueSchema.optional(),
+  alignment: textAlignmentSchema.optional(),
 });
 
 export const calloutBlockSchema = z.object({
@@ -146,6 +160,7 @@ export const calloutBlockSchema = z.object({
   type: z.literal('callout'),
   content: z.array(inlineSpanSchema).min(1),
   background: colorValueSchema.optional(),
+  alignment: textAlignmentSchema.optional(),
 });
 
 // `background` is declared (rather than left undeclared and silently
@@ -156,6 +171,7 @@ export const dividerBlockSchema = z.object({
   id: z.string().min(1),
   type: z.literal('divider'),
   background: z.never().optional(),
+  alignment: z.never().optional(),
 });
 
 // Shape only — like the Thumbnail below, the asset-host allowlist depends on
@@ -170,6 +186,7 @@ export const imageBlockSchema = z.object({
   width: z.number().int().positive().optional(),
   height: z.number().int().positive().optional(),
   background: z.never().optional(),
+  alignment: z.never().optional(),
 });
 
 function isHttpUrl(value: string): boolean {
@@ -200,6 +217,7 @@ export const linkCardBlockSchema = z.object({
   description: z.string().min(1).optional(),
   image: linkCardImageSchema.optional(),
   background: z.never().optional(),
+  alignment: z.never().optional(),
 });
 
 // ── Video links ──────────────────────────────────────────────────────────
@@ -292,6 +310,7 @@ export const videoBlockSchema = z
     provider: videoProviderSchema.optional(),
     video_id: z.string().min(1).optional(),
     background: z.never().optional(),
+    alignment: z.never().optional(),
   })
   .transform((val, ctx) => {
     if (val.url !== undefined) {
