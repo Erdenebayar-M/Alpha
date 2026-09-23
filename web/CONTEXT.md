@@ -35,6 +35,10 @@ An **Article**'s content: an ordered sequence of **Blocks**, freely arranged by 
 One unit of an Article's **Body** — a paragraph, subheading (дэд гарчиг), list, quote, image, video, link, and so on. Images, videos and subheadings sit between paragraphs wherever the author puts them. Every Block is one of a fixed set of kinds; the site decides how each kind looks, apart from any **Colour** the author gives it.
 _Avoid_: Section (that word already means a page section of the site)
 
+**Image source**:
+Whether an **Article**'s image **Block** was uploaded as a file (stored on R2) or is a pasted link to an external `http(s)` url the server never fetches. Every image Block has one of the two; Blocks stored before this distinction existed are treated as uploaded. Only image Blocks carry it — video Blocks are embeds and link cards are typed by hand, neither has this choice.
+_Avoid_: implying the server fetches or validates a linked image's contents — it only checks the url is well-formed
+
 **Colour** (Өнгө):
 An author's choice of colour in an **Article**'s **Body**, in one of three places: a *text colour* on some words, a *highlight* behind some words, or a *background* on a whole text **Block** (paragraph, subheading, list, quote, callout). Words carry a text colour or a highlight, never both; links are never coloured; a subheading is coloured as a whole. A Colour is either one from the **Palette** or a custom colour the author picks freely.
 _Avoid_: theme, style (the site's own look is not an author's Colour)
@@ -62,6 +66,7 @@ _Avoid_: treating each design frame's own x position as that row's alignment; "c
 
 - An **Article** belongs to exactly one **Category**
 - An **Article** has one **Body**, made of one or more **Blocks**
+- An image **Block** is either uploaded (R2-hosted) or linked (an external url the server never fetches)
 - A text **Block** may carry a **Colour**; image, video, link card and divider **Blocks** never do
 - A text **Block** may carry a **Text alignment**; image, video, link card and divider **Blocks** never do, and it is unrelated to the **Content column**
 - Only **Published** Articles appear on the site
