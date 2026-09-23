@@ -109,6 +109,22 @@ for (const field of colourFields) {
   assert(articleTypesTs.includes(field), `Colour field "${field}" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
 }
 
+// ── 5. Image Block sources ───────────────────────────────────────────────
+// ArticleBody.tsx picks next/image vs a plain <img> off `source` — a drift
+// here would silently misrender rather than throw, so it's worth the same
+// guard as the Colour palette above.
+
+const sourceMatch = sharedArticleTs.match(/export const IMAGE_SOURCES = \[([\s\S]*?)\] as const;/);
+assert(sourceMatch, "Could not find IMAGE_SOURCES in shared/src/validators/article.ts — has it moved or been renamed?");
+
+if (sourceMatch) {
+  const imageSources = [...sourceMatch[1].matchAll(/'([a-z]+)'/g)].map((m) => m[1]);
+  assert(imageSources.length === 2, `Expected 2 image sources in shared/, found ${imageSources.length} — web's mirrored ImageBlock.source needs re-checking too.`);
+  for (const source of imageSources) {
+    assert(articleTypesTs.includes(`"${source}"`), `Image source "${source}" is live in shared/ but missing from web/components/article/types.ts's mirrored ImageBlock.source.`);
+  }
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

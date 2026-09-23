@@ -87,6 +87,7 @@ export interface DividerBlock {
 export interface ImageBlock {
   id: string;
   type: "image";
+  source: "upload" | "link";
   url: string;
   alt: string;
   caption?: string;

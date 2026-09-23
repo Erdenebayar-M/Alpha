@@ -174,20 +174,40 @@ export const dividerBlockSchema = z.object({
   alignment: z.never().optional(),
 });
 
-// Shape only — like the Thumbnail below, the asset-host allowlist depends on
-// server config (R2 origin) that @app/shared can't see, so the backend
-// re-checks every image url (this Block's, and a link card's) itself.
-export const imageBlockSchema = z.object({
-  id: z.string().min(1),
-  type: z.literal('image'),
-  url: z.string().min(1, 'url is required'),
-  alt: z.string().min(1, 'alt is required'),
-  caption: z.string().min(1).optional(),
-  width: z.number().int().positive().optional(),
-  height: z.number().int().positive().optional(),
-  background: z.never().optional(),
-  alignment: z.never().optional(),
-});
+export const IMAGE_SOURCES = ['upload', 'link'] as const;
+export const imageSourceSchema = z.enum(IMAGE_SOURCES);
+export type ImageSource = (typeof IMAGE_SOURCES)[number];
+
+// `source` defaults to 'upload' so Blocks stored before this field existed
+// (no `source` in the DB at all) keep parsing unchanged — no migration.
+//
+// `source: 'upload'`: shape only here — like the Thumbnail, the asset-host
+// allowlist depends on server config (R2 origin) that @app/shared can't see,
+// so the backend re-checks the url (this Block's, and a link card's) itself
+// via `getArticleBodyAssetUrls`.
+//
+// `source: 'link'`: a scoped exception to the R2 allowlist, same threat-model
+// bucket as `link_card.url` — the author pastes an arbitrary http(s) url, the
+// server never fetches it (see backend/CLAUDE.md's asset-url rule for the
+// documented carve-out), and only the url *shape* is checked here.
+export const imageBlockSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.literal('image'),
+    source: imageSourceSchema.default('upload'),
+    url: z.string().min(1, 'url is required'),
+    alt: z.string().min(1, 'alt is required'),
+    caption: z.string().min(1).optional(),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+    background: z.never().optional(),
+    alignment: z.never().optional(),
+  })
+  .superRefine((block, ctx) => {
+    if (block.source === 'link' && !isHttpUrl(block.url)) {
+      ctx.addIssue({ code: 'custom', message: 'url must be an http(s) link', path: ['url'] });
+    }
+  });
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -384,11 +404,13 @@ export type ArticleBlock = z.infer<typeof blockSchema>;
 export type ArticleBody = z.infer<typeof articleBodySchema>;
 
 // ── Body asset urls ──────────────────────────────────────────────────────
-// Every url in a Body that points at an uploaded asset (an image Block, or a
-// link card's image) rather than an arbitrary external link. @app/shared
-// can't check these against the R2 allowlist (server config), so it hands
-// the backend exactly the urls that need that check, each tagged with the
-// Block position and field for an error message that names both.
+// Every url in a Body that points at an uploaded asset (an image Block with
+// source: 'upload', or a link card's image — both always upload-only) rather
+// than an arbitrary external link. @app/shared can't check these against the
+// R2 allowlist (server config), so it hands the backend exactly the urls that
+// need that check, each tagged with the Block position and field for an
+// error message that names both. An image Block with source: 'link' is
+// deliberately excluded — its url is an external link, never R2-checked.
 
 export interface ArticleBodyAssetRef {
   position: number;
@@ -399,7 +421,7 @@ export interface ArticleBodyAssetRef {
 export function getArticleBodyAssetUrls(body: ArticleBody): ArticleBodyAssetRef[] {
   const refs: ArticleBodyAssetRef[] = [];
   body.forEach((block, position) => {
-    if (block.type === 'image') {
+    if (block.type === 'image' && block.source === 'upload') {
       refs.push({ position, field: 'url', url: block.url });
     }
     if (block.type === 'link_card' && block.image) {

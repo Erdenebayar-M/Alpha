@@ -116,22 +116,44 @@ function Divider() {
   return <hr className="border-border-card" />;
 }
 
+// `source: 'link'` urls can be any host, but `next/image`'s `remotePatterns`
+// (next.config.ts) only allows the R2 CDN origin — widening it to `*` would
+// turn this server into an open image-optimizing proxy for arbitrary urls.
+// A plain `<img>` sidesteps that: no optimization for externally-linked
+// images, but we don't control that asset's lifecycle anyway.
+function LinkImage({ block }: { block: ImageBlock }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={block.url}
+      alt={block.alt}
+      width={block.width}
+      height={block.height}
+      className="h-auto w-full rounded-2xl object-cover"
+    />
+  );
+}
+
+function UploadImage({ block }: { block: ImageBlock }) {
+  return block.width && block.height ? (
+    <Image
+      src={block.url}
+      alt={block.alt}
+      width={block.width}
+      height={block.height}
+      className="h-auto w-full rounded-2xl object-cover"
+    />
+  ) : (
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl">
+      <Image src={block.url} alt={block.alt} fill className="object-cover" />
+    </div>
+  );
+}
+
 function ImageBlockView({ block }: { block: ImageBlock }) {
   return (
     <figure className="flex flex-col gap-2">
-      {block.width && block.height ? (
-        <Image
-          src={block.url}
-          alt={block.alt}
-          width={block.width}
-          height={block.height}
-          className="h-auto w-full rounded-2xl object-cover"
-        />
-      ) : (
-        <div className="relative aspect-video w-full overflow-hidden rounded-2xl">
-          <Image src={block.url} alt={block.alt} fill className="object-cover" />
-        </div>
-      )}
+      {block.source === "link" ? <LinkImage block={block} /> : <UploadImage block={block} />}
       {block.caption && <figcaption className="text-sm text-text-nav">{block.caption}</figcaption>}
     </figure>
   );
