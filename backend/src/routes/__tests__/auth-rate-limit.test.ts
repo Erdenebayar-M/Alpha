@@ -33,7 +33,10 @@ import { signToken } from '../../lib/auth/jwt';
 import authRouter from '../auth';
 
 jest.mock('../../lib/db/client', () => ({
-  prisma: { parent: { findUnique: jest.fn(), create: jest.fn() } },
+  prisma: {
+    parent: { findUnique: jest.fn(), create: jest.fn() },
+    passwordResetToken: { findUnique: jest.fn().mockResolvedValue(null) },
+  },
 }));
 jest.mock('../../lib/auth/password', () => ({
   hashPassword: jest.fn(),
@@ -120,5 +123,36 @@ describe('POST /forgot-password — rate limiting', () => {
     expect((await login(ip)).status).toBe(429);
 
     expect((await forgotPassword(ip)).status).toBe(200);
+  });
+});
+
+function resetPassword(ip: string) {
+  return authRouter.request('/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': ip },
+    body: JSON.stringify({ token: 'unknown-token', password: 'new-password' }),
+  });
+}
+
+describe('POST /reset-password — rate limiting', () => {
+  it('blocks the 11th attempt from the same IP within the window', async () => {
+    const ip = '203.0.113.70';
+    for (let i = 0; i < 10; i++) {
+      const res = await resetPassword(ip);
+      expect(res.status).toBe(400);
+    }
+    const blocked = await resetPassword(ip);
+    expect(blocked.status).toBe(429);
+    const body = (await blocked.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('RATE_LIMITED');
+    expect(blocked.headers.get('Retry-After')).not.toBeNull();
+  });
+
+  it('has its own bucket, apart from login', async () => {
+    const ip = '203.0.113.71';
+    for (let i = 0; i < 6; i++) await login(ip);
+    expect((await login(ip)).status).toBe(429);
+
+    expect((await resetPassword(ip)).status).toBe(400);
   });
 });

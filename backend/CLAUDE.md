@@ -49,10 +49,11 @@ Structured JSON logs include `request_id` (from `hono/request-id`). Unhandled er
 ## Auth Model
 
 JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`):
-- Set by `POST /api/auth/login` and `POST /api/auth/register`
+- Set by `POST /api/auth/login`, `POST /api/auth/register` and `POST /api/auth/reset-password`
 - Cleared by `POST /api/auth/logout`
 - Profile fetched via `GET /api/auth/me` — returns only `{ id, email, name }`, never `password_hash`
 - `POST /api/auth/forgot-password` emails a Password reset link (`src/lib/email.ts`: Resend when `RESEND_API_KEY` is set, otherwise logged to the console). It always returns `{ ok: true }`. `password_reset_tokens` stores only a SHA-256 hash of each token (30-minute expiry); issuing one marks the parent's older unused tokens used
+- `POST /api/auth/reset-password` takes `{ token, password }`, sets the new password and answers like login. An unknown, used or expired token is `INVALID_RESET_TOKEN` (one code, so the response doesn't say which). The token is claimed and the password set in one transaction, conditional on the token still being unused and unexpired, so a link works exactly once
 
 JWT is HS256, with `iss: 'mongolian-app'` and `aud: 'parent-api'` enforced on verify. The frontend Zustand store holds only the parent profile — **never** the token itself.
 
@@ -94,6 +95,7 @@ The codebase applies these principles consistently. New routes and features must
 - `loginLimiter`: 5 attempts / 15 min
 - `registerLimiter`: 10 / hour
 - `forgotPasswordLimiter`: 5 / hour per IP, plus at most 5 reset tokens / hour per parent (`src/lib/auth/passwordReset.ts`), so rotating IPs can't keep killing a parent's link
+- `resetPasswordLimiter`: 10 / 15 min per IP
 - `adminGenerateLimiter`: 5 / min on LLM endpoints
 
 **8. Secure Defaults**

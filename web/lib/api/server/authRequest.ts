@@ -1,6 +1,7 @@
 import { BACKEND_URL } from "@/lib/api/server/backendAuth";
 
-type AuthPath = "/api/auth/login" | "/api/auth/register" | "/api/auth/forgot-password";
+type TokenPath = "/api/auth/login" | "/api/auth/register" | "/api/auth/reset-password";
+type AuthPath = TokenPath | "/api/auth/forgot-password";
 
 export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR" };
 
@@ -43,9 +44,9 @@ export async function postAuthRoute<Code extends string>(
   return { ok: false, code: (res.status === 429 ? "RATE_LIMITED" : "UPSTREAM_ERROR") as Code | "UPSTREAM_ERROR" };
 }
 
-/** postAuthRoute for the token-issuing routes (sign in, sign up). */
+/** postAuthRoute for the token-issuing routes (sign in, sign up, Password reset). */
 export async function authWithBackend<Code extends string>(
-  path: "/api/auth/login" | "/api/auth/register",
+  path: TokenPath,
   input: object,
   clientIp: string | null,
   knownCodes: readonly Code[],

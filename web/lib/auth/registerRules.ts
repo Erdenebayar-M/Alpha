@@ -37,9 +37,15 @@ export function validateRegisterForm(values: RegisterFormValues): Partial<Record
   const errors: Partial<Record<RegisterField, true>> = {};
   if (values.name.trim().length < NAME_MIN_LENGTH) errors.name = true;
   if (!isValidLoginEmail(values.email.trim())) errors.email = true;
-  if (values.password.length < PASSWORD_MIN_LENGTH) errors.password = true;
-  else if (values.confirmPassword !== values.password) errors.confirmPassword = true;
-  return errors;
+  return { ...errors, ...validateNewPassword(values) };
+}
+
+/** The new-password pair's rule, shared by Sign up and Password reset: long
+ *  enough, then confirmed. Empty when both hold. */
+export function validateNewPassword({ password, confirmPassword }: { password: string; confirmPassword: string }): Partial<Record<"password" | "confirmPassword", true>> {
+  if (password.length < PASSWORD_MIN_LENGTH) return { password: true };
+  if (confirmPassword !== password) return { confirmPassword: true };
+  return {};
 }
 
 /** Narrows an untrusted request body to the shape `registerSchema` accepts. */

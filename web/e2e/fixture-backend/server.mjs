@@ -5,8 +5,8 @@ import { pathToFileURL } from "node:url";
  * Stand-in for the real backend's public `GET /api/articles/:slug`, so e2e
  * runs need no backend or database. Playwright's webServer starts it and
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
- * one Published Article, plus the auth routes the sign-in, sign-up and
- * forgot-password pages call (see FIXTURE_PARENT);
+ * one Published Article, plus the auth routes the sign-in, sign-up,
+ * forgot-password and reset-password pages call (see FIXTURE_PARENT);
  * every other slug — including a Draft's — is a 404,
  * matching the real route.
  */
@@ -122,6 +122,18 @@ async function forgotPassword(req, res) {
   send(res, 200, "application/json", JSON.stringify({ success: true, data: { ok: true } }));
 }
 
+// Reset-password stub: one token resets and signs in; any other is
+// INVALID_RESET_TOKEN, as the real route answers for an expired, used or
+// unknown link.
+export const VALID_RESET_TOKEN = "fixture-reset-token";
+
+async function resetPassword(req, res) {
+  const body = await readJson(req);
+  if (body?.token !== VALID_RESET_TOKEN) return fail(res, 400, "INVALID_RESET_TOKEN", "Reset link is expired or invalid");
+  const data = { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Fixture Parent", token: FIXTURE_PARENT.token };
+  send(res, 200, "application/json", JSON.stringify({ success: true, data }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -133,6 +145,7 @@ export function startFixtureBackend() {
     if (req.method === "POST" && pathname === "/api/auth/login") return login(req, res);
     if (req.method === "POST" && pathname === "/api/auth/register") return register(req, res);
     if (req.method === "POST" && pathname === "/api/auth/forgot-password") return forgotPassword(req, res);
+    if (req.method === "POST" && pathname === "/api/auth/reset-password") return resetPassword(req, res);
     if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
     if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);

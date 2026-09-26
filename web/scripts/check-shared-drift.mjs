@@ -210,6 +210,29 @@ for (const code of ["RATE_LIMITED", "VALIDATION_ERROR"]) {
   assert(forgotComponent.includes(code), `web/components/auth/ForgotPasswordCard.tsx no longer maps backend error code ${code}.`);
 }
 
+// ── 10. Reset-password rules (issue #124) ───────────────────────────────
+// web/lib/auth/resetPasswordRules.ts mirrors resetPasswordSchema with
+// registerRules.ts's PASSWORD_MIN_LENGTH; the reset card turns
+// INVALID_RESET_TOKEN into its "link expired or invalid" state.
+
+const resetSchemaMatch = sharedAuthTs.match(/export const resetPasswordSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(resetSchemaMatch, "Could not find resetPasswordSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
+
+if (resetSchemaMatch) {
+  const fields = resetSchemaMatch[1].replace(/\s+/g, " ").trim();
+  assert(
+    fields === "token: z.string().min(1), password: z.string().min(8),",
+    `resetPasswordSchema changed to { ${fields} } — web/lib/auth/resetPasswordRules.ts mirrors { token: z.string().min(1), password: z.string().min(8) } and needs updating.`,
+  );
+  assert(!/confirm/i.test(resetSchemaMatch[1]), "resetPasswordSchema in shared/src/validators/auth.ts gained a confirmation field — password confirmation is meant to be client-only (issue #124).");
+}
+
+const resetComponent = read("web/components/auth/ResetPasswordCard.tsx");
+for (const code of ["INVALID_RESET_TOKEN", "RATE_LIMITED"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the reset-password page) is missing from backend/src/lib/errors.ts.`);
+  assert(resetComponent.includes(code), `web/components/auth/ResetPasswordCard.tsx no longer maps backend error code ${code}.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {
