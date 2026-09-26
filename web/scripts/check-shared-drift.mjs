@@ -125,6 +125,17 @@ if (sourceMatch) {
   }
 }
 
+// ── 6. List Markers and split-list numbering (ADR 0005) ─────────────────
+// Nothing checked list/marker fields before this — added alongside the List
+// Marker feature so this script actually catches the next drift, not just
+// this one.
+
+const listFields = ["markerColor", "startsAt", "alignment"];
+for (const field of listFields) {
+  assert(sharedArticleTs.includes(field), `List field "${field}" (mirrored in web/components/article/types.ts) is missing from shared/src/validators/article.ts.`);
+  assert(articleTypesTs.includes(field), `List field "${field}" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

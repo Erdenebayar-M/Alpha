@@ -15,7 +15,7 @@ _Avoid_: Blog, Post, Blog post
 
 **Featured article** (Онцлох нийтлэл):
 The one **Published** Article staff have hand-picked to promote. There is at most one at a time: featuring an Article takes the title away from the previous one, and unpublishing the Featured article leaves none. It is an ordinary Article with a promotion, not a separate kind of content.
-_Avoid_: using "featured" for a ranked or computed list — a future popularity ranking is a different thing and needs its own name
+_Avoid_: using "featured" for a ranked or computed list — a future popularity ranking is a different thing and needs its own name; using "Онцлох" for locked/premium content — being Featured never restricts who can read an Article
 
 **Thumbnail**:
 The picture that stands for an **Article** wherever it is listed (article cards, link previews). It is not shown on the Article's own reading page.
@@ -35,12 +35,24 @@ An **Article**'s content: an ordered sequence of **Blocks**, freely arranged by 
 One unit of an Article's **Body** — a paragraph, subheading (дэд гарчиг), list, quote, image, video, link, and so on. Images, videos and subheadings sit between paragraphs wherever the author puts them. Every Block is one of a fixed set of kinds; the site decides how each kind looks, apart from any **Colour** the author gives it.
 _Avoid_: Section (that word already means a page section of the site)
 
+**List**:
+A text **Block** of one or more items, either *bullet* or *ordered* **style**. Each item's line begins with a **Marker**. Taking an item out of the List (Enter on an empty item, or Backspace right after its **Marker**) turns it into a plain paragraph and splits one List into two List Blocks around it: for an *ordered* List the second one continues numbering from the first (no restart), but carries none of the first's alignment, background, or Marker **Colour** — those are reapplied by hand if wanted.
+_Avoid_: assuming a List can hold another Block inside it — an item is text only, never a nested Block
+
+**Marker**:
+The bullet or number at the start of a **List** item's line — a real, selectable unit in the editor, not decorative page styling. Its glyph or number is always system-computed from the List's style and item order, never author-typed; only its **Colour** is author-editable, and unset it inherits the surrounding colour rather than a fixed default.
+_Avoid_: bullet, list marker (fine in conversation, but "Marker" is the glossary term so it isn't confused with the item's own text)
+
+**Quote**:
+A text **Block** that sets off a line of the **Body** as a pull-quote, often opening what follows it (e.g. “Эцэг эх юуг ажиглах вэ?”). Its quotation marks are drawn by the site, never typed by the author; an optional attribution names who said it.
+_Avoid_: using a subheading with hand-typed quotation marks for a pull-quote
+
 **Image source**:
 Whether an **Article**'s image **Block** was uploaded as a file (stored on R2) or is a pasted link to an external `http(s)` url the server never fetches. Every image Block has one of the two; Blocks stored before this distinction existed are treated as uploaded. Only image Blocks carry it — video Blocks are embeds and link cards are typed by hand, neither has this choice.
 _Avoid_: implying the server fetches or validates a linked image's contents — it only checks the url is well-formed
 
 **Colour** (Өнгө):
-An author's choice of colour in an **Article**'s **Body**, in one of three places: a *text colour* on some words, a *highlight* behind some words, or a *background* on a whole text **Block** (paragraph, subheading, list, quote, callout). Words carry a text colour or a highlight, never both; links are never coloured; a subheading is coloured as a whole. A Colour is either one from the **Palette** or a custom colour the author picks freely.
+An author's choice of colour in an **Article**'s **Body**, in one of four places: a *text colour* on some words, a *highlight* behind some words, a *background* on a whole text **Block** (paragraph, subheading, list, quote, callout), or a *marker colour* on a **List**'s **Marker**. Words carry a text colour or a highlight, never both; links are never coloured; a subheading is coloured as a whole; a Marker's colour is independent of any Colour on its item's words. A Colour is either one from the **Palette** or a custom colour the author picks freely.
 _Avoid_: theme, style (the site's own look is not an author's Colour)
 
 **Text alignment**:
@@ -64,10 +76,11 @@ _Avoid_: treating each design frame's own x position as that row's alignment; "c
 
 ## Relationships
 
-- An **Article** belongs to exactly one **Category**
+- An **Article** belongs to exactly one **Category**; on its reading page, that Category's pill is the one shown as current
 - An **Article** has one **Body**, made of one or more **Blocks**
 - An image **Block** is either uploaded (R2-hosted) or linked (an external url the server never fetches)
 - A text **Block** may carry a **Colour**; image, video, link card and divider **Blocks** never do
+- A **List** item's **Marker** may carry a **Colour** independently of any Colour on the item's text
 - A text **Block** may carry a **Text alignment**; image, video, link card and divider **Blocks** never do, and it is unrelated to the **Content column**
 - Only **Published** Articles appear on the site
 - Every **Published** Article has a **Thumbnail**; a Draft may not yet

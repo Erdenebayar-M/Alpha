@@ -40,11 +40,15 @@ export interface InlineSpan {
   highlight?: ColorValue;
 }
 
+/** A whole text Block's horizontal alignment (ADR 0004). Left is the default and is never stored. */
+export type TextAlignment = "center" | "right";
+
 export interface ParagraphBlock {
   id: string;
   type: "paragraph";
   content: InlineSpan[];
   background?: ColorValue;
+  alignment?: TextAlignment;
 }
 
 export interface HeadingBlock {
@@ -54,14 +58,24 @@ export interface HeadingBlock {
   text: string;
   color?: ColorValue;
   background?: ColorValue;
+  alignment?: TextAlignment;
+}
+
+/** One List item's text, and an optional colour on its Marker (ADR 0005) — independent of any Colour on the text itself. */
+export interface ListItem {
+  spans: InlineSpan[];
+  markerColor?: ColorValue;
 }
 
 export interface ListBlock {
   id: string;
   type: "list";
   style: "bullet" | "ordered";
-  items: InlineSpan[][];
+  items: ListItem[];
+  /** Set only when this List continues an ordered List split apart by an inserted Block (ADR 0005); absent means "starts at 1". */
+  startsAt?: number;
   background?: ColorValue;
+  alignment?: TextAlignment;
 }
 
 export interface QuoteBlock {
@@ -70,6 +84,7 @@ export interface QuoteBlock {
   content: InlineSpan[];
   attribution?: string;
   background?: ColorValue;
+  alignment?: TextAlignment;
 }
 
 export interface CalloutBlock {
@@ -77,6 +92,7 @@ export interface CalloutBlock {
   type: "callout";
   content: InlineSpan[];
   background?: ColorValue;
+  alignment?: TextAlignment;
 }
 
 export interface DividerBlock {
