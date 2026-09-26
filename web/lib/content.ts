@@ -455,3 +455,29 @@ export const signUp = {
     generic: signIn.errors.generic,
   },
 } as const;
+
+// Forgot-password page (Figma frame 7:7189, Orthography file). After a request
+// the same card swaps in place to `sent`, which has no frame of its own: it is
+// derived from 7:7189 — the heading, intro and action slots keep their places —
+// with copy approved in issue #123.
+export const forgotPassword = {
+  title: "Нууц үгээ мартсан уу?", // heading 7:7601
+  // Corner prompt 7:7597 — the same as sign-up's.
+  signInPrompt: signUp.signInPrompt, // 7:7598, 7:7599
+  intro: "Бүртгэлтэй имэйл хаягаа оруулна уу. Бид нууц үг сэргээх холбоосыг танд илгээнэ.", // 7:7602
+  emailLabel: signIn.emailLabel, // 7:7604
+  emailPlaceholder: signIn.emailPlaceholder, // 7:7606
+  submitLabel: "Сэргээх", // Primary action 7:7608
+  backLabel: "← Нэвтрэх хэсэг рүү буцах", // Navigation link 7:7611
+  sent: {
+    title: "Имэйлээ шалгана уу", // derived from 7:7601
+    // Derived from 7:7602; the email sits between the two parts.
+    intro: { beforeEmail: "Таны ", afterEmail: " хаяг руу нууц үг сэргээх холбоосыг илгээлээ. Холбоосын хүчинтэй хугацаа 30 минут" },
+    resendLabel: "Дахин илгээх", // derived from 7:7608
+  },
+  errors: {
+    invalidEmail: signIn.errors.invalidEmail,
+    rateLimited: signIn.errors.rateLimited,
+    generic: signIn.errors.generic,
+  },
+} as const;

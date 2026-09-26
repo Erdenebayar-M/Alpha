@@ -1,25 +1,26 @@
 import { BACKEND_URL } from "@/lib/api/server/backendAuth";
 
-export type AuthResult<Code extends string> =
-  | { ok: true; token: string }
-  | { ok: false; code: Code | "UPSTREAM_ERROR" };
+type AuthPath = "/api/auth/login" | "/api/auth/register" | "/api/auth/forgot-password";
+
+export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR" };
+
+export type AuthResult<Code extends string> = { ok: true; token: string } | AuthFailure<Code>;
 
 /**
- * POSTs to one of the backend's token-issuing auth routes as the parent
- * signing in or up (unlike backendClient.ts, which acts as the dev parent).
- * Server-side only.
+ * POSTs to one of the backend's unauthenticated auth routes as the parent
+ * (unlike backendClient.ts, which acts as the dev parent). Server-side only.
  *
  * `clientIp` is forwarded because the backend's auth rate limits are keyed on
  * X-Forwarded-For — without it every parent would share this server's bucket.
  * `knownCodes` are the backend error codes the caller handles; anything else
- * is an UPSTREAM_ERROR.
+ * is an UPSTREAM_ERROR. Resolves to the envelope's `data` on success.
  */
-export async function authWithBackend<Code extends string>(
-  path: "/api/auth/login" | "/api/auth/register",
+export async function postAuthRoute<Code extends string>(
+  path: AuthPath,
   input: object,
   clientIp: string | null,
   knownCodes: readonly Code[],
-): Promise<AuthResult<Code>> {
+): Promise<{ ok: true; data: unknown } | AuthFailure<Code>> {
   let res: Response;
   try {
     res = await fetch(`${BACKEND_URL}${path}`, {
@@ -34,10 +35,23 @@ export async function authWithBackend<Code extends string>(
   }
 
   const json = await res.json().catch(() => null);
-  if (json?.success && typeof json.data?.token === "string") return { ok: true, token: json.data.token };
+  if (json?.success) return { ok: true, data: json.data };
 
   const code = knownCodes.find((known) => known === json?.error?.code);
   if (code) return { ok: false, code };
   // A gateway in front of the backend may rate-limit with a non-JSON body.
   return { ok: false, code: (res.status === 429 ? "RATE_LIMITED" : "UPSTREAM_ERROR") as Code | "UPSTREAM_ERROR" };
+}
+
+/** postAuthRoute for the token-issuing routes (sign in, sign up). */
+export async function authWithBackend<Code extends string>(
+  path: "/api/auth/login" | "/api/auth/register",
+  input: object,
+  clientIp: string | null,
+  knownCodes: readonly Code[],
+): Promise<AuthResult<Code>> {
+  const result = await postAuthRoute(path, input, clientIp, knownCodes);
+  if (!result.ok) return result;
+  const token = (result.data as { token?: unknown } | null)?.token;
+  return typeof token === "string" ? { ok: true, token } : { ok: false, code: "UPSTREAM_ERROR" };
 }

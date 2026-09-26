@@ -189,6 +189,27 @@ for (const code of ["DUPLICATE_EMAIL", "RATE_LIMITED"]) {
   assert(signUpComponent.includes(code), `web/components/auth/SignUpForm.tsx no longer maps backend error code ${code}.`);
 }
 
+// ── 9. Forgot-password rules (issue #123) ───────────────────────────────
+// web/lib/auth/forgotPasswordRules.ts mirrors forgotPasswordSchema with the
+// login email rule; the forgot-password card maps RATE_LIMITED to copy.
+
+const forgotSchemaMatch = sharedAuthTs.match(/export const forgotPasswordSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(forgotSchemaMatch, "Could not find forgotPasswordSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
+
+if (forgotSchemaMatch) {
+  const fields = forgotSchemaMatch[1].replace(/\s+/g, " ").trim();
+  assert(
+    fields === "email: z.string().email(),",
+    `forgotPasswordSchema changed to { ${fields} } — web/lib/auth/forgotPasswordRules.ts mirrors { email: z.string().email() } and needs updating.`,
+  );
+}
+
+const forgotComponent = read("web/components/auth/ForgotPasswordCard.tsx");
+for (const code of ["RATE_LIMITED", "VALIDATION_ERROR"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the forgot-password page) is missing from backend/src/lib/errors.ts.`);
+  assert(forgotComponent.includes(code), `web/components/auth/ForgotPasswordCard.tsx no longer maps backend error code ${code}.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

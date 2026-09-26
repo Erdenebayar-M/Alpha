@@ -3,6 +3,8 @@ const TONE = {
   dark: "w-[154px] rounded-xl bg-auth-action",
   // Sign up: 174 x 54, frame 7:6344 node 7:6775.
   green: "w-[174px] rounded-xl bg-brand-green",
+  // Forgot password: hugs its label (24px padding), frame 7:7189 node 7:7608.
+  darkHug: "rounded-xl bg-auth-action",
 } as const;
 
 /** The auth cards' submit pill — not any of Button's variants. */
