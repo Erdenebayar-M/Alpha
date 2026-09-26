@@ -49,11 +49,13 @@ Structured JSON logs include `request_id` (from `hono/request-id`). Unhandled er
 ## Auth Model
 
 JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`):
-- Set by `POST /api/auth/login`, `POST /api/auth/register` and `POST /api/auth/reset-password`
+- Set by `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/reset-password` and `POST /api/auth/google`
 - Cleared by `POST /api/auth/logout`
 - Profile fetched via `GET /api/auth/me` — returns only `{ id, email, name }`, never `password_hash`
 - `POST /api/auth/forgot-password` emails a Password reset link (`src/lib/email.ts`: Resend when `RESEND_API_KEY` is set, otherwise logged to the console). It always returns `{ ok: true }`. `password_reset_tokens` stores only a SHA-256 hash of each token (30-minute expiry); issuing one marks the parent's older unused tokens used
 - `POST /api/auth/reset-password` takes `{ token, password }`, sets the new password and answers like login. An unknown, used or expired token is `INVALID_RESET_TOKEN` (one code, so the response doesn't say which). The token is claimed and the password set in one transaction, conditional on the token still being unused and unexpired, so a link works exactly once. It also increments the parent's `token_version`, signing out every other session on web and mobile; only the token it returns carries the new version
+- `POST /api/auth/google` takes `{ code, code_verifier, redirect_uri }` from web's Google callback. It exchanges the code with Google (PKCE plus `GOOGLE_CLIENT_SECRET`, which only the backend holds) and verifies the `id_token` with `jose` against Google's keys (fetched with plain `fetch`, cached an hour, refetched on an unknown `kid`): issuer, audience `GOOGLE_CLIENT_ID`, expiry, and `email_verified`. It then finds the Parent account by `google_id`, else by email (case-insensitive, linking it — unless that account is linked to a different Google account; linking clears its `password_hash` and increments `token_version`, since password sign-up never proved the email was the parent's, so a pre-registered password can't outlive the verified owner's arrival), else creates one with no password (`given_name` → name, `family_name` → surname), and answers like login. Every failure is `GOOGLE_AUTH_FAILED`, logged with the reason
+- A Google-only Parent account has `password_hash = null`; password login to it is the generic `INVALID_CREDENTIALS`. Password reset sets a password, after which both ways work — including for a password account whose password was dropped when Google linked it
 
 JWT is HS256, with `iss: 'mongolian-app'` and `aud: 'parent-api'` enforced on verify. Claims: `parent_id` and `token_version` (the Parent account's at signing). The frontend Zustand store holds only the parent profile — **never** the token itself.
 
@@ -96,6 +98,7 @@ The codebase applies these principles consistently. New routes and features must
 - `registerLimiter`: 10 / hour
 - `forgotPasswordLimiter`: 5 / hour per IP, plus at most 5 reset tokens / hour per parent (`src/lib/auth/passwordReset.ts`), so rotating IPs can't keep killing a parent's link
 - `resetPasswordLimiter`: 10 / 15 min per IP
+- `googleLimiter`: 10 / 15 min per IP
 - `adminGenerateLimiter`: 5 / min on LLM endpoints
 
 **8. Secure Defaults**

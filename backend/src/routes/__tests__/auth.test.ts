@@ -218,6 +218,23 @@ describe('POST /login', () => {
     expect(body.error!.code).toBe('INVALID_CREDENTIALS');
   });
 
+  it('401 — a Google-only Parent account (no password) gets the same generic error', async () => {
+    mockFindUnique.mockResolvedValue({ ...FAKE_PARENT, password_hash: null, google_id: 'google-sub-1' } as never);
+    // Even a comparison that would accept anything must not let this through.
+    mockCompare.mockResolvedValue(true as never);
+
+    // Its own IP: this suite's other logins already fill the default bucket.
+    const res = await authRouter.request('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.77' },
+      body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
+    });
+
+    expect(res.status).toBe(401);
+    expect((await json(res)).error!.code).toBe('INVALID_CREDENTIALS');
+    expect(mockSign).not.toHaveBeenCalled();
+  });
+
   it('400 — missing email', async () => {
     const res = await post('/login', { password: 'password123' });
 

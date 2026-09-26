@@ -14,7 +14,7 @@ interface ParentRow {
   id: string;
   email: string;
   name: string;
-  password_hash: string;
+  password_hash: string | null;
   token_version: number;
 }
 
@@ -211,6 +211,18 @@ describe('POST /reset-password', () => {
     await resetPassword('not-a-token-anyone-was-sent', NEW_PASSWORD);
 
     expect((await me(before)).status).toBe(200);
+  });
+
+  it('lets a Google-only Parent account set a password, then sign in with it', async () => {
+    parents[0].password_hash = null;
+    expect((await login(OLD_PASSWORD)).status).toBe(401);
+    const token = await requestResetToken();
+
+    expect((await resetPassword(token, NEW_PASSWORD)).status).toBe(200);
+
+    const res = await login(NEW_PASSWORD);
+    expect(res.status).toBe(200);
+    expect((await json(res)).data?.id).toBe('parent-uuid-1');
   });
 
   it('rejects a token that has already been used, leaving the first reset in place', async () => {

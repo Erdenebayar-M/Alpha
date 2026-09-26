@@ -25,7 +25,17 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8),
 });
 
+// Google sign-in: the authorization code from Google's redirect, the PKCE
+// verifier its challenge was made from, and the redirect_uri the code was
+// issued for. The backend holds the client secret and finishes the exchange.
+export const googleAuthSchema = z.object({
+  code: z.string().min(1),
+  code_verifier: z.string().min(43).max(128),
+  redirect_uri: z.string().url(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

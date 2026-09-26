@@ -400,9 +400,18 @@ export const diagnostic = {
   },
 } as const;
 
-// Sign-in page (Figma frame 7:4257, Orthography file). The Google button and
-// the "Эсвэл" divider are drawn in the frame but not shipped yet (see the
-// Google sign-in ticket), so their copy is deliberately absent.
+// Google sign-in, shared by the sign-in and sign-up cards. The button's label
+// differs per page (below); both run the same create-or-find flow. The Google
+// button and divider render only when GOOGLE_CLIENT_ID is configured.
+export const googleAuth = {
+  dividerLabel: "Эсвэл", // 7:6122, 7:6756
+  iconLetter: "G", // 7:6169, 7:6753
+  // Shown back on the originating page after a cancel or error — no frame;
+  // wording approved in the ticket.
+  failed: "Google-ээр нэвтэрч чадсангүй. Дахин оролдоно уу.",
+} as const;
+
+// Sign-in page (Figma frame 7:4257, Orthography file).
 export const signIn = {
   title: "Нэвтрэх", // heading 7:6085
   // Corner prompt, "Registration prompt" 7:6082 — reused by every auth card.
@@ -414,6 +423,7 @@ export const signIn = {
   passwordLabel: "Нууц үг", // 7:6264
   passwordPlaceholder: "••••••••", // 7:6267
   forgotPasswordLabel: "Нууц үгээ мартсан уу?", // 7:6265
+  googleLabel: "Google-ээр нэвтрэх", // Button 7:6166, label 7:6167
   submitLabel: "Нэвтрэх", // Primary action 7:6149
   errors: {
     invalidEmail: "Имэйл хаяг буруу байна.",
@@ -424,11 +434,10 @@ export const signIn = {
   },
 } as const;
 
-// Sign-up page (Figma frame 7:6344, Orthography file). Like the sign-in page,
-// the Google button and its divider are not shipped yet, so their copy is
-// deliberately absent.
+// Sign-up page (Figma frame 7:6344, Orthography file).
 export const signUp = {
   title: "Эцэг эхээр бүртгүүлэх", // heading 7:6749
+  googleLabel: "Google-ээр бүртгүүлэх", // Google action 7:6750, label 7:6751
   // Corner prompt, the sibling of signIn.registerPrompt.
   signInPrompt: { label: "Бүртгэлтэй юу?", linkLabel: "Нэвтрэх" },
   // Field order and grouping are the frame's: Овог and Нэр share one "Field"

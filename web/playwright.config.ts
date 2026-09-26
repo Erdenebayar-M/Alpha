@@ -25,7 +25,9 @@ export default defineConfig({
       command: "npm run dev",
       url: "http://localhost:3000",
       reuseExistingServer: false,
-      env: { BACKEND_URL: "http://localhost:3211" },
+      // A (fake) public Google client ID, so the Google button renders; with
+      // none it is hidden, which e2e doesn't cover (one Next server per run).
+      env: { BACKEND_URL: "http://localhost:3211", GOOGLE_CLIENT_ID: "fixture-client-id.apps.googleusercontent.com" },
     },
   ],
 });

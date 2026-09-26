@@ -239,7 +239,10 @@ enum ArticleStatus {
 model Parent {
   id            String   @id @default(uuid())
   email         String   @unique
-  password_hash String
+  // Null for a Parent account created with Google; Password reset can set one.
+  password_hash String?
+  // Google's `sub`, set on the first Google sign-in.
+  google_id     String?  @unique
   name          String
   surname       String?
   // In every issued JWT; a Password reset increments it, so older tokens stop working.

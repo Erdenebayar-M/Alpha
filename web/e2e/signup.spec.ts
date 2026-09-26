@@ -13,14 +13,12 @@ async function fillForm(page: Page, values: Partial<typeof NEW_PARENT & { confir
   await page.getByRole("button", { name: "Бүртгүүлэх", exact: true }).click();
 }
 
-test("renders the card without the Google button or divider", async ({ page }) => {
+test("renders the card", async ({ page }) => {
   await page.goto("/signup");
   await expect(page.getByRole("heading", { level: 1, name: "Эцэг эхээр бүртгүүлэх" })).toBeVisible();
   await expect(page.getByText("Бүртгэлтэй юу?")).toBeVisible();
   await expect(page.getByLabel("Овог")).toBeVisible();
   await expect(page.getByLabel("Нууц үгээ давтах")).toBeVisible();
-  await expect(page.getByText("Google")).toHaveCount(0);
-  await expect(page.getByText("Эсвэл")).toHaveCount(0);
 });
 
 test("the site's sign-up link goes to /signup", async ({ page }) => {

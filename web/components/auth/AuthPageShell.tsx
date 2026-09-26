@@ -17,12 +17,15 @@ export default function AuthPageShell({
   title,
   heading = title,
   prompt,
+  lead,
   children,
 }: {
   title: string;
   /** The card's heading; `null` when the children draw their own. */
   heading?: string | null;
   prompt: { label: string; linkLabel: string; href: string };
+  /** See AuthCard. */
+  lead?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -35,7 +38,7 @@ export default function AuthPageShell({
         >
           <RegisterScene />
           <div className="relative flex items-center justify-center gap-[63px]">
-            <AuthCard heading={heading ?? undefined} prompt={prompt}>
+            <AuthCard heading={heading ?? undefined} prompt={prompt} lead={lead}>
               {children}
             </AuthCard>
             <SignInArt />

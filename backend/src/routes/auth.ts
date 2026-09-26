@@ -6,10 +6,11 @@ import { hashPassword, comparePassword } from '../lib/auth/password';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '@app/shared';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } from '../lib/auth/rateLimit';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, googleAuthSchema } from '@app/shared';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, googleLimiter } from '../lib/auth/rateLimit';
 import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } from '../lib/auth/passwordReset';
 import { sendEmail, passwordResetEmail } from '../lib/email';
+import { googleIdentityFromCode, type GoogleIdentity } from '../lib/auth/google';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -66,7 +67,9 @@ auth.post('/login', loginLimiter, async (c) => {
     return ERRORS.INVALID_CREDENTIALS(c);
   }
 
-  const valid = await comparePassword(password, parent.password_hash);
+  // A Google-only Parent account has no password: the same generic error, so
+  // the response doesn't reveal how the account signs in.
+  const valid = parent.password_hash !== null && (await comparePassword(password, parent.password_hash));
   if (!valid) {
     return ERRORS.INVALID_CREDENTIALS(c);
   }
@@ -132,6 +135,67 @@ auth.post('/reset-password', resetPasswordLimiter, async (c) => {
   const token = await signToken({ parent_id: parent.id, token_version });
   setAuthCookie(c, token);
   return ok(c, { ...parent, token });
+});
+
+// The Parent account for a Google identity: the one already linked to it;
+// otherwise the one with its email, which gets linked; otherwise a new one
+// without a password. Throws when that email's account is linked to a
+// different Google account.
+//
+// Linking drops the account's password and signs out its sessions: sign-up
+// never proves the email is the parent's, so whoever set that password may
+// not be the Google-verified owner now arriving. Password reset, which goes
+// through the email, sets a new one.
+async function parentForGoogle(identity: GoogleIdentity) {
+  const linked = await prisma.parent.findUnique({ where: { google_id: identity.sub } });
+  if (linked) return linked;
+
+  const byEmail = await prisma.parent.findFirst({ where: { email: { equals: identity.email, mode: 'insensitive' } } });
+  if (byEmail) {
+    if (byEmail.google_id) throw new Error('Email is linked to a different Google account');
+    return prisma.parent.update({
+      where: { id: byEmail.id },
+      data: { google_id: identity.sub, password_hash: null, token_version: { increment: 1 } },
+    });
+  }
+
+  return prisma.parent.create({
+    data: {
+      email: identity.email,
+      google_id: identity.sub,
+      name: identity.given_name ?? identity.email.split('@')[0],
+      surname: identity.family_name,
+    },
+  });
+}
+
+// POST /api/auth/google — Sign in or Sign up with Google, one flow for both.
+// Takes the authorization code web received and answers like login.
+auth.post('/google', googleLimiter, async (c) => {
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = googleAuthSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+  }
+
+  let parent;
+  try {
+    parent = await parentForGoogle(await googleIdentityFromCode(parsed.data));
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        request_id: c.get('requestId') ?? null,
+        event: 'google_auth_failed',
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+    return ERRORS.GOOGLE_AUTH_FAILED(c);
+  }
+
+  const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });
+  setAuthCookie(c, token);
+  return ok(c, { id: parent.id, email: parent.email, name: parent.name, token });
 });
 
 // POST /api/auth/logout — clears the auth cookie

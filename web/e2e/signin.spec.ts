@@ -9,7 +9,7 @@ async function signIn(page: Page, email: string, password: string) {
   await page.getByRole("button", { name: "Нэвтрэх" }).click();
 }
 
-test("renders the card without the Google button or divider", async ({ page }) => {
+test("renders the card", async ({ page }) => {
   await page.goto("/signin");
   await expect(page.getByRole("heading", { level: 1, name: "Нэвтрэх" })).toBeVisible();
   await expect(page.getByText("Бүртгэлгүй юу?")).toBeVisible();
@@ -17,8 +17,6 @@ test("renders the card without the Google button or divider", async ({ page }) =
   await expect(page.getByLabel("Имэйл хаяг")).toBeVisible();
   await expect(page.getByLabel("Нууц үг")).toBeVisible();
   await expect(page.getByRole("link", { name: "Нууц үгээ мартсан уу?" })).toBeVisible();
-  await expect(page.getByText("Google")).toHaveCount(0);
-  await expect(page.getByText("Эсвэл")).toHaveCount(0);
 });
 
 test("the site's sign-in link goes to /signin", async ({ page }) => {

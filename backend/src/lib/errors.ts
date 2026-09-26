@@ -16,6 +16,11 @@ export const ERRORS = {
   INVALID_RESET_TOKEN: (c: Context) =>
     fail(c, 'INVALID_RESET_TOKEN', 'Reset link is expired or invalid', undefined, 400),
 
+  // Any failed Google sign-in: a bad or expired code, an id_token that doesn't
+  // verify, an unverified email, or Google not configured.
+  GOOGLE_AUTH_FAILED: (c: Context) =>
+    fail(c, 'GOOGLE_AUTH_FAILED', 'Google sign-in failed', undefined, 401),
+
   NOT_FOUND: (c: Context, message: string) =>
     fail(c, 'NOT_FOUND', message, undefined, 404),
 

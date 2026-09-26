@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="159.202" height="7.2" viewBox="0 0 159.202 7.2" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Line 30" filter="url(#filter0_g_0_4)">
+<line x1="3.1" y1="3.6" x2="156.102" y2="3.6" stroke="#98A2B3"/>
+</g>
+<defs>
+<filter id="filter0_g_0_4" x="0" y="0" width="159.202" height="7.2" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feTurbulence type="fractalNoise" baseFrequency="0.056497171521186829 0.056497171521186829" numOctaves="3" seed="6582" />
+<feDisplacementMap in="shape" scale="6.1999998092651367" xChannelSelector="R" yChannelSelector="G" result="displacedImage" width="100%" height="100%" />
+<feMerge result="effect1_texture_0_4">
+<feMergeNode in="displacedImage"/>
+</feMerge>
+</filter>
+</defs>
+</svg>

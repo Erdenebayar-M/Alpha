@@ -6,7 +6,8 @@ import { pathToFileURL } from "node:url";
  * runs need no backend or database. Playwright's webServer starts it and
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
  * one Published Article, plus the auth routes the sign-in, sign-up,
- * forgot-password and reset-password pages call (see FIXTURE_PARENT);
+ * forgot-password and reset-password pages and the Google callback call
+ * (see FIXTURE_PARENT);
  * every other slug — including a Draft's — is a 404,
  * matching the real route.
  */
@@ -134,6 +135,22 @@ async function resetPassword(req, res) {
   send(res, 200, "application/json", JSON.stringify({ success: true, data }));
 }
 
+// Google stub: one authorization code signs in; any other is
+// GOOGLE_AUTH_FAILED, as the real route answers for a bad code or id_token.
+// Every body is recorded so a spec can find its own (specs run in parallel)
+// and check the verifier and redirect_uri web forwarded. Real Google is never
+// contacted.
+export const VALID_GOOGLE_CODE = "fixture-google-code";
+const googleRequests = [];
+
+async function google(req, res) {
+  const body = await readJson(req);
+  googleRequests.push(body);
+  if (body?.code !== VALID_GOOGLE_CODE) return fail(res, 401, "GOOGLE_AUTH_FAILED", "Google sign-in failed");
+  const data = { id: "fixture-google-parent", email: "google@example.com", name: "Google Parent", token: FIXTURE_PARENT.token };
+  send(res, 200, "application/json", JSON.stringify({ success: true, data }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -146,6 +163,8 @@ export function startFixtureBackend() {
     if (req.method === "POST" && pathname === "/api/auth/register") return register(req, res);
     if (req.method === "POST" && pathname === "/api/auth/forgot-password") return forgotPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/reset-password") return resetPassword(req, res);
+    if (req.method === "POST" && pathname === "/api/auth/google") return google(req, res);
+    if (req.method === "GET" && pathname === "/__google-requests") return send(res, 200, "application/json", JSON.stringify(googleRequests));
     if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
     if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
