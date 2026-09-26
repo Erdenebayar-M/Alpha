@@ -428,18 +428,22 @@ export const signIn = {
 // the Google button and its divider are not shipped yet, so their copy is
 // deliberately absent.
 export const signUp = {
-  title: "Бүртгүүлэх",
+  title: "Эцэг эхээр бүртгүүлэх", // heading 7:6749
   // Corner prompt, the sibling of signIn.registerPrompt.
   signInPrompt: { label: "Бүртгэлтэй юу?", linkLabel: "Нэвтрэх" },
-  // Field order is the frame's. `key` is the form-state key; `name` the input name.
-  fields: [
-    { key: "surname", name: "surname", type: "text", label: "Овог", placeholder: "Овогоо оруулна уу", autoComplete: "family-name" },
-    { key: "name", name: "name", type: "text", label: "Нэр", placeholder: "Нэрээ оруулна уу", autoComplete: "given-name" },
-    { key: "email", name: "email", type: "email", label: "Имэйл хаяг", placeholder: signIn.emailPlaceholder, autoComplete: "email" },
-    { key: "password", name: "password", type: "password", label: "Нууц үг", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
-    { key: "confirmPassword", name: "confirmPassword", type: "password", label: "Нууц үг давтах", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
+  // Field order and grouping are the frame's: Овог and Нэр share one "Field"
+  // (7:6759, 10px apart); the rest are 18px apart. `key` is the form-state
+  // key; `name` the input name.
+  fieldGroups: [
+    [
+      { key: "surname", name: "surname", type: "text", label: "Овог", placeholder: "Овогоо оруулна уу", autoComplete: "family-name" }, // 7:6760
+      { key: "name", name: "name", type: "text", label: "Нэр", placeholder: "Нэрээ оруулна уу", autoComplete: "given-name" }, // 7:6795
+    ],
+    [{ key: "email", name: "email", type: "email", label: "Имэйл хаяг", placeholder: signIn.emailPlaceholder, autoComplete: "email" }], // 7:6764
+    [{ key: "password", name: "password", type: "password", label: "Нууц үг", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" }], // 7:6768
+    [{ key: "confirmPassword", name: "confirmPassword", type: "password", label: "Нууц үгээ давтах", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" }], // 7:6772
   ],
-  submitLabel: "Бүртгүүлэх",
+  submitLabel: "Бүртгүүлэх", // Primary action 7:6775
   errors: {
     name: "Нэр дор хаяж 2 тэмдэгттэй байна.",
     email: "Имэйл хаяг буруу байна.",

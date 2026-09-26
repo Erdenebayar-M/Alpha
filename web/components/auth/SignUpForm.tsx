@@ -59,18 +59,22 @@ export default function SignUpForm() {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-6">
-      {signUp.fields.map(({ key, ...field }) => (
-        <AuthField
-          key={key}
-          {...field}
-          value={values[key]}
-          onChange={(value) => {
-            setValues((current) => ({ ...current, [key]: value }));
-            setFieldErrors((current) => ({ ...current, [key]: undefined, ...(key === "password" ? { confirmPassword: undefined } : {}) }));
-          }}
-          error={key === "surname" ? undefined : fieldErrors[key] && signUp.errors[key]}
-        />
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+      {signUp.fieldGroups.map((group) => (
+        <div key={group[0].key} className="flex flex-col gap-2.5">
+          {group.map(({ key, ...field }) => (
+            <AuthField
+              key={key}
+              {...field}
+              value={values[key]}
+              onChange={(value) => {
+                setValues((current) => ({ ...current, [key]: value }));
+                setFieldErrors((current) => ({ ...current, [key]: undefined, ...(key === "password" ? { confirmPassword: undefined } : {}) }));
+              }}
+              error={key === "surname" ? undefined : fieldErrors[key] && signUp.errors[key]}
+            />
+          ))}
+        </div>
       ))}
       {formError && (
         <p role="alert" className="-mt-2 text-xs text-[color:var(--color-palette-red)]">
