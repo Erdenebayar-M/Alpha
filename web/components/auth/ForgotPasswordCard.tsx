@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
+import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { AuthHeading } from "@/components/auth/AuthCard";
 import { isValidLoginEmail } from "@/lib/auth/loginRules";
@@ -99,9 +100,9 @@ export default function ForgotPasswordCard() {
         />
       )}
       {formError && (
-        <p role="alert" className="-mt-2 text-xs text-[color:var(--color-palette-red)]">
+        <AuthFormError>
           {formError}
-        </p>
+        </AuthFormError>
       )}
       {/* Recovery actions 7:7607 */}
       <div className="flex flex-col items-start gap-5">

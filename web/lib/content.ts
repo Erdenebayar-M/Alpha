@@ -481,3 +481,31 @@ export const forgotPassword = {
     generic: signIn.errors.generic,
   },
 } as const;
+
+// Reset-password page, reached from the emailed link. It has no frame of its
+// own: it is derived from frame 7:7189 — the heading and message take the
+// forgot-password card's heading and intro slots (7:7600), the fields its
+// field slot (7:7603), the action its primary action (7:7608) — with copy
+// approved in issue #124.
+export const resetPassword = {
+  title: "Шинэ нууц үг үүсгэх", // derived from 7:7601
+  signInPrompt: signUp.signInPrompt, // 7:7597
+  // `key` is the form-state key; `name` the input name.
+  fields: [
+    { key: "password", name: "password", type: "password", label: "Шинэ нууц үг", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
+    { key: "confirmPassword", name: "confirmPassword", type: "password", label: "Нууц үг давтах", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
+  ],
+  submitLabel: "Хадгалах", // derived from 7:7608
+  success: "Нууц үг амжилттай солигдлоо.", // derived from 7:7602
+  // An expired, used or unknown link — one message, as the backend gives one code.
+  invalid: {
+    message: "Холбоосын хугацаа дууссан эсвэл хүчингүй байна.", // derived from 7:7602
+    actionLabel: "Шинэ холбоос авах", // derived from 7:7608
+  },
+  errors: {
+    password: signUp.errors.password,
+    confirmPassword: signUp.errors.confirmPassword,
+    rateLimited: signIn.errors.rateLimited,
+    generic: signIn.errors.generic,
+  },
+} as const;

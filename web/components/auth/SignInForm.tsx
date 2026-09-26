@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
+import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { isValidLoginEmail } from "@/lib/auth/loginRules";
 import { signIn } from "@/lib/content";
@@ -83,9 +84,9 @@ export default function SignInForm({ next }: { next?: string }) {
         onChange={setPassword}
       />
       {formError && (
-        <p role="alert" className="-mt-2 text-xs text-[color:var(--color-palette-red)]">
+        <AuthFormError>
           {formError}
-        </p>
+        </AuthFormError>
       )}
       <AuthSubmitButton label={signIn.submitLabel} submitting={submitting} />
     </form>
