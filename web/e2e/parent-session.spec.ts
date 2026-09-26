@@ -131,3 +131,47 @@ for (const path of ["/signin", "/signup"]) {
     expect(await sessionCookie(context)).toBeUndefined();
   });
 }
+
+// A new parent sent to sign in from /register-child has no account yet: `next`
+// has to survive the hop to sign-up and back.
+const NEXT_QUERY = `next=${encodeURIComponent("/register-child")}`;
+
+test("sign-in's sign-up link carries `next`", async ({ page }) => {
+  await page.goto(`/signin?${NEXT_QUERY}`);
+  await expect(page.getByRole("main").getByRole("link", { name: "Бүртгүүлэх", exact: true })).toHaveAttribute("href", `/signup?${NEXT_QUERY}`);
+});
+
+test("sign-up's sign-in link and Google button carry `next`", async ({ page }) => {
+  await page.goto(`/signup?${NEXT_QUERY}`);
+  await expect(page.getByRole("main").getByRole("link", { name: "Нэвтрэх", exact: true })).toHaveAttribute("href", `/signin?${NEXT_QUERY}`);
+  await expect(page.getByRole("link", { name: "Google-ээр бүртгүүлэх" })).toHaveAttribute("href", `/api/auth/google/start?from=%2Fsignup&${NEXT_QUERY}`);
+});
+
+test("signing up with `next` goes there", async ({ page }) => {
+  await page.goto(`/signup?${NEXT_QUERY}`);
+  await page.getByLabel("Овог").fill("Бат");
+  await page.getByLabel("Нэр", { exact: true }).fill("Болд");
+  await page.getByLabel("Имэйл хаяг").fill("next-parent@example.com");
+  await page.getByLabel("Нууц үг", { exact: true }).fill("long-enough-pw");
+  await page.getByLabel("Нууц үгээ давтах").fill("long-enough-pw");
+  await page.getByRole("button", { name: "Бүртгүүлэх", exact: true }).click();
+  await page.waitForURL((url) => url.pathname === "/register-child");
+});
+
+test("an already-registered email's sign-in link carries `next`", async ({ page }) => {
+  await page.goto(`/signup?${NEXT_QUERY}`);
+  await page.getByLabel("Овог").fill("Бат");
+  await page.getByLabel("Нэр", { exact: true }).fill("Болд");
+  await page.getByLabel("Имэйл хаяг").fill(PARENT.email);
+  await page.getByLabel("Нууц үг", { exact: true }).fill("long-enough-pw");
+  await page.getByLabel("Нууц үгээ давтах").fill("long-enough-pw");
+  await page.getByRole("button", { name: "Бүртгүүлэх", exact: true }).click();
+  await expect(page.getByRole("alert").getByRole("link", { name: "Нэвтрэх" })).toHaveAttribute("href", `/signin?${NEXT_QUERY}`);
+});
+
+test("an unsafe sign-up `next` is ignored", async ({ request }) => {
+  const res = await request.post("/api/auth/signup", {
+    data: { email: "unsafe-next@example.com", name: "Болд", password: "long-enough-pw", next: "https://evil.example/" },
+  });
+  expect(await res.json()).toEqual({ redirectTo: "/" });
+});
