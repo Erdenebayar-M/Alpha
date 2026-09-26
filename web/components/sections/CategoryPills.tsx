@@ -1,7 +1,7 @@
 import Reveal from "@/components/animations/Reveal";
 import { revealItem } from "@/components/animations/revealItem";
 import Container from "@/components/ui/Container";
-import { categoryPills } from "@/lib/content";
+import { categoryPills, type Category } from "@/lib/content";
 import { cn } from "@/lib/cn";
 
 /**
@@ -29,8 +29,11 @@ import { cn } from "@/lib/cn";
  * share of a shrinking pill and wrapping "Оношилгоо" early. Figma has no
  * mobile frame, so below `lg` this becomes a 2x2 CSS grid instead, sized to
  * fit 320px.
+ *
+ * `current` marks the pill of the Article being read (its own Category) with
+ * aria-current and a solid fill; without it every pill renders as before.
  */
-export default function CategoryPills() {
+export default function CategoryPills({ current }: { current?: Category }) {
   return (
     <nav
       aria-label={categoryPills.navLabel}
@@ -39,19 +42,31 @@ export default function CategoryPills() {
       <Reveal mode="sequence">
         <Container>
           <ul className="grid grid-cols-2 gap-[10px] lg:flex lg:gap-[0.9346%]">
-            {categoryPills.items.map((pill, index) => (
-              <li key={pill.label} className="lg:w-[24.299%]" {...revealItem("slide", index)}>
-                <a
-                  href={pill.href}
-                  className={cn(
-                    "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] bg-pill-lilac px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
-                    "lg:h-[85px] lg:min-h-0 lg:rounded-[32px] lg:px-[11.538%] lg:py-[16px] lg:text-[26px] lg:leading-[31px]"
-                  )}
+            {categoryPills.items.map((pill, index) => {
+              const isCurrent =
+                current !== undefined &&
+                "category" in pill &&
+                pill.category === current;
+              return (
+                <li
+                  key={pill.label}
+                  className="lg:w-[24.299%]"
+                  {...revealItem("slide", index)}
                 >
-                  {pill.label}
-                </a>
-              </li>
-            ))}
+                  <a
+                    href={pill.href}
+                    aria-current={isCurrent ? "true" : undefined}
+                    className={cn(
+                      "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
+                      isCurrent ? "bg-pill-lilac-current" : "bg-pill-lilac",
+                      "lg:h-[85px] lg:min-h-0 lg:rounded-[32px] lg:px-[11.538%] lg:py-[16px] lg:text-[26px] lg:leading-[31px]",
+                    )}
+                  >
+                    {pill.label}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </Container>
       </Reveal>

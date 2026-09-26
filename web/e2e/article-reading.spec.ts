@@ -40,8 +40,10 @@ test("a centered paragraph stays centered within the reading column", async ({ p
 test("no horizontal page scroll at phone width", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await page.goto("/articles/fixture-article");
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  // The Category pills slide in from 40px right; measure once they've settled.
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth))
+    .toBeLessThanOrEqual(0);
 });
 
 test("a Quote is wrapped in site-drawn quotation marks with a dash attribution", async ({ page }) => {
@@ -59,4 +61,35 @@ test("split ordered Lists count 1, 2, 3, 4 across the paragraph between them", a
     "3.Third ordered item",
     "4.Fourth ordered item",
   ]);
+});
+
+test("the Article's own Category pill is current and the other pills are not", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const pills = page.getByRole("navigation", { name: "Ангилалын сонголтууд" });
+  await expect(pills.getByRole("link", { name: "Унших" })).toHaveAttribute("aria-current", "true");
+  for (const name of ["Зөв бичих", "Оношилгоо", "Үсэглэх"]) {
+    await expect(pills.getByRole("link", { name })).not.toHaveAttribute("aria-current", /.*/);
+  }
+});
+
+test("the Оношилгоо pill leads to the Diagnostic", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const href = await page.getByRole("navigation", { name: "Ангилалын сонголтууд" }).getByRole("link", { name: "Оношилгоо" }).getAttribute("href");
+  expect(href).toBe("/register-child");
+});
+
+test("the reading page has the site nav and none of the listing chrome", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  await expect(page.getByRole("navigation", { name: "Үндсэн цэс" })).toBeVisible();
+  await expect(page.locator("article img[alt]:not([alt='Fixture image'])")).toHaveCount(0);
+  await expect(page.locator("article time")).toHaveCount(0);
+});
+
+test("the Category pills line up with the reading card at desktop width", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/articles/fixture-article");
+  const pills = (await page.getByRole("navigation", { name: "Ангилалын сонголтууд" }).locator("ul").boundingBox())!;
+  const card = (await page.locator("article").boundingBox())!;
+  expect(Math.abs(pills.x - card.x)).toBeLessThan(1);
+  expect(Math.abs(pills.x + pills.width - (card.x + card.width))).toBeLessThan(1);
 });

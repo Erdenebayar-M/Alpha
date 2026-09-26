@@ -1,10 +1,12 @@
 import { cache } from "react";
 import { BACKEND_URL } from "@/lib/api/server/backendAuth";
+import type { ArticleCategoryValue } from "@/lib/content";
 import type { ArticleBody } from "@/components/article/types";
 
 export interface PublicArticle {
   slug: string;
   title: string;
+  category: ArticleCategoryValue;
   body: ArticleBody;
 }
 

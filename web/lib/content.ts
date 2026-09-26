@@ -61,6 +61,8 @@ export const landingHero = {
 export interface CategoryPill {
   readonly label: string;
   readonly href: string;
+  /** Set on the three Category pills, absent on the Оношилгоо shortcut. */
+  readonly category?: Category;
 }
 
 // /landing-new's Category pills (Figma node 1360:8718), directly under the
@@ -72,10 +74,10 @@ export const categoryPills = {
   // draws no heading above this row.
   navLabel: "Ангилалын сонголтууд",
   items: [
-    { label: "Унших", href: siteConfig.categoryUrls.reading },
-    { label: "Зөв бичих", href: siteConfig.categoryUrls.orthography },
+    { label: "Унших", href: siteConfig.categoryUrls.reading, category: "Унших" },
+    { label: "Зөв бичих", href: siteConfig.categoryUrls.orthography, category: "Зөв бичих" },
     { label: "Оношилгоо", href: siteConfig.assessmentUrl },
-    { label: "Үсэглэх", href: siteConfig.categoryUrls.spellingOut },
+    { label: "Үсэглэх", href: siteConfig.categoryUrls.spellingOut, category: "Үсэглэх" },
   ],
 } as const satisfies { navLabel: string; items: readonly CategoryPill[] };
 
@@ -83,6 +85,15 @@ export const categoryPills = {
 // Category glossary entry) — Оношилгоо is deliberately excluded, since it is
 // a Diagnostic shortcut rather than a Category.
 export type Category = "Унших" | "Зөв бичих" | "Үсэглэх";
+
+// The backend's Article `category` values (shared ARTICLE_CATEGORIES) and the
+// Category each one is shown as.
+export const categoryByApiValue = {
+  READING: "Унших",
+  ORTHOGRAPHY: "Зөв бичих",
+  SPELLING: "Үсэглэх",
+} as const satisfies Record<string, Category>;
+export type ArticleCategoryValue = keyof typeof categoryByApiValue;
 
 export interface Article {
   readonly category: Category;

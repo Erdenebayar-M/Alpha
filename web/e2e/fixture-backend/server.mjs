@@ -16,6 +16,7 @@ const span = (text, extra = {}) => ({ text, ...extra });
 const article = {
   slug: FIXTURE_SLUG,
   title: "Fixture article title",
+  category: "READING",
   body: [
     { id: "b1", type: "paragraph", alignment: "center", content: [span("Centered paragraph text")] },
     {
