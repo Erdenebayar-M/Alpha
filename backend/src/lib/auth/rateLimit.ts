@@ -79,6 +79,12 @@ export const resetPasswordLimiter = rateLimit({
 });
 
 // 5 LLM/generation requests per IP per minute — limits API cost exposure.
+// Google sign-in: each attempt costs a round trip to Google.
+export const googleLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+});
+
 export const adminGenerateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5,

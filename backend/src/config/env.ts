@@ -33,9 +33,17 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
   EMAIL_FROM: z.string().email().optional(),
   WEB_URL: z.string().url().default("http://localhost:3000"),
+
+  // Google sign-in. Both or neither; without them POST /api/auth/google fails
+  // with GOOGLE_AUTH_FAILED (and web hides its button).
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 }).superRefine((env, ctx) => {
   if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
     ctx.addIssue({ code: "custom", path: ["EMAIL_FROM"], message: "EMAIL_FROM is required when RESEND_API_KEY is set" });
+  }
+  if (!env.GOOGLE_CLIENT_ID !== !env.GOOGLE_CLIENT_SECRET) {
+    ctx.addIssue({ code: "custom", path: ["GOOGLE_CLIENT_SECRET"], message: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together" });
   }
   if (env.NODE_ENV === "production") {
     for (const key of ["RESEND_API_KEY", "EMAIL_FROM", "WEB_URL"] as const) {
