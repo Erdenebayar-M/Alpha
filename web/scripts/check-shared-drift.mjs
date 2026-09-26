@@ -136,6 +136,34 @@ for (const field of listFields) {
   assert(articleTypesTs.includes(field), `List field "${field}" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
 }
 
+// ── 7. Login rules (issue #120) ─────────────────────────────────────────
+// web/lib/auth/loginRules.ts mirrors loginSchema (client validation +
+// the sign-in route handler), and the sign-in page maps the backend's error
+// codes to copy — a drift in either would silently mis-validate or show the
+// wrong message.
+
+const sharedAuthTs = read("shared/src/validators/auth.ts");
+const loginRulesTs = read("web/lib/auth/loginRules.ts");
+
+const loginSchemaMatch = sharedAuthTs.match(/export const loginSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(loginSchemaMatch, "Could not find loginSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
+
+if (loginSchemaMatch) {
+  const fields = loginSchemaMatch[1].replace(/\s+/g, " ").trim();
+  assert(
+    fields === "email: z.string().email(), password: z.string(),",
+    `loginSchema changed to { ${fields} } — web/lib/auth/loginRules.ts mirrors { email: z.string().email(), password: z.string() } and needs updating.`,
+  );
+}
+assert(loginRulesTs.includes("isValidLoginEmail"), "web/lib/auth/loginRules.ts no longer exports isValidLoginEmail.");
+
+const backendErrorsTs = read("backend/src/lib/errors.ts");
+const signInComponent = read("web/components/auth/SignInForm.tsx");
+for (const code of ["INVALID_CREDENTIALS", "RATE_LIMITED", "VALIDATION_ERROR"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the sign-in page) is missing from backend/src/lib/errors.ts.`);
+  assert(signInComponent.includes(code), `web/components/auth/SignInForm.tsx no longer maps backend error code ${code}.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

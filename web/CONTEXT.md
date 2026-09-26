@@ -74,6 +74,22 @@ _Avoid_: Topic, when meaning a Category
 The single horizontal band every content row on the site lines up with — one shared left and right edge running down the page, whatever the row is made of: a card, a row of pills, or bare text on the sky. What sits on the column is the row's *painted* edge, so an unboxed row's text starts where a card's surface would.
 _Avoid_: treating each design frame's own x position as that row's alignment; "container"/"wrapper", which name the mechanism rather than the thing
 
+**Parent account** (Эцэг эхийн бүртгэл):
+The account a parent holds on the site and in the app. A parent reaches it with an email and password, with Google, or with both. Every child's **Diagnostic** and learning belongs to exactly one Parent account.
+_Avoid_: user, member, customer
+
+**Sign up** (Бүртгүүлэх):
+Creating a **Parent account**. It is never the child's setup at `/register-child` — that is the start of the **Diagnostic**, which a parent does for their child after signing up.
+_Avoid_: register, registration (both already name the child's `/register-child` flow)
+
+**Sign in** (Нэвтрэх):
+Entering an existing **Parent account**, by email and password or by Google.
+_Avoid_: log in, login
+
+**Password reset** (Нууц үг сэргээх):
+A parent who forgot their password asks for a one-time link by email and uses it to set a new one. Completing it signs the account out everywhere else.
+_Avoid_: password recovery (nothing is recovered; the old password is replaced)
+
 ## Relationships
 
 - An **Article** belongs to exactly one **Category**; on its reading page, that Category's pill is the one shown as current
