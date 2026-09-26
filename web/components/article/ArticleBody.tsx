@@ -29,11 +29,11 @@ function backgroundStyle(background: ColorValue | undefined): CSSProperties | un
   return background ? { backgroundColor: tintCss(background) } : undefined;
 }
 
-// No Figma frame exists yet for an article reading page (web/AGENTS.md: no
-// route is wired to this component — see the ArticleBody doc comment below),
-// so these are plain, generic tokens already used elsewhere on the site for
-// the same job (Header/Button's default UI ink, the card family's heading
-// ink) rather than anything designed specifically for this component.
+// The article reading page is Figma frame 1422:6961 (app/articles/[slug]),
+// which doesn't specify Body typography of its own, so these are plain,
+// generic tokens already used elsewhere on the site for the same job
+// (Header/Button's default UI ink, the card family's heading ink) rather
+// than anything designed specifically for this component.
 const BODY_TEXT_CLASS = "text-base leading-relaxed text-text-nav-strong";
 const HEADING_TEXT_CLASS = "font-extrabold text-text-navy";
 
@@ -230,10 +230,8 @@ function BlockView({ block }: { block: ArticleBlock }) {
  * every Block kind, plain semantic typography per-kind, with author Colours
  * applied (issue #108, shared/docs/adr/0003): a span's `color`/`highlight`,
  * a heading's `color`, and any text Block's `background` as a tinted padded
- * surface. Not mounted on a route yet — no Figma frame exists for an
- * article reading page, so this is a standalone piece for a future page to
- * render into, not a page itself (web/AGENTS.md: no invented layout without
- * a design source).
+ * surface. Mounted by the reading page at /articles/[slug] (Figma
+ * frame 1422:6961).
  */
 export function ArticleBody({ blocks }: { blocks: ArticleBodyBlocks }) {
   return (
