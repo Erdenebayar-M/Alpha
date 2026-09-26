@@ -99,14 +99,15 @@ async function login(req, res) {
 }
 
 // Register stub: the fixture parent's email is taken, another is rate-limited,
-// anyone else signs up and gets a token — echoing the surname so a spec can
-// see it arrived. `lastRegisterBody` lets a spec assert nothing else did.
+// anyone else signs up and gets a token. Every body is kept under its email,
+// so a spec can look up its own (specs run in parallel) and check what
+// arrived — the surname — and that nothing else did.
 export const TAKEN_EMAIL = FIXTURE_PARENT.email;
-let lastRegisterBody = null;
+const registerBodies = new Map();
 
 async function register(req, res) {
   const body = await readJson(req);
-  lastRegisterBody = body;
+  if (typeof body?.email === "string") registerBodies.set(body.email, body);
   if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
   if (body?.email === TAKEN_EMAIL) return fail(res, 409, "DUPLICATE_EMAIL", "Email already registered");
   const data = { id: "fixture-new-parent", email: body?.email, name: body?.name, token: FIXTURE_PARENT.token };
@@ -208,7 +209,10 @@ export function startFixtureBackend() {
     if (req.method === "GET" && pathname === "/__diagnostic-requests") return send(res, 200, "application/json", JSON.stringify(diagnosticRequests));
     if (req.method === "GET" && pathname === "/__google-requests") return send(res, 200, "application/json", JSON.stringify(googleRequests));
     if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
-    if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
+    if (req.method === "GET" && pathname === "/__register") {
+      const email = new URL(req.url ?? "/", `http://localhost:${PORT}`).searchParams.get("email");
+      return send(res, 200, "application/json", JSON.stringify(registerBodies.get(email) ?? null));
+    }
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
     if (pathname === `/api/articles/${FIXTURE_SLUG}`) {
       return send(res, 200, "application/json", JSON.stringify({ success: true, data: { article } }));
