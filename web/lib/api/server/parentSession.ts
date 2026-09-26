@@ -13,8 +13,8 @@ const signedOut = () => NextResponse.json({ error: "Sign in to continue", code: 
  * creates on the backend belongs to their Parent account. With no session the
  * request is rejected before reaching the backend. A token the backend rejects
  * (expired, or revoked by a Password reset) clears the cookie, so the parent
- * is no longer bounced away from /signin. Other backend errors pass through;
- * anything else is a 502 with `failureMessage`.
+ * is sent to sign in. Other backend errors pass through; anything else is
+ * logged and answered with a 502 and `failureMessage`.
  */
 export async function asSignedInParent(failureMessage: string, run: (token: string) => Promise<Response>): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -30,6 +30,7 @@ export async function asSignedInParent(failureMessage: string, run: (token: stri
       }
       return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
     }
+    console.error(failureMessage, err);
     return NextResponse.json({ error: failureMessage }, { status: 502 });
   }
 }

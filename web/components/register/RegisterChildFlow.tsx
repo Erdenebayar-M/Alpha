@@ -11,6 +11,7 @@ import ResultCard from "@/components/register/ResultCard";
 import LiveExerciseEngine from "@/components/register/exercise/live/LiveExerciseEngine";
 import { startDiagnostic, submitDiagnostic } from "@/lib/api/client";
 import { ApiClientError, SIGNED_OUT_CODE } from "@/lib/api/types";
+import { withNext } from "@/lib/auth/safeNext";
 import { siteConfig } from "@/lib/site-config";
 import type { ApiDiagnosticTask, DiagnosticResult } from "@/lib/api/types";
 
@@ -69,7 +70,7 @@ export default function RegisterChildFlow() {
    *  it): sign in, then come back here. True when it navigated away. */
   function signInIfSignedOut(err: unknown): boolean {
     if (!(err instanceof ApiClientError) || err.code !== SIGNED_OUT_CODE) return false;
-    router.push(`${siteConfig.loginUrl}?${new URLSearchParams({ next: siteConfig.assessmentUrl })}`);
+    router.push(withNext(siteConfig.loginUrl, siteConfig.assessmentUrl));
     return true;
   }
 

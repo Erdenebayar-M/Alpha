@@ -64,6 +64,13 @@ test("signing out clears the session cookie", async ({ page, context }) => {
   await page.waitForURL((url) => url.pathname === "/signin");
 });
 
+test("signing out from another site is refused", async ({ page, context }) => {
+  await withSession(context);
+  const res = await page.request.post("/api/auth/signout", { maxRedirects: 0, headers: { origin: "https://evil.example" } });
+  expect(res.status()).toBe(403);
+  expect(await sessionCookie(context)).toBeDefined();
+});
+
 test("the Diagnostic proxy acts as the signed-in parent", async ({ page, context }) => {
   await withSession(context);
   const name = `Child ${test.info().testId}`;
@@ -106,8 +113,15 @@ test("a session the backend rejects is cleared, so the parent can sign in again"
   expect(new URL(page.url()).pathname).toBe("/signin");
 });
 
-test("a session rejected mid-flow sends the parent to sign in, and back to /register-child", async ({ page, context }) => {
+test("a revoked session on /register-child goes to sign in, and is cleared", async ({ page, context }) => {
   await withSession(context, "revoked-token");
+  await page.goto("/register-child");
+  await page.waitForURL((url) => url.pathname === "/signin" && url.searchParams.get("next") === "/register-child");
+  expect(await sessionCookie(context)).toBeUndefined();
+});
+
+test("a session rejected mid-flow sends the parent to sign in, and back to /register-child", async ({ page, context }) => {
+  await withSession(context, "expires-mid-flow-token");
   await page.goto("/register-child");
 
   const next = page.getByRole("button", { name: "Үргэлжлүүлэх" });

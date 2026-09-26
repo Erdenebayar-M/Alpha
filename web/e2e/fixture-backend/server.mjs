@@ -20,6 +20,9 @@ export const FIXTURE_SLUG = "fixture-article";
 // else is INVALID_CREDENTIALS — the three outcomes the sign-in page renders.
 export const FIXTURE_PARENT = { email: "parent@example.com", password: "correct-password", token: "fixture-session-token" };
 export const RATE_LIMITED_EMAIL = "limited@example.com";
+// A token `GET /api/auth/me` still accepts but the diagnostic routes reject,
+// standing in for one revoked between page load and starting the Diagnostic.
+export const EXPIRES_MID_FLOW_TOKEN = "expires-mid-flow-token";
 
 const span = (text, extra = {}) => ({ text, ...extra });
 
@@ -199,7 +202,8 @@ export function startFixtureBackend() {
     if (req.method === "POST" && pathname === "/api/auth/reset-password") return resetPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/google") return google(req, res);
     if (req.method === "GET" && pathname === "/api/auth/me") {
-      if (req.headers.authorization !== `Bearer ${FIXTURE_PARENT.token}`) return fail(res, 401, "UNAUTHORIZED", "Unauthorized");
+      const valid = [FIXTURE_PARENT.token, EXPIRES_MID_FLOW_TOKEN].map((token) => `Bearer ${token}`);
+      if (!valid.includes(req.headers.authorization)) return fail(res, 401, "UNAUTHORIZED", "Unauthorized");
       return send(res, 200, "application/json", JSON.stringify({ success: true, data: { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Fixture Parent" } }));
     }
     if (req.method === "POST" && pathname === "/api/learner") return asParent(req, res, (body) => ({ id: `fixture-learner:${body?.name}` }));

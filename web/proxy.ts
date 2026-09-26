@@ -1,39 +1,38 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { BACKEND_URL } from "@/lib/api/server/backendUrl";
 import { publicOrigin } from "@/lib/auth/publicOrigin";
-import { SESSION_COOKIE } from "@/lib/auth/session";
+import { withNext } from "@/lib/auth/safeNext";
+import { SESSION_COOKIE, SESSION_COOKIE_SCOPE } from "@/lib/auth/session";
 import { siteConfig } from "@/lib/site-config";
 
 /**
- * Session redirects (docs/adr/0006-parent-session-on-web-origin.md):
+ * Session redirects (docs/adr/0006-parent-session-on-web-origin.md). A session
+ * cookie counts only once the backend confirms its token: a revoked one (a
+ * Password reset elsewhere) is cleared here, so it neither locks the parent
+ * out of signing in again nor lets them fill in /register-child only to be
+ * sent to sign in at the end. If the backend can't be reached, the cookie is
+ * left alone and taken at its word.
  *
  * - `/register-child` without a session goes to sign in, which brings the
- *   parent back through `next`. Optimistic: it reads only whether the cookie
- *   is there; the Diagnostic proxy rejects and clears a token the backend no
- *   longer accepts (lib/api/server/parentSession.ts), and the flow then sends
- *   the parent to sign in.
- * - `/signin` and `/signup` with a session go to `/` — but only once the
- *   backend confirms the token. A revoked one (a Password reset elsewhere)
- *   would otherwise lock the parent out of signing in again, so it is cleared
- *   and the page shown. If the backend can't be reached, the page is shown too.
+ *   parent back through `next`.
+ * - `/signin` and `/signup` with a session go to `/`.
  */
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const session = token ? await checkSession(token) : "none";
+  const signedIn = session === "valid" || session === "unknown";
   const { pathname, search } = request.nextUrl;
 
+  let response: NextResponse;
   if (pathname === siteConfig.assessmentUrl) {
-    if (token) return NextResponse.next();
-    const signIn = new URL(siteConfig.loginUrl, publicOrigin(request));
-    signIn.searchParams.set("next", pathname + search);
-    return NextResponse.redirect(signIn);
+    response = signedIn
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL(withNext(siteConfig.loginUrl, pathname + search), publicOrigin(request)));
+  } else {
+    response = signedIn ? NextResponse.redirect(new URL("/", publicOrigin(request))) : NextResponse.next();
   }
 
-  if (!token) return NextResponse.next();
-  const session = await checkSession(token);
-  if (session === "valid") return NextResponse.redirect(new URL("/", publicOrigin(request)));
-
-  const response = NextResponse.next();
-  if (session === "rejected") response.cookies.delete({ name: SESSION_COOKIE, path: "/" });
+  if (session === "rejected") response.cookies.delete(SESSION_COOKIE_SCOPE);
   return response;
 }
 
