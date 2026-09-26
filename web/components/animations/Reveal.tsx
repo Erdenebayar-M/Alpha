@@ -32,6 +32,12 @@ function hasScrolledPast(entry: IntersectionObserverEntry) {
   return entry.boundingClientRect.bottom <= 0;
 }
 
+/** Same test on a live element. Skips `display: none` items (all-zero rect). */
+function isAboveViewport(el: Element) {
+  const rect = el.getBoundingClientRect();
+  return (rect.width > 0 || rect.height > 0) && rect.bottom <= 0;
+}
+
 /** Wraps a block and flags what has entered the viewport, once, then stops
  *  watching it. CSS (the [data-reveal] rules in globals.css) drives the
  *  actual animation; this only decides *when* to start it — no per-frame JS.
@@ -49,15 +55,38 @@ export default function Reveal({ children, mode = "rise", className, style }: Re
     if (!node) return;
 
     if (mode === "sequence") {
+      const pending = new Set(node.querySelectorAll("[data-reveal-item]"));
+      const reveal = (target: Element) => {
+        target.setAttribute("data-visible", "true");
+        observer.unobserve(target);
+        pending.delete(target);
+      };
       const observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting && !hasScrolledPast(entry)) continue;
-          entry.target.setAttribute("data-visible", "true");
-          observer.unobserve(entry.target);
+          if (entry.isIntersecting || hasScrolledPast(entry)) reveal(entry.target);
         }
       }, SEQUENCE_OBSERVER);
-      node.querySelectorAll("[data-reveal-item]").forEach((item) => observer.observe(item));
-      return () => observer.disconnect();
+      pending.forEach((item) => observer.observe(item));
+
+      // Chromium doesn't re-run the observer callback when one jump carries an
+      // item from below the trigger line to fully above the viewport (the
+      // intersection ratio is 0 at both samples), so also check on scroll.
+      let frame = 0;
+      const onScroll = () => {
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          pending.forEach((item) => {
+            if (isAboveViewport(item)) reveal(item);
+          });
+        });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => {
+        window.removeEventListener("scroll", onScroll);
+        cancelAnimationFrame(frame);
+        observer.disconnect();
+      };
     }
 
     const observer = new IntersectionObserver(
