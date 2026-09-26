@@ -1,7 +1,7 @@
 import { resetPasswordWithBackend } from "@/lib/api/server/resetPassword";
 import { parseResetPasswordInput } from "@/lib/auth/resetPasswordRules";
 import { clientIpFrom } from "@/lib/auth/clientIp";
-import { setSessionCookie } from "@/lib/auth/setSessionCookie";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 const STATUS_BY_CODE = {
   INVALID_RESET_TOKEN: 400,

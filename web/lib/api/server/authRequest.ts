@@ -1,4 +1,4 @@
-import { BACKEND_URL } from "@/lib/api/server/backendAuth";
+import { BACKEND_URL } from "@/lib/api/server/backendUrl";
 
 type TokenPath = "/api/auth/login" | "/api/auth/register" | "/api/auth/reset-password" | "/api/auth/google";
 type AuthPath = TokenPath | "/api/auth/forgot-password";
@@ -9,7 +9,7 @@ export type AuthResult<Code extends string> = { ok: true; token: string } | Auth
 
 /**
  * POSTs to one of the backend's unauthenticated auth routes as the parent
- * (unlike backendClient.ts, which acts as the dev parent). Server-side only.
+ * (backendClient.ts calls the routes that need their session token). Server-side only.
  *
  * `clientIp` is forwarded because the backend's auth rate limits are keyed on
  * X-Forwarded-For — without it every parent would share this server's bucket.

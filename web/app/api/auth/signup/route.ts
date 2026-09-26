@@ -1,7 +1,7 @@
 import { registerWithBackend } from "@/lib/api/server/register";
 import { parseRegisterInput } from "@/lib/auth/registerRules";
 import { clientIpFrom } from "@/lib/auth/clientIp";
-import { setSessionCookie } from "@/lib/auth/setSessionCookie";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 const STATUS_BY_CODE = {
   DUPLICATE_EMAIL: 409,

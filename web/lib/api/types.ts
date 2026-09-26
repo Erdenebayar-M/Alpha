@@ -163,6 +163,9 @@ export interface ApiFailure {
 
 export type ApiEnvelope<T> = ApiSuccess<T> | ApiFailure;
 
+/** The code a Diagnostic proxy route answers with when there is no usable parent session (lib/api/server/parentSession.ts). */
+export const SIGNED_OUT_CODE = "UNAUTHORIZED";
+
 export class ApiClientError extends Error {
   constructor(
     public readonly code: string,

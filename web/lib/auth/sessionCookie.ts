@@ -11,3 +11,8 @@ export async function setSessionCookie(token: string) {
     path: "/",
   });
 }
+
+/** Ends the parent session on this origin: on Sign out, and when the backend rejects the token. Route handlers only. */
+export async function clearSessionCookie() {
+  (await cookies()).delete({ name: SESSION_COOKIE, path: "/" });
+}

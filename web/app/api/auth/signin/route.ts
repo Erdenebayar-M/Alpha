@@ -2,7 +2,7 @@ import { loginWithBackend } from "@/lib/api/server/login";
 import { parseLoginInput } from "@/lib/auth/loginRules";
 import { safeNextPath } from "@/lib/auth/safeNext";
 import { clientIpFrom } from "@/lib/auth/clientIp";
-import { setSessionCookie } from "@/lib/auth/setSessionCookie";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 const STATUS_BY_CODE = {
   INVALID_CREDENTIALS: 401,

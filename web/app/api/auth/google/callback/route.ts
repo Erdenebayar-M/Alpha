@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { googleSignInWithBackend } from "@/lib/api/server/googleSignIn";
 import { clientIpFrom } from "@/lib/auth/clientIp";
-import { GOOGLE_FLOW_COOKIE, GOOGLE_FLOW_PATH, googleCallbackUrl, googleFailureUrl, parseGoogleFlow, publicOrigin } from "@/lib/auth/googleOAuth";
+import { GOOGLE_FLOW_COOKIE, GOOGLE_FLOW_PATH, googleCallbackUrl, googleFailureUrl, parseGoogleFlow } from "@/lib/auth/googleOAuth";
+import { publicOrigin } from "@/lib/auth/publicOrigin";
 import { safeNextPath } from "@/lib/auth/safeNext";
-import { setSessionCookie } from "@/lib/auth/setSessionCookie";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 /**
  * Google redirects here after consent. Checks `state` against the flow

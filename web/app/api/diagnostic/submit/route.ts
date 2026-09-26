@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { backendFetch, BackendRequestError } from "@/lib/api/server/backendClient";
+import { backendFetch } from "@/lib/api/server/backendClient";
+import { asSignedInParent } from "@/lib/api/server/parentSession";
 import { stripCorrectAnswer } from "@/lib/api/server/sanitizeTask";
 import type { DiagnosticSubmitResponse } from "@/lib/api/types";
 
@@ -10,23 +11,23 @@ interface SubmitBody {
   time_seconds: number;
 }
 
-export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as SubmitBody | null;
-  if (
-    !body ||
-    typeof body.session_id !== "string" ||
-    typeof body.task_id !== "string" ||
-    typeof body.input_text !== "string" ||
-    !Number.isFinite(body.time_seconds)
-  ) {
-    return NextResponse.json(
-      { error: "Expected { session_id, task_id, input_text, time_seconds }" },
-      { status: 400 },
-    );
-  }
+export function POST(request: Request) {
+  return asSignedInParent("Unexpected error submitting the answer", async (token) => {
+    const body = (await request.json().catch(() => null)) as SubmitBody | null;
+    if (
+      !body ||
+      typeof body.session_id !== "string" ||
+      typeof body.task_id !== "string" ||
+      typeof body.input_text !== "string" ||
+      !Number.isFinite(body.time_seconds)
+    ) {
+      return NextResponse.json(
+        { error: "Expected { session_id, task_id, input_text, time_seconds }" },
+        { status: 400 },
+      );
+    }
 
-  try {
-    const result = await backendFetch<Record<string, unknown>>("/diagnostic/submit", {
+    const result = await backendFetch<Record<string, unknown>>(token, "/diagnostic/submit", {
       method: "POST",
       body,
     });
@@ -39,10 +40,5 @@ export async function POST(request: Request) {
         } as unknown as DiagnosticSubmitResponse);
 
     return NextResponse.json(response);
-  } catch (err) {
-    if (err instanceof BackendRequestError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
-    }
-    return NextResponse.json({ error: "Unexpected error submitting the answer" }, { status: 502 });
-  }
+  });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { backendFetch, BackendRequestError } from "@/lib/api/server/backendClient";
+import { backendFetch } from "@/lib/api/server/backendClient";
+import { asSignedInParent } from "@/lib/api/server/parentSession";
 import { stripCorrectAnswer } from "@/lib/api/server/sanitizeTask";
 import type { DiagnosticStartResponse } from "@/lib/api/types";
 
@@ -9,19 +10,20 @@ interface StartBody {
 }
 
 /**
- * Creates a fresh learner for every run (a learner can only ever complete one
- * diagnostic — POST /diagnostic/start 409s forever after the first) and
- * starts its diagnostic session. See web/lib/api/server/backendAuth.ts for
- * how the proxy authenticates to the backend.
+ * Creates a fresh learner under the signed-in parent's Parent account for
+ * every run (a learner can only ever complete one diagnostic — POST
+ * /diagnostic/start 409s forever after the first) and starts its diagnostic
+ * session. See web/lib/api/server/parentSession.ts for how the proxy
+ * authenticates to the backend.
  */
-export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as StartBody | null;
-  if (!body || typeof body.name !== "string" || !Number.isInteger(body.grade)) {
-    return NextResponse.json({ error: "Expected { name: string, grade: number }" }, { status: 400 });
-  }
+export function POST(request: Request) {
+  return asSignedInParent("Unexpected error starting the diagnostic", async (token) => {
+    const body = (await request.json().catch(() => null)) as StartBody | null;
+    if (!body || typeof body.name !== "string" || !Number.isInteger(body.grade)) {
+      return NextResponse.json({ error: "Expected { name: string, grade: number }" }, { status: 400 });
+    }
 
-  try {
-    const learner = await backendFetch<{ id: string }>("/learner", {
+    const learner = await backendFetch<{ id: string }>(token, "/learner", {
       method: "POST",
       body: { name: body.name, grade: body.grade },
     });
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
       session_id: string;
       task: Record<string, unknown>;
       item_number: number;
-    }>("/diagnostic/start", {
+    }>(token, "/diagnostic/start", {
       method: "POST",
       body: { learner_id: learner.id },
     });
@@ -42,10 +44,5 @@ export async function POST(request: Request) {
       item_number: started.item_number,
     };
     return NextResponse.json(response);
-  } catch (err) {
-    if (err instanceof BackendRequestError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: err.status });
-    }
-    return NextResponse.json({ error: "Unexpected error starting the diagnostic" }, { status: 502 });
-  }
+  });
 }

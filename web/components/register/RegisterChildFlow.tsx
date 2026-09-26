@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { diagnostic } from "@/lib/content";
 import StepCard from "@/components/register/StepCard";
 import GenderStep from "@/components/register/steps/GenderStep";
@@ -9,7 +10,8 @@ import GradeStep from "@/components/register/steps/GradeStep";
 import ResultCard from "@/components/register/ResultCard";
 import LiveExerciseEngine from "@/components/register/exercise/live/LiveExerciseEngine";
 import { startDiagnostic, submitDiagnostic } from "@/lib/api/client";
-import { ApiClientError } from "@/lib/api/types";
+import { ApiClientError, SIGNED_OUT_CODE } from "@/lib/api/types";
+import { siteConfig } from "@/lib/site-config";
 import type { ApiDiagnosticTask, DiagnosticResult } from "@/lib/api/types";
 
 type Phase = "gender" | "name" | "grade" | "diagnostic" | "result";
@@ -42,8 +44,8 @@ type DiagnosticState =
  * Owns the whole register-child flow: which of the setup screens is showing,
  * everything collected so far, and — once diagnostic starts — the live
  * session against the real backend (see lib/api/client.ts, and the proxy
- * routes under app/api/diagnostic/* that hold the dev auth token and strip
- * every task's correct_answer before it reaches this component).
+ * routes under app/api/diagnostic/* that act as the signed-in parent and
+ * strip every task's correct_answer before it reaches this component).
  *
  * The diagnostic's length is adaptive (backend/src/lib/engines/
  * diagnostic-adaptive.ts) — there is no fixed task list to index into, so
@@ -51,6 +53,7 @@ type DiagnosticState =
  * from /submit, the same inline-next-task loop mobile's diagnostic.tsx uses.
  */
 export default function RegisterChildFlow() {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("gender");
   const [answers, setAnswers] = useState<Answers>(EMPTY);
   const [diagState, setDiagState] = useState<DiagnosticState>({ kind: "starting" });
@@ -61,6 +64,14 @@ export default function RegisterChildFlow() {
   // to stay pure; an impure initializer here would violate that rule.
   const taskStartedAt = useRef<number>(0);
   const startedRef = useRef(false);
+
+  /** No session, or one the backend no longer accepts (the proxy has cleared
+   *  it): sign in, then come back here. True when it navigated away. */
+  function signInIfSignedOut(err: unknown): boolean {
+    if (!(err instanceof ApiClientError) || err.code !== SIGNED_OUT_CODE) return false;
+    router.push(`${siteConfig.loginUrl}?${new URLSearchParams({ next: siteConfig.assessmentUrl })}`);
+    return true;
+  }
 
   async function beginDiagnostic() {
     if (startedRef.current) return;
@@ -76,6 +87,7 @@ export default function RegisterChildFlow() {
       taskStartedAt.current = Date.now();
       setDiagState({ kind: "running", sessionId: started.session_id, task: started.task, itemNumber: started.item_number });
     } catch (err) {
+      if (signInIfSignedOut(err)) return;
       setDiagState({ kind: "error", message: err instanceof ApiClientError ? err.message : "Холболтын алдаа гарлаа." });
     }
   }
@@ -106,6 +118,7 @@ export default function RegisterChildFlow() {
         itemNumber: submitted.item_number,
       });
     } catch (err) {
+      if (signInIfSignedOut(err)) return;
       setDiagState({
         kind: "error",
         message: err instanceof ApiClientError ? err.message : "Хариултаа илгээхэд алдаа гарлаа.",
