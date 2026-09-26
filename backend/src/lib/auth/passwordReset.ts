@@ -50,12 +50,13 @@ export async function issuePasswordResetToken(parent_id: string): Promise<string
  * — changing nothing — when the token is unknown, used or expired. The token
  * is claimed and the password set in one transaction, and the claim only
  * succeeds while the token is still unused and unexpired, so two requests
- * racing on the same link can't both win.
+ * racing on the same link can't both win. The parent's token_version is
+ * incremented alongside, signing out every session issued before.
  */
 export async function resetPasswordWithToken(
   token: string,
   password: string,
-): Promise<{ id: string; email: string; name: string } | null> {
+): Promise<{ id: string; email: string; name: string; token_version: number } | null> {
   const row = await prisma.passwordResetToken.findUnique({ where: { token_hash: hashResetToken(token) } });
   if (!row || row.used_at || row.expires_at.getTime() <= Date.now()) return null;
 
@@ -69,7 +70,10 @@ export async function resetPasswordWithToken(
       data: { used_at: now },
     });
     if (claimed.count !== 1) return null;
-    const { id, email, name } = await tx.parent.update({ where: { id: row.parent_id }, data: { password_hash } });
-    return { id, email, name };
+    const { id, email, name, token_version } = await tx.parent.update({
+      where: { id: row.parent_id },
+      data: { password_hash, token_version: { increment: 1 } },
+    });
+    return { id, email, name, token_version };
   });
 }

@@ -6,6 +6,7 @@ import dashboardRouter from '../dashboard';
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
+    parent: { findUnique: jest.fn().mockResolvedValue({ token_version: 0 }) }, // withAuth's token_version check
     learner: { findUnique: jest.fn() },
     learnerSkillState: { findUnique: jest.fn() },
     lesson: { findMany: jest.fn() },
@@ -55,7 +56,7 @@ function fakeSkillState() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
+  mockVerify.mockResolvedValue({ parent_id: PARENT_ID, token_version: 0 });
 });
 
 // ─── GET /dashboard/skills ─────────────────────────────────────────────────

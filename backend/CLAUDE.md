@@ -25,7 +25,7 @@ Never access `c.req.json()` without validating first.
 
 ## Auth Middleware
 
-- `withAuth` — cookie-first (`auth_token`), Bearer fallback. Sets `parent_id` in context.
+- `withAuth` — cookie-first (`auth_token`), Bearer fallback. Sets `parent_id` in context. Loads the Parent account and rejects the token unless it exists and its `token_version` matches the token's (a token without the claim counts as 0).
 - `withAdmin` — static bearer secret (`ADMIN_SECRET`), SHA-256 + `timingSafeEqual` comparison. Required on all `/api/admin/*` routes.
 
 Every learner-scoped handler must re-verify ownership: `learner.parent_id === parent_id`. Do not skip this even if `withAuth` already ran.
@@ -53,9 +53,9 @@ JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`):
 - Cleared by `POST /api/auth/logout`
 - Profile fetched via `GET /api/auth/me` — returns only `{ id, email, name }`, never `password_hash`
 - `POST /api/auth/forgot-password` emails a Password reset link (`src/lib/email.ts`: Resend when `RESEND_API_KEY` is set, otherwise logged to the console). It always returns `{ ok: true }`. `password_reset_tokens` stores only a SHA-256 hash of each token (30-minute expiry); issuing one marks the parent's older unused tokens used
-- `POST /api/auth/reset-password` takes `{ token, password }`, sets the new password and answers like login. An unknown, used or expired token is `INVALID_RESET_TOKEN` (one code, so the response doesn't say which). The token is claimed and the password set in one transaction, conditional on the token still being unused and unexpired, so a link works exactly once
+- `POST /api/auth/reset-password` takes `{ token, password }`, sets the new password and answers like login. An unknown, used or expired token is `INVALID_RESET_TOKEN` (one code, so the response doesn't say which). The token is claimed and the password set in one transaction, conditional on the token still being unused and unexpired, so a link works exactly once. It also increments the parent's `token_version`, signing out every other session on web and mobile; only the token it returns carries the new version
 
-JWT is HS256, with `iss: 'mongolian-app'` and `aud: 'parent-api'` enforced on verify. The frontend Zustand store holds only the parent profile — **never** the token itself.
+JWT is HS256, with `iss: 'mongolian-app'` and `aud: 'parent-api'` enforced on verify. Claims: `parent_id` and `token_version` (the Parent account's at signing). The frontend Zustand store holds only the parent profile — **never** the token itself.
 
 ## Security Architecture
 

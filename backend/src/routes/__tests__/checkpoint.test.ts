@@ -9,6 +9,7 @@ import checkpointRouter from '../checkpoint';
 
 jest.mock('../../lib/db/client', () => {
   const prisma: Record<string, unknown> = {
+    parent: { findUnique: jest.fn().mockResolvedValue({ token_version: 0 }) }, // withAuth's token_version check
     learner:           { findUnique: jest.fn() },
     checkpoint:        { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     task:              { findMany: jest.fn(), findUnique: jest.fn() },
@@ -149,7 +150,7 @@ const SUBMIT_BODY = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
+  mockVerify.mockResolvedValue({ parent_id: PARENT_ID, token_version: 0 });
 });
 
 // ─── GET /checkpoint ──────────────────────────────────────────────────────────

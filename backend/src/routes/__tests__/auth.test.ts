@@ -54,6 +54,7 @@ const FAKE_PARENT = {
   email: 'test@example.com',
   name: 'Test User',
   password_hash: 'hashed-pw',
+  token_version: 0,
   created_at: new Date(),
 };
 
@@ -83,7 +84,7 @@ describe('POST /register', () => {
       token: 'jwt-token',
     });
     expect(mockHash).toHaveBeenCalledWith('password123');
-    expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id });
+    expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id, token_version: 0 });
   });
 
   it('stores the optional surname', async () => {
@@ -177,6 +178,16 @@ describe('POST /login', () => {
       name: FAKE_PARENT.name,
       token: 'jwt-token',
     });
+  });
+
+  it("signs the token with the Parent account's current token_version", async () => {
+    mockFindUnique.mockResolvedValue({ ...FAKE_PARENT, token_version: 2 } as never);
+    mockCompare.mockResolvedValue(true as never);
+    mockSign.mockResolvedValue('jwt-token' as never);
+
+    await post('/login', { email: 'test@example.com', password: 'password123' });
+
+    expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id, token_version: 2 });
   });
 
   it('401 — wrong password', async () => {
