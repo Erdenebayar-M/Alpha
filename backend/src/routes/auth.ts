@@ -141,6 +141,11 @@ auth.post('/reset-password', resetPasswordLimiter, async (c) => {
 // otherwise the one with its email, which gets linked; otherwise a new one
 // without a password. Throws when that email's account is linked to a
 // different Google account.
+//
+// Linking drops the account's password and signs out its sessions: sign-up
+// never proves the email is the parent's, so whoever set that password may
+// not be the Google-verified owner now arriving. Password reset, which goes
+// through the email, sets a new one.
 async function parentForGoogle(identity: GoogleIdentity) {
   const linked = await prisma.parent.findUnique({ where: { google_id: identity.sub } });
   if (linked) return linked;
@@ -148,7 +153,10 @@ async function parentForGoogle(identity: GoogleIdentity) {
   const byEmail = await prisma.parent.findFirst({ where: { email: { equals: identity.email, mode: 'insensitive' } } });
   if (byEmail) {
     if (byEmail.google_id) throw new Error('Email is linked to a different Google account');
-    return prisma.parent.update({ where: { id: byEmail.id }, data: { google_id: identity.sub } });
+    return prisma.parent.update({
+      where: { id: byEmail.id },
+      data: { google_id: identity.sub, password_hash: null, token_version: { increment: 1 } },
+    });
   }
 
   return prisma.parent.create({

@@ -172,10 +172,12 @@ beforeEach(async () => {
     parents.push(row);
     return { ...row };
   });
-  db.parent.update.mockImplementation(async ({ where, data }: { where: Partial<ParentRow>; data: Partial<ParentRow> }) => {
+  db.parent.update.mockImplementation(async ({ where, data }: { where: Partial<ParentRow>; data: object }) => {
     const row = parents.find((p) => matches(p, where));
     if (!row) throw new Error('Record to update not found');
-    Object.assign(row, data);
+    const { token_version, ...rest } = data as Omit<Partial<ParentRow>, 'token_version'> & { token_version?: { increment: number } };
+    Object.assign(row, rest);
+    if (token_version) row.token_version += token_version.increment;
     return { ...row };
   });
 });
@@ -221,14 +223,25 @@ describe('POST /google', () => {
     expect(parents).toHaveLength(1);
   });
 
-  it('links a password Parent account with the same verified email, keeping its password', async () => {
-    seedParent({ email: 'dorj@example.com' });
+  // Password sign-ups don't prove they own the email, so a password set before
+  // the verified owner arrives may be someone else's: linking drops it and
+  // signs out every existing session. Password reset sets a new one.
+  it('links a password Parent account with the same verified email, dropping its password and sessions', async () => {
+    seedParent({ email: 'dorj@example.com', token_version: 2 });
 
     const res = await signInWithGoogle();
 
     expect(res.status).toBe(200);
-    expect((await json(res)).data?.id).toBe('parent-1');
-    expect(parents).toEqual([expect.objectContaining({ google_id: 'google-sub-1', password_hash: 'hashed:pw', name: 'Нэр' })]);
+    expect((await json(res)).data).toEqual({ id: 'parent-1', email: 'dorj@example.com', name: 'Нэр', token: 'session.parent-1.3' });
+    expect(parents).toEqual([expect.objectContaining({ google_id: 'google-sub-1', password_hash: null, token_version: 3, name: 'Нэр' })]);
+  });
+
+  it('keeps the password and sessions on later sign-ins once linked', async () => {
+    seedParent({ email: 'dorj@example.com', google_id: 'google-sub-1', password_hash: 'hashed:set-after-linking', token_version: 4 });
+
+    await signInWithGoogle();
+
+    expect(parents).toEqual([expect.objectContaining({ password_hash: 'hashed:set-after-linking', token_version: 4 })]);
   });
 
   it('links by email regardless of case', async () => {
