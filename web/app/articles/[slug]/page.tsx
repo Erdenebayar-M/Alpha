@@ -18,8 +18,8 @@ export default async function ArticlePage({ params }: PageProps<"/articles/[slug
 
   return (
     <main id="main" className="min-h-dvh bg-surface-page px-4 py-10">
-      <article className="mx-auto flex max-w-3xl flex-col gap-6 rounded-3xl bg-surface p-6 sm:p-10">
-        <h1 className="text-3xl font-extrabold text-article-title">{article.title}</h1>
+      <article className="mx-auto flex max-w-[1000px] flex-col gap-6 rounded-3xl bg-surface p-6 sm:p-10">
+        <h1 className="text-center text-3xl font-extrabold text-text-navy">{article.title}</h1>
         <ArticleBody blocks={article.body} />
       </article>
     </main>

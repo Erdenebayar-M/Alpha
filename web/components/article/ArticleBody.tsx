@@ -225,19 +225,34 @@ function BlockView({ block }: { block: ArticleBlock }) {
   }
 }
 
+// Reading layout (issue #115, Figma frame 1422:6961) — a site rule authors
+// can't change, unrelated to Text alignment. Measured at the 1440px frame:
+// the reading column is ≈775px, centered in the card; subheadings and Quotes
+// instead start ≈60px in from the card's inner edge, hanging left of the
+// column while sharing its right edge. Below `lg` the card and column just
+// shrink and the hang collapses to zero.
+const READING_COLUMN_CLASS = "mx-auto w-full max-w-[775px]";
+const HANGING_CLASS = "w-full lg:pl-[60px] lg:pr-[calc((100%-775px)/2)]";
+
+function layoutClass(block: ArticleBlock): string {
+  return block.type === "heading" || block.type === "quote" ? HANGING_CLASS : READING_COLUMN_CLASS;
+}
+
 /**
  * Renders a validated Article Body (shared/src/validators/article.ts) —
  * every Block kind, plain semantic typography per-kind, with author Colours
  * applied (issue #108, shared/docs/adr/0003): a span's `color`/`highlight`,
  * a heading's `color`, and any text Block's `background` as a tinted padded
- * surface. Mounted by the reading page at /articles/[slug] (Figma
- * frame 1422:6961).
+ * surface. Blocks sit on the reading layout above. Mounted by the reading
+ * page at /articles/[slug] (Figma frame 1422:6961).
  */
 export function ArticleBody({ blocks }: { blocks: ArticleBodyBlocks }) {
   return (
     <div className="flex flex-col gap-6">
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} />
+        <div key={block.id} className={layoutClass(block)}>
+          <BlockView block={block} />
+        </div>
       ))}
     </div>
   );
