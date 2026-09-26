@@ -21,6 +21,9 @@ jest.mock('../../config/env', () => ({
     R2_BUCKET_NAME:       undefined,
     R2_PUBLIC_URL:        undefined,
     ALLOW_PROD_SEED:      undefined,
+    RESEND_API_KEY:       undefined,
+    EMAIL_FROM:           undefined,
+    WEB_URL:              'http://localhost:3000',
   },
 }));
 
@@ -81,5 +84,41 @@ describe('POST /login — rate limiting', () => {
 
     const fresh = await login(b);
     expect(fresh.status).toBe(401);
+  });
+});
+
+function forgotPassword(ip: string) {
+  return authRouter.request('/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': ip },
+    body: JSON.stringify({ email: 'a@b.com' }),
+  });
+}
+
+describe('POST /forgot-password — rate limiting', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindUnique.mockResolvedValue(null);
+  });
+
+  it('blocks the 6th request from the same IP within the window', async () => {
+    const ip = '203.0.113.60';
+    for (let i = 0; i < 5; i++) {
+      const res = await forgotPassword(ip);
+      expect(res.status).toBe(200);
+    }
+    const blocked = await forgotPassword(ip);
+    expect(blocked.status).toBe(429);
+    const body = (await blocked.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('RATE_LIMITED');
+    expect(blocked.headers.get('Retry-After')).not.toBeNull();
+  });
+
+  it('has its own bucket, apart from login', async () => {
+    const ip = '203.0.113.61';
+    for (let i = 0; i < 6; i++) await login(ip);
+    expect((await login(ip)).status).toBe(429);
+
+    expect((await forgotPassword(ip)).status).toBe(200);
   });
 });

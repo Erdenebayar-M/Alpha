@@ -244,9 +244,27 @@ model Parent {
   surname       String?
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
-  learners Learner[]
+  learners              Learner[]
+  password_reset_tokens PasswordResetToken[]
 
   @@map("parents")
+}
+
+// A Password reset link. Only the SHA-256 hash of the token is stored; the raw
+// token exists only in the emailed link. Issuing a new one marks the parent's
+// older unused tokens used, so at most one is live at a time.
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  parent_id  String
+  token_hash String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  parent Parent @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+
+  @@index([parent_id])
+  @@map("password_reset_tokens")
 }
 
 model Learner {

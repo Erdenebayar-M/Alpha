@@ -27,6 +27,21 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().optional(),
   R2_PUBLIC_URL: z.string().url().optional(),
+
+  // Password reset email. Without RESEND_API_KEY the message is logged to the
+  // console instead — dev only, since the link carries a live token.
+  RESEND_API_KEY: z.string().startsWith("re_").optional(),
+  EMAIL_FROM: z.string().email().optional(),
+  WEB_URL: z.string().url().default("http://localhost:3000"),
+}).superRefine((env, ctx) => {
+  if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
+    ctx.addIssue({ code: "custom", path: ["EMAIL_FROM"], message: "EMAIL_FROM is required when RESEND_API_KEY is set" });
+  }
+  if (env.NODE_ENV === "production") {
+    for (const key of ["RESEND_API_KEY", "EMAIL_FROM", "WEB_URL"] as const) {
+      if (!process.env[key]) ctx.addIssue({ code: "custom", path: [key], message: `${key} is required in production` });
+    }
+  }
 });
 
 const parsed = envSchema.safeParse(process.env);
