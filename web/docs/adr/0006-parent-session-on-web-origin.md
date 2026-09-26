@@ -10,6 +10,8 @@ Parents sign in on the marketing site (`/signin`) and later reach account pages 
 
 The web sign-in handler forwards the client's `X-Forwarded-For` to the backend, because the backend's login rate limit is keyed on it; otherwise every parent would share the web server's bucket.
 
+**Deployment assumption:** web must be deployed behind a proxy that overwrites `X-Forwarded-For`; otherwise the sign-in rate limit can be bypassed. Next's route handlers don't expose the raw connection IP, so this header is the only per-parent key available, and dropping it would put every parent in one shared bucket that a single attacker could exhaust to lock everyone out. Vercel, or nginx with `proxy_set_header X-Forwarded-For $remote_addr;`, overwrite it.
+
 ## Considered options
 
 - **Call the backend directly from the browser, keep its cookie.** Rejected: the backend is on another origin, its cookie is `SameSite=Strict`, and the token would be in reach of scripts if it were ever returned in a body the page reads.

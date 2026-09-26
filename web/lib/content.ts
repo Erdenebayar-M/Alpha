@@ -419,8 +419,7 @@ export const signIn = {
     invalidEmail: "Имэйл хаяг буруу байна.",
     invalidCredentials: "Имэйл эсвэл нууц үг буруу байна.",
     rateLimited: "Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.",
-    // Not in the ticket or the frame — network failure / backend 5xx. Wording
-    // is a placeholder pending review.
+    // Backend outage or timeout — not in the frame; wording approved by the owner.
     generic: "Алдаа гарлаа. Дахин оролдоно уу.",
   },
 } as const;
