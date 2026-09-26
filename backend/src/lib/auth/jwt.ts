@@ -6,7 +6,13 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(s);
 }
 
-export async function signToken(payload: { parent_id: string }): Promise<string> {
+/** `token_version` is the Parent account's at signing; see withAuth. */
+export type TokenClaims = {
+  parent_id: string;
+  token_version: number;
+};
+
+export async function signToken(payload: TokenClaims): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -16,7 +22,7 @@ export async function signToken(payload: { parent_id: string }): Promise<string>
     .sign(getSecret());
 }
 
-export async function verifyToken(token: string): Promise<{ parent_id: string }> {
+export async function verifyToken(token: string): Promise<TokenClaims> {
   const { payload } = await jwtVerify(token, getSecret(), {
     algorithms: ['HS256'],
     issuer: 'mongolian-app',
@@ -25,5 +31,11 @@ export async function verifyToken(token: string): Promise<{ parent_id: string }>
   if (typeof payload.parent_id !== 'string') {
     throw new Error('Malformed token: missing parent_id');
   }
-  return { parent_id: payload.parent_id };
+  // Tokens issued before token_version existed carry none; they count as 0 so
+  // deploying this signs no one out.
+  const token_version = payload.token_version ?? 0;
+  if (typeof token_version !== 'number') {
+    throw new Error('Malformed token: token_version is not a number');
+  }
+  return { parent_id: payload.parent_id, token_version };
 }

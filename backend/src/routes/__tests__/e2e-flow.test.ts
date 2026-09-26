@@ -235,7 +235,8 @@ function submitBody(task_id: string) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  m.verifyToken.mockResolvedValue({ parent_id: PARENT_ID });
+  m.verifyToken.mockResolvedValue({ parent_id: PARENT_ID, token_version: 0 });
+  m.parentFindUnique.mockResolvedValue({ token_version: 0 }); // withAuth's token_version check
   m.planCreate.mockResolvedValue({ id: PLAN_ID });
   // Default $transaction: handle both array and callback styles
   m.transaction.mockImplementation((arg: any) => {
@@ -254,6 +255,7 @@ describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
       id: PARENT_ID,
       email: 'parent@test.mn',
       name: 'Батмөнх',
+      token_version: 0,
     });
     m.signToken.mockResolvedValue('e2e-test-token');
 

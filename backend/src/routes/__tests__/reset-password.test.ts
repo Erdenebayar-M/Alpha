@@ -15,6 +15,7 @@ interface ParentRow {
   email: string;
   name: string;
   password_hash: string;
+  token_version: number;
 }
 
 interface TokenRow {
@@ -43,7 +44,18 @@ jest.mock('../../lib/auth/password', () => ({
   hashPassword: jest.fn(async (password: string) => `hashed:${password}`),
   comparePassword: jest.fn(async (password: string, hash: string) => hash === `hashed:${password}`),
 }));
-jest.mock('../../lib/auth/jwt', () => ({ signToken: jest.fn() }));
+// A readable stand-in for a JWT that carries its claims, so a session can be
+// taken from one request and presented on a later one.
+jest.mock('../../lib/auth/jwt', () => ({
+  signToken: jest.fn(async ({ parent_id, token_version }: { parent_id: string; token_version: number }) =>
+    `session.${parent_id}.${token_version}`,
+  ),
+  verifyToken: jest.fn(async (token: string) => {
+    const [kind, parent_id, version] = token.split('.');
+    if (kind !== 'session') throw new Error('JWSInvalid');
+    return { parent_id, token_version: Number(version) };
+  }),
+}));
 jest.mock('../../lib/email', () => ({
   ...jest.requireActual('../../lib/email'),
   sendEmail: jest.fn(),
@@ -88,6 +100,7 @@ async function requestResetToken(): Promise<string> {
 
 const resetPassword = (token: unknown, password: unknown) => post('/reset-password', { token, password });
 const login = (password: string) => post('/login', { email: EMAIL, password });
+const me = (session: string) => authRouter.request('/me', { headers: { Authorization: `Bearer ${session}` } });
 
 interface Envelope {
   success: boolean;
@@ -100,7 +113,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   parents.length = 0;
   tokens.length = 0;
-  parents.push({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', password_hash: `hashed:${OLD_PASSWORD}` });
+  parents.push({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', password_hash: `hashed:${OLD_PASSWORD}`, token_version: 0 });
 
   const pick = <T extends object>(row: T | undefined, select?: Record<string, boolean>) =>
     row && select ? Object.fromEntries(Object.keys(select).map((k) => [k, row[k as keyof T]])) : (row ?? null);
@@ -108,12 +121,15 @@ beforeEach(() => {
   db.parent.findUnique.mockImplementation(async ({ where, select }: { where: { email?: string; id?: string }; select?: Record<string, boolean> }) =>
     pick(parents.find((p) => (where.email ? p.email === where.email : p.id === where.id)), select),
   );
-  db.parent.update.mockImplementation(async ({ where, data }: { where: { id: string }; data: Partial<ParentRow> }) => {
-    const row = parents.find((p) => p.id === where.id);
-    if (!row) throw new Error('Record to update not found');
-    Object.assign(row, data);
-    return row;
-  });
+  db.parent.update.mockImplementation(
+    async ({ where, data }: { where: { id: string }; data: { password_hash?: string; token_version?: { increment: number } } }) => {
+      const row = parents.find((p) => p.id === where.id);
+      if (!row) throw new Error('Record to update not found');
+      if (data.password_hash !== undefined) row.password_hash = data.password_hash;
+      if (data.token_version) row.token_version += data.token_version.increment;
+      return { ...row };
+    },
+  );
 
   db.passwordResetToken.findUnique.mockImplementation(async ({ where }: { where: { token_hash: string } }) =>
     tokens.find((t) => t.token_hash === where.token_hash) ?? null,
@@ -145,7 +161,6 @@ beforeEach(() => {
     typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(prisma) : Promise.all(arg as Promise<unknown>[]),
   );
   mockSendEmail.mockResolvedValue(undefined);
-  mockSign.mockResolvedValue('session-jwt' as never);
 });
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -159,10 +174,10 @@ describe('POST /reset-password', () => {
     expect(res.status).toBe(200);
     expect(await json(res)).toEqual({
       success: true,
-      data: { id: 'parent-uuid-1', email: EMAIL, name: 'Болд', token: 'session-jwt' },
+      data: { id: 'parent-uuid-1', email: EMAIL, name: 'Болд', token: 'session.parent-uuid-1.1' },
     });
-    expect(mockSign).toHaveBeenCalledWith({ parent_id: 'parent-uuid-1' });
-    expect(res.headers.get('set-cookie')).toContain('auth_token=session-jwt');
+    expect(mockSign).toHaveBeenCalledWith({ parent_id: 'parent-uuid-1', token_version: 1 });
+    expect(res.headers.get('set-cookie')).toContain('auth_token=session.parent-uuid-1.1');
   });
 
   it('after a reset, the old password fails and the new one works', async () => {
@@ -175,6 +190,27 @@ describe('POST /reset-password', () => {
     expect(old.status).toBe(401);
     expect((await json(old)).error?.code).toBe('INVALID_CREDENTIALS');
     expect((await login(NEW_PASSWORD)).status).toBe(200);
+  });
+
+  it('signs the Parent account out everywhere else; the session from the reset works', async () => {
+    const before = (await json(await login(OLD_PASSWORD))).data!.token!;
+    expect((await me(before)).status).toBe(200);
+
+    const after = (await json(await resetPassword(await requestResetToken(), NEW_PASSWORD))).data!.token!;
+
+    const stale = await me(before);
+    expect(stale.status).toBe(401);
+    expect((await json(stale)).error?.code).toBe('UNAUTHORIZED');
+    expect((await me(after)).status).toBe(200);
+    expect((await me((await json(await login(NEW_PASSWORD))).data!.token!)).status).toBe(200);
+  });
+
+  it('a failed reset signs no one out', async () => {
+    const before = (await json(await login(OLD_PASSWORD))).data!.token!;
+
+    await resetPassword('not-a-token-anyone-was-sent', NEW_PASSWORD);
+
+    expect((await me(before)).status).toBe(200);
   });
 
   it('rejects a token that has already been used, leaving the first reset in place', async () => {

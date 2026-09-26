@@ -6,6 +6,7 @@ import checkpointRouter from '../checkpoint';
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
+    parent: { findUnique: jest.fn().mockResolvedValue({ token_version: 0 }) }, // withAuth's token_version check
     learner: { findUnique: jest.fn() },
     lesson: { findFirst: jest.fn(), findMany: jest.fn() },
     plan: { findFirst: jest.fn() },
@@ -17,7 +18,7 @@ jest.mock('../../lib/db/client', () => ({
 
 jest.mock('../../lib/auth/jwt', () => ({
   signToken: jest.fn(),
-  verifyToken: jest.fn().mockResolvedValue({ parent_id: 'parent-1' }),
+  verifyToken: jest.fn().mockResolvedValue({ parent_id: 'parent-1', token_version: 0 }),
 }));
 
 const BEARER = 'Bearer test-token';

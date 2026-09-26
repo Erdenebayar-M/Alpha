@@ -8,6 +8,7 @@ import lessonRouter from '../lesson';
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
+    parent: { findUnique: jest.fn().mockResolvedValue({ token_version: 0 }) }, // withAuth's token_version check
     learner:           { findUnique: jest.fn() },
     lesson:            { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     task:              { findMany: jest.fn(), findUnique: jest.fn() },
@@ -112,7 +113,7 @@ function fakeSkillState() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
+  mockVerify.mockResolvedValue({ parent_id: PARENT_ID, token_version: 0 });
 });
 
 // ─── GET /today ───────────────────────────────────────────────────────────────

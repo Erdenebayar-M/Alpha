@@ -46,7 +46,7 @@ auth.post('/register', registerLimiter, async (c) => {
     data: { email, name, surname, password_hash },
   });
 
-  const token = await signToken({ parent_id: parent.id });
+  const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });
   setAuthCookie(c, token);
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token }, undefined, 201);
 });
@@ -71,7 +71,7 @@ auth.post('/login', loginLimiter, async (c) => {
     return ERRORS.INVALID_CREDENTIALS(c);
   }
 
-  const token = await signToken({ parent_id: parent.id });
+  const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });
   setAuthCookie(c, token);
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token });
 });
@@ -114,7 +114,8 @@ auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
 });
 
 // POST /api/auth/reset-password — sets a new password from the emailed link's
-// token and signs the parent in, answering like login.
+// token and signs the parent in, answering like login. Every other session is
+// signed out: the reset increments token_version and only the new token has it.
 auth.post('/reset-password', resetPasswordLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = resetPasswordSchema.safeParse(body);
@@ -122,12 +123,13 @@ auth.post('/reset-password', resetPasswordLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
-  const parent = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
-  if (!parent) {
+  const reset = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
+  if (!reset) {
     return ERRORS.INVALID_RESET_TOKEN(c);
   }
 
-  const token = await signToken({ parent_id: parent.id });
+  const { token_version, ...parent } = reset;
+  const token = await signToken({ parent_id: parent.id, token_version });
   setAuthCookie(c, token);
   return ok(c, { ...parent, token });
 });

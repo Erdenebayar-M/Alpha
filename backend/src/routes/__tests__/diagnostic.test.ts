@@ -7,6 +7,7 @@ import diagnosticRouter from '../diagnostic';
 
 jest.mock('../../lib/db/client', () => ({
   prisma: {
+    parent: { findUnique: jest.fn().mockResolvedValue({ token_version: 0 }) }, // withAuth's token_version check
     learner: { findUnique: jest.fn() },
     diagnosticSession: {
       findFirst: jest.fn(),
@@ -138,7 +139,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   BANK_ROWS = [];
   POOL = {};
-  mockVerify.mockResolvedValue({ parent_id: PARENT_ID });
+  mockVerify.mockResolvedValue({ parent_id: PARENT_ID, token_version: 0 });
   mockPlanCreate.mockResolvedValue({ id: 'test-plan-id' });
   mockSessionCreate.mockResolvedValue({ id: SESSION_ID });
   mockSessionUpdate.mockResolvedValue({});
