@@ -11,9 +11,21 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
   },
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
-  },
+  // The fixture backend stands in for the real one so e2e needs no database;
+  // the Next server is pointed at it via BACKEND_URL, which takes precedence
+  // over .env.local. Not reused: a dev server already running against the
+  // real backend would silently bypass the fixture, so stop it before running.
+  webServer: [
+    {
+      command: "node e2e/fixture-backend/server.mjs",
+      url: "http://localhost:3211/api/articles/fixture-article",
+      reuseExistingServer: false,
+    },
+    {
+      command: "npm run dev",
+      url: "http://localhost:3000",
+      reuseExistingServer: false,
+      env: { BACKEND_URL: "http://localhost:3211" },
+    },
+  ],
 });
