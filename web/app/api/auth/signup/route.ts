@@ -1,7 +1,8 @@
 import { registerWithBackend } from "@/lib/api/server/register";
 import { parseRegisterInput } from "@/lib/auth/registerRules";
 import { clientIpFrom } from "@/lib/auth/clientIp";
-import { setSessionCookie } from "@/lib/auth/setSessionCookie";
+import { safeNextPath } from "@/lib/auth/safeNext";
+import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
 const STATUS_BY_CODE = {
   DUPLICATE_EMAIL: 409,
@@ -13,8 +14,9 @@ const STATUS_BY_CODE = {
 /**
  * Sign up: calls the backend register, keeps the token in an httpOnly cookie
  * on this origin exactly as Sign in does, and hands the page back only where
- * to go next. The parent is signed in straight away. Responds `{ redirectTo }`
- * or `{ error: <backend code> }`. The password confirmation never gets here.
+ * to go next — `next` when it is safe, as for Sign in. The parent is signed in
+ * straight away. Responds `{ redirectTo }` or `{ error: <backend code> }`.
+ * The password confirmation never gets here.
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -26,5 +28,5 @@ export async function POST(request: Request) {
   if (!result.ok) return Response.json({ error: result.code }, { status: STATUS_BY_CODE[result.code] });
 
   await setSessionCookie(result.token);
-  return Response.json({ redirectTo: "/" });
+  return Response.json({ redirectTo: safeNextPath((body as { next?: unknown }).next) });
 }

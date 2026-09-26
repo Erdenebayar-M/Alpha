@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
+import { withNext } from "@/lib/auth/safeNext";
 import { validateRegisterForm, type RegisterField, type RegisterFormValues } from "@/lib/auth/registerRules";
 import { signUp } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
@@ -18,8 +19,9 @@ const ERROR_BY_CODE: Record<string, FormError> = {
 };
 
 /** The sign-up form (frame 7:6344). The password confirmation is checked here
- *  and only here — it is not part of what is sent. */
-export default function SignUpForm() {
+ *  and only here — it is not part of what is sent. `next` is only passed
+ *  through; the route handler decides whether it is safe to follow. */
+export default function SignUpForm({ next }: { next?: string }) {
   const [values, setValues] = useState(EMPTY);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<RegisterField, true>>>({});
   const [formError, setFormError] = useState<FormError>();
@@ -44,6 +46,7 @@ export default function SignUpForm() {
           name: values.name.trim(),
           ...(surname ? { surname } : {}),
           password: values.password,
+          next,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -82,7 +85,7 @@ export default function SignUpForm() {
           {formError.kind === "duplicateEmail" ? (
             <>
               {signUp.errors.duplicateEmail}{" "}
-              <a href={siteConfig.loginUrl} className="font-bold text-auth-link focus-ring">
+              <a href={withNext(siteConfig.loginUrl, next)} className="font-bold text-auth-link focus-ring">
                 {signUp.errors.duplicateEmailLinkLabel}
               </a>
             </>

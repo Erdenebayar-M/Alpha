@@ -7,7 +7,9 @@ import { pathToFileURL } from "node:url";
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
  * one Published Article, plus the auth routes the sign-in, sign-up,
  * forgot-password and reset-password pages and the Google callback call
- * (see FIXTURE_PARENT);
+ * (see FIXTURE_PARENT), `GET /api/auth/me` that proxy.ts checks a session
+ * with, and the learner/diagnostic routes the Diagnostic proxy calls as that
+ * parent;
  * every other slug — including a Draft's — is a 404,
  * matching the real route.
  */
@@ -18,6 +20,9 @@ export const FIXTURE_SLUG = "fixture-article";
 // else is INVALID_CREDENTIALS — the three outcomes the sign-in page renders.
 export const FIXTURE_PARENT = { email: "parent@example.com", password: "correct-password", token: "fixture-session-token" };
 export const RATE_LIMITED_EMAIL = "limited@example.com";
+// A token `GET /api/auth/me` still accepts but the diagnostic routes reject,
+// standing in for one revoked between page load and starting the Diagnostic.
+export const EXPIRES_MID_FLOW_TOKEN = "expires-mid-flow-token";
 
 const span = (text, extra = {}) => ({ text, ...extra });
 
@@ -97,14 +102,15 @@ async function login(req, res) {
 }
 
 // Register stub: the fixture parent's email is taken, another is rate-limited,
-// anyone else signs up and gets a token — echoing the surname so a spec can
-// see it arrived. `lastRegisterBody` lets a spec assert nothing else did.
+// anyone else signs up and gets a token. Every body is kept under its email,
+// so a spec can look up its own (specs run in parallel) and check what
+// arrived — the surname — and that nothing else did.
 export const TAKEN_EMAIL = FIXTURE_PARENT.email;
-let lastRegisterBody = null;
+const registerBodies = new Map();
 
 async function register(req, res) {
   const body = await readJson(req);
-  lastRegisterBody = body;
+  if (typeof body?.email === "string") registerBodies.set(body.email, body);
   if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
   if (body?.email === TAKEN_EMAIL) return fail(res, 409, "DUPLICATE_EMAIL", "Email already registered");
   const data = { id: "fixture-new-parent", email: body?.email, name: body?.name, token: FIXTURE_PARENT.token };
@@ -151,6 +157,37 @@ async function google(req, res) {
   send(res, 200, "application/json", JSON.stringify({ success: true, data }));
 }
 
+// Learner/diagnostic stubs: like the real routes, they require a parent's
+// Bearer token, and only the fixture parent's is valid — any other is
+// UNAUTHORIZED, as the real backend answers for an expired or revoked token.
+// Every call is recorded with the token it carried, so a spec can check the
+// proxy acted as the signed-in parent. A learner's id carries the child's
+// name, so a spec can pick out its own calls (specs run in parallel).
+const diagnosticRequests = [];
+const DIAGNOSTIC_TASK = {
+  id: "fixture-task",
+  task_type: "SELF_CHECK",
+  prompt_text: "Fixture task",
+  interaction_form: null,
+  options: {},
+  audio_url: null,
+  image_url: null,
+  primary_skill: "S1",
+  estimated_time_seconds: 10,
+  feedback_text: null,
+  feedback_correct: null,
+  feedback_wrong: null,
+  correct_answer: "fixture answer",
+};
+
+async function asParent(req, res, respond) {
+  const authorization = req.headers.authorization ?? null;
+  const body = await readJson(req);
+  diagnosticRequests.push({ path: req.url, authorization, body });
+  if (authorization !== `Bearer ${FIXTURE_PARENT.token}`) return fail(res, 401, "UNAUTHORIZED", "Unauthorized");
+  send(res, 200, "application/json", JSON.stringify({ success: true, data: respond(body) }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -164,9 +201,22 @@ export function startFixtureBackend() {
     if (req.method === "POST" && pathname === "/api/auth/forgot-password") return forgotPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/reset-password") return resetPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/google") return google(req, res);
+    if (req.method === "GET" && pathname === "/api/auth/me") {
+      const valid = [FIXTURE_PARENT.token, EXPIRES_MID_FLOW_TOKEN].map((token) => `Bearer ${token}`);
+      if (!valid.includes(req.headers.authorization)) return fail(res, 401, "UNAUTHORIZED", "Unauthorized");
+      return send(res, 200, "application/json", JSON.stringify({ success: true, data: { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Fixture Parent" } }));
+    }
+    if (req.method === "POST" && pathname === "/api/learner") return asParent(req, res, (body) => ({ id: `fixture-learner:${body?.name}` }));
+    if (req.method === "POST" && pathname === "/api/diagnostic/start") {
+      return asParent(req, res, () => ({ session_id: "fixture-session", task: DIAGNOSTIC_TASK, item_number: 1 }));
+    }
+    if (req.method === "GET" && pathname === "/__diagnostic-requests") return send(res, 200, "application/json", JSON.stringify(diagnosticRequests));
     if (req.method === "GET" && pathname === "/__google-requests") return send(res, 200, "application/json", JSON.stringify(googleRequests));
     if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
-    if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
+    if (req.method === "GET" && pathname === "/__register") {
+      const email = new URL(req.url ?? "/", `http://localhost:${PORT}`).searchParams.get("email");
+      return send(res, 200, "application/json", JSON.stringify(registerBodies.get(email) ?? null));
+    }
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
     if (pathname === `/api/articles/${FIXTURE_SLUG}`) {
       return send(res, 200, "application/json", JSON.stringify({ success: true, data: { article } }));

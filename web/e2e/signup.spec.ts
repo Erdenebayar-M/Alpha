@@ -75,6 +75,6 @@ test("signing up sends the surname but not the confirmation, sets the session co
   const session = (await context.cookies()).find((c) => c.name === "orto_session");
   expect(session).toMatchObject({ httpOnly: true, sameSite: "Lax", value: "fixture-session-token" });
 
-  const sent = await (await request.get("http://localhost:3211/__last-register")).json();
+  const sent = await (await request.get(`http://localhost:3211/__register?${new URLSearchParams({ email: NEW_PARENT.email })}`)).json();
   expect(sent).toEqual({ email: NEW_PARENT.email, name: NEW_PARENT.name, surname: NEW_PARENT.surname, password: NEW_PARENT.password });
 });

@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { publicOrigin } from "@/lib/auth/publicOrigin";
 
 /**
  * Google sign-in on web (docs/adr/0006-parent-session-on-web-origin.md). Web
@@ -74,17 +75,7 @@ export function parseGoogleFlow(raw: string | undefined): GoogleFlow | null {
   }
 }
 
-/**
- * The site's public origin: WEB_ORIGIN when set, as it must be behind a proxy
- * or TLS terminator, where `request.url` can carry an internal host or
- * `http:` — a redirect_uri Google wouldn't recognise. Falls back to the
- * request's own origin for local dev and e2e.
- */
-export function publicOrigin(request: Request): string {
-  return process.env.WEB_ORIGIN || new URL(request.url).origin;
-}
-
-/** The redirect_uri registered with Google: this site's callback route. */
+/** The redirect_uri registered with Google: this site's callback route, on the public origin (an internal host is a redirect_uri Google wouldn't recognise). */
 export function googleCallbackUrl(request: Request): string {
   return new URL(`${GOOGLE_FLOW_PATH}/callback`, publicOrigin(request)).toString();
 }

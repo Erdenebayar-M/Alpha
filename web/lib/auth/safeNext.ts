@@ -14,3 +14,8 @@ export function safeNextPath(next: unknown): string {
   if (/^\/(signin|api)(?:[/?#]|$)/.test(next)) return "/";
   return next;
 }
+
+/** A link to another auth page that keeps `next` along (the target decides whether it is safe to follow). */
+export function withNext(path: string, next: string | undefined): string {
+  return next ? `${path}?${new URLSearchParams({ next })}` : path;
+}

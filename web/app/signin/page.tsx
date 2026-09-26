@@ -3,6 +3,7 @@ import AuthPageShell from "@/components/auth/AuthPageShell";
 import GoogleSignIn from "@/components/auth/GoogleSignIn";
 import SignInForm from "@/components/auth/SignInForm";
 import { googleStartHref } from "@/lib/auth/googleOAuth";
+import { withNext } from "@/lib/auth/safeNext";
 import { signIn } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
@@ -21,7 +22,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
   return (
     <AuthPageShell
       title={signIn.title}
-      prompt={{ ...signIn.registerPrompt, href: siteConfig.registerUrl }}
+      prompt={{ ...signIn.registerPrompt, href: withNext(siteConfig.registerUrl, next) }}
       lead={googleHref && <GoogleSignIn variant="signIn" label={signIn.googleLabel} href={googleHref} failed={params.google_error !== undefined} />}
     >
       <SignInForm next={next} />
