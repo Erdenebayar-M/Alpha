@@ -399,3 +399,28 @@ export const diagnostic = {
     dailyMinutes: (minutes: number) => `Өдрийн дасгал: ~${minutes} мин`,
   },
 } as const;
+
+// Sign-in page (Figma frame 7:4257, Orthography file). The Google button and
+// the "Эсвэл" divider are drawn in the frame but not shipped yet (see the
+// Google sign-in ticket), so their copy is deliberately absent.
+export const signIn = {
+  title: "Нэвтрэх", // heading 7:6085
+  // Corner prompt, "Registration prompt" 7:6082 — reused by every auth card.
+  registerPrompt: { label: "Бүртгэлгүй юу?", linkLabel: "Бүртгүүлэх" }, // 7:6083, 7:6084
+  // The frame's own label reads "Хэрэглэгчийн нэр эсвэл имэйл хаяг" (7:6132);
+  // Parent accounts have no username, so it is relabelled.
+  emailLabel: "Имэйл хаяг",
+  emailPlaceholder: "hello@tanidomain.com", // 7:6134
+  passwordLabel: "Нууц үг", // 7:6264
+  passwordPlaceholder: "••••••••", // 7:6267
+  forgotPasswordLabel: "Нууц үгээ мартсан уу?", // 7:6265
+  submitLabel: "Нэвтрэх", // Primary action 7:6149
+  errors: {
+    invalidEmail: "Имэйл хаяг буруу байна.",
+    invalidCredentials: "Имэйл эсвэл нууц үг буруу байна.",
+    rateLimited: "Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.",
+    // Not in the ticket or the frame — network failure / backend 5xx. Wording
+    // is a placeholder pending review.
+    generic: "Алдаа гарлаа. Дахин оролдоно уу.",
+  },
+} as const;

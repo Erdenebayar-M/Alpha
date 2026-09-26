@@ -108,6 +108,14 @@
   --color-task-accent: #2356f8;
   --color-task-badge: #e7eeff;
   --color-task-strong: #263446;
+
+  /* --- Sign-in / auth cards (frame 7:4257) ---
+   * Measured off the frame; none of these has a Figma variable. */
+  --color-auth-ink: #17181b;
+  --color-auth-action: #17191c;
+  --color-auth-muted: #7b8494;
+  --color-auth-link: #3d78f2;
+  --color-auth-border: #d8dee8;
   --color-task-muted: #718096;
   --color-task-border: #dde8f5;
   --color-task-tile: #f8fbff;

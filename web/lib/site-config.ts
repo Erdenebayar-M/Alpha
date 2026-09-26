@@ -1,6 +1,6 @@
 /**
  * Central place for every external/app link on the marketing site.
- * Real URLs (App Store, Google Play, login/register, download) were not
+ * Real URLs (App Store, Google Play, register, download) were not
  * provided yet — swap the "#" placeholders below when they're available.
  */
 export const siteConfig = {
@@ -16,8 +16,10 @@ export const siteConfig = {
 
   // TODO: replace with the real destinations.
   appUrl: "#",
-  loginUrl: "#",
+  loginUrl: "/signin",
   registerUrl: "#",
+  // TODO: the Password reset page (linked from /signin).
+  forgotPasswordUrl: "#",
   appStoreUrl: "#",
   playStoreUrl: "#",
 
