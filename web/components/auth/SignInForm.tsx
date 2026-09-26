@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
+import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { isValidLoginEmail } from "@/lib/auth/loginRules";
 import { signIn } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
@@ -86,14 +87,7 @@ export default function SignInForm({ next }: { next?: string }) {
           {formError}
         </p>
       )}
-      {/* Node 7:6148 — a dark pill, 154 x 54, not any of Button's variants. */}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="h-[54px] w-[154px] rounded-xl bg-auth-action px-6 text-[15px] font-bold text-white transition-[transform,opacity] duration-150 ease-press hover:-translate-y-px active:translate-y-px disabled:opacity-60 focus-ring"
-      >
-        {signIn.submitLabel}
-      </button>
+      <AuthSubmitButton label={signIn.submitLabel} submitting={submitting} />
     </form>
   );
 }

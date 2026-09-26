@@ -241,6 +241,7 @@ model Parent {
   email         String   @unique
   password_hash String
   name          String
+  surname       String?
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
   learners Learner[]

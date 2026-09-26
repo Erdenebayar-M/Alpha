@@ -86,6 +86,25 @@ describe('POST /register', () => {
     expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id });
   });
 
+  it('stores the optional surname', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    mockHash.mockResolvedValue('hashed-pw' as never);
+    mockCreate.mockResolvedValue({ ...FAKE_PARENT, surname: 'Бат' } as never);
+    mockSign.mockResolvedValue('jwt-token' as never);
+
+    const res = await post('/register', {
+      email: 'test@example.com',
+      name: 'Test User',
+      surname: 'Бат',
+      password: 'password123',
+    });
+
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith({
+      data: { email: 'test@example.com', name: 'Test User', surname: 'Бат', password_hash: 'hashed-pw' },
+    });
+  });
+
   it('409 — duplicate email', async () => {
     mockFindUnique.mockResolvedValue(FAKE_PARENT as never);
 

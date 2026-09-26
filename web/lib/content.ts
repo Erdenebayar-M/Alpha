@@ -423,3 +423,31 @@ export const signIn = {
     generic: "Алдаа гарлаа. Дахин оролдоно уу.",
   },
 } as const;
+
+// Sign-up page (Figma frame 7:6344, Orthography file). Like the sign-in page,
+// the Google button and its divider are not shipped yet, so their copy is
+// deliberately absent.
+export const signUp = {
+  title: "Бүртгүүлэх",
+  // Corner prompt, the sibling of signIn.registerPrompt.
+  signInPrompt: { label: "Бүртгэлтэй юу?", linkLabel: "Нэвтрэх" },
+  // Field order is the frame's. `key` is the form-state key; `name` the input name.
+  fields: [
+    { key: "surname", name: "surname", type: "text", label: "Овог", placeholder: "Овогоо оруулна уу", autoComplete: "family-name" },
+    { key: "name", name: "name", type: "text", label: "Нэр", placeholder: "Нэрээ оруулна уу", autoComplete: "given-name" },
+    { key: "email", name: "email", type: "email", label: "Имэйл хаяг", placeholder: signIn.emailPlaceholder, autoComplete: "email" },
+    { key: "password", name: "password", type: "password", label: "Нууц үг", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
+    { key: "confirmPassword", name: "confirmPassword", type: "password", label: "Нууц үг давтах", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" },
+  ],
+  submitLabel: "Бүртгүүлэх",
+  errors: {
+    name: "Нэр дор хаяж 2 тэмдэгттэй байна.",
+    email: "Имэйл хаяг буруу байна.",
+    password: "Нууц үг дор хаяж 8 тэмдэгттэй байна.",
+    confirmPassword: "Нууц үг таарахгүй байна.",
+    duplicateEmail: "Энэ имэйл хаягаар бүртгэл үүссэн байна.",
+    duplicateEmailLinkLabel: "Нэвтрэх",
+    rateLimited: signIn.errors.rateLimited,
+    generic: signIn.errors.generic,
+  },
+} as const;

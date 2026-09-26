@@ -32,7 +32,7 @@ auth.post('/register', registerLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
-  const { email, name, password } = parsed.data;
+  const { email, name, surname, password } = parsed.data;
 
   const existing = await prisma.parent.findUnique({ where: { email } });
   if (existing) {
@@ -41,7 +41,7 @@ auth.post('/register', registerLimiter, async (c) => {
 
   const password_hash = await hashPassword(password);
   const parent = await prisma.parent.create({
-    data: { email, name, password_hash },
+    data: { email, name, surname, password_hash },
   });
 
   const token = await signToken({ parent_id: parent.id });

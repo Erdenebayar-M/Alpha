@@ -94,6 +94,21 @@ async function login(req, res) {
   fail(res, 401, "INVALID_CREDENTIALS", "Invalid email or password");
 }
 
+// Register stub: the fixture parent's email is taken, another is rate-limited,
+// anyone else signs up and gets a token — echoing the surname so a spec can
+// see it arrived. `lastRegisterBody` lets a spec assert nothing else did.
+export const TAKEN_EMAIL = FIXTURE_PARENT.email;
+let lastRegisterBody = null;
+
+async function register(req, res) {
+  const body = await readJson(req);
+  lastRegisterBody = body;
+  if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
+  if (body?.email === TAKEN_EMAIL) return fail(res, 409, "DUPLICATE_EMAIL", "Email already registered");
+  const data = { id: "fixture-new-parent", email: body?.email, name: body?.name, token: FIXTURE_PARENT.token };
+  send(res, 201, "application/json", JSON.stringify({ success: true, data }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -103,6 +118,8 @@ export function startFixtureBackend() {
   const server = createServer((req, res) => {
     const { pathname } = new URL(req.url ?? "/", `http://localhost:${PORT}`);
     if (req.method === "POST" && pathname === "/api/auth/login") return login(req, res);
+    if (req.method === "POST" && pathname === "/api/auth/register") return register(req, res);
+    if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
     if (pathname === `/api/articles/${FIXTURE_SLUG}`) {
       return send(res, 200, "application/json", JSON.stringify({ success: true, data: { article } }));
