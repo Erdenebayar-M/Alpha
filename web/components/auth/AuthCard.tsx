@@ -9,6 +9,8 @@ interface AuthCardProps {
   heading?: string;
   /** The corner prompt ("Бүртгэлгүй юу? / Бүртгүүлэх"). */
   prompt: { label: string; linkLabel: string; href: string };
+  /** Above the form: the Google button and divider, when Google is configured. */
+  lead?: ReactNode;
   children: ReactNode;
 }
 
@@ -19,9 +21,12 @@ interface AuthCardProps {
  *
  * Nominally 452px wide with 38px gutters, leaving the design's 374px column
  * (the Google button / inputs, 7:6166). Height follows content — the frame's
- * 621px includes the Google button and divider, which aren't shown yet.
+ * 621px includes the Google button and divider, which render only when
+ * Google sign-in is configured. With them, heading, button, divider and form
+ * are 20px apart (frame 7:6344's 20px card gap); without, the form sits 24px
+ * under the heading.
  */
-export default function AuthCard({ heading, prompt, children }: AuthCardProps) {
+export default function AuthCard({ heading, prompt, lead, children }: AuthCardProps) {
   return (
     <div
       className="w-full max-w-[452px] shrink-0 rounded-card border border-white/50 bg-white/94 px-6 py-[38px] sm:px-[38px]"
@@ -40,7 +45,8 @@ export default function AuthCard({ heading, prompt, children }: AuthCardProps) {
         </p>
       </div>
       {heading && <AuthHeading className="mt-[29px] leading-[1.06]">{heading}</AuthHeading>}
-      <div className="mt-6">{children}</div>
+      {lead && <div className="mt-5">{lead}</div>}
+      <div className={lead ? "mt-5" : "mt-6"}>{children}</div>
     </div>
   );
 }
