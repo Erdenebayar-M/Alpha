@@ -18,8 +18,7 @@ export const siteConfig = {
   appUrl: "#",
   loginUrl: "/signin",
   registerUrl: "/signup",
-  // TODO: the Password reset page (linked from /signin).
-  forgotPasswordUrl: "#",
+  forgotPasswordUrl: "/forgot-password",
   appStoreUrl: "#",
   playStoreUrl: "#",
 

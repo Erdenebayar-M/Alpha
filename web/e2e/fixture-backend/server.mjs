@@ -5,7 +5,8 @@ import { pathToFileURL } from "node:url";
  * Stand-in for the real backend's public `GET /api/articles/:slug`, so e2e
  * runs need no backend or database. Playwright's webServer starts it and
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
- * one Published Article, plus `POST /api/auth/login` (see FIXTURE_PARENT);
+ * one Published Article, plus the auth routes the sign-in, sign-up and
+ * forgot-password pages call (see FIXTURE_PARENT);
  * every other slug — including a Draft's — is a 404,
  * matching the real route.
  */
@@ -109,6 +110,18 @@ async function register(req, res) {
   send(res, 201, "application/json", JSON.stringify({ success: true, data }));
 }
 
+// Forgot-password stub: the same success for every email, as the real route
+// answers, except the rate-limited one. Every accepted email is recorded so a
+// spec can count its own requests.
+const forgotPasswordRequests = [];
+
+async function forgotPassword(req, res) {
+  const body = await readJson(req);
+  if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
+  forgotPasswordRequests.push(body?.email);
+  send(res, 200, "application/json", JSON.stringify({ success: true, data: { ok: true } }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -119,6 +132,8 @@ export function startFixtureBackend() {
     const { pathname } = new URL(req.url ?? "/", `http://localhost:${PORT}`);
     if (req.method === "POST" && pathname === "/api/auth/login") return login(req, res);
     if (req.method === "POST" && pathname === "/api/auth/register") return register(req, res);
+    if (req.method === "POST" && pathname === "/api/auth/forgot-password") return forgotPassword(req, res);
+    if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
     if (req.method === "GET" && pathname === "/__last-register") return send(res, 200, "application/json", JSON.stringify(lastRegisterBody));
     if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
     if (pathname === `/api/articles/${FIXTURE_SLUG}`) {

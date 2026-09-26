@@ -12,5 +12,12 @@ export const loginSchema = z.object({
   password: z.string(),
 });
 
+// Password reset request: only the email. The response never says whether a
+// Parent account exists for it.
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;

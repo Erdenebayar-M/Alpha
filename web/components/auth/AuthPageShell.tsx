@@ -15,10 +15,13 @@ import SignInArt from "@/components/auth/SignInArt";
  */
 export default function AuthPageShell({
   title,
+  heading = title,
   prompt,
   children,
 }: {
   title: string;
+  /** The card's heading; `null` when the children draw their own. */
+  heading?: string | null;
   prompt: { label: string; linkLabel: string; href: string };
   children: ReactNode;
 }) {
@@ -32,7 +35,7 @@ export default function AuthPageShell({
         >
           <RegisterScene />
           <div className="relative flex items-center justify-center gap-[63px]">
-            <AuthCard heading={title} prompt={prompt}>
+            <AuthCard heading={heading ?? undefined} prompt={prompt}>
               {children}
             </AuthCard>
             <SignInArt />

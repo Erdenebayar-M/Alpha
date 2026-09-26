@@ -1,9 +1,12 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
+import { cn } from "@/lib/cn";
 
 interface AuthCardProps {
-  heading: string;
+  /** Omitted when the children draw their own AuthHeading — a card whose
+   *  heading changes with its state (forgot password, 7:7189). */
+  heading?: string;
   /** The corner prompt ("Бүртгэлгүй юу? / Бүртгүүлэх"). */
   prompt: { label: string; linkLabel: string; href: string };
   children: ReactNode;
@@ -36,8 +39,13 @@ export default function AuthCard({ heading, prompt, children }: AuthCardProps) {
           </a>
         </p>
       </div>
-      <h1 className="mt-[29px] text-2xl leading-[1.06] font-bold text-auth-ink">{heading}</h1>
+      {heading && <AuthHeading className="mt-[29px] leading-[1.06]">{heading}</AuthHeading>}
       <div className="mt-6">{children}</div>
     </div>
   );
+}
+
+/** The auth cards' 24px bold page heading. Line height is per frame. */
+export function AuthHeading({ className, ...props }: ComponentProps<"h1">) {
+  return <h1 className={cn("text-2xl font-bold text-auth-ink", className)} {...props} />;
 }

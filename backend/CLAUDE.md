@@ -52,6 +52,7 @@ JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`):
 - Set by `POST /api/auth/login` and `POST /api/auth/register`
 - Cleared by `POST /api/auth/logout`
 - Profile fetched via `GET /api/auth/me` — returns only `{ id, email, name }`, never `password_hash`
+- `POST /api/auth/forgot-password` emails a Password reset link (`src/lib/email.ts`: Resend when `RESEND_API_KEY` is set, otherwise logged to the console). It always returns `{ ok: true }`. `password_reset_tokens` stores only a SHA-256 hash of each token (30-minute expiry); issuing one marks the parent's older unused tokens used
 
 JWT is HS256, with `iss: 'mongolian-app'` and `aud: 'parent-api'` enforced on verify. The frontend Zustand store holds only the parent profile — **never** the token itself.
 
@@ -76,6 +77,7 @@ The codebase applies these principles consistently. New routes and features must
 
 **4. Don't Leak Information**
 - Login returns `"Invalid email or password"` regardless of whether the email exists
+- Forgot-password returns the same success, just as fast, whether or not the email is registered: token issue and email send run after the response, and failures are only logged
 - IDOR failures return `NOT_FOUND`, not `FORBIDDEN`
 - 500 responses return only a `request_id`; stack traces go to stderr only
 
@@ -91,6 +93,7 @@ The codebase applies these principles consistently. New routes and features must
 **7. Rate Limiting** — defined in `src/lib/auth/rateLimit.ts`
 - `loginLimiter`: 5 attempts / 15 min
 - `registerLimiter`: 10 / hour
+- `forgotPasswordLimiter`: 5 / hour per IP, plus at most 5 reset tokens / hour per parent (`src/lib/auth/passwordReset.ts`), so rotating IPs can't keep killing a parent's link
 - `adminGenerateLimiter`: 5 / min on LLM endpoints
 
 **8. Secure Defaults**

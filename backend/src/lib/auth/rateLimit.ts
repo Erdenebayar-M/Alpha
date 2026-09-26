@@ -65,6 +65,12 @@ export const registerLimiter = rateLimit({
   max: 10,
 });
 
+// 5 Password reset requests per IP per hour — each one may send an email.
+export const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+});
+
 // 5 LLM/generation requests per IP per minute — limits API cost exposure.
 export const adminGenerateLimiter = rateLimit({
   windowMs: 60 * 1000,
