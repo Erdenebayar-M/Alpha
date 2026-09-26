@@ -71,6 +71,13 @@ export const forgotPasswordLimiter = rateLimit({
   max: 5,
 });
 
+// 10 Password reset attempts per IP per 15 minutes — tokens are unguessable;
+// this bounds the bcrypt work a caller can make the server do.
+export const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+});
+
 // 5 LLM/generation requests per IP per minute — limits API cost exposure.
 export const adminGenerateLimiter = rateLimit({
   windowMs: 60 * 1000,

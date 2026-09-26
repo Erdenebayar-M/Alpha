@@ -11,6 +11,11 @@ export const ERRORS = {
   INVALID_CREDENTIALS: (c: Context) =>
     fail(c, 'INVALID_CREDENTIALS', 'Invalid email or password', undefined, 401),
 
+  // An expired, used or unknown Password reset token — deliberately one code,
+  // so the response doesn't say which.
+  INVALID_RESET_TOKEN: (c: Context) =>
+    fail(c, 'INVALID_RESET_TOKEN', 'Reset link is expired or invalid', undefined, 400),
+
   NOT_FOUND: (c: Context, message: string) =>
     fail(c, 'NOT_FOUND', message, undefined, 404),
 

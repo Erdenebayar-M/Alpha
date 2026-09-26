@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/client';
 import { env } from '../../config/env';
+import { hashPassword } from './password';
 
 export const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -42,4 +43,33 @@ export async function issuePasswordResetToken(parent_id: string): Promise<string
     }),
   ]);
   return token;
+}
+
+/**
+ * Sets a new password from a Password reset token. Returns the parent, or null
+ * — changing nothing — when the token is unknown, used or expired. The token
+ * is claimed and the password set in one transaction, and the claim only
+ * succeeds while the token is still unused and unexpired, so two requests
+ * racing on the same link can't both win.
+ */
+export async function resetPasswordWithToken(
+  token: string,
+  password: string,
+): Promise<{ id: string; email: string; name: string } | null> {
+  const row = await prisma.passwordResetToken.findUnique({ where: { token_hash: hashResetToken(token) } });
+  if (!row || row.used_at || row.expires_at.getTime() <= Date.now()) return null;
+
+  const password_hash = await hashPassword(password);
+
+  return prisma.$transaction(async (tx) => {
+    // Re-checks expiry too: hashing is slow, and the link may run out meanwhile.
+    const now = new Date();
+    const claimed = await tx.passwordResetToken.updateMany({
+      where: { id: row.id, used_at: null, expires_at: { gt: now } },
+      data: { used_at: now },
+    });
+    if (claimed.count !== 1) return null;
+    const { id, email, name } = await tx.parent.update({ where: { id: row.parent_id }, data: { password_hash } });
+    return { id, email, name };
+  });
 }

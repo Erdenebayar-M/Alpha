@@ -6,9 +6,9 @@ import { hashPassword, comparePassword } from '../lib/auth/password';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { registerSchema, loginSchema, forgotPasswordSchema } from '@app/shared';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter } from '../lib/auth/rateLimit';
-import { issuePasswordResetToken, passwordResetLink } from '../lib/auth/passwordReset';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from '@app/shared';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter } from '../lib/auth/rateLimit';
+import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } from '../lib/auth/passwordReset';
 import { sendEmail, passwordResetEmail } from '../lib/email';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
@@ -111,6 +111,25 @@ auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
   if (parent) void sendPasswordReset(parent, email, c.get('requestId') ?? null);
 
   return ok(c, { ok: true });
+});
+
+// POST /api/auth/reset-password — sets a new password from the emailed link's
+// token and signs the parent in, answering like login.
+auth.post('/reset-password', resetPasswordLimiter, async (c) => {
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = resetPasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+  }
+
+  const parent = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
+  if (!parent) {
+    return ERRORS.INVALID_RESET_TOKEN(c);
+  }
+
+  const token = await signToken({ parent_id: parent.id });
+  setAuthCookie(c, token);
+  return ok(c, { ...parent, token });
 });
 
 // POST /api/auth/logout — clears the auth cookie
