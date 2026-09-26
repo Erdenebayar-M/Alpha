@@ -65,37 +65,71 @@ function Heading({ block }: { block: HeadingBlock }) {
   );
 }
 
+// A List's Marker (ADR 0005) is rendered by us, not the browser's native
+// `::marker` — its glyph/number is always computed from position, never
+// stored, so it can never drift out of sync with the list's own items. This
+// also fixes alignment: as ordinary inline content ahead of the item's text
+// (not a `::marker` box), it moves with `text-align` like any other run.
+function markerGlyph(style: ListBlock["style"], index: number, startsAt: number | undefined): string {
+  return style === "bullet" ? "•" : `${(startsAt ?? 1) + index}.`;
+}
+
+function alignmentClass(alignment: ListBlock["alignment"]): string | undefined {
+  if (alignment === "center") return "text-center";
+  if (alignment === "right") return "text-right";
+  return undefined;
+}
+
 function List({ block }: { block: ListBlock }) {
   const Tag = block.style === "ordered" ? "ol" : "ul";
   return (
     <Tag
+      start={block.startsAt}
       className={cn(
         BODY_TEXT_CLASS,
-        "flex flex-col gap-2 pl-6",
-        block.style === "ordered" ? "list-decimal" : "list-disc",
+        "flex flex-col gap-2 pl-6 list-none",
+        alignmentClass(block.alignment),
         backgroundClass(block.background)
       )}
       style={backgroundStyle(block.background)}
     >
       {block.items.map((item, index) => (
         <li key={index}>
-          <InlineContent spans={item} />
+          <span
+            className="mr-2 select-none"
+            style={item.markerColor ? { color: colorCss(item.markerColor) } : undefined}
+          >
+            {markerGlyph(block.style, index, block.startsAt)}
+          </span>
+          <InlineContent spans={item.spans} />
         </li>
       ))}
     </Tag>
   );
 }
 
+// The pull-quote's quotation marks are drawn here, never typed by the author
+// (web/CONTEXT.md **Quote**). Real glyphs rather than CSS pseudo-elements so
+// they survive copy/paste; hidden from assistive tech, which announces the
+// blockquote itself.
 function Quote({ block }: { block: QuoteBlock }) {
   return (
     <blockquote
-      className={cn(BODY_TEXT_CLASS, "border-l-4 border-border-card pl-4 italic", backgroundClass(block.background))}
+      className={cn(
+        "text-2xl italic leading-snug text-text-navy",
+        alignmentClass(block.alignment),
+        backgroundClass(block.background)
+      )}
       style={backgroundStyle(block.background)}
     >
       <p>
+        <span aria-hidden="true">“</span>
         <InlineContent spans={block.content} />
+        <span aria-hidden="true">”</span>
       </p>
-      {block.attribution && <footer className="mt-2 text-sm text-text-nav not-italic">— {block.attribution}</footer>}
+      {block.attribution && (
+        <footer className="mt-2 text-sm not-italic text-text-nav">— {block.attribution}</footer>
+      )}
     </blockquote>
   );
 }

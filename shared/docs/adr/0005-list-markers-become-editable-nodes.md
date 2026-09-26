@@ -1,0 +1,11 @@
+# List markers become real, colourable document nodes; splitting a List continues numbering but not styling
+
+ADR 0003/0004 let an author colour and align a whole List **Block**, but the bullet/number itself stayed a CSS `::marker`, invisible to the editor. Colouring a Marker independently of its item's text — and letting authors freely select "marker + some words" as one range — isn't representable by CSS at all, since `::marker` was never part of the document a selection can span. We replaced it with a real, atomic, editor-managed node per item: read-only text (the glyph/number is always system-computed from the List's style and item order, never author-typed), but colourable like any other span, using the same Colour mechanism (ADR 0003) rather than inventing a second one. Left unset, a Marker inherits the surrounding colour rather than a fixed default, so no List published before this change changes appearance.
+
+Inserting a Block between two items only has one representable shape: a List item is text-only (ADR 0001's "one level only," no nested Blocks), so the insertion always splits one List Block into two List Blocks around the new content. We chose to keep the two halves feeling like one interrupted list rather than two unrelated ones for *ordered* Lists specifically: numbering continues from the first half rather than restarting at 1. We chose the opposite for appearance: the second half starts with no alignment, background, or Marker colour of its own, rather than copying the first half's. Continuation only has one sensible reading (a reader would find restarting confusing); styling doesn't — an author who deliberately coloured a list is not obviously choosing that colour for content inserted after the fact, and auto-copying it silently is a stranger default than requiring an explicit re-pick.
+
+## Consequences
+
+- `listBlockSchema`'s `items` gains a per-item shape (text + optional marker colour) instead of a bare array of spans; old stored Bodies parse unchanged because the marker colour is optional.
+- Continuing numbering across a split needs a way to carry "start from N" on the second List Block — a new optional field, absent from every List Block stored before this change.
+- The editor takes over numbering/marker rendering entirely; nothing here relies on the browser's native `::marker` any more.

@@ -135,13 +135,33 @@ export const LIST_STYLES = ['bullet', 'ordered'] as const;
 export const listStyleSchema = z.enum(LIST_STYLES);
 export type ListStyle = (typeof LIST_STYLES)[number];
 
+// A Marker's colour (ADR 0005) is per item, not per list — it parallels
+// InlineSpan.color's grain, since colouring is always a selection touching
+// one marker at a time, never "every marker in this list at once".
+export const listItemSchema = z.object({
+  spans: z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'),
+  markerColor: colorValueSchema.optional(),
+});
+
 export const listBlockSchema = z.object({
   id: z.string().min(1),
   type: z.literal('list'),
   style: listStyleSchema,
+  // Every item stored before ADR 0005 is a bare InlineSpan[] (no markerColor
+  // ever existed); both shapes normalize to `listItemSchema` here so old rows
+  // keep parsing unchanged — no migration, same trick `videoBlockSchema` uses
+  // for its own old-shape/new-shape split.
   items: z
-    .array(z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'))
+    .array(
+      z
+        .union([z.array(inlineSpanSchema).min(1, 'each list item needs at least one span'), listItemSchema])
+        .transform((item) => (Array.isArray(item) ? { spans: item } : item)),
+    )
     .min(1, 'list needs at least one item'),
+  // Set only when a list continues an ordered list split apart by an
+  // inserted Block (ADR 0005) — absent means "starts at 1", matching how
+  // `alignment`/`background` are never stored for their own default value.
+  startsAt: z.number().int().positive().optional(),
   background: colorValueSchema.optional(),
   alignment: textAlignmentSchema.optional(),
 });
@@ -592,7 +612,7 @@ export function computeReadingTimeMinutes(body: ArticleBody): number {
         break;
       case 'list':
         for (const item of block.items) {
-          for (const span of item) wordCount += countWords(span.text);
+          for (const span of item.spans) wordCount += countWords(span.text);
         }
         break;
       case 'divider':

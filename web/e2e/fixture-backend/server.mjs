@@ -40,7 +40,7 @@ const article = {
       type: "list",
       style: "ordered",
       startsAt: 3,
-      items: [{ spans: [span("Third ordered item")] }],
+      items: [{ spans: [span("Third ordered item")] }, { spans: [span("Fourth ordered item")] }],
     },
     {
       id: "b7",

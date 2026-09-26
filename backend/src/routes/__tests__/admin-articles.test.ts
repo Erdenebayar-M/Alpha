@@ -329,7 +329,11 @@ describe('POST / — new Block kinds (issue #85)', () => {
     const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
     expect(res.status).toBe(201);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ body: [listBlock] }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({
+          body: [{ ...listBlock, items: [{ spans: [{ text: 'one' }] }, { spans: [{ text: 'two' }] }] }],
+        }),
+      }),
     );
   });
 
@@ -337,6 +341,55 @@ describe('POST / — new Block kinds (issue #85)', () => {
     const listBlock = { id: 'b1', type: 'list', style: 'ordered', items: [[{ text: 'first' }]] };
     const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
     expect(res.status).toBe(201);
+  });
+
+  it('accepts a list item with a marker colour, alongside a plain bare-array item (ADR 0005)', async () => {
+    const listBlock = {
+      id: 'b1',
+      type: 'list',
+      style: 'bullet',
+      items: [{ spans: [{ text: 'coloured marker' }], markerColor: 'brand-blue' }, [{ text: 'plain item' }]],
+    };
+    const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          body: [
+            {
+              ...listBlock,
+              items: [
+                { spans: [{ text: 'coloured marker' }], markerColor: 'brand-blue' },
+                { spans: [{ text: 'plain item' }] },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('accepts an ordered list Block continuing a split list\'s numbering via startsAt (ADR 0005)', async () => {
+    const listBlock = { id: 'b1', type: 'list', style: 'ordered', items: [[{ text: 'third' }]], startsAt: 3 };
+    const res = await createArticle({ ...VALID_BODY, body: [listBlock] });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ body: [{ ...listBlock, items: [{ spans: [{ text: 'third' }] }] }] }),
+      }),
+    );
+  });
+
+  it('rejects a non-positive startsAt, naming the Block position', async () => {
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'list', style: 'ordered', items: [[{ text: 'one' }]], startsAt: 0 }],
+    });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it('rejects a nested list, naming the Block position', async () => {
@@ -666,6 +719,18 @@ describe('POST / — new Block kinds (issue #85)', () => {
       expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 2 }) }),
     );
   });
+
+  it('counts words in a list item carrying a marker colour the same as a plain item', async () => {
+    const words = Array.from({ length: 400 }, (_, i) => `word${i}`).join(' ');
+    const res = await createArticle({
+      ...VALID_BODY,
+      body: [{ id: 'b1', type: 'list', style: 'bullet', items: [{ spans: [{ text: words }], markerColor: 'red' }] }],
+    });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reading_time_minutes: 2 }) }),
+    );
+  });
 });
 
 describe('POST / — author Colours (issue #108)', () => {
@@ -694,7 +759,12 @@ describe('POST / — author Colours (issue #108)', () => {
     ];
     const res = await createArticle({ ...VALID_BODY, body });
     expect(res.status).toBe(201);
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ body }) }));
+    const expectedBody = body.map((block) =>
+      block.type === 'list' ? { ...block, items: block.items!.map((spans) => ({ spans })) } : block,
+    );
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: expectedBody }) }),
+    );
   });
 
   it('rejects an unknown Palette name, naming the Block position', async () => {
@@ -799,7 +869,12 @@ describe('POST / — Text alignment (issue #110)', () => {
     ];
     const res = await createArticle({ ...VALID_BODY, body });
     expect(res.status).toBe(201);
-    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ body }) }));
+    const expectedBody = body.map((block) =>
+      block.type === 'list' ? { ...block, items: block.items!.map((spans) => ({ spans })) } : block,
+    );
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: expectedBody }) }),
+    );
   });
 
   it('rejects an invalid alignment value, naming the Block position', async () => {

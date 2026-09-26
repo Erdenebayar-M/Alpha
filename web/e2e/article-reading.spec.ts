@@ -43,3 +43,20 @@ test("no horizontal page scroll at phone width", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("a Quote is wrapped in site-drawn quotation marks with a dash attribution", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const quote = page.locator("blockquote");
+  await expect(quote.locator("p")).toHaveText("“Quoted words”");
+  await expect(quote.locator("footer")).toHaveText("— Quote author");
+});
+
+test("split ordered Lists count 1, 2, 3, 4 across the paragraph between them", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  await expect(page.locator("ol > li")).toHaveText([
+    "1.First ordered item",
+    "2.Second ordered item",
+    "3.Third ordered item",
+    "4.Fourth ordered item",
+  ]);
+});
