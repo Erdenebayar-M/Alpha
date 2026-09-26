@@ -1,8 +1,8 @@
-import { cookies } from "next/headers";
 import { loginWithBackend } from "@/lib/api/server/login";
 import { parseLoginInput } from "@/lib/auth/loginRules";
 import { safeNextPath } from "@/lib/auth/safeNext";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/lib/auth/session";
+import { clientIpFrom } from "@/lib/auth/clientIp";
+import { setSessionCookie } from "@/lib/auth/setSessionCookie";
 
 const STATUS_BY_CODE = {
   INVALID_CREDENTIALS: 401,
@@ -22,16 +22,10 @@ export async function POST(request: Request) {
   const input = parseLoginInput(body);
   if (!input) return Response.json({ error: "VALIDATION_ERROR" }, { status: STATUS_BY_CODE.VALIDATION_ERROR });
 
-  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const clientIp = clientIpFrom(request);
   const result = await loginWithBackend(input, clientIp);
   if (!result.ok) return Response.json({ error: result.code }, { status: STATUS_BY_CODE[result.code] });
 
-  (await cookies()).set(SESSION_COOKIE, result.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-    path: "/",
-  });
+  await setSessionCookie(result.token);
   return Response.json({ redirectTo: safeNextPath((body as { next?: unknown }).next) });
 }

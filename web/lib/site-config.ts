@@ -17,7 +17,7 @@ export const siteConfig = {
   // TODO: replace with the real destinations.
   appUrl: "#",
   loginUrl: "/signin",
-  registerUrl: "#",
+  registerUrl: "/signup",
   // TODO: the Password reset page (linked from /signin).
   forgotPasswordUrl: "#",
   appStoreUrl: "#",

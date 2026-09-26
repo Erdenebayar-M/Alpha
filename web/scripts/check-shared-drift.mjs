@@ -164,6 +164,31 @@ for (const code of ["INVALID_CREDENTIALS", "RATE_LIMITED", "VALIDATION_ERROR"]) 
   assert(signInComponent.includes(code), `web/components/auth/SignInForm.tsx no longer maps backend error code ${code}.`);
 }
 
+// ── 8. Register rules (issue #121) ──────────────────────────────────────
+// web/lib/auth/registerRules.ts mirrors registerSchema; the sign-up form
+// maps the backend's DUPLICATE_EMAIL code to a link to /signin.
+
+const registerRulesTs = read("web/lib/auth/registerRules.ts");
+const registerSchemaMatch = sharedAuthTs.match(/export const registerSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(registerSchemaMatch, "Could not find registerSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
+
+if (registerSchemaMatch) {
+  const fields = registerSchemaMatch[1].replace(/\s+/g, " ").trim();
+  assert(
+    fields === "email: z.string().email(), name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8),",
+    `registerSchema changed to { ${fields} } — web/lib/auth/registerRules.ts mirrors { email: z.string().email(), name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8) } and needs updating.`,
+  );
+}
+assert(registerRulesTs.includes("NAME_MIN_LENGTH = 2"), "web/lib/auth/registerRules.ts no longer declares NAME_MIN_LENGTH = 2.");
+assert(registerRulesTs.includes("PASSWORD_MIN_LENGTH = 8"), "web/lib/auth/registerRules.ts no longer declares PASSWORD_MIN_LENGTH = 8.");
+assert(!registerSchemaMatch || !/confirm/i.test(registerSchemaMatch[1]), "registerSchema in shared/src/validators/auth.ts gained a confirmation field — password confirmation is meant to be client-only (issue #121).");
+
+const signUpComponent = read("web/components/auth/SignUpForm.tsx");
+for (const code of ["DUPLICATE_EMAIL", "RATE_LIMITED"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the sign-up page) is missing from backend/src/lib/errors.ts.`);
+  assert(signUpComponent.includes(code), `web/components/auth/SignUpForm.tsx no longer maps backend error code ${code}.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

@@ -4,7 +4,7 @@ interface AuthFieldProps {
   label: string;
   /** Sits opposite the label (the password field's "forgot" link). */
   labelAction?: ReactNode;
-  type: "email" | "password";
+  type: "text" | "email" | "password";
   name: string;
   placeholder: string;
   value: string;
