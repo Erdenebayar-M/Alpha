@@ -76,9 +76,29 @@ auth.post('/login', loginLimiter, async (c) => {
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token });
 });
 
+// Issues a token and emails the link. Failures are only logged: the caller has
+// already answered.
+async function sendPasswordReset(parent: { id: string; name: string }, email: string, request_id: string | null) {
+  try {
+    const token = await issuePasswordResetToken(parent.id);
+    if (!token) return;
+    await sendEmail(passwordResetEmail({ to: email, name: parent.name, link: passwordResetLink(token) }));
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        request_id,
+        event: 'password_reset_email_failed',
+        parent_id: parent.id,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
+}
+
 // POST /api/auth/forgot-password — requests a Password reset link. The response
-// is the same whether or not a Parent account has this email, and a failure to
-// send is only logged, so nothing here reveals which emails are registered.
+// is the same, and as quick, whether or not a Parent account has this email:
+// issuing the token and sending the email happen after it goes out.
 auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = forgotPasswordSchema.safeParse(body);
@@ -88,22 +108,7 @@ auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
 
   const { email } = parsed.data;
   const parent = await prisma.parent.findUnique({ where: { email }, select: { id: true, name: true } });
-  if (parent) {
-    try {
-      const token = await issuePasswordResetToken(parent.id);
-      await sendEmail(passwordResetEmail({ to: email, name: parent.name, link: passwordResetLink(token) }));
-    } catch (err) {
-      console.error(
-        JSON.stringify({
-          ts: new Date().toISOString(),
-          request_id: c.get('requestId') ?? null,
-          event: 'password_reset_email_failed',
-          parent_id: parent.id,
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
-    }
-  }
+  if (parent) void sendPasswordReset(parent, email, c.get('requestId') ?? null);
 
   return ok(c, { ok: true });
 });

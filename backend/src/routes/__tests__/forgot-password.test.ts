@@ -22,7 +22,7 @@ const tokens: TokenRow[] = [];
 jest.mock('../../lib/db/client', () => ({
   prisma: {
     parent: { findUnique: jest.fn() },
-    passwordResetToken: { updateMany: jest.fn(), create: jest.fn() },
+    passwordResetToken: { updateMany: jest.fn(), create: jest.fn(), count: jest.fn() },
     $transaction: jest.fn(),
   },
 }));
@@ -39,6 +39,7 @@ jest.mock('../../lib/email', () => ({
 const mockFindUnique  = prisma.parent.findUnique as jest.Mock;
 const mockUpdateMany  = prisma.passwordResetToken.updateMany as jest.Mock;
 const mockCreate      = prisma.passwordResetToken.create as jest.Mock;
+const mockCount       = prisma.passwordResetToken.count as jest.Mock;
 const mockTransaction = prisma.$transaction as jest.Mock;
 const mockSendEmail   = sendEmail as jest.MockedFunction<typeof sendEmail>;
 
@@ -46,13 +47,19 @@ const PARENT = { id: 'parent-uuid-1', name: 'Болд' };
 const REGISTERED = 'parent@example.com';
 
 let ipCounter = 0;
-function forgotPassword(body: unknown) {
+// The route answers before the token is issued and the email sent (so a
+// registered email isn't slower); settle() lets that background work finish.
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+async function forgotPassword(body: unknown) {
   // A fresh IP per request keeps these tests clear of the route's rate limit.
-  return authRouter.request('/forgot-password', {
+  const res = await authRouter.request('/forgot-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `198.51.100.${++ipCounter}` },
     body: JSON.stringify(body),
   });
+  await settle();
+  return res;
 }
 
 const sentEmails = () => mockSendEmail.mock.calls.map(([message]) => message as EmailMessage);
@@ -83,6 +90,9 @@ beforeEach(() => {
     tokens.push(row);
     return row;
   });
+  mockCount.mockImplementation(async ({ where }: { where: { parent_id: string; created_at: { gte: Date } } }) =>
+    tokens.filter((t) => t.parent_id === where.parent_id && t.created_at >= where.created_at.gte).length,
+  );
   mockTransaction.mockImplementation(async (ops: Promise<unknown>[]) => Promise.all(ops));
   mockSendEmail.mockResolvedValue(undefined);
 });
@@ -140,6 +150,36 @@ describe('POST /forgot-password', () => {
     const [first, second] = sentEmails().map(tokenFromLink);
     expect(first).not.toBe(second);
     expect(liveTokens().map((t) => t.token_hash)).toEqual([sha256(second)]);
+  });
+
+  it('answers without waiting for the token or the email', async () => {
+    let releaseEmail!: () => void;
+    mockSendEmail.mockImplementation(() => new Promise<void>((resolve) => (releaseEmail = resolve)));
+
+    const res = await authRouter.request('/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.250' },
+      body: JSON.stringify({ email: REGISTERED }),
+    });
+
+    expect(res.status).toBe(200);
+    await settle();
+    expect(mockSendEmail).toHaveBeenCalledTimes(1); // still pending when the response went out
+    releaseEmail();
+  });
+
+  it('issues at most 5 links per parent per hour, whatever the IP, and answers the same after', async () => {
+    for (let i = 0; i < 5; i++) await forgotPassword({ email: REGISTERED });
+    expect(tokens).toHaveLength(5);
+    const newest = tokenFromLink(sentEmails()[4]);
+
+    const capped = await forgotPassword({ email: REGISTERED });
+
+    expect(capped.status).toBe(200);
+    expect(await capped.json()).toEqual({ success: true, data: { ok: true } });
+    expect(tokens).toHaveLength(5);
+    expect(mockSendEmail).toHaveBeenCalledTimes(5);
+    expect(liveTokens().map((t) => t.token_hash)).toEqual([sha256(newest)]);
   });
 
   it('still responds with success when the email cannot be sent', async () => {

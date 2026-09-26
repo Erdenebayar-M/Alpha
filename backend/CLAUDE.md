@@ -77,7 +77,7 @@ The codebase applies these principles consistently. New routes and features must
 
 **4. Don't Leak Information**
 - Login returns `"Invalid email or password"` regardless of whether the email exists
-- Forgot-password returns the same success whether or not the email is registered, even if the email fails to send
+- Forgot-password returns the same success, just as fast, whether or not the email is registered: token issue and email send run after the response, and failures are only logged
 - IDOR failures return `NOT_FOUND`, not `FORBIDDEN`
 - 500 responses return only a `request_id`; stack traces go to stderr only
 
@@ -93,7 +93,7 @@ The codebase applies these principles consistently. New routes and features must
 **7. Rate Limiting** — defined in `src/lib/auth/rateLimit.ts`
 - `loginLimiter`: 5 attempts / 15 min
 - `registerLimiter`: 10 / hour
-- `forgotPasswordLimiter`: 5 / hour
+- `forgotPasswordLimiter`: 5 / hour per IP, plus at most 5 reset tokens / hour per parent (`src/lib/auth/passwordReset.ts`), so rotating IPs can't keep killing a parent's link
 - `adminGenerateLimiter`: 5 / min on LLM endpoints
 
 **8. Secure Defaults**
