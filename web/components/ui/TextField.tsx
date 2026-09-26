@@ -6,6 +6,10 @@ interface TextFieldProps {
   value: string;
   onChange: (value: string) => void;
   autoComplete?: string;
+  type?: "text" | "password" | "email";
+  name?: string;
+  /** Inline message shown under the input; also marks the input invalid. */
+  error?: string;
 }
 
 /**
@@ -17,8 +21,18 @@ interface TextFieldProps {
  * throughout, so this is a Figma default leaking into two text nodes rather
  * than a real type choice. Rendered in the page font like everything else.
  */
-export default function TextField({ label, placeholder, value, onChange, autoComplete }: TextFieldProps) {
+export default function TextField({
+  label,
+  placeholder,
+  value,
+  onChange,
+  autoComplete,
+  type = "text",
+  name,
+  error,
+}: TextFieldProps) {
   const id = useId();
+  const errorId = `${id}-error`;
 
   return (
     <div className="flex w-full flex-col gap-[7px]">
@@ -27,13 +41,21 @@ export default function TextField({ label, placeholder, value, onChange, autoCom
       </label>
       <input
         id={id}
-        type="text"
+        type={type}
+        name={name}
         value={value}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[clamp(52px,7dvh,66px)] w-full rounded-xl border border-setup-border bg-white p-3.5 text-xs text-black placeholder:text-text-nav focus-ring"
+        className={`h-[clamp(52px,7dvh,66px)] w-full rounded-xl border ${error ? "border-[color:var(--color-palette-red)]" : "border-setup-border"} bg-white p-3.5 text-xs text-black placeholder:text-text-nav focus-ring`}
       />
+      {error && (
+        <p id={errorId} className="text-xs text-[color:var(--color-palette-red)]">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
