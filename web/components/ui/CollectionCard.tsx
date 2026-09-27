@@ -41,7 +41,7 @@ interface CollectionCardProps {
 }
 
 /**
- * One card of /landing-new's Collections row (Figma node 1401:22290, "Frame
+ * One card of the homepage's Collections row (Figma node 1401:22290, "Frame
  * 94" and its four siblings): a 244x262 white card — icon, title and a
  * subtitle-plus-chevron row in normal flow, with the green hill and its
  * scattered decoration absolutely positioned behind the card's bottom edge.

@@ -71,7 +71,7 @@ interface ArticleCardProps {
 }
 
 /**
- * One card of /landing-new's Articles-for-parents grid (Figma node
+ * One card of the homepage's Articles-for-parents grid (Figma node
  * 1401:20820 "Frame 96" and its two siblings, 1401:20869 / 1401:20947):
  * a gradient frame around a 321x255 illustration panel, with a white
  * footer showing the card's label and title. Rendered three times by

@@ -6,7 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 /** `rise`: the wrapper itself fades and rises 16px (Pricing on `/`).
  *  `sequence`: the wrapper stays put; each item inside it marked with
  *  `revealItem()` plays on its own once *it* reaches the trigger line, delayed
- *  by its step (/landing-new's sections). */
+ *  by its step (the homepage's sections). */
 export type RevealMode = "rise" | "sequence";
 
 interface RevealProps {

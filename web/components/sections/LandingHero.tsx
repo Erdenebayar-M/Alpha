@@ -4,7 +4,7 @@ import LandingHeroArt from "@/components/sections/LandingHeroArt";
 import { landingHero } from "@/lib/content";
 
 /**
- * /landing-new's hero (Figma node 1360:8705, inside layout 1360:8704): the
+  * The homepage's hero (Figma node 1360:8705, inside layout 1360:8704): the
  * "Эцэг эхэд" badge, the page's only h1, the lead paragraph, and the cloud +
  * reading-characters illustration. Figma is a fixed 1440-wide desktop
  * design with no mobile frame, so below `lg` the content stacks in a simple

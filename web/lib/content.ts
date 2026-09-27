@@ -18,10 +18,11 @@ export const nav = {
   },
 } as const satisfies { links: readonly NavLink[]; auth: { loginLabel: string; registerLabel: string } };
 
-// /landing-new's own nav link set (Figma node 1360:8955), passed to Header in
-// place of the homepage's `nav.links` above. "Эцэг эхэд" is this page itself
-// (Header renders it at 16px with aria-current="page"); the other two are
-// existing destinations, sourced from site-config rather than repeated here.
+// The homepage's own nav link set (Figma node 1360:8955), passed to Header in
+// place of `nav.links` above, which /landing-old uses instead. "Эцэг эхэд" is
+// this page itself (Header renders it at 16px with aria-current="page"); the
+// other two are existing destinations, sourced from site-config rather than
+// repeated here.
 export const landingNav = {
   links: [
     { label: "Эцэг эхэд", href: "#top" },
@@ -34,7 +35,7 @@ export const storeBadges = {
   downloadLabel: "Татаж авах",
 } as const;
 
-// /landing-new's hero (Figma node 1360:8705). The heading is one text layer
+// The homepage's hero (Figma node 1360:8705). The heading is one text layer
 // authored as two manual lines, kept as a 2-tuple here so the component can
 // join them with a <br/> inside a single <h1> rather than relying on wrap.
 export const landingHero = {
@@ -65,7 +66,7 @@ export interface CategoryPill {
   readonly category?: Category;
 }
 
-// /landing-new's Category pills (Figma node 1360:8718), directly under the
+// The homepage's Category pills (Figma node 1360:8718), directly under the
 // hero. Унших, Зөв бичих and Үсэглэх are Categories (see CONTEXT.md);
 // Оношилгоо is not a Category — it's a Diagnostic shortcut, so it links to
 // `assessmentUrl` rather than a Category placeholder.
@@ -102,7 +103,7 @@ export interface Article {
   readonly href: string;
 }
 
-// /landing-new's Featured article (Figma node 1401:22062), directly under the
+// The homepage's Featured article (Figma node 1401:22062), directly under the
 // Category pills — the one Published Article staff have promoted (see
 // web/CONTEXT.md). Modelled as an Article rather than a one-off shape so the
 // Articles-for-parents grid (a future ticket) can reuse the same interface.
@@ -133,7 +134,7 @@ export interface ArticleCardCopy {
   readonly href: string;
 }
 
-// /landing-new's Articles-for-parents grid (Figma node 1371:9792), directly
+// The homepage's Articles-for-parents grid (Figma node 1371:9792), directly
 // under the Featured article — three more Articles for parents to browse
 // (see web/CONTEXT.md's Article entry). Unlike the Featured article, each
 // card's own face shows a generic "Завгүй" eyebrow label rather than a
@@ -162,7 +163,7 @@ export interface CollectionCardCopy {
   readonly href: string;
 }
 
-// /landing-new's Collections row (Figma node 1401:22290), the page's final
+// The homepage's Collections row (Figma node 1401:22290), the page's final
 // section — five Collections (see web/CONTEXT.md's Collection entry)
 // grouping material by theme. Each subtitle states the kind of material the
 // Collection holds, per the glossary. Cards 3 and 5 both title "Зөв
@@ -202,7 +203,7 @@ export const collectionsRow = {
   nextLabel: string;
 };
 
-// /landing-new's Diagnostic card (Figma node 1401:21880), directly under the
+// The homepage's Diagnostic card (Figma node 1401:21880), directly under the
 // Category pills. "Оношилгоо" badges the same Diagnostic the "Оношилгоо" nav
 // link and pill point at (see CONTEXT.md); "Үнэлгээг эхлүүлэх" is its
 // parent-facing CTA wording, matching the homepage's own `hero.cta`.

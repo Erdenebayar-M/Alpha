@@ -253,7 +253,7 @@ html {
 }
 
 /* ---------------------------------------------------------------------------
- * /landing-new's lilac/mint gradient card surface (DiagnosticCard, node
+ * The homepage's lilac/mint gradient card surface (DiagnosticCard, node
  * 1401:21880; Featured article, node 1401:22064) and the fluid-clamp
  * heading/body treatment both cards share (same 26px/31px-leading heading
  * and 18px/31px-leading body in Figma — see DiagnosticCard's own comment for
@@ -291,7 +291,7 @@ html {
   @apply bg-linear-to-br from-art-panel-from to-art-panel-to;
 }
 
-/* The bottom spacing under each /landing-new section that sits directly on
+/* The bottom spacing under each homepage section that sits directly on
  * the sky/hill background (Diagnostic card, Featured article, Articles
  * grid) — each section adds its own top spacing/`relative`-positioning
  * needs on top, since those differ, but the gap to the next section is the

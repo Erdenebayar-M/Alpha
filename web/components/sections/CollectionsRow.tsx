@@ -112,7 +112,7 @@ const art: readonly [
 ];
 
 /**
- * /landing-new's Collections row (Figma node 1401:22290, "Frame 94"), the
+  * The homepage's Collections row (Figma node 1401:22290, "Frame 94"), the
  * page's final section — five Collection cards (see web/CONTEXT.md's
  * Collection entry) a parent can browse by theme. One `CollectionCard`
  * component, five cards from one data array (`collectionsRow.items` zipped

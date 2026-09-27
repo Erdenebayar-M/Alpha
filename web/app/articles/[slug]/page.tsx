@@ -26,8 +26,8 @@ export default async function ArticlePage({ params }: PageProps<"/articles/[slug
   return (
     <div className="relative isolate min-h-dvh">
       <LandingScene />
-      {/* The nav's #top links target the landing sections, so resolve them there. */}
-      <Header basePath="/landing-new" links={landingNav.links} variant="spacious" />
+      {/* The nav's #top link targets the landing sections, so resolve it there. */}
+      <Header basePath="/" links={landingNav.links} variant="spacious" />
       <main id="main" className="relative">
         <CategoryPills current={categoryByApiValue[article.category]} />
         <Container className="pb-16">
