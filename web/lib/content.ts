@@ -455,6 +455,10 @@ export const signUp = {
     [{ key: "password", name: "password", type: "password", label: "Нууц үг", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" }], // 7:6768
     [{ key: "confirmPassword", name: "confirmPassword", type: "password", label: "Нууц үгээ давтах", placeholder: signIn.passwordPlaceholder, autoComplete: "new-password" }], // 7:6772
   ],
+  // "Did you mean …?" under the email field for a common domain typo
+  // (issue #139). No Figma frame; the suggested address sits where SentToEmail
+  // puts one, but as a button rather than static text.
+  emailSuggestion: { beforeEmail: "Та ", afterEmail: " гэж бичихийг хүссэн үү?" },
   submitLabel: "Бүртгүүлэх", // Primary action 7:6775
   errors: {
     name: "Нэр дор хаяж 2 тэмдэгттэй байна.",
