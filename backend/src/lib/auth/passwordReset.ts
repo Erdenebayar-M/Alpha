@@ -44,6 +44,10 @@ export async function issuePasswordResetToken(parent_id: string): Promise<string
  * succeeds while the token is still unused and unexpired, so two requests
  * racing on the same link can't both win. The parent's token_version is
  * incremented alongside, signing out every session issued before.
+ *
+ * Also confirms the email if it wasn't already: completing a Password reset
+ * proves ownership just as an Email confirmation link would, so a parent who
+ * forgot their password before confirming isn't locked out.
  */
 export async function resetPasswordWithToken(
   token: string,
@@ -62,10 +66,16 @@ export async function resetPasswordWithToken(
       data: { used_at: now },
     });
     if (claimed.count !== 1) return null;
-    const { id, email, name, token_version } = await tx.parent.update({
+    const updated = await tx.parent.update({
       where: { id: row.parent_id },
       data: { password_hash, token_version: { increment: 1 } },
     });
+    // Confirms the email only if it wasn't already, so an already-confirmed
+    // account keeps its original confirmation timestamp.
+    if (!updated.email_confirmed_at) {
+      await tx.parent.update({ where: { id: row.parent_id }, data: { email_confirmed_at: now } });
+    }
+    const { id, email, name, token_version } = updated;
     return { id, email, name, token_version };
   });
 }

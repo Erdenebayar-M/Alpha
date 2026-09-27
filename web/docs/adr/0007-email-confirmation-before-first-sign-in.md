@@ -10,7 +10,7 @@ A parent could **Sign up** with any email and was signed in straight away. Nothi
 
 **A link can be resent, and only the newest works.** `POST /api/auth/resend-confirmation` takes an email and always answers the same, so it never reveals whether an unconfirmed account exists; only an unconfirmed account's email gets mail. Issuing a link marks the parent's older unused ones used, and is capped at 5 per parent per hour on top of a per-IP limit, as for Password reset. Web offers Resend, with a 60-second cooldown, under "check your email" and on the used-or-expired page, where the parent gives the address (prefilled from sign-up in the same tab).
 
-This amends ADR 0006: from here on a password Parent account's email *is* proven before anyone can use it. Google linking keeps dropping the password for accounts that predate confirmation, and for unconfirmed ones (issue #142).
+This amends ADR 0006: from here on a password Parent account's email *is* proven before anyone can use it. The other two ways of proving it also confirm it: completing a **Password reset** on an unconfirmed account sets `email_confirmed_at`, so a parent who forgot their password before confirming isn't locked out, and **Google sign-in** always creates or links a confirmed account — Google linking keeps dropping the password (and bumping `token_version`) for the account it takes over, unconfirmed or not, since Google's verified email settles the question either way.
 
 Parent accounts that existed before this change are marked confirmed by the migration (`email_confirmed_at = created_at`), so none is locked out.
 

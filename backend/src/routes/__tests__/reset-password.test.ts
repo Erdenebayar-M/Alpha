@@ -17,6 +17,7 @@ interface ParentRow {
   password_hash: string | null;
   token_version: number;
   email_confirmed_at: Date | null;
+  created_at: Date;
 }
 
 interface TokenRow {
@@ -114,7 +115,15 @@ beforeEach(() => {
   jest.clearAllMocks();
   parents.length = 0;
   tokens.length = 0;
-  parents.push({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', password_hash: `hashed:${OLD_PASSWORD}`, token_version: 0, email_confirmed_at: new Date() });
+  parents.push({
+    id: 'parent-uuid-1',
+    email: EMAIL,
+    name: 'Болд',
+    password_hash: `hashed:${OLD_PASSWORD}`,
+    token_version: 0,
+    email_confirmed_at: new Date(),
+    created_at: new Date(),
+  });
 
   const pick = <T extends object>(row: T | undefined, select?: Record<string, boolean>) =>
     row && select ? Object.fromEntries(Object.keys(select).map((k) => [k, row[k as keyof T]])) : (row ?? null);
@@ -123,11 +132,18 @@ beforeEach(() => {
     pick(parents.find((p) => (where.email ? p.email === where.email : p.id === where.id)), select),
   );
   db.parent.update.mockImplementation(
-    async ({ where, data }: { where: { id: string }; data: { password_hash?: string; token_version?: { increment: number } } }) => {
+    async ({
+      where,
+      data,
+    }: {
+      where: { id: string };
+      data: { password_hash?: string; token_version?: { increment: number }; email_confirmed_at?: Date | null };
+    }) => {
       const row = parents.find((p) => p.id === where.id);
       if (!row) throw new Error('Record to update not found');
       if (data.password_hash !== undefined) row.password_hash = data.password_hash;
       if (data.token_version) row.token_version += data.token_version.increment;
+      if (data.email_confirmed_at !== undefined) row.email_confirmed_at = data.email_confirmed_at;
       return { ...row };
     },
   );
@@ -179,6 +195,27 @@ describe('POST /reset-password', () => {
     });
     expect(mockSign).toHaveBeenCalledWith({ parent_id: 'parent-uuid-1', token_version: 1 });
     expect(res.headers.get('set-cookie')).toContain('auth_token=session.parent-uuid-1.1');
+  });
+
+  it('confirms an unconfirmed account, letting the parent sign in afterwards', async () => {
+    parents[0].email_confirmed_at = null;
+    const token = await requestResetToken();
+
+    const res = await resetPassword(token, NEW_PASSWORD);
+
+    expect(res.status).toBe(200);
+    expect(parents[0].email_confirmed_at).not.toBeNull();
+    const login_res = await login(NEW_PASSWORD);
+    expect(login_res.status).toBe(200);
+  });
+
+  it('keeps the original confirmation timestamp on an already-confirmed account', async () => {
+    const confirmedAt = parents[0].email_confirmed_at;
+    const token = await requestResetToken();
+
+    await resetPassword(token, NEW_PASSWORD);
+
+    expect(parents[0].email_confirmed_at).toEqual(confirmedAt);
   });
 
   it('after a reset, the old password fails and the new one works', async () => {

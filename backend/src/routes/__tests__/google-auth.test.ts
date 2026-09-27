@@ -29,6 +29,7 @@ interface ParentRow {
   password_hash: string | null;
   google_id: string | null;
   token_version: number;
+  email_confirmed_at: Date | null;
 }
 
 const parents: ParentRow[] = [];
@@ -116,6 +117,7 @@ function seedParent(row: Partial<ParentRow>) {
     password_hash: 'hashed:pw',
     google_id: null,
     token_version: 0,
+    email_confirmed_at: null,
     ...row,
   });
 }
@@ -166,6 +168,7 @@ beforeEach(async () => {
       password_hash: null,
       google_id: null,
       token_version: 0,
+      email_confirmed_at: null,
       // Prisma stores an omitted (undefined) column as its default.
       ...(Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined)) as Pick<ParentRow, 'email' | 'name'>),
     };
@@ -213,6 +216,12 @@ describe('POST /google', () => {
     expect(res.headers.get('set-cookie')).toContain('auth_token=session.parent-1.0');
   });
 
+  it('creates a new Parent account already confirmed', async () => {
+    await signInWithGoogle();
+
+    expect(parents).toEqual([expect.objectContaining({ email_confirmed_at: expect.any(Date) })]);
+  });
+
   it('finds the Parent account by google_id, even after the Google email changed', async () => {
     seedParent({ email: 'old-address@example.com', google_id: 'google-sub-1', token_version: 3 });
 
@@ -234,6 +243,23 @@ describe('POST /google', () => {
     expect(res.status).toBe(200);
     expect((await json(res)).data).toEqual({ id: 'parent-1', email: 'dorj@example.com', name: 'Нэр', token: 'session.parent-1.3' });
     expect(parents).toEqual([expect.objectContaining({ google_id: 'google-sub-1', password_hash: null, token_version: 3, name: 'Нэр' })]);
+  });
+
+  it('confirms an unconfirmed password account it links', async () => {
+    seedParent({ email: 'dorj@example.com', email_confirmed_at: null });
+
+    await signInWithGoogle();
+
+    expect(parents).toEqual([expect.objectContaining({ email_confirmed_at: expect.any(Date) })]);
+  });
+
+  it('keeps the original confirmation timestamp on an already-confirmed account it links', async () => {
+    const confirmedAt = new Date('2026-01-01T00:00:00Z');
+    seedParent({ email: 'dorj@example.com', email_confirmed_at: confirmedAt });
+
+    await signInWithGoogle();
+
+    expect(parents).toEqual([expect.objectContaining({ email_confirmed_at: confirmedAt })]);
   });
 
   it('keeps the password and sessions on later sign-ins once linked', async () => {

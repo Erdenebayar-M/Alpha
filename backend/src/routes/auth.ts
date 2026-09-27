@@ -259,6 +259,10 @@ auth.post('/reset-password', resetPasswordLimiter, async (c) => {
 // never proves the email is the parent's, so whoever set that password may
 // not be the Google-verified owner now arriving. Password reset, which goes
 // through the email, sets a new one.
+//
+// Google's verified email counts as confirmed either way — a fresh account
+// is created confirmed, and linking to an existing unconfirmed one confirms
+// it (an already-confirmed account keeps its original timestamp).
 async function parentForGoogle(identity: GoogleIdentity) {
   const linked = await prisma.parent.findUnique({ where: { google_id: identity.sub } });
   if (linked) return linked;
@@ -268,7 +272,12 @@ async function parentForGoogle(identity: GoogleIdentity) {
     if (byEmail.google_id) throw new Error('Email is linked to a different Google account');
     return prisma.parent.update({
       where: { id: byEmail.id },
-      data: { google_id: identity.sub, password_hash: null, token_version: { increment: 1 } },
+      data: {
+        google_id: identity.sub,
+        password_hash: null,
+        token_version: { increment: 1 },
+        email_confirmed_at: byEmail.email_confirmed_at ?? new Date(),
+      },
     });
   }
 
@@ -278,6 +287,7 @@ async function parentForGoogle(identity: GoogleIdentity) {
       google_id: identity.sub,
       name: identity.given_name ?? identity.email.split('@')[0],
       surname: identity.family_name,
+      email_confirmed_at: new Date(),
     },
   });
 }
