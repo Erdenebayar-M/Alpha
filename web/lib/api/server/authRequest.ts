@@ -1,7 +1,7 @@
 import { BACKEND_URL } from "@/lib/api/server/backendUrl";
 
 type TokenPath = "/api/auth/login" | "/api/auth/confirm-email" | "/api/auth/reset-password" | "/api/auth/google";
-type AuthPath = TokenPath | "/api/auth/register" | "/api/auth/forgot-password";
+type AuthPath = TokenPath | "/api/auth/register" | "/api/auth/forgot-password" | "/api/auth/resend-confirmation";
 
 export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR" };
 

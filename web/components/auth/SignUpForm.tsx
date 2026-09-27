@@ -4,7 +4,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
+import ResendConfirmation from "@/components/auth/ResendConfirmation";
 import SentToEmail from "@/components/auth/SentToEmail";
+import { rememberPendingConfirmationEmail } from "@/lib/auth/pendingConfirmationEmail";
 import { withNext } from "@/lib/auth/safeNext";
 import { validateRegisterForm, type RegisterField, type RegisterFormValues } from "@/lib/auth/registerRules";
 import { signUp } from "@/lib/content";
@@ -62,6 +64,7 @@ export default function SignUpForm({ next }: { next?: string }) {
       });
       const body = await res.json().catch(() => null);
       if (res.ok && typeof body?.email === "string") {
+        rememberPendingConfirmationEmail(body.email);
         setSentTo(body.email);
         return;
       }
@@ -81,6 +84,7 @@ export default function SignUpForm({ next }: { next?: string }) {
         <p className="text-sm leading-[1.55] text-auth-muted">
           <SentToEmail copy={signUp.sent.intro} email={sentTo} />
         </p>
+        <ResendConfirmation email={sentTo} next={next} />
       </div>
     );
   }

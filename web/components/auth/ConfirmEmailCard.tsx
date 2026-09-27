@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
+import ResendConfirmation from "@/components/auth/ResendConfirmation";
 import { confirmEmail } from "@/lib/content";
 
 type Outcome = { kind: "confirming" } | { kind: "invalid" } | { kind: "failed"; message: string };
@@ -15,8 +16,8 @@ const ERROR_BY_CODE: Record<string, string> = {
  * whole action — and, once the parent is signed in, moves on to where the
  * route handler says. Confirming from the page's script rather than on the
  * GET keeps mail scanners that fetch links from using the token up. Three
- * states: confirming; invalid, for an expired, used or unknown link (or none);
- * and failed, for a backend error, which can be retried.
+ * states: confirming; invalid, for an expired, used or unknown link (or none),
+ * which offers a new one; and failed, for a backend error, which can be retried.
  */
 export default function ConfirmEmailCard({ token, next }: { token?: string; next?: string }) {
   const [outcome, setOutcome] = useState<Outcome>(token ? { kind: "confirming" } : { kind: "invalid" });
@@ -59,22 +60,25 @@ export default function ConfirmEmailCard({ token, next }: { token?: string; next
   const message = outcome.kind === "confirming" ? confirmEmail.confirming : outcome.kind === "invalid" ? confirmEmail.invalid : outcome.message;
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void confirm();
-      }}
-      className="flex flex-col gap-6"
-    >
-      <p role={outcome.kind === "failed" ? "alert" : "status"} className="text-sm leading-[1.55] text-auth-muted">
-        {message}
-      </p>
-      {outcome.kind === "failed" && (
-        <div className="flex flex-col items-start">
-          <AuthSubmitButton label={confirmEmail.retryLabel} submitting={false} tone="darkHug" />
-        </div>
-      )}
-    </form>
+    <div className="flex flex-col gap-6">
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void confirm();
+        }}
+        className="flex flex-col gap-6"
+      >
+        <p role={outcome.kind === "failed" ? "alert" : "status"} className="text-sm leading-[1.55] text-auth-muted">
+          {message}
+        </p>
+        {outcome.kind === "failed" && (
+          <div className="flex flex-col items-start">
+            <AuthSubmitButton label={confirmEmail.retryLabel} submitting={false} tone="darkHug" />
+          </div>
+        )}
+      </form>
+      {outcome.kind === "invalid" && <ResendConfirmation next={next} />}
+    </div>
   );
 }

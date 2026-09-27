@@ -65,11 +65,11 @@ export const registerLimiter = rateLimit({
   max: 10,
 });
 
-// 5 Password reset requests per IP per hour — each one may send an email.
-export const forgotPasswordLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
-});
+// 5 requests per IP per hour for the routes that each may send an email.
+const EMAIL_SENDING = { windowMs: 60 * 60 * 1000, max: 5 };
+
+// Password reset requests.
+export const forgotPasswordLimiter = rateLimit(EMAIL_SENDING);
 
 // 10 Password reset attempts per IP per 15 minutes — tokens are unguessable;
 // this bounds the bcrypt work a caller can make the server do.
@@ -84,6 +84,9 @@ export const confirmEmailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
 });
+
+// Email confirmation resends — its own bucket, apart from Password reset.
+export const resendConfirmationLimiter = rateLimit(EMAIL_SENDING);
 
 // 5 LLM/generation requests per IP per minute — limits API cost exposure.
 // Google sign-in: each attempt costs a round trip to Google.
