@@ -103,7 +103,7 @@ async function signUpAndGetToken(): Promise<string> {
 interface Envelope {
   success: boolean;
   data?: { id?: string; email?: string; name?: string; token?: string };
-  error?: { code: string };
+  error?: { code: string; details?: unknown };
 }
 const json = async (res: Response) => (await res.json()) as Envelope;
 
@@ -315,7 +315,9 @@ describe('POST /login on an unconfirmed Parent account', () => {
     const res = await login();
 
     expect(res.status).toBe(403);
-    expect((await json(res)).error?.code).toBe('EMAIL_NOT_CONFIRMED');
+    const error = (await json(res)).error;
+    expect(error?.code).toBe('EMAIL_NOT_CONFIRMED');
+    expect(error?.details).toEqual({ email: 'b***@gmail.com' });
     expect(res.headers.get('set-cookie')).toBeNull();
   });
 

@@ -23,9 +23,10 @@ export const ERRORS = {
 
   // The right password for a Parent account whose email isn't confirmed yet.
   // Only given after the password checks out, so it reveals nothing to a
-  // caller who doesn't know it.
-  EMAIL_NOT_CONFIRMED: (c: Context) =>
-    fail(c, 'EMAIL_NOT_CONFIRMED', 'Email is not confirmed yet', undefined, 403),
+  // caller who doesn't know it. `maskedEmail` is where the link went, so web
+  // can say so without echoing the whole address.
+  EMAIL_NOT_CONFIRMED: (c: Context, maskedEmail: string) =>
+    fail(c, 'EMAIL_NOT_CONFIRMED', 'Email is not confirmed yet', { email: maskedEmail }, 403),
 
   // Any failed Google sign-in: a bad or expired code, an id_token that doesn't
   // verify, an unverified email, or Google not configured.

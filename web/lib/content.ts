@@ -425,6 +425,9 @@ export const signIn = {
   forgotPasswordLabel: "Нууц үгээ мартсан уу?", // 7:6265
   googleLabel: "Google-ээр нэвтрэх", // Button 7:6166, label 7:6167
   submitLabel: "Нэвтрэх", // Primary action 7:6149
+  // Right password, unconfirmed account — not in the frame; wording drafted for
+  // issue #143, awaiting owner approval.
+  confirmFirst: (maskedEmail: string) => `Эхлээд имэйлээ баталгаажуулна уу. ${maskedEmail} хаяг руу холбоос илгээсэн.`,
   errors: {
     invalidEmail: "Имэйл хаяг буруу байна.",
     invalidCredentials: "Имэйл эсвэл нууц үг буруу байна.",

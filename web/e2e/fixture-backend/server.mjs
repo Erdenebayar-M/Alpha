@@ -21,6 +21,9 @@ export const FIXTURE_SLUG = "fixture-article";
 // else is INVALID_CREDENTIALS — the three outcomes the sign-in page renders.
 export const FIXTURE_PARENT = { email: "parent@example.com", password: "correct-password", token: "fixture-session-token" };
 export const RATE_LIMITED_EMAIL = "limited@example.com";
+// A parent who has not confirmed their email: the right password is
+// EMAIL_NOT_CONFIRMED with the masked address, a wrong one the generic error.
+export const UNCONFIRMED_PARENT = { email: "unconfirmed@example.com", password: "correct-password", maskedEmail: "u***@example.com" };
 // A token `GET /api/auth/me` still accepts but the diagnostic routes reject,
 // standing in for one revoked between page load and starting the Diagnostic.
 export const EXPIRES_MID_FLOW_TOKEN = "expires-mid-flow-token";
@@ -88,8 +91,8 @@ function readJson(req) {
   });
 }
 
-function fail(res, status, code, message) {
-  send(res, status, "application/json", JSON.stringify({ success: false, error: { code, message } }));
+function fail(res, status, code, message, details) {
+  send(res, status, "application/json", JSON.stringify({ success: false, error: { code, message, ...(details && { details }) } }));
 }
 
 async function login(req, res) {
@@ -98,6 +101,9 @@ async function login(req, res) {
   if (body?.email === FIXTURE_PARENT.email && body?.password === FIXTURE_PARENT.password) {
     const data = { id: "fixture-parent", email: body.email, name: "Fixture Parent", token: FIXTURE_PARENT.token };
     return send(res, 200, "application/json", JSON.stringify({ success: true, data }));
+  }
+  if (body?.email === UNCONFIRMED_PARENT.email && body?.password === UNCONFIRMED_PARENT.password) {
+    return fail(res, 403, "EMAIL_NOT_CONFIRMED", "Email is not confirmed yet", { email: UNCONFIRMED_PARENT.maskedEmail });
   }
   fail(res, 401, "INVALID_CREDENTIALS", "Invalid email or password");
 }
