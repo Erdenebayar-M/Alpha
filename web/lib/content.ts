@@ -463,6 +463,13 @@ export const signUp = {
     rateLimited: signIn.errors.rateLimited,
     generic: signIn.errors.generic,
   },
+  // After submitting, the form gives way to this in place. No frame of its
+  // own: it follows forgotPassword.sent, whose heading and intro it mirrors.
+  sent: {
+    title: "Имэйлээ шалгана уу",
+    // The email sits between the two parts.
+    intro: { beforeEmail: "Таны ", afterEmail: " хаяг руу баталгаажуулах холбоос илгээлээ. Бүртгэлээ дуусгахын тулд холбоосыг нээнэ үү. Холбоосын хүчинтэй хугацаа 24 цаг." },
+  },
 } as const;
 
 // Forgot-password page (Figma frame 7:7189, Orthography file). After a request
@@ -486,6 +493,22 @@ export const forgotPassword = {
   },
   errors: {
     invalidEmail: signIn.errors.invalidEmail,
+    rateLimited: signIn.errors.rateLimited,
+    generic: signIn.errors.generic,
+  },
+} as const;
+
+// Email confirmation page, reached from the link Sign up emails. No frame of
+// its own: it sits in the auth card like the reset-password page. It confirms
+// on arrival and moves on, so it mostly shows `confirming`.
+export const confirmEmail = {
+  title: "Имэйл баталгаажуулах",
+  signInPrompt: signUp.signInPrompt,
+  confirming: "Имэйл хаягийг баталгаажуулж байна…",
+  // An expired, used or unknown link — one message, as the backend gives one code.
+  invalid: "Баталгаажуулах холбоосын хугацаа дууссан эсвэл хүчингүй байна.",
+  retryLabel: "Дахин оролдох",
+  errors: {
     rateLimited: signIn.errors.rateLimited,
     generic: signIn.errors.generic,
   },

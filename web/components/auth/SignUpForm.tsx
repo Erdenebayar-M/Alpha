@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
+import SentToEmail from "@/components/auth/SentToEmail";
 import { withNext } from "@/lib/auth/safeNext";
 import { validateRegisterForm, type RegisterField, type RegisterFormValues } from "@/lib/auth/registerRules";
 import { signUp } from "@/lib/content";
@@ -20,12 +21,22 @@ const ERROR_BY_CODE: Record<string, FormError> = {
 
 /** The sign-up form (frame 7:6344). The password confirmation is checked here
  *  and only here — it is not part of what is sent. `next` is only passed
- *  through; the route handler decides whether it is safe to follow. */
+ *  through, into the Email confirmation link; the confirmation decides
+ *  whether it is safe to follow. Once submitted, the form gives way in place
+ *  to "check your email", naming the address the link went to. */
 export default function SignUpForm({ next }: { next?: string }) {
   const [values, setValues] = useState(EMPTY);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<RegisterField, true>>>({});
   const [formError, setFormError] = useState<FormError>();
   const [submitting, setSubmitting] = useState(false);
+  const [sentTo, setSentTo] = useState<string>();
+  const sentHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // The form is replaced, not navigated away from, so move focus onto the
+  // new heading for screen readers.
+  useEffect(() => {
+    if (sentTo) sentHeadingRef.current?.focus();
+  }, [sentTo]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -50,9 +61,8 @@ export default function SignUpForm({ next }: { next?: string }) {
         }),
       });
       const body = await res.json().catch(() => null);
-      if (res.ok && typeof body?.redirectTo === "string") {
-        // A full navigation, so the new cookie is on the very next request.
-        window.location.assign(body.redirectTo);
+      if (res.ok && typeof body?.email === "string") {
+        setSentTo(body.email);
         return;
       }
       setFormError(ERROR_BY_CODE[body?.error] ?? { kind: "message", text: signUp.errors.generic });
@@ -60,6 +70,19 @@ export default function SignUpForm({ next }: { next?: string }) {
       setFormError({ kind: "message", text: signUp.errors.generic });
     }
     setSubmitting(false);
+  }
+
+  if (sentTo) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 ref={sentHeadingRef} tabIndex={-1} className="text-lg font-bold text-auth-ink outline-none">
+          {signUp.sent.title}
+        </h2>
+        <p className="text-sm leading-[1.55] text-auth-muted">
+          <SentToEmail copy={signUp.sent.intro} email={sentTo} />
+        </p>
+      </div>
+    );
   }
 
   return (

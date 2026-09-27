@@ -1,7 +1,6 @@
-import { createHash, randomBytes } from 'node:crypto';
 import { prisma } from '../db/client';
-import { env } from '../../config/env';
 import { hashPassword } from './password';
+import { hashEmailedToken, newEmailedToken, webLink } from './emailedToken';
 
 export const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
@@ -10,15 +9,8 @@ export const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 const MAX_TOKENS_PER_HOUR = 5;
 const HOUR_MS = 60 * 60 * 1000;
 
-/** Only this digest is stored; the raw token lives in the emailed link alone. */
-export function hashResetToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
-
 export function passwordResetLink(token: string): string {
-  const url = new URL('/reset-password', env.WEB_URL);
-  url.searchParams.set('token', token);
-  return url.toString();
+  return webLink('/reset-password', { token });
 }
 
 /**
@@ -34,12 +26,12 @@ export async function issuePasswordResetToken(parent_id: string): Promise<string
   });
   if (recent >= MAX_TOKENS_PER_HOUR) return null;
 
-  const token = randomBytes(32).toString('base64url');
+  const token = newEmailedToken();
 
   await prisma.$transaction([
     prisma.passwordResetToken.updateMany({ where: { parent_id, used_at: null }, data: { used_at: now } }),
     prisma.passwordResetToken.create({
-      data: { parent_id, token_hash: hashResetToken(token), expires_at: new Date(now.getTime() + RESET_TOKEN_TTL_MS) },
+      data: { parent_id, token_hash: hashEmailedToken(token), expires_at: new Date(now.getTime() + RESET_TOKEN_TTL_MS) },
     }),
   ]);
   return token;
@@ -57,7 +49,7 @@ export async function resetPasswordWithToken(
   token: string,
   password: string,
 ): Promise<{ id: string; email: string; name: string; token_version: number } | null> {
-  const row = await prisma.passwordResetToken.findUnique({ where: { token_hash: hashResetToken(token) } });
+  const row = await prisma.passwordResetToken.findUnique({ where: { token_hash: hashEmailedToken(token) } });
   if (!row || row.used_at || row.expires_at.getTime() <= Date.now()) return null;
 
   const password_hash = await hashPassword(password);

@@ -1,0 +1,18 @@
+# Email confirmation before first Sign in; unconfirmed Parent accounts are disposable
+
+A parent could **Sign up** with any email and was signed in straight away. Nothing proved they owned it: a typo (`bat@gmial.com`) went unnoticed until they forgot their password, when Password reset mailed the typo — losing the account and their child's Diagnostic — and whoever owned the mistyped address could take the account over through Password reset. ADR 0006 records the consequence of that gap for Google linking: "password sign-up never proves the parent owns the email", so linking drops the password.
+
+**Sign up is not finished until the parent opens a link sent to their email.** `POST /api/auth/register` creates the **Parent account** with `email_confirmed_at` unset, emails a one-time link and returns no session; web shows "we sent a link to **bat@gmail.com**", so a typo is visible at once. The link (`/confirm-email?token=…&next=…`) is built from `WEB_URL` and carries `next`, so the parent goes on where they were heading. Its token is stored as a SHA-256 hash, expires after 24 hours and is claimed in one transaction, only while unused and unexpired, so two racing opens can't both win — the same shape as the Password reset token. Opening it confirms the email and signs the parent in exactly as Sign in does (`orto_session`, per ADR 0006), then lands on `safeNextPath(next)`, defaulting to `/register-child` because Sign up leads into the Diagnostic.
+
+**An unconfirmed Parent account cannot be signed into and holds nothing.** Login with its right password answers `EMAIL_NOT_CONFIRMED`; a wrong password stays the generic `INVALID_CREDENTIALS`, so only someone who knows the password learns the account is unconfirmed. Because no session is ever issued to it, no learner or Diagnostic can hang off it, and it can be given up — replaced by the next Sign up with its email, and treated as absent after a week (issue #141) — without losing anyone's data. Until that lands, Sign up over any existing account's email is still `DUPLICATE_EMAIL`.
+
+**The page confirms from script, not on the GET.** Mail scanners fetch links in messages; if the GET confirmed and signed in, a scanner would spend the one-time token before the parent arrives. `app/confirm-email` renders a card that POSTs the token to `app/api/auth/confirm-email` once, which sets the cookie and answers `{ redirectTo }`. The page is `noindex` and `no-referrer`, as the reset-password page is, since its URL carries a live token.
+
+This amends ADR 0006: from here on a password Parent account's email *is* proven before anyone can use it. Google linking keeps dropping the password for accounts that predate confirmation, and for unconfirmed ones (issue #142).
+
+Parent accounts that existed before this change are marked confirmed by the migration (`email_confirmed_at = created_at`), so none is locked out.
+
+## Considered options
+
+- **Sign in straight away, confirm later, restrict features until then.** Rejected: the account would already hold a child's Diagnostic under a possibly mistyped email — the very loss this is meant to prevent — and every feature would need an "is confirmed" gate.
+- **Confirm on the link's GET in a route handler.** Rejected: link-scanning mail filters would consume the token (see above).

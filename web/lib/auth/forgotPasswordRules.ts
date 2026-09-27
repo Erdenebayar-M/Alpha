@@ -5,7 +5,7 @@ import { isValidLoginEmail } from "@/lib/auth/loginRules";
  * loginRules.ts for why web mirrors instead of importing).
  * scripts/check-shared-drift.mjs fails when the source of truth changes shape.
  *
- *   forgotPasswordSchema = { email: z.string().email() }
+ *   forgotPasswordSchema = { email: emailSchema }
  *
  * The email rule is the same Zod default loginSchema uses, so it reuses
  * isValidLoginEmail.

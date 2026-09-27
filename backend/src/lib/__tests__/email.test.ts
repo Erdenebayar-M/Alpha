@@ -3,7 +3,7 @@ const mockEnv: { RESEND_API_KEY?: string; EMAIL_FROM?: string; WEB_URL: string }
 };
 jest.mock('../../config/env', () => ({ env: mockEnv }));
 
-import { sendEmail, passwordResetEmail } from '../email';
+import { sendEmail, passwordResetEmail, emailConfirmationEmail } from '../email';
 
 const MESSAGE = { to: 'parent@example.com', subject: 'Subject', text: 'Plain body', html: '<p>Html body</p>' };
 
@@ -89,5 +89,25 @@ describe('passwordResetEmail', () => {
     const hostile = passwordResetEmail({ to: 'a@b.com', name: '<script>x</script>', link });
     expect(hostile.html).not.toContain('<script>');
     expect(hostile.html).toContain('&lt;script&gt;');
+  });
+});
+
+describe('emailConfirmationEmail', () => {
+  const link = 'http://localhost:3000/confirm-email?token=abc_DEF-123&next=%2Fregister-child';
+  const email = emailConfirmationEmail({ to: 'bat@gmail.com', name: 'Болд', link });
+
+  it('says what it is for, from the app, to the parent by name', () => {
+    expect(email.to).toBe('bat@gmail.com');
+    expect(email.subject).toBe('ОРТО — имэйл хаягаа баталгаажуулна уу');
+    for (const part of [email.text, email.html]) {
+      expect(part).toContain('Сайн байна уу, Болд,');
+      expect(part).toContain('Энэ холбоос 24 цаг хүчинтэй байх болно.');
+    }
+  });
+
+  it('links the "Имэйл баталгаажуулах" button to the confirmation page', () => {
+    expect(email.html).toContain(`href="${link.replace(/&/g, '&amp;')}"`);
+    expect(email.html).toMatch(/>Имэйл баталгаажуулах<\/a>/);
+    expect(email.text).toContain(link);
   });
 });

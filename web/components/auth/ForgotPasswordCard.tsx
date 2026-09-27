@@ -5,6 +5,7 @@ import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import { AuthHeading } from "@/components/auth/AuthCard";
+import SentToEmail from "@/components/auth/SentToEmail";
 import { isValidLoginEmail } from "@/lib/auth/loginRules";
 import { forgotPassword } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
@@ -73,15 +74,7 @@ export default function ForgotPasswordCard() {
           {sentTo ? sent.title : forgotPassword.title}
         </AuthHeading>
         <p className="text-sm leading-[1.55] text-auth-muted">
-          {sentTo ? (
-            <>
-              {sent.intro.beforeEmail}
-              <strong className="font-bold text-auth-ink">{sentTo}</strong>
-              {sent.intro.afterEmail}
-            </>
-          ) : (
-            forgotPassword.intro
-          )}
+          {sentTo ? <SentToEmail copy={sent.intro} email={sentTo} /> : forgotPassword.intro}
         </p>
       </div>
       {!sentTo && (

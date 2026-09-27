@@ -5,11 +5,14 @@ import { isValidLoginEmail } from "@/lib/auth/loginRules";
  * an npm workspace member — same arrangement as loginRules.ts).
  * scripts/check-shared-drift.mjs fails when the source of truth changes shape.
  *
- *   registerSchema = { email: z.string().email(), name: z.string().min(2),
- *                      surname: z.string().optional(), password: z.string().min(8) }
+ *   registerSchema = { email: emailSchema, name: z.string().min(2),
+ *                      surname: z.string().optional(), password: z.string().min(8),
+ *                      next: z.string().max(2048).optional() }
+ *   (emailSchema = z.string().trim().toLowerCase().email())
  *
  * `confirmPassword` is a client-only check: it is never sent to the backend
- * and never added to the shared schema.
+ * and never added to the shared schema. The schema's optional `next` is not
+ * a form field: the sign-up route handler adds it.
  */
 
 export const NAME_MIN_LENGTH = 2;

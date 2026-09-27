@@ -67,13 +67,16 @@ test("rate limiting shows its message", async ({ page }) => {
   await expect(page.getByText("Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.")).toBeVisible();
 });
 
-test("signing up sends the surname but not the confirmation, sets the session cookie and redirects to /", async ({ page, context, request }) => {
+test("signing up sends the surname but not the confirmation, sets no session and shows where the link went", async ({ page, context, request }) => {
   await page.goto("/signup");
   await fillForm(page);
-  await page.waitForURL((url) => url.pathname === "/");
 
-  const session = (await context.cookies()).find((c) => c.name === "orto_session");
-  expect(session).toMatchObject({ httpOnly: true, sameSite: "Lax", value: "fixture-session-token" });
+  await expect(page.getByRole("heading", { name: "Имэйлээ шалгана уу" })).toBeFocused();
+  await expect(page.getByText("хаяг руу баталгаажуулах холбоос илгээлээ", { exact: false })).toBeVisible();
+  await expect(page.locator("strong", { hasText: NEW_PARENT.email })).toBeVisible();
+  await expect(page.getByLabel("Нууц үг", { exact: true })).toHaveCount(0);
+  expect(new URL(page.url()).pathname).toBe("/signup");
+  expect((await context.cookies()).find((c) => c.name === "orto_session")).toBeUndefined();
 
   const sent = await (await request.get(`http://localhost:3211/__register?${new URLSearchParams({ email: NEW_PARENT.email })}`)).json();
   expect(sent).toEqual({ email: NEW_PARENT.email, name: NEW_PARENT.name, surname: NEW_PARENT.surname, password: NEW_PARENT.password });

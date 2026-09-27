@@ -11,9 +11,9 @@ const RESEND_URL = 'https://api.resend.com/emails';
 
 /**
  * Sends one email through Resend's HTTP API. Without RESEND_API_KEY it logs
- * the whole message instead, so a Password reset link can be followed
- * locally — env.ts requires the key in production, where logging a live
- * token would be a leak. Throws when Resend rejects the message.
+ * the whole message instead, so an emailed link (Password reset, Email
+ * confirmation) can be followed locally — env.ts requires the key in
+ * production, where logging a live token would be a leak. Throws when Resend rejects the message.
  */
 export async function sendEmail(message: EmailMessage): Promise<void> {
   if (!env.RESEND_API_KEY) {
@@ -52,16 +52,45 @@ const RESET_COPY = {
   button: 'Нууц үг сэргээх',
 };
 
-/** The Password reset email: approved copy, a button linking to `link`. */
-export function passwordResetEmail({ to, name, link }: { to: string; name: string; link: string }): EmailMessage {
-  const [instruction, ...rest] = RESET_COPY.body;
-  const text = [RESET_COPY.greeting(name), instruction, `${RESET_COPY.button}: ${link}`, ...rest].join('\n\n');
+interface ButtonEmailCopy {
+  subject: string;
+  greeting: (name: string) => string;
+  /** The first line comes before the button; the rest after it. */
+  body: string[];
+  button: string;
+}
+
+/** An email of approved copy around one button linking to `link`. */
+function buttonEmail(copy: ButtonEmailCopy, { to, name, link }: { to: string; name: string; link: string }): EmailMessage {
+  const [instruction, ...rest] = copy.body;
+  const text = [copy.greeting(name), instruction, `${copy.button}: ${link}`, ...rest].join('\n\n');
   const html = [
-    `<p>${escapeHtml(RESET_COPY.greeting(name))}</p>`,
+    `<p>${escapeHtml(copy.greeting(name))}</p>`,
     `<p>${instruction}</p>`,
-    `<p><a href="${escapeHtml(link)}" style="display:inline-block;padding:14px 24px;border-radius:12px;background:#17181b;color:#ffffff;font-weight:bold;text-decoration:none">${RESET_COPY.button}</a></p>`,
+    `<p><a href="${escapeHtml(link)}" style="display:inline-block;padding:14px 24px;border-radius:12px;background:#17181b;color:#ffffff;font-weight:bold;text-decoration:none">${copy.button}</a></p>`,
     ...rest.map((line) => `<p>${line}</p>`),
   ].join('\n');
 
-  return { to, subject: RESET_COPY.subject, text, html };
+  return { to, subject: copy.subject, text, html };
+}
+
+/** The Password reset email: approved copy, a button linking to `link`. */
+export function passwordResetEmail(recipient: { to: string; name: string; link: string }): EmailMessage {
+  return buttonEmail(RESET_COPY, recipient);
+}
+
+const CONFIRMATION_COPY = {
+  subject: 'ОРТО — имэйл хаягаа баталгаажуулна уу',
+  greeting: RESET_COPY.greeting,
+  body: [
+    'ОРТО-д бүртгүүлсэнд баярлалаа. Бүртгэлээ дуусгахын тулд доорх товчийг дарж имэйл хаягаа баталгаажуулна уу.',
+    'Энэ холбоос 24 цаг хүчинтэй байх болно.',
+    'Хэрэв та ОРТО-д бүртгүүлээгүй бол уг имэйлийг хэрэгсэхгүй орхино уу.',
+  ],
+  button: 'Имэйл баталгаажуулах',
+};
+
+/** The Email confirmation email: a button linking to `link`. */
+export function emailConfirmationEmail(recipient: { to: string; name: string; link: string }): EmailMessage {
+  return buttonEmail(CONFIRMATION_COPY, recipient);
 }

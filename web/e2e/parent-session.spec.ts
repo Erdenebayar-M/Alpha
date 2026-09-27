@@ -161,7 +161,9 @@ test("sign-up's sign-in link and Google button carry `next`", async ({ page }) =
   await expect(page.getByRole("link", { name: "Google-ээр бүртгүүлэх" })).toHaveAttribute("href", `/api/auth/google/start?from=%2Fsignup&${NEXT_QUERY}`);
 });
 
-test("signing up with `next` goes there", async ({ page }) => {
+// Sign up signs no one in: `next` rides into the Email confirmation link, and
+// opening that link goes there (confirm-email.spec.ts).
+test("signing up with `next` carries it into the confirmation link", async ({ page, request }) => {
   await page.goto(`/signup?${NEXT_QUERY}`);
   await page.getByLabel("Овог").fill("Бат");
   await page.getByLabel("Нэр", { exact: true }).fill("Болд");
@@ -169,7 +171,10 @@ test("signing up with `next` goes there", async ({ page }) => {
   await page.getByLabel("Нууц үг", { exact: true }).fill("long-enough-pw");
   await page.getByLabel("Нууц үгээ давтах").fill("long-enough-pw");
   await page.getByRole("button", { name: "Бүртгүүлэх", exact: true }).click();
-  await page.waitForURL((url) => url.pathname === "/register-child");
+  await expect(page.getByRole("heading", { name: "Имэйлээ шалгана уу" })).toBeVisible();
+
+  const sent = await (await request.get(`http://localhost:3211/__register?${new URLSearchParams({ email: "next-parent@example.com" })}`)).json();
+  expect(sent.next).toBe("/register-child");
 });
 
 test("an already-registered email's sign-in link carries `next`", async ({ page }) => {
@@ -183,9 +188,9 @@ test("an already-registered email's sign-in link carries `next`", async ({ page 
   await expect(page.getByRole("alert").getByRole("link", { name: "Нэвтрэх" })).toHaveAttribute("href", `/signin?${NEXT_QUERY}`);
 });
 
-test("an unsafe sign-up `next` is ignored", async ({ request }) => {
-  const res = await request.post("/api/auth/signup", {
-    data: { email: "unsafe-next@example.com", name: "Болд", password: "long-enough-pw", next: "https://evil.example/" },
+test("an unsafe `next` from the confirmation link is ignored", async ({ request }) => {
+  const res = await request.post("/api/auth/confirm-email", {
+    data: { token: "fixture-confirmation-token", next: "https://evil.example/" },
   });
-  expect(await res.json()).toEqual({ redirectTo: "/" });
+  expect(await res.json()).toEqual({ redirectTo: "/register-child" });
 });

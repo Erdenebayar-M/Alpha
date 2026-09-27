@@ -247,10 +247,13 @@ model Parent {
   surname       String?
   // In every issued JWT; a Password reset increments it, so older tokens stop working.
   token_version Int      @default(0)
+  // Set by Email confirmation. Until then the account can't be signed into.
+  email_confirmed_at DateTime? @db.Timestamptz(6)
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
-  learners              Learner[]
-  password_reset_tokens PasswordResetToken[]
+  learners                  Learner[]
+  password_reset_tokens     PasswordResetToken[]
+  email_confirmation_tokens EmailConfirmationToken[]
 
   @@map("parents")
 }
@@ -270,6 +273,22 @@ model PasswordResetToken {
 
   @@index([parent_id])
   @@map("password_reset_tokens")
+}
+
+// An Email confirmation link, stored like PasswordResetToken: only the SHA-256
+// hash of the token; the raw token exists only in the emailed link.
+model EmailConfirmationToken {
+  id         String    @id @default(uuid())
+  parent_id  String
+  token_hash String    @unique
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  parent Parent @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+
+  @@index([parent_id])
+  @@map("email_confirmation_tokens")
 }
 
 model Learner {

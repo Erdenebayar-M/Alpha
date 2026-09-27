@@ -16,6 +16,7 @@ interface ParentRow {
   name: string;
   password_hash: string | null;
   token_version: number;
+  email_confirmed_at: Date | null;
 }
 
 interface TokenRow {
@@ -113,7 +114,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   parents.length = 0;
   tokens.length = 0;
-  parents.push({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', password_hash: `hashed:${OLD_PASSWORD}`, token_version: 0 });
+  parents.push({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', password_hash: `hashed:${OLD_PASSWORD}`, token_version: 0, email_confirmed_at: new Date() });
 
   const pick = <T extends object>(row: T | undefined, select?: Record<string, boolean>) =>
     row && select ? Object.fromEntries(Object.keys(select).map((k) => [k, row[k as keyof T]])) : (row ?? null);

@@ -6,10 +6,11 @@ import { hashPassword, comparePassword } from '../lib/auth/password';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, googleAuthSchema } from '@app/shared';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, googleLimiter } from '../lib/auth/rateLimit';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, confirmEmailSchema, googleAuthSchema } from '@app/shared';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, confirmEmailLimiter, googleLimiter } from '../lib/auth/rateLimit';
 import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } from '../lib/auth/passwordReset';
-import { sendEmail, passwordResetEmail } from '../lib/email';
+import { createUnconfirmedParent, emailConfirmationLink, confirmEmailWithToken } from '../lib/auth/emailConfirmation';
+import { sendEmail, passwordResetEmail, emailConfirmationEmail } from '../lib/email';
 import { googleIdentityFromCode, type GoogleIdentity } from '../lib/auth/google';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
@@ -27,7 +28,10 @@ function setAuthCookie(c: Context, token: string) {
 
 const auth = new Hono<AuthEnv>();
 
-// POST /api/auth/register
+// POST /api/auth/register — Sign up. Creates an unconfirmed Parent account and
+// emails its Email confirmation link; the parent is signed in only once they
+// open it (POST /confirm-email). Answers with the address the link went to,
+// and no token.
 auth.post('/register', registerLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = registerSchema.safeParse(body);
@@ -35,7 +39,7 @@ auth.post('/register', registerLimiter, async (c) => {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
   }
 
-  const { email, name, surname, password } = parsed.data;
+  const { email, name, surname, password, next } = parsed.data;
 
   const existing = await prisma.parent.findUnique({ where: { email } });
   if (existing) {
@@ -43,13 +47,45 @@ auth.post('/register', registerLimiter, async (c) => {
   }
 
   const password_hash = await hashPassword(password);
-  const parent = await prisma.parent.create({
-    data: { email, name, surname, password_hash },
-  });
+  const { parent, token } = await createUnconfirmedParent({ email, name, surname, password_hash });
 
-  const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });
+  // A failed send is only logged: the account exists either way, and the
+  // parent is told to check their email.
+  try {
+    await sendEmail(emailConfirmationEmail({ to: parent.email, name: parent.name, link: emailConfirmationLink(token, next) }));
+  } catch (err) {
+    console.error(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        request_id: c.get('requestId') ?? null,
+        event: 'email_confirmation_email_failed',
+        parent_id: parent.id,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
+
+  return ok(c, { email: parent.email }, undefined, 201);
+});
+
+// POST /api/auth/confirm-email — Email confirmation from the emailed link's
+// token. Confirms the email and signs the parent in, answering like login.
+auth.post('/confirm-email', confirmEmailLimiter, async (c) => {
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = confirmEmailSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+  }
+
+  const confirmed = await confirmEmailWithToken(parsed.data.token);
+  if (!confirmed) {
+    return ERRORS.INVALID_CONFIRMATION_TOKEN(c);
+  }
+
+  const { token_version, ...parent } = confirmed;
+  const token = await signToken({ parent_id: parent.id, token_version });
   setAuthCookie(c, token);
-  return ok(c, { id: parent.id, email: parent.email, name: parent.name, token }, undefined, 201);
+  return ok(c, { ...parent, token });
 });
 
 // POST /api/auth/login
@@ -72,6 +108,11 @@ auth.post('/login', loginLimiter, async (c) => {
   const valid = parent.password_hash !== null && (await comparePassword(password, parent.password_hash));
   if (!valid) {
     return ERRORS.INVALID_CREDENTIALS(c);
+  }
+  // Checked only after the password, so the answer tells nothing to a caller
+  // who doesn't know it.
+  if (!parent.email_confirmed_at) {
+    return ERRORS.EMAIL_NOT_CONFIRMED(c);
   }
 
   const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });

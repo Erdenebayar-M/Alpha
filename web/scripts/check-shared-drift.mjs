@@ -151,8 +151,8 @@ assert(loginSchemaMatch, "Could not find loginSchema in shared/src/validators/au
 if (loginSchemaMatch) {
   const fields = loginSchemaMatch[1].replace(/\s+/g, " ").trim();
   assert(
-    fields === "email: z.string().email(), password: z.string(),",
-    `loginSchema changed to { ${fields} } — web/lib/auth/loginRules.ts mirrors { email: z.string().email(), password: z.string() } and needs updating.`,
+    fields === "email: emailSchema, password: z.string(),",
+    `loginSchema changed to { ${fields} } — web/lib/auth/loginRules.ts mirrors { email: emailSchema, password: z.string() } and needs updating.`,
   );
 }
 assert(loginRulesTs.includes("isValidLoginEmail"), "web/lib/auth/loginRules.ts no longer exports isValidLoginEmail.");
@@ -173,10 +173,10 @@ const registerSchemaMatch = sharedAuthTs.match(/export const registerSchema = z\
 assert(registerSchemaMatch, "Could not find registerSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
 
 if (registerSchemaMatch) {
-  const fields = registerSchemaMatch[1].replace(/\s+/g, " ").trim();
+  const fields = registerSchemaMatch[1].replace(/\/\/.*$/gm, "").replace(/\s+/g, " ").trim();
   assert(
-    fields === "email: z.string().email(), name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8),",
-    `registerSchema changed to { ${fields} } — web/lib/auth/registerRules.ts mirrors { email: z.string().email(), name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8) } and needs updating.`,
+    fields === "email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8), next: z.string().max(2048).optional(),",
+    `registerSchema changed to { ${fields} } — web/lib/auth/registerRules.ts and app/api/auth/signup/route.ts mirror { email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8), next: z.string().max(2048).optional() } and need updating.`,
   );
 }
 assert(registerRulesTs.includes("NAME_MIN_LENGTH = 2"), "web/lib/auth/registerRules.ts no longer declares NAME_MIN_LENGTH = 2.");
@@ -199,8 +199,8 @@ assert(forgotSchemaMatch, "Could not find forgotPasswordSchema in shared/src/val
 if (forgotSchemaMatch) {
   const fields = forgotSchemaMatch[1].replace(/\s+/g, " ").trim();
   assert(
-    fields === "email: z.string().email(),",
-    `forgotPasswordSchema changed to { ${fields} } — web/lib/auth/forgotPasswordRules.ts mirrors { email: z.string().email() } and needs updating.`,
+    fields === "email: emailSchema,",
+    `forgotPasswordSchema changed to { ${fields} } — web/lib/auth/forgotPasswordRules.ts mirrors { email: emailSchema } and needs updating.`,
   );
 }
 
@@ -232,6 +232,22 @@ for (const code of ["INVALID_RESET_TOKEN", "RATE_LIMITED"]) {
   assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the reset-password page) is missing from backend/src/lib/errors.ts.`);
   assert(resetComponent.includes(code), `web/components/auth/ResetPasswordCard.tsx no longer maps backend error code ${code}.`);
 }
+
+// ── 11. Email confirmation (issue #138) ─────────────────────────────────
+// The confirmation page turns INVALID_CONFIRMATION_TOKEN into its "link
+// expired or invalid" state; the sign-up route caps `next` as the schema does.
+
+const confirmSchemaMatch = sharedAuthTs.match(/export const confirmEmailSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(
+  confirmSchemaMatch && confirmSchemaMatch[1].replace(/\s+/g, " ").trim() === "token: z.string().min(1),",
+  "confirmEmailSchema in shared/src/validators/auth.ts is missing or no longer { token: z.string().min(1) } — web/app/api/auth/confirm-email/route.ts mirrors it.",
+);
+const confirmComponent = read("web/components/auth/ConfirmEmailCard.tsx");
+for (const code of ["INVALID_CONFIRMATION_TOKEN", "RATE_LIMITED"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the confirm-email page) is missing from backend/src/lib/errors.ts.`);
+  assert(confirmComponent.includes(code), `web/components/auth/ConfirmEmailCard.tsx no longer maps backend error code ${code}.`);
+}
+assert(read("web/app/api/auth/signup/route.ts").includes("NEXT_MAX_LENGTH = 2048"), "web/app/api/auth/signup/route.ts no longer caps `next` at registerSchema's 2048.");
 
 // ── Report ───────────────────────────────────────────────────────────────
 
