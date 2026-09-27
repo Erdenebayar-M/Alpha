@@ -12,6 +12,7 @@ import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } fr
 import { createUnconfirmedParent, emailConfirmationLink, confirmEmailWithToken, issueEmailConfirmationToken } from '../lib/auth/emailConfirmation';
 import { sendEmail, type EmailMessage, passwordResetEmail, emailConfirmationEmail } from '../lib/email';
 import { googleIdentityFromCode, type GoogleIdentity } from '../lib/auth/google';
+import { maskEmail } from '../lib/mask-email';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -112,7 +113,7 @@ auth.post('/login', loginLimiter, async (c) => {
   // Checked only after the password, so the answer tells nothing to a caller
   // who doesn't know it.
   if (!parent.email_confirmed_at) {
-    return ERRORS.EMAIL_NOT_CONFIRMED(c);
+    return ERRORS.EMAIL_NOT_CONFIRMED(c, maskEmail(parent.email));
   }
 
   const token = await signToken({ parent_id: parent.id, token_version: parent.token_version });

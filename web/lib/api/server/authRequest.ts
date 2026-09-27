@@ -3,7 +3,8 @@ import { BACKEND_URL } from "@/lib/api/server/backendUrl";
 type TokenPath = "/api/auth/login" | "/api/auth/confirm-email" | "/api/auth/reset-password" | "/api/auth/google";
 type AuthPath = TokenPath | "/api/auth/register" | "/api/auth/forgot-password" | "/api/auth/resend-confirmation";
 
-export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR" };
+/** `maskedEmail` is the backend's `details.email`, sent with EMAIL_NOT_CONFIRMED. */
+export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR"; maskedEmail?: string };
 
 export type AuthResult<Code extends string> = { ok: true; token: string } | AuthFailure<Code>;
 
@@ -39,7 +40,10 @@ export async function postAuthRoute<Code extends string>(
   if (json?.success) return { ok: true, data: json.data };
 
   const code = knownCodes.find((known) => known === json?.error?.code);
-  if (code) return { ok: false, code };
+  if (code) {
+    const maskedEmail = json?.error?.details?.email;
+    return { ok: false, code, ...(typeof maskedEmail === "string" && { maskedEmail }) };
+  }
   // A gateway in front of the backend may rate-limit with a non-JSON body.
   return { ok: false, code: (res.status === 429 ? "RATE_LIMITED" : "UPSTREAM_ERROR") as Code | "UPSTREAM_ERROR" };
 }

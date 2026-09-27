@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { resendRequestsFor } from "./resendRequests";
 
 // Runs against e2e/fixture-backend (see playwright.config.ts) — no real backend.
 const PARENT = { email: "parent@example.com", password: "correct-password" };
@@ -43,6 +44,33 @@ test("a wrong password shows the credentials message and sets no session", async
   await expect(page.getByText("Имэйл эсвэл нууц үг буруу байна.")).toBeVisible();
   await expect(page).toHaveURL(/\/signin/);
   expect((await context.cookies()).find((c) => c.name === "orto_session")).toBeUndefined();
+});
+
+const UNCONFIRMED = { email: "unconfirmed@example.com", password: "correct-password" };
+
+test("the right password on an unconfirmed account says to confirm first, with the masked address and Resend", async ({ page, context }) => {
+  await page.goto("/signin");
+  await signIn(page, UNCONFIRMED.email, UNCONFIRMED.password);
+  await expect(page.getByText("Эхлээд имэйлээ баталгаажуулна уу. u***@example.com хаяг руу холбоос илгээсэн.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Дахин илгээх", exact: true })).toBeEnabled();
+  await expect(page).toHaveURL(/\/signin/);
+  expect((await context.cookies()).find((c) => c.name === "orto_session")).toBeUndefined();
+});
+
+test("Resend on the sign-in page sends a fresh link to the typed address", async ({ page, request }) => {
+  await page.goto("/signin?next=/articles/fixture-article");
+  await signIn(page, UNCONFIRMED.email, UNCONFIRMED.password);
+  await page.getByRole("button", { name: "Дахин илгээх", exact: true }).click();
+  await expect(page.getByRole("status")).toBeVisible();
+  expect(await resendRequestsFor(request, UNCONFIRMED.email)).toEqual([{ email: UNCONFIRMED.email, next: "/articles/fixture-article" }]);
+});
+
+test("a wrong password on an unconfirmed account shows the generic error, not the confirm-first message", async ({ page }) => {
+  await page.goto("/signin");
+  await signIn(page, UNCONFIRMED.email, "wrong-password");
+  await expect(page.getByText("Имэйл эсвэл нууц үг буруу байна.")).toBeVisible();
+  await expect(page.getByText("Эхлээд имэйлээ баталгаажуулна уу.")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Дахин илгээх" })).toHaveCount(0);
 });
 
 test("rate limiting shows its message", async ({ page }) => {

@@ -26,9 +26,10 @@ const ERROR_BY_CODE: Record<string, string> = {
  * it — the address is fixed and the cooldown runs from the start. Without —
  * the expired-or-used link page — the parent gives the address (prefilled with the
  * one sign-up used in this tab, when there is one) and the cooldown starts once a link is sent. `next` goes into
- * the new link as it did the first.
+ * the new link as it did the first. Sign-in passes `coolDownFirst={false}`:
+ * it knows the address but no link has just been sent, so Resend is ready.
  */
-export default function ResendConfirmation({ email, next }: { email?: string; next?: string }) {
+export default function ResendConfirmation({ email, next, coolDownFirst = true }: { email?: string; next?: string; coolDownFirst?: boolean }) {
   // What the parent typed; until they do, the address sign-up used in this tab.
   // Storage doesn't exist on the server render, hence the server snapshot.
   const [typed, setTyped] = useState<string>();
@@ -37,7 +38,7 @@ export default function ResendConfirmation({ email, next }: { email?: string; ne
   const [formError, setFormError] = useState<string>();
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [cooldownEnds, setCooldownEnds] = useState(() => (email ? Date.now() + COOLDOWN_SECONDS * 1000 : 0));
+  const [cooldownEnds, setCooldownEnds] = useState(() => (email && coolDownFirst ? Date.now() + COOLDOWN_SECONDS * 1000 : 0));
   const [now, setNow] = useState(() => Date.now());
 
   const remaining = Math.max(0, Math.ceil((cooldownEnds - now) / 1000));

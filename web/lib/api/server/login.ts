@@ -1,7 +1,7 @@
 import { authWithBackend, type AuthResult } from "@/lib/api/server/authRequest";
 import type { LoginInput } from "@/lib/auth/loginRules";
 
-const KNOWN_CODES = ["INVALID_CREDENTIALS", "RATE_LIMITED", "VALIDATION_ERROR"] as const;
+const KNOWN_CODES = ["INVALID_CREDENTIALS", "EMAIL_NOT_CONFIRMED", "RATE_LIMITED", "VALIDATION_ERROR"] as const;
 
 export type LoginResult = AuthResult<(typeof KNOWN_CODES)[number]>;
 
