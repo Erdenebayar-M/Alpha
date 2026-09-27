@@ -125,6 +125,14 @@ describe('POST /forgot-password', () => {
     expect(message.text).toContain(`${env.WEB_URL}/reset-password?token=${tokenFromLink(message)}`);
   });
 
+  it('finds the parent whatever the capitals or surrounding spaces of the email', async () => {
+    await forgotPassword({ email: '  Parent@Example.COM ' });
+
+    expect(sentEmails()).toHaveLength(1);
+    expect(sentEmails()[0].to).toBe(REGISTERED);
+    expect(tokens).toHaveLength(1);
+  });
+
   it('stores only a hash of the token, expiring in 30 minutes', async () => {
     const before = Date.now();
     await forgotPassword({ email: REGISTERED });

@@ -31,10 +31,13 @@ const mockSign       = signToken               as jest.MockedFunction<typeof sig
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+let ipCounter = 0;
+
 function post(path: string, body: unknown) {
+  // A fresh IP per request keeps these tests clear of the routes' rate limits.
   return authRouter.request(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-forwarded-for': `198.51.100.${++ipCounter}` },
     body: JSON.stringify(body),
   });
 }
@@ -104,6 +107,39 @@ describe('POST /register', () => {
     expect(mockCreate).toHaveBeenCalledWith({
       data: { email: 'test@example.com', name: 'Test User', surname: 'Бат', password_hash: 'hashed-pw' },
     });
+  });
+
+  it('stores the email trimmed and lowercased', async () => {
+    mockFindUnique.mockResolvedValue(null);
+    mockHash.mockResolvedValue('hashed-pw' as never);
+    mockCreate.mockResolvedValue(FAKE_PARENT as never);
+    mockSign.mockResolvedValue('jwt-token' as never);
+
+    const res = await post('/register', {
+      email: '  Bat@Gmail.com ',
+      name: 'Test User',
+      password: 'password123',
+    });
+
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ email: 'bat@gmail.com' }),
+    });
+  });
+
+  it('409 — duplicate email in different capitals is DUPLICATE_EMAIL, never a second Parent', async () => {
+    mockFindUnique.mockImplementation((async ({ where }: { where: { email: string } }) =>
+      where.email === 'bat@gmail.com' ? { ...FAKE_PARENT, email: 'bat@gmail.com' } : null) as never);
+
+    const res = await post('/register', {
+      email: 'BAT@Gmail.COM',
+      name: 'Test User',
+      password: 'password123',
+    });
+
+    expect(res.status).toBe(409);
+    expect((await json(res)).error!.code).toBe('DUPLICATE_EMAIL');
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 
   it('409 — duplicate email', async () => {
@@ -188,6 +224,18 @@ describe('POST /login', () => {
     await post('/login', { email: 'test@example.com', password: 'password123' });
 
     expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id, token_version: 2 });
+  });
+
+  it('200 — signs in with different capitals and surrounding spaces than at sign up', async () => {
+    mockFindUnique.mockImplementation((async ({ where }: { where: { email: string } }) =>
+      where.email === 'bat@gmail.com' ? { ...FAKE_PARENT, email: 'bat@gmail.com' } : null) as never);
+    mockCompare.mockResolvedValue(true as never);
+    mockSign.mockResolvedValue('jwt-token' as never);
+
+    const res = await post('/login', { email: ' Bat@Gmail.com ', password: 'password123' });
+
+    expect(res.status).toBe(200);
+    expect((await json(res)).data!.token).toBe('jwt-token');
   });
 
   it('401 — wrong password', async () => {
