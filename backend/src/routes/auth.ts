@@ -6,11 +6,11 @@ import { hashPassword, comparePassword } from '../lib/auth/password';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
-import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, confirmEmailSchema, googleAuthSchema } from '@app/shared';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, confirmEmailLimiter, googleLimiter } from '../lib/auth/rateLimit';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, confirmEmailSchema, resendConfirmationSchema, googleAuthSchema } from '@app/shared';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, confirmEmailLimiter, resendConfirmationLimiter, googleLimiter } from '../lib/auth/rateLimit';
 import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } from '../lib/auth/passwordReset';
-import { createUnconfirmedParent, emailConfirmationLink, confirmEmailWithToken } from '../lib/auth/emailConfirmation';
-import { sendEmail, passwordResetEmail, emailConfirmationEmail } from '../lib/email';
+import { createUnconfirmedParent, emailConfirmationLink, confirmEmailWithToken, issueEmailConfirmationToken } from '../lib/auth/emailConfirmation';
+import { sendEmail, type EmailMessage, passwordResetEmail, emailConfirmationEmail } from '../lib/email';
 import { googleIdentityFromCode, type GoogleIdentity } from '../lib/auth/google';
 import { AUTH_COOKIE, withAuth, type AuthEnv } from '../lib/auth/middleware';
 
@@ -120,25 +120,59 @@ auth.post('/login', loginLimiter, async (c) => {
   return ok(c, { id: parent.id, email: parent.email, name: parent.name, token });
 });
 
-// Issues a token and emails the link. Failures are only logged: the caller has
-// already answered.
-async function sendPasswordReset(parent: { id: string; name: string }, email: string, request_id: string | null) {
+// Issues a token and emails the link — Password reset or Email confirmation.
+// Failures are only logged: the caller has already answered.
+async function issueAndEmail(
+  parent: { id: string },
+  request_id: string | null,
+  event: string,
+  issue: (parent_id: string) => Promise<string | null>,
+  email: (token: string) => EmailMessage,
+) {
   try {
-    const token = await issuePasswordResetToken(parent.id);
+    const token = await issue(parent.id);
     if (!token) return;
-    await sendEmail(passwordResetEmail({ to: email, name: parent.name, link: passwordResetLink(token) }));
+    await sendEmail(email(token));
   } catch (err) {
     console.error(
       JSON.stringify({
         ts: new Date().toISOString(),
         request_id,
-        event: 'password_reset_email_failed',
+        event,
         parent_id: parent.id,
         error: err instanceof Error ? err.message : String(err),
       }),
     );
   }
 }
+
+const sendPasswordReset = (parent: { id: string; name: string }, email: string, request_id: string | null) =>
+  issueAndEmail(parent, request_id, 'password_reset_email_failed', issuePasswordResetToken, (token) =>
+    passwordResetEmail({ to: email, name: parent.name, link: passwordResetLink(token) }),
+  );
+
+const sendEmailConfirmation = (parent: { id: string; name: string }, email: string, next: string | undefined, request_id: string | null) =>
+  issueAndEmail(parent, request_id, 'email_confirmation_email_failed', issueEmailConfirmationToken, (token) =>
+    emailConfirmationEmail({ to: email, name: parent.name, link: emailConfirmationLink(token, next) }),
+  );
+
+// POST /api/auth/resend-confirmation — sends a new Email confirmation link,
+// which invalidates the older ones. The response is the same, and as quick,
+// whether or not an unconfirmed Parent account has this email: only one does
+// get mail, after the response goes out.
+auth.post('/resend-confirmation', resendConfirmationLimiter, async (c) => {
+  const body = await c.req.json<unknown>().catch(() => null);
+  const parsed = resendConfirmationSchema.safeParse(body);
+  if (!parsed.success) {
+    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+  }
+
+  const { email, next } = parsed.data;
+  const parent = await prisma.parent.findUnique({ where: { email }, select: { id: true, name: true, email_confirmed_at: true } });
+  if (parent && !parent.email_confirmed_at) void sendEmailConfirmation(parent, email, next, c.get('requestId') ?? null);
+
+  return ok(c, { ok: true });
+});
 
 // POST /api/auth/forgot-password — requests a Password reset link. The response
 // is the same, and as quick, whether or not a Parent account has this email:

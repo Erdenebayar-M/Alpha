@@ -249,6 +249,21 @@ for (const code of ["INVALID_CONFIRMATION_TOKEN", "RATE_LIMITED"]) {
 }
 assert(read("web/app/api/auth/signup/route.ts").includes("NEXT_MAX_LENGTH = 2048"), "web/app/api/auth/signup/route.ts no longer caps `next` at registerSchema's 2048.");
 
+// ── 12. Email confirmation resend (issue #140) ──────────────────────────
+// web/lib/auth/resendConfirmationRules.ts mirrors resendConfirmationSchema;
+// the resend control maps RATE_LIMITED and VALIDATION_ERROR to copy.
+
+const resendSchemaMatch = sharedAuthTs.match(/export const resendConfirmationSchema = z\.object\(\{([\s\S]*?)\}\);/);
+assert(
+  resendSchemaMatch && /email: emailSchema,\s*next: z\.string\(\)\.max\(2048\)\.optional\(\),/.test(resendSchemaMatch[1]),
+  "resendConfirmationSchema in shared/src/validators/auth.ts is missing or no longer { email, next (max 2048, optional) } — web/lib/auth/resendConfirmationRules.ts mirrors it.",
+);
+const resendComponent = read("web/components/auth/ResendConfirmation.tsx");
+for (const code of ["RATE_LIMITED", "VALIDATION_ERROR"]) {
+  assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the resend control) is missing from backend/src/lib/errors.ts.`);
+  assert(resendComponent.includes(code), `web/components/auth/ResendConfirmation.tsx no longer maps backend error code ${code}.`);
+}
+
 // ── Report ───────────────────────────────────────────────────────────────
 
 if (failures.length > 0) {

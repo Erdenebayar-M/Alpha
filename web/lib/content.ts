@@ -514,6 +514,24 @@ export const confirmEmail = {
   },
 } as const;
 
+// Resending the Email confirmation link: under sign-up's "check your email" and
+// on the confirmation page's expired-or-used state. No Figma frame; the copy
+// follows forgotPassword.sent's resend action.
+export const resendConfirmation = {
+  label: "Дахин илгээх", // as forgotPassword.sent.resendLabel
+  cooldownLabel: (seconds: number) => `Дахин илгээх (${seconds})`,
+  prompt: "Шинэ холбоос авахын тулд имэйл хаягаа оруулна уу.",
+  emailLabel: signIn.emailLabel,
+  emailPlaceholder: signIn.emailPlaceholder,
+  // The same whether or not an unconfirmed account has the address.
+  sent: "Хэрэв энэ хаяг баталгаажаагүй бүртгэлтэй бол шинэ холбоосыг илгээлээ. Өмнөх холбоос хүчингүй боллоо.",
+  errors: {
+    invalidEmail: signIn.errors.invalidEmail,
+    rateLimited: signIn.errors.rateLimited,
+    generic: signIn.errors.generic,
+  },
+} as const;
+
 // Reset-password page, reached from the emailed link. It has no frame of its
 // own: it is derived from frame 7:7189 — the heading and message take the
 // forgot-password card's heading and intro slots (7:7600), the fields its

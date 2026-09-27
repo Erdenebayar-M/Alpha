@@ -37,6 +37,14 @@ export const confirmEmailSchema = z.object({
   token: z.string().min(1),
 });
 
+// Resend of the Email confirmation link: only the email, and the `next` that
+// registerSchema carries. The response never says whether an unconfirmed
+// Parent account exists for it.
+export const resendConfirmationSchema = z.object({
+  email: emailSchema,
+  next: z.string().max(2048).optional(),
+});
+
 // Google sign-in: the authorization code from Google's redirect, the PKCE
 // verifier its challenge was made from, and the redirect_uri the code was
 // issued for. The backend holds the client secret and finishes the exchange.
@@ -51,4 +59,5 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ConfirmEmailInput = z.infer<typeof confirmEmailSchema>;
+export type ResendConfirmationInput = z.infer<typeof resendConfirmationSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

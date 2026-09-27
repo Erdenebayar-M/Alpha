@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { resendRequestsFor } from "./resendRequests";
 
 // Runs against e2e/fixture-backend (see playwright.config.ts) — no real backend.
 const NEW_PARENT = { surname: "Бат", name: "Болд", email: "new-parent@example.com", password: "long-enough-pw" };
@@ -80,4 +81,27 @@ test("signing up sends the surname but not the confirmation, sets no session and
 
   const sent = await (await request.get(`http://localhost:3211/__register?${new URLSearchParams({ email: NEW_PARENT.email })}`)).json();
   expect(sent).toEqual({ email: NEW_PARENT.email, name: NEW_PARENT.name, surname: NEW_PARENT.surname, password: NEW_PARENT.password });
+});
+
+test("the check-your-email screen resends the link, with a cooldown", async ({ page, request }) => {
+  const email = "resend-signup@example.com";
+  await page.clock.install();
+  await page.goto("/signup?next=/articles/fixture-article");
+  await fillForm(page, { email });
+
+  // A link has just gone out, so the button waits.
+  const resend = page.getByRole("button", { name: /^Дахин илгээх/ });
+  await expect(resend).toBeDisabled();
+  await expect(resend).toHaveText("Дахин илгээх (60)");
+  await page.clock.fastForward(5_000);
+  await expect(resend).toHaveText("Дахин илгээх (55)");
+
+  await page.clock.fastForward(56_000);
+  await expect(resend).toBeEnabled();
+  await expect(resend).toHaveText("Дахин илгээх");
+  await resend.click();
+
+  await expect(page.getByRole("status")).toContainText("шинэ холбоосыг илгээлээ");
+  await expect(resend).toBeDisabled();
+  expect(await resendRequestsFor(request, email)).toEqual([{ email, next: "/articles/fixture-article" }]);
 });

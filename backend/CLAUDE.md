@@ -53,6 +53,7 @@ JWT carried in an **HttpOnly + SameSite=Strict cookie** (`auth_token`):
 - Cleared by `POST /api/auth/logout`
 - `POST /api/auth/register` (Sign up) sets no cookie and returns no token: it creates a Parent account with `email_confirmed_at = null`, emails an Email confirmation link (`WEB_URL/confirm-email?token=…&next=…`, `next` carried from the body) and answers `{ email }`. A failed send is only logged. An email already held by any Parent account is `DUPLICATE_EMAIL`. `email_confirmation_tokens` stores only a SHA-256 hash of each token (24-hour expiry)
 - `POST /api/auth/confirm-email` takes `{ token }`, sets `email_confirmed_at` and answers like login. An unknown, used or expired token is `INVALID_CONFIRMATION_TOKEN`; the token is claimed in one transaction, conditional on it still being unused and unexpired, so a link works exactly once
+- `POST /api/auth/resend-confirmation` takes `{ email, next? }` and always answers `{ ok: true }`, just as fast, whether or not an unconfirmed Parent account has that email; only an unconfirmed one gets mail, after the response. Issuing a token marks the parent's older unused confirmation tokens used, so only the newest link works
 - Login to an unconfirmed Parent account with the right password is `EMAIL_NOT_CONFIRMED` (403); with a wrong one it stays `INVALID_CREDENTIALS`, so only someone who knows the password learns the account is unconfirmed
 - Profile fetched via `GET /api/auth/me` — returns only `{ id, email, name }`, never `password_hash`
 - `POST /api/auth/forgot-password` emails a Password reset link (`src/lib/email.ts`: Resend when `RESEND_API_KEY` is set, otherwise logged to the console). It always returns `{ ok: true }`. `password_reset_tokens` stores only a SHA-256 hash of each token (30-minute expiry); issuing one marks the parent's older unused tokens used
@@ -100,6 +101,7 @@ The codebase applies these principles consistently. New routes and features must
 - `loginLimiter`: 5 attempts / 15 min
 - `registerLimiter`: 10 / hour
 - `forgotPasswordLimiter`: 5 / hour per IP, plus at most 5 reset tokens / hour per parent (`src/lib/auth/passwordReset.ts`), so rotating IPs can't keep killing a parent's link
+- `resendConfirmationLimiter`: 5 / hour per IP (its own bucket), plus at most 5 confirmation tokens / hour per parent (`src/lib/auth/emailConfirmation.ts`)
 - `resetPasswordLimiter`: 10 / 15 min per IP
 - `confirmEmailLimiter`: 10 / 15 min per IP
 - `googleLimiter`: 10 / 15 min per IP
