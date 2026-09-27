@@ -1,21 +1,25 @@
 import { z } from 'zod';
 
+// A Parent's email is the same whatever its capitals or surrounding spaces, so
+// it is normalised here, once, for backend, web and mobile alike.
+const emailSchema = z.string().trim().toLowerCase().email();
+
 export const registerSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   name: z.string().min(2),
   surname: z.string().optional(),
   password: z.string().min(8),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string(),
 });
 
 // Password reset request: only the email. The response never says whether a
 // Parent account exists for it.
 export const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
 });
 
 // Password reset: the raw token from the emailed link and the new password,
