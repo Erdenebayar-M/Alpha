@@ -4,9 +4,11 @@ import Mascot, { MASCOT_BOX, MASCOT_SPHERE } from "@/components/brand/Mascot";
 // Frame 7:4257's cloud ("Union" 7:5712) is the same 503.172 x 356.962 shape
 // the landing hero draws (1360:8712), so it reuses that export. The mascot
 // ("Sound idle component" 7:5731) is Mascot.tsx placed by its body circle:
-// 156.041px across, centred 205.6 / 193.3px into the cloud's box.
+// 156.041px across, centred 229.5 / 193.3px into the cloud's box. Figma
+// centres the 207.357px mascot in its 255.04px wrapper (7:5718, x 907 → 1162),
+// so its left is 930.84 and the sphere lands at 930.84 + 101.65 - 803.
 const CLOUD = { width: 503.172, height: 356.962, bleedX: 28, bleedY: 16 };
-const SPHERE = { diameter: 156.041, cx: 205.6, cy: 193.3 };
+const SPHERE = { diameter: 156.041, cx: 229.5, cy: 193.3 };
 const MASCOT_SCALE = SPHERE.diameter / (2 * MASCOT_SPHERE.r);
 const MASCOT_WIDTH = MASCOT_BOX.width * MASCOT_SCALE;
 
