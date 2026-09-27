@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/db/client';
-import { hashPassword, comparePassword } from '../../lib/auth/password';
+import { comparePassword } from '../../lib/auth/password';
 import { signToken } from '../../lib/auth/jwt';
 import authRouter from '../auth';
 
@@ -25,7 +25,6 @@ jest.mock('../../lib/auth/jwt', () => ({
 
 const mockFindUnique = prisma.parent.findUnique as jest.MockedFunction<typeof prisma.parent.findUnique>;
 const mockCreate     = prisma.parent.create    as jest.MockedFunction<typeof prisma.parent.create>;
-const mockHash       = hashPassword            as jest.MockedFunction<typeof hashPassword>;
 const mockCompare    = comparePassword         as jest.MockedFunction<typeof comparePassword>;
 const mockSign       = signToken               as jest.MockedFunction<typeof signToken>;
 
@@ -58,74 +57,16 @@ const FAKE_PARENT = {
   name: 'Test User',
   password_hash: 'hashed-pw',
   token_version: 0,
+  email_confirmed_at: new Date(),
   created_at: new Date(),
 };
 
 // ─── Register ────────────────────────────────────────────────────────────────
 
+// The successful path (an unconfirmed account and its confirmation email) is
+// covered in email-confirmation.test.ts, against fake tables.
 describe('POST /register', () => {
   beforeEach(() => jest.clearAllMocks());
-
-  it('201 — returns id, email, name, token on success', async () => {
-    mockFindUnique.mockResolvedValue(null);
-    mockHash.mockResolvedValue('hashed-pw' as never);
-    mockCreate.mockResolvedValue(FAKE_PARENT as never);
-    mockSign.mockResolvedValue('jwt-token' as never);
-
-    const res = await post('/register', {
-      email: 'test@example.com',
-      name: 'Test User',
-      password: 'password123',
-    });
-
-    expect(res.status).toBe(201);
-    const body = await json(res);
-    expect(body.data).toEqual({
-      id: FAKE_PARENT.id,
-      email: FAKE_PARENT.email,
-      name: FAKE_PARENT.name,
-      token: 'jwt-token',
-    });
-    expect(mockHash).toHaveBeenCalledWith('password123');
-    expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id, token_version: 0 });
-  });
-
-  it('stores the optional surname', async () => {
-    mockFindUnique.mockResolvedValue(null);
-    mockHash.mockResolvedValue('hashed-pw' as never);
-    mockCreate.mockResolvedValue({ ...FAKE_PARENT, surname: 'Бат' } as never);
-    mockSign.mockResolvedValue('jwt-token' as never);
-
-    const res = await post('/register', {
-      email: 'test@example.com',
-      name: 'Test User',
-      surname: 'Бат',
-      password: 'password123',
-    });
-
-    expect(res.status).toBe(201);
-    expect(mockCreate).toHaveBeenCalledWith({
-      data: { email: 'test@example.com', name: 'Test User', surname: 'Бат', password_hash: 'hashed-pw' },
-    });
-  });
-
-  it('stores the email trimmed and lowercased', async () => {
-    mockFindUnique.mockResolvedValue(null);
-    mockHash.mockResolvedValue('hashed-pw' as never);
-    mockCreate.mockResolvedValue(FAKE_PARENT as never);
-    mockSign.mockResolvedValue('jwt-token' as never);
-
-    const res = await post('/register', {
-      email: '  Bat@Gmail.com ',
-      name: 'Test User',
-      password: 'password123',
-    });
-
-    expect(res.status).toBe(201);
-    expect(mockCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({ email: 'bat@gmail.com' }),
-    });
-  });
 
   it('409 — duplicate email in different capitals is DUPLICATE_EMAIL, never a second Parent', async () => {
     mockFindUnique.mockImplementation((async ({ where }: { where: { email: string } }) =>

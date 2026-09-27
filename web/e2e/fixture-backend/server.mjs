@@ -6,7 +6,8 @@ import { pathToFileURL } from "node:url";
  * runs need no backend or database. Playwright's webServer starts it and
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
  * one Published Article, plus the auth routes the sign-in, sign-up,
- * forgot-password and reset-password pages and the Google callback call
+ * confirm-email, forgot-password and reset-password pages and the Google
+ * callback call
  * (see FIXTURE_PARENT), `GET /api/auth/me` that proxy.ts checks a session
  * with, and the learner/diagnostic routes the Diagnostic proxy calls as that
  * parent;
@@ -102,9 +103,10 @@ async function login(req, res) {
 }
 
 // Register stub: the fixture parent's email is taken, another is rate-limited,
-// anyone else signs up and gets a token. Every body is kept under its email,
-// so a spec can look up its own (specs run in parallel) and check what
-// arrived — the surname — and that nothing else did.
+// anyone else signs up — answered, as the real route does, with the address
+// the confirmation link went to and no token. Every body is kept under its
+// email, so a spec can look up its own (specs run in parallel) and check what
+// arrived — the surname, `next` — and that nothing else did.
 export const TAKEN_EMAIL = FIXTURE_PARENT.email;
 const registerBodies = new Map();
 
@@ -113,8 +115,21 @@ async function register(req, res) {
   if (typeof body?.email === "string") registerBodies.set(body.email, body);
   if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
   if (body?.email === TAKEN_EMAIL) return fail(res, 409, "DUPLICATE_EMAIL", "Email already registered");
-  const data = { id: "fixture-new-parent", email: body?.email, name: body?.name, token: FIXTURE_PARENT.token };
-  send(res, 201, "application/json", JSON.stringify({ success: true, data }));
+  send(res, 201, "application/json", JSON.stringify({ success: true, data: { email: body?.email } }));
+}
+
+// Confirm-email stub: one token confirms and signs in; any other is
+// INVALID_CONFIRMATION_TOKEN, as the real route answers for an expired, used
+// or unknown link. Every token is recorded, so a spec can count its own.
+export const VALID_CONFIRMATION_TOKEN = "fixture-confirmation-token";
+const confirmEmailRequests = [];
+
+async function confirmEmail(req, res) {
+  const body = await readJson(req);
+  confirmEmailRequests.push(body?.token);
+  if (body?.token !== VALID_CONFIRMATION_TOKEN) return fail(res, 400, "INVALID_CONFIRMATION_TOKEN", "Confirmation link is expired or invalid");
+  const data = { id: "fixture-new-parent", email: "new-parent@example.com", name: "Болд", token: FIXTURE_PARENT.token };
+  send(res, 200, "application/json", JSON.stringify({ success: true, data }));
 }
 
 // Forgot-password stub: the same success for every email, as the real route
@@ -198,6 +213,7 @@ export function startFixtureBackend() {
     const { pathname } = new URL(req.url ?? "/", `http://localhost:${PORT}`);
     if (req.method === "POST" && pathname === "/api/auth/login") return login(req, res);
     if (req.method === "POST" && pathname === "/api/auth/register") return register(req, res);
+    if (req.method === "POST" && pathname === "/api/auth/confirm-email") return confirmEmail(req, res);
     if (req.method === "POST" && pathname === "/api/auth/forgot-password") return forgotPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/reset-password") return resetPassword(req, res);
     if (req.method === "POST" && pathname === "/api/auth/google") return google(req, res);
@@ -212,6 +228,7 @@ export function startFixtureBackend() {
     }
     if (req.method === "GET" && pathname === "/__diagnostic-requests") return send(res, 200, "application/json", JSON.stringify(diagnosticRequests));
     if (req.method === "GET" && pathname === "/__google-requests") return send(res, 200, "application/json", JSON.stringify(googleRequests));
+    if (req.method === "GET" && pathname === "/__confirm-email-requests") return send(res, 200, "application/json", JSON.stringify(confirmEmailRequests));
     if (req.method === "GET" && pathname === "/__forgot-password-requests") return send(res, 200, "application/json", JSON.stringify(forgotPasswordRequests));
     if (req.method === "GET" && pathname === "/__register") {
       const email = new URL(req.url ?? "/", `http://localhost:${PORT}`).searchParams.get("email");

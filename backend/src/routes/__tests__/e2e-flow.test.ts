@@ -21,6 +21,7 @@ import dashboardRouter from '../dashboard';
 jest.mock('../../lib/db/client', () => ({
   prisma: {
     parent: { findUnique: jest.fn(), create: jest.fn() },
+    emailConfirmationToken: { create: jest.fn() },
     learner: { findUnique: jest.fn(), create: jest.fn() },
     learnerSkillState: {
       create: jest.fn(),
@@ -61,6 +62,11 @@ jest.mock('../../lib/auth/jwt', () => ({
 jest.mock('../../lib/auth/password', () => ({
   hashPassword: jest.fn(),
   comparePassword: jest.fn(),
+}));
+
+jest.mock('../../lib/email', () => ({
+  ...jest.requireActual('../../lib/email'),
+  sendEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../lib/error-engine/attempt-processor', () => ({
@@ -248,7 +254,9 @@ beforeEach(() => {
 // ─── Step 1: Register parent ──────────────────────────────────────────────────
 
 describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
-  it('201 → returns id, email, name, token', async () => {
+  // Sign up answers with the address the confirmation link went to; the
+  // session comes from confirming (email-confirmation.test.ts).
+  it('201 → returns the email, no token', async () => {
     m.parentFindUnique.mockResolvedValue(null);
     m.hashPassword.mockResolvedValue('hashed_pw');
     m.parentCreate.mockResolvedValue({
@@ -257,7 +265,6 @@ describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
       name: 'Батмөнх',
       token_version: 0,
     });
-    m.signToken.mockResolvedValue('e2e-test-token');
 
     const res = await authRouter.request('/register', {
       method: 'POST',
@@ -271,10 +278,7 @@ describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
     const body = await json(res);
 
     expect(res.status).toBe(201);
-    expect(body.data.id).toBe(PARENT_ID);
-    expect(body.data.email).toBe('parent@test.mn');
-    expect(body.data.name).toBe('Батмөнх');
-    expect(body.data.token).toBe('e2e-test-token');
+    expect(body.data).toEqual({ email: 'parent@test.mn' });
     expect(m.parentCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ email: 'parent@test.mn', name: 'Батмөнх' }),

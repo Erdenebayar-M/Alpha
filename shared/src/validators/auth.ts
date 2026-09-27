@@ -9,6 +9,9 @@ export const registerSchema = z.object({
   name: z.string().min(2),
   surname: z.string().optional(),
   password: z.string().min(8),
+  // Where web sends the parent once they open the emailed link. It is only
+  // carried into the link; web decides whether it is safe to follow.
+  next: z.string().max(2048).optional(),
 });
 
 export const loginSchema = z.object({
@@ -29,6 +32,11 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8),
 });
 
+// Email confirmation: the raw token from the emailed link.
+export const confirmEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
 // Google sign-in: the authorization code from Google's redirect, the PKCE
 // verifier its challenge was made from, and the redirect_uri the code was
 // issued for. The backend holds the client secret and finishes the exchange.
@@ -42,4 +50,5 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ConfirmEmailInput = z.infer<typeof confirmEmailSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

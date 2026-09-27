@@ -78,6 +78,13 @@ export const resetPasswordLimiter = rateLimit({
   max: 10,
 });
 
+// 10 Email confirmation attempts per IP per 15 minutes — tokens are
+// unguessable; this only bounds guessing.
+export const confirmEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+});
+
 // 5 LLM/generation requests per IP per minute — limits API cost exposure.
 // Google sign-in: each attempt costs a round trip to Google.
 export const googleLimiter = rateLimit({

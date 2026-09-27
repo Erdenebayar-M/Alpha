@@ -4,7 +4,7 @@
  * lib/api/types.ts). scripts/check-shared-drift.mjs fails when the source of
  * truth changes shape.
  *
- *   loginSchema = { email: z.string().email(), password: z.string() }
+ *   loginSchema = { email: emailSchema, password: z.string() }
  *
  * `password` has no rule: an empty or wrong one is the backend's
  * INVALID_CREDENTIALS, not a validation error.

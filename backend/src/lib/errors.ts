@@ -16,6 +16,17 @@ export const ERRORS = {
   INVALID_RESET_TOKEN: (c: Context) =>
     fail(c, 'INVALID_RESET_TOKEN', 'Reset link is expired or invalid', undefined, 400),
 
+  // An expired, used or unknown Email confirmation token — one code, as for
+  // INVALID_RESET_TOKEN.
+  INVALID_CONFIRMATION_TOKEN: (c: Context) =>
+    fail(c, 'INVALID_CONFIRMATION_TOKEN', 'Confirmation link is expired or invalid', undefined, 400),
+
+  // The right password for a Parent account whose email isn't confirmed yet.
+  // Only given after the password checks out, so it reveals nothing to a
+  // caller who doesn't know it.
+  EMAIL_NOT_CONFIRMED: (c: Context) =>
+    fail(c, 'EMAIL_NOT_CONFIRMED', 'Email is not confirmed yet', undefined, 403),
+
   // Any failed Google sign-in: a bad or expired code, an id_token that doesn't
   // verify, an unverified email, or Google not configured.
   GOOGLE_AUTH_FAILED: (c: Context) =>
