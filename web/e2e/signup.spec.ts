@@ -106,6 +106,36 @@ test("the check-your-email screen resends the link, with a cooldown", async ({ p
   expect(await resendRequestsFor(request, email)).toEqual([{ email, next: "/articles/fixture-article" }]);
 });
 
+test("a known domain typo offers a correction, and accepting it replaces the email", async ({ page }) => {
+  await page.goto("/signup");
+  await page.getByLabel("Имэйл хаяг").fill("bat@gmial.com");
+
+  await expect(page.getByText("гэж бичихийг хүссэн үү?", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "bat@gmail.com" }).click();
+
+  await expect(page.getByLabel("Имэйл хаяг")).toHaveValue("bat@gmail.com");
+  await expect(page.getByText("гэж бичихийг хүссэн үү?", { exact: false })).toHaveCount(0);
+});
+
+test("ignoring the domain typo suggestion still submits the email as typed", async ({ page }) => {
+  await page.goto("/signup");
+  await fillForm(page, { email: "bat@gmial.com" });
+
+  await expect(page.getByRole("heading", { name: "Имэйлээ шалгана уу" })).toBeVisible();
+  await expect(page.locator("strong", { hasText: "bat@gmial.com" })).toBeVisible();
+});
+
+test("a correct or unknown domain shows no suggestion", async ({ page }) => {
+  await page.goto("/signup");
+  const email = page.getByLabel("Имэйл хаяг");
+
+  await email.fill("bat@gmail.com");
+  await expect(page.getByText("гэж бичихийг хүссэн үү?", { exact: false })).toHaveCount(0);
+
+  await email.fill("bat@some-unusual-domain.com");
+  await expect(page.getByText("гэж бичихийг хүссэн үү?", { exact: false })).toHaveCount(0);
+});
+
 test("'Wrong email? Start again' restores the form with what was typed", async ({ page }) => {
   await page.goto("/signup");
   await fillForm(page, { email: "mistyped@example.com" });

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton from "@/components/auth/AuthSubmitButton";
 import ResendConfirmation from "@/components/auth/ResendConfirmation";
 import SentToEmail from "@/components/auth/SentToEmail";
+import { suggestEmailCorrection } from "@/lib/auth/emailTypoSuggestion";
 import { rememberPendingConfirmationEmail } from "@/lib/auth/pendingConfirmationEmail";
 import { withNext } from "@/lib/auth/safeNext";
 import { validateRegisterForm, type RegisterField, type RegisterFormValues } from "@/lib/auth/registerRules";
@@ -34,6 +35,10 @@ export default function SignUpForm({ next }: { next?: string }) {
   const [sentTo, setSentTo] = useState<string>();
   const sentHeadingRef = useRef<HTMLHeadingElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  // Recomputed from whatever is currently typed — accepting it changes the
+  // email to the corrected domain, which naturally has no suggestion of its
+  // own; ignoring it just leaves it typed as-is, since it never blocks submit.
+  const emailSuggestion = useMemo(() => suggestEmailCorrection(values.email), [values.email]);
   // Only true once the form has actually given way to "check your email", so
   // the form isn't stolen focus on first render.
   const wasSent = useRef(false);
@@ -120,6 +125,22 @@ export default function SignUpForm({ next }: { next?: string }) {
               error={key === "surname" ? undefined : fieldErrors[key] && signUp.errors[key]}
             />
           ))}
+          {group[0].key === "email" && emailSuggestion && (
+            <p role="status" className="text-xs text-auth-muted">
+              {signUp.emailSuggestion.beforeEmail}
+              <button
+                type="button"
+                onClick={() => {
+                  setValues((current) => ({ ...current, email: emailSuggestion }));
+                  setFieldErrors((current) => ({ ...current, email: undefined }));
+                }}
+                className="font-bold text-auth-link focus-ring"
+              >
+                {emailSuggestion}
+              </button>
+              {signUp.emailSuggestion.afterEmail}
+            </p>
+          )}
         </div>
       ))}
       {formError && (
