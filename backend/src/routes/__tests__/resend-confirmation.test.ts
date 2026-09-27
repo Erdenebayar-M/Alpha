@@ -43,9 +43,11 @@ const mockSendEmail   = sendEmail as jest.MockedFunction<typeof sendEmail>;
 
 const UNCONFIRMED = 'new@example.com';
 const CONFIRMED = 'done@example.com';
-const PARENTS: Record<string, { id: string; name: string; email_confirmed_at: Date | null }> = {
-  [UNCONFIRMED]: { id: 'parent-uuid-1', name: 'Болд', email_confirmed_at: null },
-  [CONFIRMED]: { id: 'parent-uuid-2', name: 'Дорж', email_confirmed_at: new Date() },
+// Freshly created, so neither is a lapsed-unconfirmed account here;
+// unconfirmed-lapse.test.ts covers that case.
+const PARENTS: Record<string, { id: string; name: string; email_confirmed_at: Date | null; created_at: Date }> = {
+  [UNCONFIRMED]: { id: 'parent-uuid-1', name: 'Болд', email_confirmed_at: null, created_at: new Date() },
+  [CONFIRMED]: { id: 'parent-uuid-2', name: 'Дорж', email_confirmed_at: new Date(), created_at: new Date() },
 };
 
 let ipCounter = 0;

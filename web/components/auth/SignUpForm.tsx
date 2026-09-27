@@ -33,11 +33,20 @@ export default function SignUpForm({ next }: { next?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string>();
   const sentHeadingRef = useRef<HTMLHeadingElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Only true once the form has actually given way to "check your email", so
+  // the form isn't stolen focus on first render.
+  const wasSent = useRef(false);
 
-  // The form is replaced, not navigated away from, so move focus onto the
-  // new heading for screen readers.
+  // The form and heading swap in place, not by navigating, so move focus onto
+  // whichever one comes forward, for screen readers.
   useEffect(() => {
-    if (sentTo) sentHeadingRef.current?.focus();
+    if (sentTo) {
+      sentHeadingRef.current?.focus();
+      wasSent.current = true;
+    } else if (wasSent.current) {
+      formRef.current?.focus();
+    }
   }, [sentTo]);
 
   async function handleSubmit(event: FormEvent) {
@@ -85,12 +94,18 @@ export default function SignUpForm({ next }: { next?: string }) {
           <SentToEmail copy={signUp.sent.intro} email={sentTo} />
         </p>
         <ResendConfirmation email={sentTo} next={next} />
+        <p className="text-sm leading-[1.55] text-auth-muted">
+          {signUp.sent.startAgain.label}{" "}
+          <button type="button" onClick={() => setSentTo(undefined)} className="font-bold text-auth-link focus-ring">
+            {signUp.sent.startAgain.linkLabel}
+          </button>
+        </p>
       </div>
     );
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-[18px]">
+    <form noValidate ref={formRef} tabIndex={-1} onSubmit={handleSubmit} className="flex flex-col gap-[18px] outline-none">
       {signUp.fieldGroups.map((group) => (
         <div key={group[0].key} className="flex flex-col gap-2.5">
           {group.map(({ key, ...field }) => (

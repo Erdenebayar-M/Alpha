@@ -8,6 +8,16 @@ export const CONFIRMATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_TOKENS_PER_HOUR = 5;
 const HOUR_MS = 60 * 60 * 1000;
 
+// An unconfirmed Parent account this old is dead weight: nothing has proven
+// the email is the parent's, and no job scheduler sweeps these away, so
+// Sign in, Resend and Forgot-password all treat it as if it never existed —
+// freeing its email for the next Sign up to take over.
+export const UNCONFIRMED_LAPSE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isLapsedUnconfirmedParent(parent: { email_confirmed_at: Date | null; created_at: Date }): boolean {
+  return !parent.email_confirmed_at && parent.created_at.getTime() <= Date.now() - UNCONFIRMED_LAPSE_MS;
+}
+
 /** The emailed link: web's confirmation page, carrying `next` when given. */
 export function emailConfirmationLink(token: string, next?: string): string {
   return webLink('/confirm-email', { token, next });
@@ -57,6 +67,53 @@ export async function issueEmailConfirmationToken(parent_id: string): Promise<st
     }),
   ]);
   return token;
+}
+
+/**
+ * Replaces an unconfirmed Parent account with a Sign up's new details — name,
+ * surname and password — as though it never existed, in one transaction:
+ * `token_version` bumped and its older confirmation tokens invalidated so a
+ * link or session from the account it replaces can't outlive it.
+ *
+ * The claim only succeeds while the account is still unconfirmed: a confirm
+ * racing this replace may win first, and a confirmed account is never
+ * replaced. Returns null in that case.
+ *
+ * A fresh confirmation token is issued subject to the same per-parent cap as
+ * `issueEmailConfirmationToken` — the account is replaced either way (a
+ * mistyped password shouldn't get stuck on it), but past the cap the
+ * returned `token` is null and no new link goes out this hour.
+ */
+export async function replaceUnconfirmedParent(
+  parent_id: string,
+  data: { name: string; surname: string | null; password_hash: string },
+): Promise<{ parent: { id: string; email: string; name: string }; token: string | null } | null> {
+  const now = new Date();
+  return prisma.$transaction(async (tx) => {
+    const claimed = await tx.parent.updateMany({
+      where: { id: parent_id, email_confirmed_at: null },
+      data: { ...data, token_version: { increment: 1 } },
+    });
+    if (claimed.count !== 1) return null;
+
+    // The account's details just changed, so every older link — however
+    // recent — must die: whoever still holds one must not confirm into an
+    // account with someone else's name and password.
+    await tx.emailConfirmationToken.updateMany({ where: { parent_id, used_at: null }, data: { used_at: now } });
+
+    const parent = await tx.parent.findUniqueOrThrow({ where: { id: parent_id }, select: { id: true, email: true, name: true } });
+
+    const recent = await tx.emailConfirmationToken.count({
+      where: { parent_id, created_at: { gte: new Date(now.getTime() - HOUR_MS) } },
+    });
+    if (recent >= MAX_TOKENS_PER_HOUR) return { parent, token: null };
+
+    const token = newEmailedToken();
+    await tx.emailConfirmationToken.create({
+      data: { parent_id, token_hash: hashEmailedToken(token), expires_at: new Date(now.getTime() + CONFIRMATION_TOKEN_TTL_MS) },
+    });
+    return { parent, token };
+  });
 }
 
 /**

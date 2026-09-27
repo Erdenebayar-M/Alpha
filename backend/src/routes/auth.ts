@@ -9,7 +9,14 @@ import { ok } from '../lib/response';
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, confirmEmailSchema, resendConfirmationSchema, googleAuthSchema } from '@app/shared';
 import { loginLimiter, registerLimiter, forgotPasswordLimiter, resetPasswordLimiter, confirmEmailLimiter, resendConfirmationLimiter, googleLimiter } from '../lib/auth/rateLimit';
 import { issuePasswordResetToken, passwordResetLink, resetPasswordWithToken } from '../lib/auth/passwordReset';
-import { createUnconfirmedParent, emailConfirmationLink, confirmEmailWithToken, issueEmailConfirmationToken } from '../lib/auth/emailConfirmation';
+import {
+  createUnconfirmedParent,
+  replaceUnconfirmedParent,
+  emailConfirmationLink,
+  confirmEmailWithToken,
+  issueEmailConfirmationToken,
+  isLapsedUnconfirmedParent,
+} from '../lib/auth/emailConfirmation';
 import { sendEmail, type EmailMessage, passwordResetEmail, emailConfirmationEmail } from '../lib/email';
 import { googleIdentityFromCode, type GoogleIdentity } from '../lib/auth/google';
 import { maskEmail } from '../lib/mask-email';
@@ -33,6 +40,12 @@ const auth = new Hono<AuthEnv>();
 // emails its Email confirmation link; the parent is signed in only once they
 // open it (POST /confirm-email). Answers with the address the link went to,
 // and no token.
+//
+// An email already held by a confirmed account is DUPLICATE_EMAIL. Held by an
+// unconfirmed one — whatever its age, mistyped password or abandoned minutes
+// ago — it is replaced outright: new name, surname and password, its older
+// links dead, a fresh one sent. An unconfirmed account holds nothing, so
+// there is nothing to lose by starting it over.
 auth.post('/register', registerLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = registerSchema.safeParse(body);
@@ -43,27 +56,39 @@ auth.post('/register', registerLimiter, async (c) => {
   const { email, name, surname, password, next } = parsed.data;
 
   const existing = await prisma.parent.findUnique({ where: { email } });
-  if (existing) {
+  if (existing?.email_confirmed_at) {
     return ERRORS.DUPLICATE_EMAIL(c);
   }
 
   const password_hash = await hashPassword(password);
-  const { parent, token } = await createUnconfirmedParent({ email, name, surname, password_hash });
+  const replaced = existing ? await replaceUnconfirmedParent(existing.id, { name, surname: surname ?? null, password_hash }) : null;
+  // A concurrent request confirmed this account between the lookup above and
+  // the replace's own claim — it's no longer an unconfirmed account to take
+  // over, so answer exactly as if it had been found confirmed all along.
+  if (existing && !replaced) {
+    return ERRORS.DUPLICATE_EMAIL(c);
+  }
 
-  // A failed send is only logged: the account exists either way, and the
+  const { parent, token } = replaced ?? (await createUnconfirmedParent({ email, name, surname, password_hash }));
+
+  // A missing token means the per-parent cap on confirmation links was hit;
+  // the account is still replaced, just without a new link this hour. A
+  // failed send is only logged: the account exists either way, and the
   // parent is told to check their email.
-  try {
-    await sendEmail(emailConfirmationEmail({ to: parent.email, name: parent.name, link: emailConfirmationLink(token, next) }));
-  } catch (err) {
-    console.error(
-      JSON.stringify({
-        ts: new Date().toISOString(),
-        request_id: c.get('requestId') ?? null,
-        event: 'email_confirmation_email_failed',
-        parent_id: parent.id,
-        error: err instanceof Error ? err.message : String(err),
-      }),
-    );
+  if (token) {
+    try {
+      await sendEmail(emailConfirmationEmail({ to: parent.email, name: parent.name, link: emailConfirmationLink(token, next) }));
+    } catch (err) {
+      console.error(
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          request_id: c.get('requestId') ?? null,
+          event: 'email_confirmation_email_failed',
+          parent_id: parent.id,
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    }
   }
 
   return ok(c, { email: parent.email }, undefined, 201);
@@ -100,7 +125,8 @@ auth.post('/login', loginLimiter, async (c) => {
   const { email, password } = parsed.data;
 
   const parent = await prisma.parent.findUnique({ where: { email } });
-  if (!parent) {
+  // A lapsed unconfirmed account behaves as absent, whatever the password.
+  if (!parent || isLapsedUnconfirmedParent(parent)) {
     return ERRORS.INVALID_CREDENTIALS(c);
   }
 
@@ -160,7 +186,8 @@ const sendEmailConfirmation = (parent: { id: string; name: string }, email: stri
 // POST /api/auth/resend-confirmation — sends a new Email confirmation link,
 // which invalidates the older ones. The response is the same, and as quick,
 // whether or not an unconfirmed Parent account has this email: only one does
-// get mail, after the response goes out.
+// get mail, after the response goes out. A lapsed unconfirmed account (past
+// its week) behaves as absent, so it gets nothing either.
 auth.post('/resend-confirmation', resendConfirmationLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = resendConfirmationSchema.safeParse(body);
@@ -169,15 +196,21 @@ auth.post('/resend-confirmation', resendConfirmationLimiter, async (c) => {
   }
 
   const { email, next } = parsed.data;
-  const parent = await prisma.parent.findUnique({ where: { email }, select: { id: true, name: true, email_confirmed_at: true } });
-  if (parent && !parent.email_confirmed_at) void sendEmailConfirmation(parent, email, next, c.get('requestId') ?? null);
+  const parent = await prisma.parent.findUnique({
+    where: { email },
+    select: { id: true, name: true, email_confirmed_at: true, created_at: true },
+  });
+  if (parent && !parent.email_confirmed_at && !isLapsedUnconfirmedParent(parent)) {
+    void sendEmailConfirmation(parent, email, next, c.get('requestId') ?? null);
+  }
 
   return ok(c, { ok: true });
 });
 
 // POST /api/auth/forgot-password — requests a Password reset link. The response
 // is the same, and as quick, whether or not a Parent account has this email:
-// issuing the token and sending the email happen after it goes out.
+// issuing the token and sending the email happen after it goes out. A lapsed
+// unconfirmed account (past its week) behaves as absent, so it gets nothing.
 auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = forgotPasswordSchema.safeParse(body);
@@ -186,8 +219,12 @@ auth.post('/forgot-password', forgotPasswordLimiter, async (c) => {
   }
 
   const { email } = parsed.data;
-  const parent = await prisma.parent.findUnique({ where: { email }, select: { id: true, name: true } });
-  if (parent) void sendPasswordReset(parent, email, c.get('requestId') ?? null);
+  const parent = await prisma.parent.findUnique({
+    where: { email },
+    select: { id: true, name: true, email_confirmed_at: true, created_at: true },
+  });
+  // A lapsed unconfirmed account behaves as absent.
+  if (parent && !isLapsedUnconfirmedParent(parent)) void sendPasswordReset(parent, email, c.get('requestId') ?? null);
 
   return ok(c, { ok: true });
 });

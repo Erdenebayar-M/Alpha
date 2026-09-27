@@ -472,6 +472,9 @@ export const signUp = {
     title: "Имэйлээ шалгана уу",
     // The email sits between the two parts.
     intro: { beforeEmail: "Таны ", afterEmail: " хаяг руу баталгаажуулах холбоос илгээлээ. Бүртгэлээ дуусгахын тулд холбоосыг нээнэ үү. Холбоосын хүчинтэй хугацаа 24 цаг." },
+    // Brings the filled-in form back in place — no Figma frame; a mistyped
+    // email is the one thing worth fixing without retyping the rest.
+    startAgain: { label: "Буруу имэйл үү?", linkLabel: "Дахин эхлэх" },
   },
 } as const;
 

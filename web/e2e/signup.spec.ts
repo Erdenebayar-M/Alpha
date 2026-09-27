@@ -105,3 +105,17 @@ test("the check-your-email screen resends the link, with a cooldown", async ({ p
   await expect(resend).toBeDisabled();
   expect(await resendRequestsFor(request, email)).toEqual([{ email, next: "/articles/fixture-article" }]);
 });
+
+test("'Wrong email? Start again' restores the form with what was typed", async ({ page }) => {
+  await page.goto("/signup");
+  await fillForm(page, { email: "mistyped@example.com" });
+  await expect(page.getByRole("heading", { name: "Имэйлээ шалгана уу" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Дахин эхлэх" }).click();
+
+  await expect(page.getByLabel("Овог")).toHaveValue(NEW_PARENT.surname);
+  await expect(page.getByLabel("Нэр", { exact: true })).toHaveValue(NEW_PARENT.name);
+  await expect(page.getByLabel("Имэйл хаяг")).toHaveValue("mistyped@example.com");
+  await expect(page.getByLabel("Нууц үг", { exact: true })).toHaveValue(NEW_PARENT.password);
+  await expect(page.getByLabel("Нууц үгээ давтах")).toHaveValue(NEW_PARENT.password);
+});

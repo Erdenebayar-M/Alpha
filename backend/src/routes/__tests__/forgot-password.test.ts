@@ -43,7 +43,9 @@ const mockCount       = prisma.passwordResetToken.count as jest.Mock;
 const mockTransaction = prisma.$transaction as jest.Mock;
 const mockSendEmail   = sendEmail as jest.MockedFunction<typeof sendEmail>;
 
-const PARENT = { id: 'parent-uuid-1', name: 'Болд' };
+// Confirmed, so it's never a lapsed-unconfirmed account for these tests;
+// unconfirmed-lapse.test.ts covers the unconfirmed and lapsed cases.
+const PARENT = { id: 'parent-uuid-1', name: 'Болд', email_confirmed_at: new Date(), created_at: new Date() };
 const REGISTERED = 'parent@example.com';
 
 let ipCounter = 0;
