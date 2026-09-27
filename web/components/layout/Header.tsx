@@ -65,7 +65,7 @@ export default function Header({
               return (
                 <li key={link.href}>
                   <a
-                    href={`${basePath}${link.href}`}
+                    href={link.href.startsWith("#") ? `${basePath}${link.href}` : link.href}
                     aria-current={isActive ? "page" : undefined}
                     className={
                       isActive

@@ -61,7 +61,7 @@ export default function MobileNav({ basePath = "", links = nav.links }: MobileNa
             {links.map((link) => (
               <li key={link.href}>
                 <a
-                  href={`${basePath}${link.href}`}
+                  href={link.href.startsWith("#") ? `${basePath}${link.href}` : link.href}
                   onClick={() => setOpen(false)}
                   className="block min-h-11 py-2 text-sm font-extrabold text-text-nav"
                 >

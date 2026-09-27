@@ -8,7 +8,7 @@ interface SectionHeadingProps {
 }
 
 /**
- * The heading treatment shared by /landing-new's Featured article
+ * The heading treatment shared by the homepage's Featured article
  * ("Онцлох нийтлэл", node 1401:22287), Articles-for-parents grid and
  * Collections row sections: Nunito Bold 28px, 1.2 line height, -0.84px
  * tracking, `text-label` (#2a4263, matching Figma's own token despite the

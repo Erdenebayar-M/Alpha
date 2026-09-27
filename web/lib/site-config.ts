@@ -10,9 +10,9 @@ export const siteConfig = {
   url: "https://orto.mn",
 
   assessmentUrl: "/register-child",
-  // The homepage's existing pricing anchor, reused as a cross-page nav
-  // destination from other routes (e.g. /landing-new's "Үнэ" link).
-  pricingUrl: "/#une",
+  // /landing-old's Pricing anchor, reused as a cross-page nav destination
+  // from the homepage's "Үнэ" link.
+  pricingUrl: "/landing-old#une",
 
   // TODO: replace with the real destinations.
   appUrl: "#",
@@ -23,7 +23,7 @@ export const siteConfig = {
   playStoreUrl: "#",
 
   // TODO: replace with the real Category destinations (see web/CONTEXT.md
-  // for the glossary). /landing-new's Category pills link here for Унших,
+  // for the glossary). The homepage's Category pills link here for Унших,
   // Зөв бичих and Үсэглэх; Оношилгоо is not a Category and links to
   // `assessmentUrl` above instead.
   categoryUrls: {
@@ -33,17 +33,17 @@ export const siteConfig = {
   },
 
   // TODO: replace with the real Featured article destination once Articles
-  // have their own reading page. /landing-new's Featured article card links
+  // have their own reading page. The homepage's Featured article card links
   // here (see web/CONTEXT.md for the Article/Featured article glossary).
   featuredArticleUrl: "#",
 
   // TODO: replace with the real per-Article destinations once Articles have
-  // their own reading page. /landing-new's Articles-for-parents grid cards
+  // their own reading page. The homepage's Articles-for-parents grid cards
   // all link here for now (see web/CONTEXT.md for the Article glossary).
   articleUrl: "#",
 
   // TODO: replace with the real per-Collection destinations once Collections
-  // have their own pages. /landing-new's Collections row cards all link here
+  // have their own pages. The homepage's Collections row cards all link here
   // for now (see web/CONTEXT.md for the Collection glossary).
   collectionUrl: "#",
 } as const;

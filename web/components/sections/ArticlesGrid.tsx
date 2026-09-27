@@ -30,7 +30,7 @@ const art: readonly [ArticleCardArt, ArticleCardArt, ArticleCardArt] = [
 ];
 
 /**
- * /landing-new's Articles-for-parents grid (Figma node 1371:9792,
+  * The homepage's Articles-for-parents grid (Figma node 1371:9792,
  * "Эцэг эхчүүдэд туслах нийтлэлүүд"), directly under the Featured article —
  * three more Article cards for parents to browse (see web/CONTEXT.md's
  * Article entry). One `ArticleCard` component, three cards from one data
@@ -39,7 +39,7 @@ const art: readonly [ArticleCardArt, ArticleCardArt, ArticleCardArt] = [
  *
  * Figma has no mobile frame for this row; below `lg` the cards stack full-
  * width in a single column rather than the 3-up row, matching the pattern
- * every other /landing-new section uses.
+ * every other homepage section uses.
  */
 export default function ArticlesGrid() {
   return (

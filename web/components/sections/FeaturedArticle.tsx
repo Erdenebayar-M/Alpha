@@ -8,7 +8,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { featuredArticle } from "@/lib/content";
 
 /**
- * /landing-new's Featured article (Figma node 1401:22062, "Онцлох нийтлэл
+  * The homepage's Featured article (Figma node 1401:22062, "Онцлох нийтлэл
  * групп"), directly under the Diagnostic card: the section heading and the
  * illustration + Article text row, both painted inside one shared card
  * surface — not a heading sitting above the card. Figma's own node tree

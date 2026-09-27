@@ -9,7 +9,7 @@ interface ContainerProps {
 
 /**
  * The page's **Content column**: the single horizontal box every content row
- * on /landing-new lines up with — 1140px wide, centred, i.e. 150px gutters at
+ * on the homepage lines up with — 1140px wide, centred, i.e. 150px gutters at
  * the 1440px design width (Figma node 1360:8704 "Layout", squared up; see
  * docs/adr/0003-page-content-column.md for why the design's own per-frame x
  * positions are overridden).

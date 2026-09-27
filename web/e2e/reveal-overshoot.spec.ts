@@ -24,10 +24,10 @@ import { test, expect } from "@playwright/test";
  * review instead — see docs/adr/0004-playwright-for-reveal-regression.md.
  */
 
-test("sequence mode reveals items skipped by a fast scroll (/landing-new CategoryPills)", async ({
+test("sequence mode reveals items skipped by a fast scroll (homepage CategoryPills)", async ({
   page,
 }) => {
-  await page.goto("/landing-new");
+  await page.goto("/");
 
   const wrapper = page.locator('nav [data-reveal="sequence"]').first();
   const items = wrapper.locator("[data-reveal-item]");

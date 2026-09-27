@@ -5,7 +5,7 @@ import { categoryPills, type Category } from "@/lib/content";
 import { cn } from "@/lib/cn";
 
 /**
- * /landing-new's Category pills (Figma node 1360:8718), sitting 30px below
+  * The homepage's Category pills (Figma node 1360:8718), sitting 30px below
  * the Hero Card's bottom edge (Hero Card bottom is absolute y=638 in the
  * artwork frame, this row's top is y=668). Унших, Зөв бичих and Үсэглэх
  * link to their Category placeholder; Оношилгоо is a Diagnostic shortcut,

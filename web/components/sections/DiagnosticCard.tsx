@@ -8,7 +8,7 @@ import { diagnosticCard } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
 /**
- * /landing-new's Diagnostic card (Figma node 1401:21880, "Hero Card"),
+  * The homepage's Diagnostic card (Figma node 1401:21880, "Hero Card"),
  * directly under the Category pills: the lilac "Оношилгоо" badge, the
  * question heading, body copy and CTA on the left, and the ORto mascot
  * (node 1401:21910, "Sound idle component" — the same idle character
