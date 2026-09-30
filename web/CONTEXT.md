@@ -90,6 +90,10 @@ _Avoid_: verification, activation (the account is already active before it)
 Replacing a confirmed **Parent account**'s email (a parent who mistyped their email while signing up simply signs up again with the right one). The parent changes it only after proving it is them again, and the new email replaces the old only once it is confirmed; the old email is told. When a parent can no longer reach their email at all, support makes the change after the parent names each child and their grade, roughly when they signed up, and the email they think they used; the old email is told of that too.
 _Avoid_: account recovery (nothing is recovered; the email is replaced)
 
+**Weak password** (Сул нууц үг):
+A new password a **Parent account** may not choose: too short or too long, one people commonly use, one repeated character or a simple run, or — at **Sign up** only — one that contains the parent's own name, surname or email name. It is judged only when a password is set (**Sign up**, password reset); **Sign in** never judges a password, so a parent who already has a weak one is not locked out. There is no rule about which kinds of character a password must hold.
+_Avoid_: password strength score; requiring a digit, symbol or capital
+
 **Sign in** (Нэвтрэх):
 Entering an existing **Parent account**, by email and password or by Google.
 _Avoid_: log in, login

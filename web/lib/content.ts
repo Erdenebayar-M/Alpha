@@ -466,7 +466,15 @@ export const signUp = {
   errors: {
     name: "Нэр дор хаяж 2 тэмдэгттэй байна.",
     email: "Имэйл хаяг буруу байна.",
-    password: "Нууц үг дор хаяж 8 тэмдэгттэй байна.",
+    // One per Weak password reason (lib/auth/passwordRules.ts), shared with
+    // resetPassword. PASSWORD_SIMILAR only arises at Sign up.
+    password: {
+      PASSWORD_TOO_SHORT: "Нууц үг дор хаяж 8 тэмдэгттэй байна.",
+      PASSWORD_TOO_LONG: "Нууц үг хэт урт байна.",
+      PASSWORD_PATTERN: "Нэг тэмдэгт давтсан эсвэл дараалсан тоо, үсэг нууц үг болохгүй.",
+      PASSWORD_COMMON: "Энэ нууц үг хэт түгээмэл байна. Өөр нууц үг сонгоно уу.",
+      PASSWORD_SIMILAR: "Нууц үгэнд нэр эсвэл имэйл хаягаа бүү ашиглаарай.",
+    },
     confirmPassword: "Нууц үг таарахгүй байна.",
     duplicateEmail: "Энэ имэйл хаягаар бүртгэл үүссэн байна.",
     duplicateEmailLinkLabel: "Нэвтрэх",

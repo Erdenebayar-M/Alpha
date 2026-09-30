@@ -345,6 +345,18 @@ describe('POST /reset-password', () => {
     expect((await resetPassword(token, NEW_PASSWORD)).status).toBe(200);
   });
 
+  it('400 — rejects a Weak password without using the token, naming its reason', async () => {
+    const token = await requestResetToken();
+
+    const res = await resetPassword(token, 'password1');
+
+    expect(res.status).toBe(400);
+    const body = await json(res);
+    expect(body.error?.code).toBe('VALIDATION_ERROR');
+    expect((body.error as { details?: { password?: string[] } }).details?.password).toEqual(['PASSWORD_COMMON']);
+    expect((await resetPassword(token, NEW_PASSWORD)).status).toBe(200);
+  });
+
   it('400 — rejects a body without a token', async () => {
     for (const body of [{ password: NEW_PASSWORD }, { token: '', password: NEW_PASSWORD }, null]) {
       const res = await post('/reset-password', body);

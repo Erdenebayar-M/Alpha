@@ -1,10 +1,13 @@
 import { BACKEND_URL } from "@/lib/api/server/backendUrl";
+import { isPasswordWeakness, type PasswordWeakness } from "@/lib/auth/passwordRules";
 
 type TokenPath = "/api/auth/login" | "/api/auth/confirm-email" | "/api/auth/reset-password" | "/api/auth/google";
 type AuthPath = TokenPath | "/api/auth/register" | "/api/auth/forgot-password" | "/api/auth/resend-confirmation";
 
-/** `maskedEmail` is the backend's `details.email`, sent with EMAIL_NOT_CONFIRMED. */
-export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR"; maskedEmail?: string };
+/** `maskedEmail` is the backend's `details.email`, sent with EMAIL_NOT_CONFIRMED;
+ *  `passwordWeakness` its `details.password` reason, sent with a VALIDATION_ERROR
+ *  for a Weak password. */
+export type AuthFailure<Code extends string> = { ok: false; code: Code | "UPSTREAM_ERROR"; maskedEmail?: string; passwordWeakness?: PasswordWeakness };
 
 export type AuthResult<Code extends string> = { ok: true; token: string } | AuthFailure<Code>;
 
@@ -42,7 +45,13 @@ export async function postAuthRoute<Code extends string>(
   const code = knownCodes.find((known) => known === json?.error?.code);
   if (code) {
     const maskedEmail = json?.error?.details?.email;
-    return { ok: false, code, ...(typeof maskedEmail === "string" && { maskedEmail }) };
+    const passwordWeakness = json?.error?.details?.password?.[0];
+    return {
+      ok: false,
+      code,
+      ...(typeof maskedEmail === "string" && { maskedEmail }),
+      ...(isPasswordWeakness(passwordWeakness) && { passwordWeakness }),
+    };
   }
   // A gateway in front of the backend may rate-limit with a non-JSON body.
   return { ok: false, code: (res.status === 429 ? "RATE_LIMITED" : "UPSTREAM_ERROR") as Code | "UPSTREAM_ERROR" };

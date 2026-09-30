@@ -9,7 +9,8 @@ import SentToEmail from "@/components/auth/SentToEmail";
 import { suggestEmailCorrection } from "@/lib/auth/emailTypoSuggestion";
 import { rememberPendingConfirmationEmail } from "@/lib/auth/pendingConfirmationEmail";
 import { withNext } from "@/lib/auth/safeNext";
-import { validateRegisterForm, type RegisterField, type RegisterFormValues } from "@/lib/auth/registerRules";
+import { isPasswordWeakness } from "@/lib/auth/passwordRules";
+import { newPasswordErrorText, validateRegisterForm, type RegisterErrors, type RegisterFormValues } from "@/lib/auth/registerRules";
 import { signUp } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
@@ -29,7 +30,7 @@ const ERROR_BY_CODE: Record<string, FormError> = {
  *  to "check your email", naming the address the link went to. */
 export default function SignUpForm({ next }: { next?: string }) {
   const [values, setValues] = useState(EMPTY);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<RegisterField, true>>>({});
+  const [fieldErrors, setFieldErrors] = useState<RegisterErrors>({});
   const [formError, setFormError] = useState<FormError>();
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string>();
@@ -82,6 +83,12 @@ export default function SignUpForm({ next }: { next?: string }) {
         setSentTo(body.email);
         return;
       }
+      if (body?.error === "VALIDATION_ERROR" && isPasswordWeakness(body.passwordWeakness)) {
+        // A rule only the backend can judge (a common password) — shown where web's own would be.
+        setFieldErrors({ password: body.passwordWeakness });
+        setSubmitting(false);
+        return;
+      }
       setFormError(ERROR_BY_CODE[body?.error] ?? { kind: "message", text: signUp.errors.generic });
     } catch {
       setFormError({ kind: "message", text: signUp.errors.generic });
@@ -122,7 +129,13 @@ export default function SignUpForm({ next }: { next?: string }) {
                 setValues((current) => ({ ...current, [key]: value }));
                 setFieldErrors((current) => ({ ...current, [key]: undefined, ...(key === "password" ? { confirmPassword: undefined } : {}) }));
               }}
-              error={key === "surname" ? undefined : fieldErrors[key] && signUp.errors[key]}
+              error={
+                key === "surname"
+                  ? undefined
+                  : key === "password" || key === "confirmPassword"
+                    ? newPasswordErrorText(fieldErrors, key, signUp.errors)
+                    : fieldErrors[key] && signUp.errors[key]
+              }
             />
           ))}
           {group[0].key === "email" && emailSuggestion && (

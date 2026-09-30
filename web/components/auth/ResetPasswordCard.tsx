@@ -5,7 +5,8 @@ import AuthField from "@/components/auth/AuthField";
 import AuthFormError from "@/components/auth/AuthFormError";
 import AuthSubmitButton, { AuthActionLink } from "@/components/auth/AuthSubmitButton";
 import { AuthHeading } from "@/components/auth/AuthCard";
-import { validateNewPassword } from "@/lib/auth/registerRules";
+import { isPasswordWeakness } from "@/lib/auth/passwordRules";
+import { newPasswordErrorText, validateNewPassword, type NewPasswordErrors } from "@/lib/auth/registerRules";
 import { resetPassword } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
@@ -32,7 +33,7 @@ const SUCCESS_REDIRECT_DELAY_MS = 1500;
  */
 export default function ResetPasswordCard({ token }: { token?: string }) {
   const [values, setValues] = useState(EMPTY);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, true>>>({});
+  const [fieldErrors, setFieldErrors] = useState<NewPasswordErrors>({});
   const [formError, setFormError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<"success" | "invalid" | undefined>(token ? undefined : "invalid");
@@ -69,7 +70,10 @@ export default function ResetPasswordCard({ token }: { token?: string }) {
         setTimeout(() => window.location.assign(redirectTo), SUCCESS_REDIRECT_DELAY_MS);
         return;
       }
-      if (body?.error === "INVALID_RESET_TOKEN") {
+      if (body?.error === "VALIDATION_ERROR" && isPasswordWeakness(body.passwordWeakness)) {
+        // A rule only the backend can judge (a common password) — shown where web's own would be.
+        setFieldErrors({ password: body.passwordWeakness });
+      } else if (body?.error === "INVALID_RESET_TOKEN") {
         setOutcome("invalid");
         setChanged(true);
       } else {
@@ -107,7 +111,7 @@ export default function ResetPasswordCard({ token }: { token?: string }) {
                   setValues((current) => ({ ...current, [key]: value }));
                   setFieldErrors((current) => ({ ...current, [key]: undefined, ...(key === "password" ? { confirmPassword: undefined } : {}) }));
                 }}
-                error={fieldErrors[key] && resetPassword.errors[key]}
+                error={newPasswordErrorText(fieldErrors, key, resetPassword.errors)}
               />
             ))}
           </div>

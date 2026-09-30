@@ -3,6 +3,7 @@ import { setCookie, deleteCookie } from 'hono/cookie';
 import type { Context } from 'hono';
 import { prisma } from '../lib/db/client';
 import { hashPassword, comparePassword } from '../lib/auth/password';
+import { validationMessage } from '../lib/auth/weakPassword';
 import { signToken } from '../lib/auth/jwt';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
@@ -50,7 +51,8 @@ auth.post('/register', registerLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+    const { fieldErrors } = parsed.error.flatten();
+    return ERRORS.VALIDATION_ERROR(c, validationMessage(fieldErrors), fieldErrors);
   }
 
   const { email, name, surname, password, next } = parsed.data;
@@ -236,7 +238,8 @@ auth.post('/reset-password', resetPasswordLimiter, async (c) => {
   const body = await c.req.json<unknown>().catch(() => null);
   const parsed = resetPasswordSchema.safeParse(body);
   if (!parsed.success) {
-    return ERRORS.VALIDATION_ERROR(c, 'Invalid request body', parsed.error.flatten().fieldErrors);
+    const { fieldErrors } = parsed.error.flatten();
+    return ERRORS.VALIDATION_ERROR(c, validationMessage(fieldErrors), fieldErrors);
   }
 
   const reset = await resetPasswordWithToken(parsed.data.token, parsed.data.password);

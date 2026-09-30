@@ -75,7 +75,7 @@ describe('POST /register', () => {
     const res = await post('/register', {
       email: 'BAT@Gmail.COM',
       name: 'Test User',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(409);
@@ -89,7 +89,7 @@ describe('POST /register', () => {
     const res = await post('/register', {
       email: 'test@example.com',
       name: 'Test User',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(409);
@@ -101,7 +101,7 @@ describe('POST /register', () => {
   it('400 — missing email field', async () => {
     const res = await post('/register', {
       name: 'Test User',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(400);
@@ -113,7 +113,7 @@ describe('POST /register', () => {
     const res = await post('/register', {
       email: 'not-an-email',
       name: 'Test User',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(400);
@@ -130,6 +130,21 @@ describe('POST /register', () => {
 
     expect(res.status).toBe(400);
   });
+
+  it.each([
+    ['password1', 'PASSWORD_COMMON', 'Password is too common — choose another'],
+    ['12345678', 'PASSWORD_PATTERN', 'Password cannot be one repeated character or a simple sequence'],
+    ['my-test-user-pw', 'PASSWORD_SIMILAR', 'Password cannot contain your name or email'],
+  ])('400 — a Weak password %j names its reason and says why', async (password, weakness, message) => {
+    const res = await post('/register', { email: 'test@example.com', name: 'Test User', password });
+
+    expect(res.status).toBe(400);
+    const body = await json(res);
+    expect(body.error!.code).toBe('VALIDATION_ERROR');
+    expect(body.error!.message).toBe(message);
+    expect((body.error as { details?: { password?: string[] } }).details?.password).toEqual([weakness]);
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
 });
 
 // ─── Login ───────────────────────────────────────────────────────────────────
@@ -144,7 +159,7 @@ describe('POST /login', () => {
 
     const res = await post('/login', {
       email: 'test@example.com',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(200);
@@ -162,7 +177,7 @@ describe('POST /login', () => {
     mockCompare.mockResolvedValue(true as never);
     mockSign.mockResolvedValue('jwt-token' as never);
 
-    await post('/login', { email: 'test@example.com', password: 'password123' });
+    await post('/login', { email: 'test@example.com', password: 'kite-river-lantern' });
 
     expect(mockSign).toHaveBeenCalledWith({ parent_id: FAKE_PARENT.id, token_version: 2 });
   });
@@ -173,10 +188,20 @@ describe('POST /login', () => {
     mockCompare.mockResolvedValue(true as never);
     mockSign.mockResolvedValue('jwt-token' as never);
 
-    const res = await post('/login', { email: ' Bat@Gmail.com ', password: 'password123' });
+    const res = await post('/login', { email: ' Bat@Gmail.com ', password: 'kite-river-lantern' });
 
     expect(res.status).toBe(200);
     expect((await json(res)).data!.token).toBe('jwt-token');
+  });
+
+  it('200 — never judges the password: a weak existing one still signs in', async () => {
+    mockFindUnique.mockResolvedValue(FAKE_PARENT as never);
+    mockCompare.mockResolvedValue(true as never);
+    mockSign.mockResolvedValue('jwt-token' as never);
+
+    const res = await post('/login', { email: 'test@example.com', password: '12345678' });
+
+    expect(res.status).toBe(200);
   });
 
   it('401 — wrong password', async () => {
@@ -199,7 +224,7 @@ describe('POST /login', () => {
 
     const res = await post('/login', {
       email: 'nobody@example.com',
-      password: 'password123',
+      password: 'kite-river-lantern',
     });
 
     expect(res.status).toBe(401);
@@ -216,7 +241,7 @@ describe('POST /login', () => {
     const res = await authRouter.request('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.77' },
-      body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
+      body: JSON.stringify({ email: 'test@example.com', password: 'kite-river-lantern' }),
     });
 
     expect(res.status).toBe(401);
@@ -225,7 +250,7 @@ describe('POST /login', () => {
   });
 
   it('400 — missing email', async () => {
-    const res = await post('/login', { password: 'password123' });
+    const res = await post('/login', { password: 'kite-river-lantern' });
 
     expect(res.status).toBe(400);
     const body = await json(res);
