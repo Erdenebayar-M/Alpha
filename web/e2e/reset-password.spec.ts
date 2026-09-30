@@ -43,6 +43,13 @@ test("a short or mismatched password shows its message and does not call the bac
   expect(called).toBe(false);
 });
 
+test("a common password the backend refuses shows why and keeps the form", async ({ page }) => {
+  await page.goto(`/reset-password?token=${VALID_RESET_TOKEN}`);
+  await setPassword(page, "password1");
+  await expect(page.getByText("Энэ нууц үг хэт түгээмэл байна. Өөр нууц үг сонгоно уу.")).toBeVisible();
+  await expect(page.getByLabel("Шинэ нууц үг", { exact: true })).toHaveAttribute("aria-invalid", "true");
+});
+
 test("a valid link sets the password, shows success, sets the session cookie and redirects to /", async ({ page, context }) => {
   await page.goto(`/reset-password?token=${VALID_RESET_TOKEN}`);
   await setPassword(page);

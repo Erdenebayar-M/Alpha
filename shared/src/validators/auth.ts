@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { newPasswordSchema, resemblesParent, type PasswordWeakness } from './password';
 
 // A Parent's email is the same whatever its capitals or surrounding spaces, so
 // it is normalised here, once, for backend, web and mobile alike.
@@ -8,10 +9,15 @@ export const registerSchema = z.object({
   email: emailSchema,
   name: z.string().min(2),
   surname: z.string().optional(),
-  password: z.string().min(8),
+  password: newPasswordSchema,
   // Where web sends the parent once they open the emailed link. It is only
   // carried into the link; web decides whether it is safe to follow.
   next: z.string().max(2048).optional(),
+}).superRefine(({ email, name, surname, password }, ctx) => {
+  // Runs only once every field is otherwise valid.
+  if (resemblesParent(password, { email, name, surname })) {
+    ctx.addIssue({ code: 'custom', path: ['password'], message: 'PASSWORD_SIMILAR' satisfies PasswordWeakness });
+  }
 });
 
 export const loginSchema = z.object({
@@ -26,10 +32,11 @@ export const forgotPasswordSchema = z.object({
 });
 
 // Password reset: the raw token from the emailed link and the new password,
-// under the same rule as registerSchema. The confirmation is client-only.
+// under registerSchema's rule less the resemblance check — there is no
+// account to hand until the token is spent. The confirmation is client-only.
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(8),
+  password: newPasswordSchema,
 });
 
 // Email confirmation: the raw token from the emailed link.

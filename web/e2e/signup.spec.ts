@@ -54,6 +54,27 @@ test("a mismatched confirmation shows its message and does not call the backend"
   expect(called).toBe(false);
 });
 
+test("a password that is one run, or holds the parent's name, shows why and does not call the backend", async ({ page }) => {
+  let called = false;
+  await page.route("**/api/auth/signup", (route) => {
+    called = true;
+    return route.continue();
+  });
+  await page.goto("/signup");
+  await fillForm(page, { password: "12345678", confirm: "12345678" });
+  await expect(page.getByText("Нэг тэмдэгт давтсан эсвэл дараалсан тоо, үсэг нууц үг болохгүй.")).toBeVisible();
+  await fillForm(page, { email: "tsetseg@example.com", password: "tsetseg-2026", confirm: "tsetseg-2026" });
+  await expect(page.getByText("Нууц үгэнд нэр эсвэл имэйл хаягаа бүү ашиглаарай.")).toBeVisible();
+  expect(called).toBe(false);
+});
+
+test("a common password the backend refuses shows why under the password field", async ({ page }) => {
+  await page.goto("/signup");
+  await fillForm(page, { email: "common-password@example.com", password: "password1", confirm: "password1" });
+  await expect(page.getByLabel("Нууц үг", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByText("Энэ нууц үг хэт түгээмэл байна. Өөр нууц үг сонгоно уу.")).toBeVisible();
+});
+
 test("a taken email links to /signin", async ({ page, context }) => {
   await page.goto("/signup");
   await fillForm(page, { email: "parent@example.com" });

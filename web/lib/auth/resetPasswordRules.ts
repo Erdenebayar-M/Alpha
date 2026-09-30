@@ -1,11 +1,11 @@
-import { PASSWORD_MIN_LENGTH } from "@/lib/auth/registerRules";
+import { PASSWORD_MIN_LENGTH } from "@/lib/auth/passwordRules";
 
 /**
  * Hand-mirror of shared/src/validators/auth.ts's `resetPasswordSchema` (see
  * loginRules.ts for why web mirrors instead of importing).
  * scripts/check-shared-drift.mjs fails when the source of truth changes shape.
  *
- *   resetPasswordSchema = { token: z.string().min(1), password: z.string().min(8) }
+ *   resetPasswordSchema = { token: z.string().min(1), password: newPasswordSchema }
  *
  * The form's own rule, confirmation included, is registerRules.ts's
  * validateNewPassword; the confirmation is never sent.

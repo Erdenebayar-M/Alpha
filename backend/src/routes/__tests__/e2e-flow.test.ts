@@ -272,7 +272,7 @@ describe('1 – register parent (Батмөнх, parent@test.mn)', () => {
       body: JSON.stringify({
         email: 'parent@test.mn',
         name: 'Батмөнх',
-        password: 'password123',
+        password: 'kite-river-lantern',
       }),
     });
     const body = await json(res);

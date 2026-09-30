@@ -301,12 +301,12 @@ describe('POST /register over an unconfirmed Parent account', () => {
     // is what actually loses the race, not the lookup that precedes it.
     db.parent.findUnique.mockResolvedValueOnce({ ...parents[0], email_confirmed_at: null });
 
-    const res = await register({ name: 'Attacker', password: 'attacker-password1' });
+    const res = await register({ name: 'Attacker', password: 'lantern-over-hills' });
 
     expect(res.status).toBe(409);
     expect((await json(res)).error?.code).toBe('DUPLICATE_EMAIL');
     expect(parents[0].name).toBe('Болд');
-    expect(parents[0].password_hash).not.toBe('hashed:attacker-password1');
+    expect(parents[0].password_hash).not.toBe('hashed:lantern-over-hills');
   });
 });
 

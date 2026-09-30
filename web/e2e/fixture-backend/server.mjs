@@ -116,11 +116,18 @@ async function login(req, res) {
 export const TAKEN_EMAIL = FIXTURE_PARENT.email;
 const registerBodies = new Map();
 
+// The one common password the fixture knows: register and reset-password
+// refuse it as the real routes do, naming the reason in `details.password`.
+export const COMMON_PASSWORD = "password1";
+const commonPasswordFailure = (res) =>
+  fail(res, 400, "VALIDATION_ERROR", "Password is too common — choose another", { password: ["PASSWORD_COMMON"] });
+
 async function register(req, res) {
   const body = await readJson(req);
   if (typeof body?.email === "string") registerBodies.set(body.email, body);
   if (body?.email === RATE_LIMITED_EMAIL) return fail(res, 429, "RATE_LIMITED", "Too many attempts");
   if (body?.email === TAKEN_EMAIL) return fail(res, 409, "DUPLICATE_EMAIL", "Email already registered");
+  if (body?.password === COMMON_PASSWORD) return commonPasswordFailure(res);
   send(res, 201, "application/json", JSON.stringify({ success: true, data: { email: body?.email } }));
 }
 
@@ -170,6 +177,7 @@ export const VALID_RESET_TOKEN = "fixture-reset-token";
 async function resetPassword(req, res) {
   const body = await readJson(req);
   if (body?.token !== VALID_RESET_TOKEN) return fail(res, 400, "INVALID_RESET_TOKEN", "Reset link is expired or invalid");
+  if (body?.password === COMMON_PASSWORD) return commonPasswordFailure(res);
   const data = { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Fixture Parent", token: FIXTURE_PARENT.token };
   send(res, 200, "application/json", JSON.stringify({ success: true, data }));
 }

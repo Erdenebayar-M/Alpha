@@ -169,18 +169,18 @@ for (const code of ["INVALID_CREDENTIALS", "RATE_LIMITED", "VALIDATION_ERROR"]) 
 // maps the backend's DUPLICATE_EMAIL code to a link to /signin.
 
 const registerRulesTs = read("web/lib/auth/registerRules.ts");
-const registerSchemaMatch = sharedAuthTs.match(/export const registerSchema = z\.object\(\{([\s\S]*?)\}\);/);
+const registerSchemaMatch = sharedAuthTs.match(/export const registerSchema = z\.object\(\{([\s\S]*?)\}\)\.superRefine/);
 assert(registerSchemaMatch, "Could not find registerSchema in shared/src/validators/auth.ts — has it moved or been renamed?");
 
 if (registerSchemaMatch) {
   const fields = registerSchemaMatch[1].replace(/\/\/.*$/gm, "").replace(/\s+/g, " ").trim();
   assert(
-    fields === "email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8), next: z.string().max(2048).optional(),",
-    `registerSchema changed to { ${fields} } — web/lib/auth/registerRules.ts and app/api/auth/signup/route.ts mirror { email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: z.string().min(8), next: z.string().max(2048).optional() } and need updating.`,
+    fields === "email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: newPasswordSchema, next: z.string().max(2048).optional(),",
+    `registerSchema changed to { ${fields} } — web/lib/auth/registerRules.ts and app/api/auth/signup/route.ts mirror { email: emailSchema, name: z.string().min(2), surname: z.string().optional(), password: newPasswordSchema, next: z.string().max(2048).optional() } and need updating.`,
   );
 }
 assert(registerRulesTs.includes("NAME_MIN_LENGTH = 2"), "web/lib/auth/registerRules.ts no longer declares NAME_MIN_LENGTH = 2.");
-assert(registerRulesTs.includes("PASSWORD_MIN_LENGTH = 8"), "web/lib/auth/registerRules.ts no longer declares PASSWORD_MIN_LENGTH = 8.");
+assert(/resemblesParent\(/.test(sharedAuthTs) && registerRulesTs.includes("resemblesParent("), "registerSchema's resemblance check (PASSWORD_SIMILAR) and web/lib/auth/registerRules.ts's mirror of it no longer both apply it.");
 assert(!registerSchemaMatch || !/confirm/i.test(registerSchemaMatch[1]), "registerSchema in shared/src/validators/auth.ts gained a confirmation field — password confirmation is meant to be client-only (issue #121).");
 
 const signUpComponent = read("web/components/auth/SignUpForm.tsx");
@@ -212,7 +212,7 @@ for (const code of ["RATE_LIMITED", "VALIDATION_ERROR"]) {
 
 // ── 10. Reset-password rules (issue #124) ───────────────────────────────
 // web/lib/auth/resetPasswordRules.ts mirrors resetPasswordSchema with
-// registerRules.ts's PASSWORD_MIN_LENGTH; the reset card turns
+// passwordRules.ts's PASSWORD_MIN_LENGTH; the reset card turns
 // INVALID_RESET_TOKEN into its "link expired or invalid" state.
 
 const resetSchemaMatch = sharedAuthTs.match(/export const resetPasswordSchema = z\.object\(\{([\s\S]*?)\}\);/);
@@ -221,8 +221,8 @@ assert(resetSchemaMatch, "Could not find resetPasswordSchema in shared/src/valid
 if (resetSchemaMatch) {
   const fields = resetSchemaMatch[1].replace(/\s+/g, " ").trim();
   assert(
-    fields === "token: z.string().min(1), password: z.string().min(8),",
-    `resetPasswordSchema changed to { ${fields} } — web/lib/auth/resetPasswordRules.ts mirrors { token: z.string().min(1), password: z.string().min(8) } and needs updating.`,
+    fields === "token: z.string().min(1), password: newPasswordSchema,",
+    `resetPasswordSchema changed to { ${fields} } — web/lib/auth/resetPasswordRules.ts mirrors { token: z.string().min(1), password: newPasswordSchema } and needs updating.`,
   );
   assert(!/confirm/i.test(resetSchemaMatch[1]), "resetPasswordSchema in shared/src/validators/auth.ts gained a confirmation field — password confirmation is meant to be client-only (issue #124).");
 }
@@ -231,6 +231,31 @@ const resetComponent = read("web/components/auth/ResetPasswordCard.tsx");
 for (const code of ["INVALID_RESET_TOKEN", "RATE_LIMITED"]) {
   assert(backendErrorsTs.includes(`${code}:`) || backendErrorsTs.includes(`'${code}'`), `Backend error code ${code} (handled by the reset-password page) is missing from backend/src/lib/errors.ts.`);
   assert(resetComponent.includes(code), `web/components/auth/ResetPasswordCard.tsx no longer maps backend error code ${code}.`);
+}
+
+// ── 10b. Weak password rules ─────────────────────────────────────────────
+// web/lib/auth/passwordRules.ts mirrors shared/src/validators/password.ts's
+// constants and reasons (all but the common-password list, which stays in
+// shared/); both forms word every reason in lib/content.ts.
+
+const sharedPasswordTs = read("shared/src/validators/password.ts");
+const passwordRulesTs = read("web/lib/auth/passwordRules.ts");
+for (const constant of ["PASSWORD_MIN_LENGTH", "PASSWORD_MAX_LENGTH", "PASSWORD_MAX_BYTES", "SIMILARITY_MIN_LENGTH"]) {
+  const shared = sharedPasswordTs.match(new RegExp(`export const ${constant} = (\\d+);`))?.[1];
+  const mirrored = passwordRulesTs.match(new RegExp(`export const ${constant} = (\\d+);`))?.[1];
+  assert(shared !== undefined, `Could not find ${constant} in shared/src/validators/password.ts — has it moved or been renamed?`);
+  assert(shared === mirrored, `${constant} is ${shared} in shared/src/validators/password.ts but ${mirrored} in web/lib/auth/passwordRules.ts.`);
+}
+const weaknessesIn = (source) => [...(source.match(/PASSWORD_WEAKNESSES = \[([\s\S]*?)\] as const/)?.[1] ?? "").matchAll(/['"](PASSWORD_[A-Z_]+)['"]/g)].map((m) => m[1]);
+const sharedWeaknesses = weaknessesIn(sharedPasswordTs);
+assert(sharedWeaknesses.length > 0, "Could not find PASSWORD_WEAKNESSES in shared/src/validators/password.ts — has it moved or been renamed?");
+assert(
+  sharedWeaknesses.join() === weaknessesIn(passwordRulesTs).join(),
+  `PASSWORD_WEAKNESSES differ: shared has [${sharedWeaknesses}], web/lib/auth/passwordRules.ts has [${weaknessesIn(passwordRulesTs)}].`,
+);
+const contentTs = read("web/lib/content.ts");
+for (const weakness of sharedWeaknesses) {
+  assert(contentTs.includes(`${weakness}:`), `web/lib/content.ts has no copy for the Weak password reason ${weakness}.`);
 }
 
 // ── 11. Email confirmation (issue #138) ─────────────────────────────────

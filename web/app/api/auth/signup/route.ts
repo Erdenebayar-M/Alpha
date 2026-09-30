@@ -17,7 +17,8 @@ const NEXT_MAX_LENGTH = 2048;
  * Email confirmation link, and the parent is signed in only once they open it
  * (app/api/auth/confirm-email). `next` rides along into that link; the
  * confirmation decides whether it is safe to follow. Responds `{ email }`
- * (where the link went) or `{ error: <backend code> }`. The password
+ * (where the link went) or `{ error: <backend code>, passwordWeakness? }`
+ * — the latter naming which rule a Weak password broke. The password
  * confirmation never gets here.
  */
 export async function POST(request: Request) {
@@ -28,7 +29,10 @@ export async function POST(request: Request) {
   const { next } = body as { next?: unknown };
   const withNext = typeof next === "string" && next.length <= NEXT_MAX_LENGTH ? { ...input, next } : input;
   const result = await registerWithBackend(withNext, clientIpFrom(request));
-  if (!result.ok) return Response.json({ error: result.code }, { status: STATUS_BY_CODE[result.code] });
+  if (!result.ok) {
+    const { code, passwordWeakness } = result;
+    return Response.json({ error: code, ...(passwordWeakness && { passwordWeakness }) }, { status: STATUS_BY_CODE[code] });
+  }
 
   return Response.json({ email: result.email });
 }
