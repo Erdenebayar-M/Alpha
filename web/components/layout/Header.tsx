@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import Logo from "@/components/brand/Logo";
 import Button from "@/components/ui/Button";
 import MobileNav from "@/components/layout/MobileNav";
+import { SESSION_COOKIE } from "@/lib/auth/session";
 import { nav, type NavLink } from "@/lib/content";
 import { siteConfig } from "@/lib/site-config";
 
@@ -26,13 +28,16 @@ interface HeaderProps {
 /** Transparent header sitting directly on the hero sky (Figma: node
  *  1195:6227 has no fill and no border — the sky gradient behind it reads
  *  straight through). `z-10` keeps it above the hero's bled-up background. */
-export default function Header({
+export default async function Header({
   basePath = "",
   links = nav.links,
   variant = "compact",
   activeHref,
 }: HeaderProps) {
   const spacious = variant === "spacious";
+  // Cookie presence only: a marketing header must not depend on a backend call.
+  // A revoked cookie is cleared by proxy.ts on the next /signin visit.
+  const signedIn = (await cookies()).has(SESSION_COOKIE);
 
   return (
     <header className="relative z-10">
@@ -81,17 +86,19 @@ export default function Header({
               );
             })}
           </ul>
-          <div className="flex items-center gap-[5px]">
-            <Button variant={spacious ? "navOutlineLg" : "navOutline"} href={siteConfig.loginUrl}>
-              {nav.auth.loginLabel}
-            </Button>
-            <Button variant={spacious ? "navSolidLg" : "navSolid"} href={siteConfig.registerUrl}>
-              {nav.auth.registerLabel}
-            </Button>
-          </div>
+          {signedIn ? null : (
+            <div className="flex items-center gap-[5px]">
+              <Button variant={spacious ? "navOutlineLg" : "navOutline"} href={siteConfig.loginUrl}>
+                {nav.auth.loginLabel}
+              </Button>
+              <Button variant={spacious ? "navSolidLg" : "navSolid"} href={siteConfig.registerUrl}>
+                {nav.auth.registerLabel}
+              </Button>
+            </div>
+          )}
         </nav>
 
-        <MobileNav basePath={basePath} links={links} />
+        <MobileNav basePath={basePath} links={links} signedIn={signedIn} />
       </div>
     </header>
   );
