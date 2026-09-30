@@ -11,12 +11,14 @@ interface MobileNavProps {
   /** Per-page link set; see Header.tsx's `links`. Defaults to the homepage's
    *  own links. */
   links?: readonly NavLink[];
+  /** A signed-in parent doesn't need the Sign in / Sign up buttons. */
+  signedIn?: boolean;
 }
 
 /** The only stateful component in the header: a disclosure panel for narrow
  *  viewports. Traps no focus (a full modal is overkill for 5 links) but does
  *  return focus to the trigger and closes on Escape or link selection. */
-export default function MobileNav({ basePath = "", links = nav.links }: MobileNavProps) {
+export default function MobileNav({ basePath = "", links = nav.links, signedIn = false }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -70,14 +72,16 @@ export default function MobileNav({ basePath = "", links = nav.links }: MobileNa
               </li>
             ))}
           </ul>
-          <div className="mt-3 flex gap-2 border-t border-border-card pt-3">
-            <Button variant="navOutline" href={siteConfig.loginUrl} className="flex-1 text-center">
-              {nav.auth.loginLabel}
-            </Button>
-            <Button variant="navSolid" href={siteConfig.registerUrl} className="flex-1 text-center">
-              {nav.auth.registerLabel}
-            </Button>
-          </div>
+          {signedIn ? null : (
+            <div className="mt-3 flex gap-2 border-t border-border-card pt-3">
+              <Button variant="navOutline" href={siteConfig.loginUrl} className="flex-1 text-center">
+                {nav.auth.loginLabel}
+              </Button>
+              <Button variant="navSolid" href={siteConfig.registerUrl} className="flex-1 text-center">
+                {nav.auth.registerLabel}
+              </Button>
+            </div>
+          )}
         </div>
       ) : null}
     </div>

@@ -234,3 +234,17 @@ test("an unsafe `next` from the confirmation link is ignored", async ({ request 
   });
   expect(await res.json()).toEqual({ redirectTo: "/register-child" });
 });
+
+test("the nav shows Sign in and Sign up only when signed out", async ({ page, context }) => {
+  const nav = page.getByRole("navigation", { name: "Үндсэн цэс" });
+
+  await page.goto("/");
+  await expect(nav.getByRole("link", { name: "Нэвтрэх" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Бүртгүүлэх" })).toBeVisible();
+
+  await withSession(context);
+  await page.goto("/");
+  await expect(nav).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Нэвтрэх" })).toHaveCount(0);
+  await expect(nav.getByRole("link", { name: "Бүртгүүлэх" })).toHaveCount(0);
+});
