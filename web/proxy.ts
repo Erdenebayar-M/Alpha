@@ -13,7 +13,7 @@ import { siteConfig } from "@/lib/site-config";
  * sent to sign in at the end. If the backend can't be reached, the cookie is
  * left alone and taken at its word.
  *
- * - `/register-child` and `/account` without a session go to sign in, which
+ * - `/register-child` and `/account` (and its tabs) without a session go to sign in, which
  *   brings the parent back through `next`.
  * - `/signin` and `/signup` with a session go to the Account page.
  */
@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   let response: NextResponse;
-  if (pathname === siteConfig.assessmentUrl || pathname === siteConfig.accountUrl) {
+  if (pathname === siteConfig.assessmentUrl || isAccountPath(pathname)) {
     response = signedIn
       ? NextResponse.next()
       : NextResponse.redirect(new URL(withNext(siteConfig.loginUrl, pathname + search), publicOrigin(request)));
@@ -35,6 +35,8 @@ export async function proxy(request: NextRequest) {
   if (session === "rejected") response.cookies.delete(SESSION_COOKIE_SCOPE);
   return response;
 }
+
+const isAccountPath = (pathname: string) => pathname === siteConfig.accountUrl || pathname.startsWith(`${siteConfig.accountUrl}/`);
 
 async function checkSession(token: string): Promise<"valid" | "rejected" | "unknown"> {
   try {
@@ -52,5 +54,5 @@ async function checkSession(token: string): Promise<"valid" | "rejected" | "unkn
 // Literal paths: the matcher must be statically analysable, so it can't read
 // siteConfig. Keep in step with assessmentUrl, accountUrl, loginUrl and registerUrl.
 export const config = {
-  matcher: ["/register-child", "/account", "/signin", "/signup"],
+  matcher: ["/register-child", "/account/:path*", "/signin", "/signup"],
 };

@@ -573,16 +573,46 @@ export const resetPassword = {
   },
 } as const;
 
-// Account page (Figma frame 23:11664, Orthography file). Only what a Parent
-// account holds is drawn; the frame's menu, phone, birth date, profile
-// completion, 2FA and edit controls are left out until they exist.
+// Account page (Figma frame 23:11664, Orthography file) — a visual prototype
+// (docs/adr/0008-account-page-as-visual-prototype.md): every part of the frame
+// is drawn; only the name and email are the parent's own.
 export const account = {
   title: "Хувийн мэдээлэл", // heading 23:12088, card title 23:12095
+  description: "Таны профайл болон аккаунтын үндсэн тохиргоо.", // 23:12089
   role: "Эцэг эх", // 23:12050
-  settingsLabel: "Тохиргоо", // 23:12060
+  settingsLabel: "Тохиргоо", // 23:12060 (rendered uppercase)
   surnameLabel: "Овог", // 23:12098
   nameLabel: "Нэр", // 23:12102
+  phoneLabel: "Утасны дугаар", // 23:12107
+  birthDateLabel: "Төрсөн огноо", // 23:12113
+  completionLabel: "Профайл бүрдэлт", // 23:12053
+  editLabel: "Засах", // 23:12093
   signOutLabel: "Аккаунтаас гарах", // 23:12083
+  // Tab labels: 23:12069, 23:12064, 23:12073, 23:12077
+  tabs: {
+    dashboard: "Дашбоард",
+    children: "Суралцагч хүүхэд",
+    security: "Нууцлал ба аюулгүй байдал",
+    notifications: "Мэдэгдэл",
+  },
+  security: {
+    title: "Нууцлал ба аюулгүй байдал", // 23:12137
+    passwordTitle: "Нууц үг", // 23:12143
+    passwordHint: "Сүүлд 3 сарын өмнө шинэчилсэн", // 23:12144
+    passwordAction: "Өөрчлөх", // 23:12146
+    twoFactorTitle: "Хоёр шатлалт баталгаажуулалт", // 23:12153
+    twoFactorHint: "Нэвтрэх бүрд нэмэлт хамгаалалт ашиглана", // 23:12154
+  },
+  saveHint: "Өөрчлөлт автоматаар хадгалагдана.", // 23:12158
+  saveLabel: "Хадгалах", // 23:12162
+  // Feedback for the prototype's controls — not in the frame; wording drafted, awaiting owner approval.
+  saved: "Хадгалагдлаа",
+  passwordSoon: "Нууц үг солих боломж тун удахгүй нэмэгдэнэ.",
+  // Coming soon screen — not in the frame; wording drafted, awaiting owner approval.
+  comingSoon: {
+    headline: (tab: string) => `${tab} тун удахгүй`,
+    subtitle: "Бид энэ хуудсыг бэлтгэж байна. Удахгүй эндээс үзэх боломжтой болно.",
+  },
   // After Sign in / Sign up — not in the frame; wording drafted, awaiting owner approval.
   welcome: (name: string) => `Тавтай морил, ${name}!`,
 } as const;

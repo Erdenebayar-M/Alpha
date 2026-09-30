@@ -99,8 +99,16 @@ A signed-in parent leaving their **Parent account** on this device. It ends only
 _Avoid_: log out, logout
 
 **Account page** (Хувийн мэдээлэл):
-The page a signed-in parent lands on after **Sign in** or **Sign up**, showing who they are signed in as (name, email, role Эцэг эх) and offering **Sign out**. It shows only what a **Parent account** actually holds; anything the account does not hold yet is left off rather than shown as a placeholder. It is not the landing page, which stays the same signed in or out.
-_Avoid_: profile, dashboard (Дашбоард is a separate, not yet built, thing)
+The page a signed-in parent lands on after **Sign in** or **Sign up**, showing who they are signed in as (name, email, role Эцэг эх), the four **Account tabs**, and **Sign out**. For now it is a visual prototype of the full design: the name and email are the parent's real ones, everything else (phone, birth date, profile completion, two-step verification) is sample data that changes nothing and is not saved. It is not the landing page, which stays the same signed in or out.
+_Avoid_: profile, dashboard (Дашбоард is one of the **Account tabs**, not the page itself)
+
+**Account tab** (Тохиргооны цэс):
+One of the four entries in the **Account page**'s menu: Дашбоард, Суралцагч хүүхэд, Нууцлал ба аюулгүй байдал, Мэдэгдэл. Each has its own address under `/account`. **Sign out** sits beside them in the menu but is not a tab. Only Нууцлал ба аюулгүй байдал has content so far (personal information and security settings); the other three show a **Coming soon screen**.
+_Avoid_: section (already means a page section of the site), profile tab
+
+**Coming soon screen** (Тун удахгүй):
+What an **Account tab** without content shows: the mascot, a headline naming that tab, and one shared subtitle. It stands in for a feature that is planned but not built; it is never shown for something the product will not offer.
+_Avoid_: empty state, placeholder
 
 **Password reset** (Нууц үг сэргээх):
 A parent who forgot their password asks for a one-time link by email and uses it to set a new one. Completing it signs the account out everywhere else. Completing it on an unconfirmed Parent account also confirms its email, since only the owner of that email receives the link. A parent who can no longer reach their email goes through **Email change** by support instead.

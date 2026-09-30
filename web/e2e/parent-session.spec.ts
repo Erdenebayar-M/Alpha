@@ -85,7 +85,7 @@ test("the Account page shows who is signed in, and Sign out ends the session", a
   await expect(page.getByText(PARENT.email)).toBeVisible();
   await expect(page.getByText("Эцэг эх")).toBeVisible();
   await expect(page.getByText("ДБ")).toBeVisible();
-  await expect(page.getByText("Дорж", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Овог", { exact: true })).toHaveValue("Дорж");
   // No welcome without the flag.
   await expect(page.getByRole("status")).toHaveCount(0);
 
