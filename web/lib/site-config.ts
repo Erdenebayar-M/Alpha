@@ -7,7 +7,7 @@ export const siteConfig = {
   name: "ОРто",
   description:
     "5-7 насны хүүхдийн Монгол хэлний зөв бичих чадварыг тодорхойлж, түвшинд нь тохирсон суралцах төлөвлөгөө санал болгодог хөгжлийн үнэлгээ.",
-  url: "https://orto.mn",
+  url: "https://www.orto.my",
 
   assessmentUrl: "/register-child",
   // /landing-old's Pricing anchor, reused as a cross-page nav destination
