@@ -239,7 +239,7 @@ export function startFixtureBackend() {
     if (req.method === "GET" && pathname === "/api/auth/me") {
       const valid = [FIXTURE_PARENT.token, EXPIRES_MID_FLOW_TOKEN].map((token) => `Bearer ${token}`);
       if (!valid.includes(req.headers.authorization)) return fail(res, 401, "UNAUTHORIZED", "Unauthorized");
-      return send(res, 200, "application/json", JSON.stringify({ success: true, data: { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Fixture Parent" } }));
+      return send(res, 200, "application/json", JSON.stringify({ success: true, data: { id: "fixture-parent", email: FIXTURE_PARENT.email, name: "Болд", surname: "Дорж" } }));
     }
     if (req.method === "POST" && pathname === "/api/learner") return asParent(req, res, (body) => ({ id: `fixture-learner:${body?.name}` }));
     if (req.method === "POST" && pathname === "/api/diagnostic/start") {

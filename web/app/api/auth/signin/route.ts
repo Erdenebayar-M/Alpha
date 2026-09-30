@@ -1,5 +1,6 @@
 import { loginWithBackend } from "@/lib/api/server/login";
 import { parseLoginInput } from "@/lib/auth/loginRules";
+import { welcomeUrl } from "@/lib/auth/flash";
 import { safeNextPath } from "@/lib/auth/safeNext";
 import { clientIpFrom } from "@/lib/auth/clientIp";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
@@ -30,5 +31,5 @@ export async function POST(request: Request) {
   }
 
   await setSessionCookie(result.token);
-  return Response.json({ redirectTo: safeNextPath((body as { next?: unknown }).next) });
+  return Response.json({ redirectTo: safeNextPath((body as { next?: unknown }).next, welcomeUrl) });
 }

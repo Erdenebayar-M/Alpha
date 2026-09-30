@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import AuthPageShell from "@/components/auth/AuthPageShell";
+import FlashNotice from "@/components/auth/FlashNotice";
 import GoogleSignIn from "@/components/auth/GoogleSignIn";
 import SignInForm from "@/components/auth/SignInForm";
+import { SIGNED_OUT_PARAM } from "@/lib/auth/flash";
 import { googleStartHref } from "@/lib/auth/googleOAuth";
 import { withNext } from "@/lib/auth/safeNext";
 import { signIn } from "@/lib/content";
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/signin" },
 };
 
-type SearchParams = Promise<{ next?: string | string[]; google_error?: string | string[] }>;
+type SearchParams = Promise<{ next?: string | string[]; google_error?: string | string[]; signedout?: string | string[] }>;
 
 export default async function SignInPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -25,7 +27,10 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
       prompt={{ ...signIn.registerPrompt, href: withNext(siteConfig.registerUrl, next) }}
       lead={googleHref && <GoogleSignIn variant="signIn" label={signIn.googleLabel} href={googleHref} failed={params.google_error !== undefined} />}
     >
-      <SignInForm next={next} />
+      <div className="flex flex-col gap-6">
+        {params[SIGNED_OUT_PARAM] !== undefined && <FlashNotice param={SIGNED_OUT_PARAM}>{signIn.signedOutNotice}</FlashNotice>}
+        <SignInForm next={next} />
+      </div>
     </AuthPageShell>
   );
 }

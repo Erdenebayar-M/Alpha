@@ -45,23 +45,63 @@ test("a signed-in visit to /register-child stays there", async ({ page, context 
 });
 
 for (const path of ["/signin", "/signup", "/signin?next=/register-child"]) {
-  test(`a signed-in visit to ${path} goes to /`, async ({ page, context }) => {
+  test(`a signed-in visit to ${path} goes to /account`, async ({ page, context }) => {
     await withSession(context);
     await page.goto(path);
-    expect(new URL(page.url()).pathname).toBe("/");
+    expect(new URL(page.url()).pathname).toBe("/account");
   });
 }
 
-test("signing out clears the session cookie", async ({ page, context }) => {
+test("signing out clears the session cookie and lands on sign in with a notice", async ({ page, context }) => {
   await withSession(context);
   const res = await page.request.post("/api/auth/signout", { maxRedirects: 0 });
   expect(res.status()).toBe(303);
-  expect(new URL(res.headers()["location"]).pathname).toBe("/");
+  const location = new URL(res.headers()["location"]);
+  expect(location.pathname + location.search).toBe("/signin?signedout=1");
   expect(await sessionCookie(context)).toBeUndefined();
 
   // Signed out, the guard applies again.
   await page.goto("/register-child");
   await page.waitForURL((url) => url.pathname === "/signin");
+});
+
+test("a signed-out visit to /account goes to sign in, and signing in comes back", async ({ page, context }) => {
+  await page.goto("/account");
+  await page.waitForURL((url) => url.pathname === "/signin" && url.searchParams.get("next") === "/account");
+
+  await page.getByLabel("Имэйл хаяг").fill(PARENT.email);
+  await page.getByLabel("Нууц үг").fill(PARENT.password);
+  await page.getByRole("button", { name: "Нэвтрэх" }).click();
+
+  await page.waitForURL((url) => url.pathname === "/account");
+  expect(await sessionCookie(context)).toBeDefined();
+});
+
+test("the Account page shows who is signed in, and Sign out ends the session", async ({ page, context }) => {
+  await withSession(context);
+  await page.goto("/account");
+
+  await expect(page.getByRole("heading", { level: 1, name: "Хувийн мэдээлэл" })).toBeVisible();
+  await expect(page.getByText(PARENT.email)).toBeVisible();
+  await expect(page.getByText("Эцэг эх")).toBeVisible();
+  await expect(page.getByText("ДБ")).toBeVisible();
+  await expect(page.getByText("Дорж", { exact: true })).toBeVisible();
+  // No welcome without the flag.
+  await expect(page.getByRole("status")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Аккаунтаас гарах" }).click();
+  await page.waitForURL((url) => url.pathname === "/signin");
+  await expect(page.getByRole("status")).toHaveText("Та амжилттай гарлаа.");
+  // The notice is one-time: its flag is dropped from the address.
+  await expect(page).toHaveURL(/\/signin$/);
+  expect(await sessionCookie(context)).toBeUndefined();
+});
+
+test("a revoked session on /account goes to sign in, and is cleared", async ({ page, context }) => {
+  await withSession(context, "revoked-token");
+  await page.goto("/account");
+  await page.waitForURL((url) => url.pathname === "/signin" && url.searchParams.get("next") === "/account");
+  expect(await sessionCookie(context)).toBeUndefined();
 });
 
 test("signing out from another site is refused", async ({ page, context }) => {

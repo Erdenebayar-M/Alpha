@@ -4,6 +4,7 @@ import { googleSignInWithBackend } from "@/lib/api/server/googleSignIn";
 import { clientIpFrom } from "@/lib/auth/clientIp";
 import { GOOGLE_FLOW_COOKIE, GOOGLE_FLOW_PATH, googleCallbackUrl, googleFailureUrl, parseGoogleFlow } from "@/lib/auth/googleOAuth";
 import { publicOrigin } from "@/lib/auth/publicOrigin";
+import { welcomeUrl } from "@/lib/auth/flash";
 import { safeNextPath } from "@/lib/auth/safeNext";
 import { setSessionCookie } from "@/lib/auth/sessionCookie";
 
@@ -33,5 +34,5 @@ export async function GET(request: Request) {
   if (!result.ok) return NextResponse.redirect(googleFailureUrl(request, flow.from, flow.next), 303);
 
   await setSessionCookie(result.token);
-  return NextResponse.redirect(new URL(safeNextPath(flow.next), publicOrigin(request)), 303);
+  return NextResponse.redirect(new URL(safeNextPath(flow.next, welcomeUrl), publicOrigin(request)), 303);
 }

@@ -429,6 +429,8 @@ export const signIn = {
   // Right password, unconfirmed account — not in the frame; wording drafted for
   // issue #143, awaiting owner approval.
   confirmFirst: (maskedEmail: string) => `Эхлээд имэйлээ баталгаажуулна уу. ${maskedEmail} хаяг руу холбоос илгээсэн.`,
+  // After Sign out — not in the frame; wording drafted, awaiting owner approval.
+  signedOutNotice: "Та амжилттай гарлаа.",
   errors: {
     invalidEmail: "Имэйл хаяг буруу байна.",
     invalidCredentials: "Имэйл эсвэл нууц үг буруу байна.",
@@ -569,4 +571,18 @@ export const resetPassword = {
     rateLimited: signIn.errors.rateLimited,
     generic: signIn.errors.generic,
   },
+} as const;
+
+// Account page (Figma frame 23:11664, Orthography file). Only what a Parent
+// account holds is drawn; the frame's menu, phone, birth date, profile
+// completion, 2FA and edit controls are left out until they exist.
+export const account = {
+  title: "Хувийн мэдээлэл", // heading 23:12088, card title 23:12095
+  role: "Эцэг эх", // 23:12050
+  settingsLabel: "Тохиргоо", // 23:12060
+  surnameLabel: "Овог", // 23:12098
+  nameLabel: "Нэр", // 23:12102
+  signOutLabel: "Аккаунтаас гарах", // 23:12083
+  // After Sign in / Sign up — not in the frame; wording drafted, awaiting owner approval.
+  welcome: (name: string) => `Тавтай морил, ${name}!`,
 } as const;
