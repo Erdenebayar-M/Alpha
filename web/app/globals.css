@@ -118,6 +118,15 @@
   --color-auth-border: #d8dee8;
   --color-auth-divider: #98a2b3; /* "Эсвэл" and its rules, 7:6122 */
   --color-task-muted: #718096;
+
+  /* --- Account page (frame 23:11664) ---
+   * Measured off the frame; brand blue, --color-text-nav (#667085), --color-border-card
+   * and --color-surface-lilac are reused as they are. */
+  --color-account-ink: #172033;
+  --color-account-avatar-border: #d7deff;
+  --color-account-field: #f8fafd;
+  --color-account-danger: #d92d20;
+  --color-account-danger-tint: #fff1f0;
   --color-task-border: #dde8f5;
   --color-task-tile: #f8fbff;
   /* Sentence word chips + their dashed drop target (nodes 1255:16730 / 1255:16736).
@@ -144,6 +153,7 @@
   --shadow-card: 0px 12px 16px rgba(16, 24, 40, 0.07);
   --shadow-page: 0px 24px 64px rgba(16, 24, 40, 0.07);
   /* Register-child flow (setup cards 1268:18752, task cards 1270:22692 …) */
+  --shadow-account-card: 0px 18px 46px rgba(25, 59, 112, 0.1); /* 23:12038 */
   --shadow-setup-card: 0px 12px 32px rgba(25, 59, 112, 0.07);
   --shadow-task-card: 0px 14px 36px rgba(44, 64, 100, 0.08);
   --shadow-tile: 0px 8px 18px rgba(79, 125, 255, 0.14);

@@ -332,7 +332,7 @@ auth.get('/me', withAuth, async (c) => {
   const parent_id = c.get('parent_id');
   const parent = await prisma.parent.findUnique({
     where: { id: parent_id },
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true, surname: true },
   });
   if (!parent) {
     return ERRORS.UNAUTHORIZED(c, 'Account no longer exists');

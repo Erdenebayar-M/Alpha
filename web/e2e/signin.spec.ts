@@ -79,10 +79,11 @@ test("rate limiting shows its message", async ({ page }) => {
   await expect(page.getByText("Хэт олон оролдлого хийлээ. Түр хүлээгээд дахин оролдоно уу.")).toBeVisible();
 });
 
-test("signing in sets an httpOnly session cookie, hidden from page scripts, and redirects to /", async ({ page, context }) => {
+test("signing in sets an httpOnly session cookie, hidden from page scripts, and lands on the Account page with a welcome", async ({ page, context }) => {
   await page.goto("/signin");
   await signIn(page, PARENT.email, PARENT.password);
-  await page.waitForURL((url) => url.pathname === "/");
+  await page.waitForURL((url) => url.pathname === "/account");
+  await expect(page.getByRole("status")).toHaveText("Тавтай морил, Болд!");
 
   const session = (await context.cookies()).find((c) => c.name === "orto_session");
   expect(session).toMatchObject({ httpOnly: true, sameSite: "Lax", value: "fixture-session-token" });
@@ -102,7 +103,7 @@ test.describe("an unsafe `next` is ignored", () => {
     test(next, async ({ request }) => {
       const res = await request.post("/api/auth/signin", { data: { ...PARENT, next } });
       expect(res.status()).toBe(200);
-      expect(await res.json()).toEqual({ redirectTo: "/" });
+      expect(await res.json()).toEqual({ redirectTo: "/account?welcome=1" });
     });
   }
 });

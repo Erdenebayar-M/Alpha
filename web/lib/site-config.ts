@@ -10,6 +10,8 @@ export const siteConfig = {
   url: "https://www.orto.my",
 
   assessmentUrl: "/register-child",
+  // The signed-in parent's Account page.
+  accountUrl: "/account",
   // /landing-old's Pricing anchor, reused as a cross-page nav destination
   // from the homepage's "Үнэ" link.
   pricingUrl: "/landing-old#une",

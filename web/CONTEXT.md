@@ -75,19 +75,35 @@ The single horizontal band every content row on the site lines up with — one s
 _Avoid_: treating each design frame's own x position as that row's alignment; "container"/"wrapper", which name the mechanism rather than the thing
 
 **Parent account** (Эцэг эхийн бүртгэл):
-The account a parent holds on the site and in the app. A parent reaches it with an email and password, with Google, or with both. Every child's **Diagnostic** and learning belongs to exactly one Parent account.
+The account a parent holds on the site and in the app. A parent reaches it with an email and password, with Google, or with both. It is identified by its email, compared without regard to case. Every child's **Diagnostic** and learning belongs to exactly one Parent account.
 _Avoid_: user, member, customer
 
 **Sign up** (Бүртгүүлэх):
 Creating a **Parent account**. It is never the child's setup at `/register-child` — that is the start of the **Diagnostic**, which a parent does for their child after signing up.
 _Avoid_: register, registration (both already name the child's `/register-child` flow)
 
+**Email confirmation** (Имэйл баталгаажуулах):
+The parent proving they own their **Parent account**'s email by opening a link sent to it. **Sign up** is not finished until it happens: a Parent account whose email is unconfirmed cannot be signed into and holds nothing. It is given up after a week, and signing up again with its email replaces it. Opening the link confirms the email and signs the parent in. An email from Google sign-in counts as confirmed.
+_Avoid_: verification, activation (the account is already active before it)
+
+**Email change** (Имэйл солих):
+Replacing a confirmed **Parent account**'s email (a parent who mistyped their email while signing up simply signs up again with the right one). The parent changes it only after proving it is them again, and the new email replaces the old only once it is confirmed; the old email is told. When a parent can no longer reach their email at all, support makes the change after the parent names each child and their grade, roughly when they signed up, and the email they think they used; the old email is told of that too.
+_Avoid_: account recovery (nothing is recovered; the email is replaced)
+
 **Sign in** (Нэвтрэх):
 Entering an existing **Parent account**, by email and password or by Google.
 _Avoid_: log in, login
 
+**Sign out** (Гарах):
+A signed-in parent leaving their **Parent account** on this device. It ends only this browser's session; other devices stay signed in. It lands the parent on **Sign in** with a brief notice that they have signed out.
+_Avoid_: log out, logout
+
+**Account page** (Хувийн мэдээлэл):
+The page a signed-in parent lands on after **Sign in** or **Sign up**, showing who they are signed in as (name, email, role Эцэг эх) and offering **Sign out**. It shows only what a **Parent account** actually holds; anything the account does not hold yet is left off rather than shown as a placeholder. It is not the landing page, which stays the same signed in or out.
+_Avoid_: profile, dashboard (Дашбоард is a separate, not yet built, thing)
+
 **Password reset** (Нууц үг сэргээх):
-A parent who forgot their password asks for a one-time link by email and uses it to set a new one. Completing it signs the account out everywhere else.
+A parent who forgot their password asks for a one-time link by email and uses it to set a new one. Completing it signs the account out everywhere else. Completing it on an unconfirmed Parent account also confirms its email, since only the owner of that email receives the link. A parent who can no longer reach their email goes through **Email change** by support instead.
 _Avoid_: password recovery (nothing is recovered; the old password is replaced)
 
 ## Relationships

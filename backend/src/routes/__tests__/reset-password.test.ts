@@ -14,6 +14,7 @@ interface ParentRow {
   id: string;
   email: string;
   name: string;
+  surname: string | null;
   password_hash: string | null;
   token_version: number;
   email_confirmed_at: Date | null;
@@ -106,7 +107,7 @@ const me = (session: string) => authRouter.request('/me', { headers: { Authoriza
 
 interface Envelope {
   success: boolean;
-  data?: { id?: string; email?: string; name?: string; token?: string };
+  data?: { id?: string; email?: string; name?: string; surname?: string | null; token?: string };
   error?: { code: string };
 }
 const json = async (res: Response) => (await res.json()) as Envelope;
@@ -119,6 +120,7 @@ beforeEach(() => {
     id: 'parent-uuid-1',
     email: EMAIL,
     name: 'Болд',
+    surname: 'Дорж',
     password_hash: `hashed:${OLD_PASSWORD}`,
     token_version: 0,
     email_confirmed_at: new Date(),
@@ -228,6 +230,13 @@ describe('POST /reset-password', () => {
     expect(old.status).toBe(401);
     expect((await json(old)).error?.code).toBe('INVALID_CREDENTIALS');
     expect((await login(NEW_PASSWORD)).status).toBe(200);
+  });
+
+  it('/me tells the web app who is signed in, surname included', async () => {
+    const session = (await json(await login(OLD_PASSWORD))).data!.token!;
+    const res = await me(session);
+    expect(res.status).toBe(200);
+    expect((await json(res)).data).toEqual({ id: 'parent-uuid-1', email: EMAIL, name: 'Болд', surname: 'Дорж' });
   });
 
   it('signs the Parent account out everywhere else; the session from the reset works', async () => {

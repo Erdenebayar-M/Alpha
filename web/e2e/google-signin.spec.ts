@@ -122,5 +122,5 @@ test("an unsafe `next` is ignored after a Google sign-in", async ({ page }) => {
 
   const res = await page.request.get(`/api/auth/google/callback?code=${VALID_CODE}&state=${google.searchParams.get("state")}`, { maxRedirects: 0 });
 
-  expect(res.headers()["location"]).toBe("http://localhost:3000/");
+  expect(res.headers()["location"]).toBe("http://localhost:3000/account?welcome=1");
 });
