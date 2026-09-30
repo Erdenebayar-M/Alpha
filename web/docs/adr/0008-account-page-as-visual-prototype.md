@@ -1,0 +1,3 @@
+# Account page is a visual prototype of the full Figma design
+
+The Account page used to draw only what a Parent account holds (name, email, Sign out) and leave the rest of Figma frame 23:11664 off. We now build the whole design — four tabs at their own `/account/*` addresses, sample phone/birth date/completion/2FA, local-only Edit/Save/toggle, and a Coming soon screen with the mascot on the tabs without content — so the product feels complete before the backend exists. Only the name and email are real. This reverses the earlier "no placeholders" rule on purpose and temporarily: when the backend holds these fields, the sample data is replaced with real data and nothing persisted locally (no `localStorage`) has to be migrated.
