@@ -30,6 +30,15 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Dummy values that satisfy backend/src/config/env.ts validation. Eight suites import
+    # the real env module (the rest mock it); none connect to a database or call a provider.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
+      JWT_SECRET: ci-only-jwt-secret-ci-only-jwt-secret-ci-only-jwt-secret-00000000
+      CORS_ORIGIN: http://localhost:3000
+      OPENROUTER_API_KEY: sk-or-ci
+      GEMINI_API_KEY: AIza-ci
+      ADMIN_SECRET: ci-only-admin-secret-ci-only-admin-secret
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +54,6 @@ jobs:
       # backend/generated/ is not committed; the tests import the Prisma client from it.
       - run: npm run db:generate
 
-      # No Postgres service: the suite mocks the DB client (lib/db/client) and config/env,
-      # so it needs neither DATABASE_URL nor a running database.
+      # No Postgres service: the suite mocks the DB client (lib/db/client), so it only
+      # needs the dummy env above, not a running database.
       - run: npm run test:backend -- --ci
