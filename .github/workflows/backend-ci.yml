@@ -1,0 +1,37 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [dev, master]
+    paths:
+      - 'backend/**'
+      - 'shared/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [dev, master]
+    paths:
+      - 'backend/**'
+      - 'shared/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # backend/ and shared/ are npm workspaces, so install from the repo root.
+      - run: npm ci
+
+      # backend/generated/ is not committed; the tests import the Prisma client from it.
+      - run: npm run db:generate
+
+      # No Postgres service: the suite mocks the DB client (lib/db/client) and config/env,
+      # so it needs neither DATABASE_URL nor a running database.
+      - run: npm run test:backend -- --ci
