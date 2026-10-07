@@ -1,0 +1,139 @@
+{
+  "task_id": "G24-024",
+  "variants": [
+    {
+      "id": "G24-024-v1",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж хоол хийв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "\"хийв\" гэж бичнэ. Үйл үгийн өнгөрсөн цагийн төгсгөл нь \"в\" үсгээр төгсдөг.",
+      "options": {
+        "incorrect_text": "Ээж хоол хийб.",
+        "correct_text": "Ээж хоол хийв."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:55.438Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G3:M3",
+        "G4:M3"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT3_CORRECTION → TT_2_6: error_type E1 has no mapped v3 correction type"
+    },
+    {
+      "id": "G24-024-v2",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Аав гутал авчирав.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "\"авчирав\" гэж бичнэ. \"ав-\" үндэс үг нь \"в\" үсгээр бичигдэнэ, \"б\" биш.",
+      "options": {
+        "incorrect_text": "Аав гутал абчирав.",
+        "correct_text": "Аав гутал авчирав."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:57.472Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G3:M3",
+        "G4:M3"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT3_CORRECTION → TT_2_6: error_type E2 has no mapped v3 correction type"
+    },
+    {
+      "id": "G24-024-v3",
+      "task_type": "TT_3_5",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Цас орж харандаа алдлаа.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M3",
+      "error_targets": [
+        "E1",
+        "E2",
+        "C1"
+      ],
+      "grade_band": [
+        "G3",
+        "G4"
+      ],
+      "difficulty": 4,
+      "estimated_time_seconds": 45,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "\"алдлаа\" гэж бичнэ. Өнгөрсөн цагийн -лаа төгсгөл нь кирилл \"а\" үсгээр бичигдэнэ.",
+      "options": {
+        "incorrect_text": "Цас орж харандаа алдлaa.",
+        "correct_text": "Цас орж харандаа алдлаа."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:59.442Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G3:M3",
+        "G4:M3"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_3_5: legacy error_type C1"
+    }
+  ]
+}
