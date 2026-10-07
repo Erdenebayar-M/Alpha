@@ -174,6 +174,10 @@ Issues live in GitHub Issues (github.com/Erdenebayar-M/Alpha), managed via the `
 
 Default five canonical labels (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
 
+### Branch flow
+
+Feature PRs target `dev`; `dev` → `master` is promoted manually by the developer. Agents never merge their own PRs. See `docs/agents/branch-flow.md`.
+
 ### Domain docs
 
 Multi-context: root `CONTEXT-MAP.md` points to per-package `CONTEXT.md`/`docs/adr/` (backend, shared, mobile, web). See `docs/agents/domain.md`.
