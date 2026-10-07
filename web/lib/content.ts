@@ -624,3 +624,13 @@ export const account = {
   // After Sign in / Sign up — not in the frame; wording drafted, awaiting owner approval.
   welcome: (name: string) => `Тавтай морил, ${name}!`,
 } as const;
+
+// Dev-site password gate (proxy.ts, lib/devGate.ts) — dev deploys only, never
+// in production, so not in Figma; wording drafted, awaiting owner approval.
+export const devGate = {
+  title: "Туршилтын хувилбар",
+  intro: "Энэ бол хөгжүүлэлтийн туршилтын сайт. Үргэлжлүүлэхийн тулд нууц үгээ оруулна уу.",
+  passwordLabel: signIn.passwordLabel,
+  submitLabel: "Нэвтрэх",
+  wrongPassword: "Нууц үг буруу байна.",
+} as const;
