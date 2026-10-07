@@ -1,58 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { BACKEND_URL } from "@/lib/api/server/backendUrl";
-import { publicOrigin } from "@/lib/auth/publicOrigin";
-import { withNext } from "@/lib/auth/safeNext";
-import { SESSION_COOKIE, SESSION_COOKIE_SCOPE } from "@/lib/auth/session";
-import { siteConfig } from "@/lib/site-config";
+import { isSessionRedirectPath, sessionRedirect } from "@/lib/auth/sessionRedirect";
+import { devGate, noindex } from "@/lib/devGate";
 
 /**
- * Session redirects (docs/adr/0006-parent-session-on-web-origin.md). A session
- * cookie counts only once the backend confirms its token: a revoked one (a
- * Password reset elsewhere) is cleared here, so it neither locks the parent
- * out of signing in again nor lets them fill in /register-child only to be
- * sent to sign in at the end. If the backend can't be reached, the cookie is
- * left alone and taken at its word.
- *
- * - `/register-child` and `/account` (and its tabs) without a session go to sign in, which
- *   brings the parent back through `next`.
- * - `/signin` and `/signup` with a session go to the Account page.
+ * On a dev deploy (DEV_SITE_PASSWORD set) every route sits behind the password
+ * gate and is marked noindex. Then, on any deploy, the session redirects run
+ * on their own pages (lib/auth/sessionRedirect.ts); every other route passes.
  */
 export async function proxy(request: NextRequest) {
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
-  const session = token ? await checkSession(token) : "none";
-  const signedIn = session === "valid" || session === "unknown";
-  const { pathname, search } = request.nextUrl;
-
-  let response: NextResponse;
-  if (pathname === siteConfig.assessmentUrl || isAccountPath(pathname)) {
-    response = signedIn
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL(withNext(siteConfig.loginUrl, pathname + search), publicOrigin(request)));
-  } else {
-    response = signedIn ? NextResponse.redirect(new URL(siteConfig.accountUrl, publicOrigin(request))) : NextResponse.next();
+  const password = process.env.DEV_SITE_PASSWORD;
+  if (password) {
+    const locked = await devGate(request, password);
+    if (locked) return noindex(locked);
   }
 
-  if (session === "rejected") response.cookies.delete(SESSION_COOKIE_SCOPE);
-  return response;
+  const response = isSessionRedirectPath(request.nextUrl.pathname) ? await sessionRedirect(request) : NextResponse.next();
+  return password ? noindex(response) : response;
 }
 
-const isAccountPath = (pathname: string) => pathname === siteConfig.accountUrl || pathname.startsWith(`${siteConfig.accountUrl}/`);
-
-async function checkSession(token: string): Promise<"valid" | "rejected" | "unknown"> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
-      headers: { authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(3_000),
-    });
-    if (res.ok) return "valid";
-    return res.status === 401 ? "rejected" : "unknown";
-  } catch {
-    return "unknown";
-  }
-}
-
-// Literal paths: the matcher must be statically analysable, so it can't read
-// siteConfig. Keep in step with assessmentUrl, accountUrl, loginUrl and registerUrl.
+// Every route the gate has to cover, so it can't list the session pages; those
+// are picked out by isSessionRedirectPath instead. Framework files under
+// /_next/ and static assets (public/, icon.svg) skip the proxy: they are the
+// same as production's. Only asset extensions are skipped, not any dot, so a
+// page or API path like /articles/v1.2 is still gated.
 export const config = {
-  matcher: ["/register-child", "/account/:path*", "/signin", "/signup"],
+  matcher: ["/((?!_next/|.*\\.(?:svg|png|jpe?g|gif|webp|avif|ico|wav|mp3|woff2?)$).*)"],
 };
