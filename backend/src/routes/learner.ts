@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { Variant } from '../../generated/prisma';
 import { prisma } from '../lib/db/client';
 import { withAuth, type AuthEnv } from '../lib/auth/middleware';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { createLearnerSchema } from '@app/shared';
 import { pickSkillColumns } from '../lib/skill-state';
+import { initialSkillState, variantForGrade } from '../lib/learner-defaults';
 
 const learner = new Hono<AuthEnv>();
 
@@ -22,7 +22,7 @@ learner.post('/', async (c) => {
 
   const { name, grade, daily_minutes } = parsed.data;
   const parent_id = c.get('parent_id');
-  const variant: Variant = grade <= 2 ? Variant.A : Variant.B;
+  const variant = variantForGrade(grade);
 
   const newLearner = await prisma.$transaction(async (tx) => {
     const created = await tx.learner.create({
@@ -30,14 +30,7 @@ learner.post('/', async (c) => {
     });
 
     await tx.learnerSkillState.create({
-      data: {
-        learner_id: created.id,
-        top_error_codes: [],
-        weak_skills: [],
-        recent_error_codes: [],
-        recent_task_ids: [],
-        preferred_session_length: daily_minutes,
-      },
+      data: { learner_id: created.id, ...initialSkillState(daily_minutes) },
     });
 
     return created;

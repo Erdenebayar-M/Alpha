@@ -10,6 +10,7 @@
     "dev:backend": "npm --workspace=@app/backend run dev",
     "test:backend": "npm --workspace=@app/backend run test",
     "seed": "npm --workspace=@app/backend run seed",
+    "fixtures:dev": "npm --workspace=@app/backend run fixtures:dev --",
     "db:migrate": "npm --workspace=@app/backend run db:migrate",
     "db:generate": "npm --workspace=@app/backend run db:generate",
     "pipeline:generate": "npx tsx content-pipeline/scripts/llmGenerate.ts",

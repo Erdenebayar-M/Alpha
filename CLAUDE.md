@@ -90,6 +90,7 @@ npm run dev:backend     # Hono on :3001
 | `npm run dev:backend`                        | Start Hono backend                |
 | `npm run test:backend`                       | Jest suite                        |
 | `npm run seed`                               | Seed Word and Task tables         |
+| `npm run fixtures:dev`                       | Dev DB: prod content, articles, demo accounts |
 | `npm run db:migrate`                         | Apply pending migrations          |
 | `npm run db:generate`                        | Regenerate Prisma client          |
 | `npm --workspace=@app/backend run db:studio` | Browse database                   |
