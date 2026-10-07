@@ -1,0 +1,215 @@
+{
+  "task_id": "G12-011",
+  "variants": [
+    {
+      "id": "G12-011-v1",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "ном",
+      "options": {
+        "incorrect_text": "ом",
+        "correct_text": "ном"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: ном",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:57.071Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G1:M1",
+        "G2:M1"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_2_6: legacy error_type B1"
+    },
+    {
+      "id": "G12-011-v2",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "мод",
+      "options": {
+        "incorrect_text": "од",
+        "correct_text": "мод"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:02:59.600Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G1:M1",
+        "G2:M1"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_2_6: legacy error_type B1"
+    },
+    {
+      "id": "G12-011-v2",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "мод",
+      "options": {
+        "incorrect_text": "од",
+        "correct_text": "мод"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T03:55:54.689Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G1:M1",
+        "G2:M1"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_2_6: legacy error_type B1"
+    },
+    {
+      "id": "G12-011-v2",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "мод",
+      "options": {
+        "incorrect_text": "од",
+        "correct_text": "мод"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: мод",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:00:53.976Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G1:M1",
+        "G2:M1"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_2_6: legacy error_type B1"
+    },
+    {
+      "id": "G12-011-v3",
+      "task_type": "TT_2_6",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах үгэнд алдаа байна. Зөв засаарай.",
+      "correct_answer": "гэр",
+      "options": {
+        "incorrect_text": "эр",
+        "correct_text": "гэр"
+      },
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S8",
+      "secondary_skill": null,
+      "level_target": "M1",
+      "error_targets": [
+        "B1"
+      ],
+      "grade_band": [
+        "G1",
+        "G2"
+      ],
+      "difficulty": 2,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "Зөв хариу: гэр",
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:00:55.985Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G1:M1",
+        "G2:M1"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_2_6: legacy error_type B1"
+    }
+  ]
+}

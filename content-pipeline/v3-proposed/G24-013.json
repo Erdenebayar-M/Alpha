@@ -1,0 +1,260 @@
+{
+  "task_id": "G24-013",
+  "variants": [
+    {
+      "id": "G24-013-v1",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Морь хурдан, харандаа хурц.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Морь хурдан, харандаа хурц.",
+      "options": {
+        "incorrect_text": "Морь хурдан харандаа хурц.",
+        "correct_text": "Морь хурдан, харандаа хурц."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:48.510Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-013-v2",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв, аав ажиллав.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Ээж ирэв, аав ажиллав.",
+      "options": {
+        "incorrect_text": "Ээж ирэв аав ажиллав.",
+        "correct_text": "Ээж ирэв, аав ажиллав."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:50.322Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-013-v3",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Хүүхэд инээв, туулай хурдан.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Зөв хариу: Хүүхэд инээв, туулай хурдан.",
+      "options": {
+        "incorrect_text": "Хүүхэд инээв туулай хурдан.",
+        "correct_text": "Хүүхэд инээв, туулай хурдан."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:52.387Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-013-v1",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирээд, хоол хийв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Нэгдсэн өгүүлбэрт үйлийг заасан үгсийг таслалаар тусгаарлана.",
+      "initial_text": "Ээж ирээд хоол хийв.",
+      "options": {
+        "incorrect_text": "Ээж ирээд хоол хийв.",
+        "correct_text": "Ээж ирээд, хоол хийв."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:53.463Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-013-v2",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Морь давхиж, бөмбөг өнхрөв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Нэгдсэн өгүүлбэрт үйлийг заасан үгсийг таслалаар тусгаарлана.",
+      "initial_text": "Морь давхиж бөмбөг өнхрөв.",
+      "options": {
+        "incorrect_text": "Морь давхиж бөмбөг өнхрөв.",
+        "correct_text": "Морь давхиж, бөмбөг өнхрөв."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:55.472Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-013-v3",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Хүүхэд инээж, тоглож байв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Нэгдсэн өгүүлбэрт үйлийг заасан үгсийг таслалаар тусгаарлана.",
+      "initial_text": "Хүүхэд инээж тоглож байв.",
+      "options": {
+        "incorrect_text": "Хүүхэд инээж тоглож байв.",
+        "correct_text": "Хүүхэд инээж, тоглож байв."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:57.257Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "task_id": "G24-018",
+  "variants": [
+    {
+      "id": "G24-018-v1",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв. Би явна.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "options": {
+        "incorrect_text": "Ээж ирэв би явна.",
+        "correct_text": "Ээж ирэв. Би явна."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:26.332Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-018-v3",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Багш ирлээ. Зураг гоё.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "options": {
+        "incorrect_text": "Багш ирлээ зураг гоё.",
+        "correct_text": "Багш ирлээ. Зураг гоё."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:05:33.802Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-018-v1",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Ээж ирэв. Би явна.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "initial_text": "Ээж ирэв би явна.",
+      "options": {
+        "incorrect_text": "Ээж ирэв би явна.",
+        "correct_text": "Ээж ирэв. Би явна."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:12.508Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-018-v2",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Туулай хурдан. Шувуу нисэв.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "initial_text": "Туулай хурдан шувуу нисэв.",
+      "options": {
+        "incorrect_text": "Туулай хурдан шувуу нисэв.",
+        "correct_text": "Туулай хурдан. Шувуу нисэв."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:14.394Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    },
+    {
+      "id": "G24-018-v3",
+      "task_type": "TT_6_3",
+      "title": "Алдааг засаарай",
+      "prompt_text": "Дараах өгүүлбэрт алдаа байна. Зөв засаарай.",
+      "correct_answer": "Авдар өрөөнд байна. Хивс цэвэр.",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S6",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "G1",
+        "G2"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 30,
+      "lesson_slot_fit": "MIXED",
+      "feedback_text": "Өгүүлбэр бүр цэгтэй байна.",
+      "initial_text": "Авдар өрөөнд байна хивс цэвэр.",
+      "options": {
+        "incorrect_text": "Авдар өрөөнд байна хивс цэвэр.",
+        "correct_text": "Авдар өрөөнд байна. Хивс цэвэр."
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:02:16.346Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "migration_note": "TT3_CORRECTION → TT_6_3: legacy error_type G2"
+    }
+  ]
+}
