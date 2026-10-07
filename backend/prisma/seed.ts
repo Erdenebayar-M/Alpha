@@ -13,6 +13,7 @@ import {
   LessonSlot,
 } from "../generated/prisma";
 import { taskTypeSchema } from "@app/shared";
+import { loadValidatedTasks } from "../src/lib/seed/validated-tasks";
 
 const isDryRun = process.argv.includes("--dry-run");
 
@@ -44,42 +45,6 @@ function buildGradeLevels(gradeBand: string[], levelTarget: string): string[] {
     for (const l of levels) cells.push(`${g}:${l}`);
   }
   return cells;
-}
-
-interface ValidatedVariant {
-  id: string;
-  task_type: string;
-  prompt_text: string;
-  correct_answer: string;
-  options: object;
-  audio_url: string | null;
-  image_url: string | null;
-  primary_skill: string;
-  secondary_skill: string | null;
-  level_target: string;
-  error_targets: string[];
-  grade_band: string[];
-  difficulty: number;
-  estimated_time_seconds: number;
-  lesson_slot_fit: string;
-  feedback_text: string;
-  is_diagnostic?: boolean;
-}
-
-function loadValidatedTasks(): ValidatedVariant[] {
-  const validatedDir = path.join(__dirname, "../content-pipeline/validated");
-  const variants: ValidatedVariant[] = [];
-  if (!fs.existsSync(validatedDir)) return variants;
-  const files = fs.readdirSync(validatedDir).filter((f) => f.endsWith(".json"));
-  for (const file of files) {
-    const raw = JSON.parse(
-      fs.readFileSync(path.join(validatedDir, file), "utf-8"),
-    );
-    if (Array.isArray(raw.variants)) {
-      variants.push(...raw.variants);
-    }
-  }
-  return variants;
 }
 
 // â”€â”€â”€ Load words from content-pipeline/generated/seed-words.json â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
