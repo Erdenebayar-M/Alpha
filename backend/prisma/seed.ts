@@ -166,6 +166,12 @@ async function main() {
     `Tasks upserted:  ${taskTotal} (${taskCreated} created, ${taskUpdated} updated, ${taskErrored} errors)`,
   );
 
+  if (taskTotal === 0) {
+    throw new Error(
+      `Seed loaded 0 tasks (${taskErrored} of ${validatedVariants.length} variants errored) — see errors above`,
+    );
+  }
+
   if (!isDryRun) {
     // Compute coverage from DB
     const allTasks = await prisma.task.findMany({
