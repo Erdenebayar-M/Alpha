@@ -3,9 +3,17 @@ import * as os from "os";
 import * as path from "path";
 import { VALIDATED_DIR, loadValidatedTasks } from "../validated-tasks";
 
+const tmpDirs: string[] = [];
+
 function tmpDir(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "validated-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "validated-"));
+  tmpDirs.push(dir);
+  return dir;
 }
+
+afterEach(() => {
+  for (const d of tmpDirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+});
 
 describe("VALIDATED_DIR", () => {
   it("resolves to the repo-root content-pipeline/validated folder", () => {
@@ -33,6 +41,18 @@ describe("loadValidatedTasks", () => {
     const dir = tmpDir();
     fs.writeFileSync(path.join(dir, "a.json"), JSON.stringify({ variants: [] }));
     expect(() => loadValidatedTasks(dir)).toThrow(/no variants/i);
+  });
+
+  it("throws naming the file when it has no variants array", () => {
+    const dir = tmpDir();
+    fs.writeFileSync(path.join(dir, "bad.json"), JSON.stringify({ tasks: [] }));
+    expect(() => loadValidatedTasks(dir)).toThrow(/bad\.json/);
+  });
+
+  it("throws naming the file when JSON is malformed", () => {
+    const dir = tmpDir();
+    fs.writeFileSync(path.join(dir, "trunc.json"), "{");
+    expect(() => loadValidatedTasks(dir)).toThrow(/trunc\.json/);
   });
 
   it("returns variants from every file", () => {

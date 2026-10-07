@@ -41,10 +41,16 @@ export function loadValidatedTasks(
   }
   const variants: ValidatedVariant[] = [];
   for (const file of files) {
-    const raw = JSON.parse(
-      fs.readFileSync(path.join(validatedDir, file), "utf-8"),
-    );
-    if (Array.isArray(raw.variants)) variants.push(...raw.variants);
+    let raw: { variants?: unknown };
+    try {
+      raw = JSON.parse(fs.readFileSync(path.join(validatedDir, file), "utf-8"));
+    } catch (e) {
+      throw new Error(`Invalid JSON in ${file}: ${(e as Error).message}`);
+    }
+    if (!Array.isArray(raw.variants)) {
+      throw new Error(`${file} has no 'variants' array`);
+    }
+    variants.push(...(raw.variants as ValidatedVariant[]));
   }
   if (variants.length === 0) {
     throw new Error(`No variants found in ${files.length} files: ${validatedDir}`);
