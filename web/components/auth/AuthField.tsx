@@ -56,10 +56,10 @@ export default function AuthField({
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-14 w-full rounded-xl border bg-white px-4 text-[15px] text-auth-ink outline-none transition-shadow placeholder:text-text-nav focus:border-[1.5px] focus:border-auth-link focus:shadow-[0_0_0_3px_rgba(61,120,242,0.12)] ${error ? "border-[color:var(--color-palette-red)]" : "border-auth-border"}`}
+        className={`h-14 w-full rounded-xl border bg-white px-4 text-[15px] text-auth-ink outline-none transition-shadow placeholder:text-text-nav focus:border-[1.5px] focus:border-auth-link focus:shadow-[0_0_0_3px_rgba(61,120,242,0.12)] ${error ? "border-form-error" : "border-auth-border"}`}
       />
       {error && (
-        <p id={errorId} role="alert" className="text-xs text-[color:var(--color-palette-red)]">
+        <p id={errorId} role="alert" className="text-xs text-form-error">
           {error}
         </p>
       )}
