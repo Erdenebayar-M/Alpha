@@ -646,6 +646,8 @@ export const feedback = {
   figmaLabel: "Figma холбоос (заавал биш)",
   figmaPlaceholder: "https://www.figma.com/design/…",
   figmaHint: "Байршил, өнгө, зайн өөрчлөлтөд Figma холбоос хэрэгтэй. Текст, зургийн засварт хэрэггүй.",
+  imageLabel: "Зураг (заавал биш)",
+  imageHint: (maxMb: number) => `PNG, JPG, GIF эсвэл WebP, ${maxMb} МБ хүртэл.`,
   submitLabel: "Илгээх",
   sendingLabel: "Илгээж байна…",
   closeLabel: "Хаах",
@@ -653,7 +655,8 @@ export const feedback = {
   errors: {
     VALIDATION_ERROR: "Текстээ шалгаад дахин оролдоно уу.",
     INVALID_FIGMA_URL: "Figma холбоос https://www.figma.com/… хаягаар эхлэх ёстой.",
-    PAYLOAD_TOO_LARGE: "Текст хэт урт байна. Богиносгоод дахин оролдоно уу.",
+    PAYLOAD_TOO_LARGE: "Текст эсвэл зураг хэт том байна. Багасгаад дахин оролдоно уу.",
+    INVALID_IMAGE: "Зураг PNG, JPG, GIF эсвэл WebP байх ёстой.",
     RATE_LIMITED: "Хэт олон удаа илгээлээ. Хэдэн минутын дараа дахин оролдоно уу.",
     UPSTREAM_ERROR: "Илгээж чадсангүй. Дахин оролдоно уу.",
   },

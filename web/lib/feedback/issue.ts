@@ -12,14 +12,16 @@ export type FeedbackIssue = { title: string; body: string; labels: string[] };
  * The text is fenced so GitHub shows it verbatim: an @mention or #ref in it
  * would otherwise ping someone or cross-link an issue as the token's owner.
  * `commitSha` is the deploy's (VERCEL_GIT_COMMIT_SHA), never the browser's say.
+ * `imageUrl` is the stored screenshot's public URL, embedded so it shows inline.
  */
-export function feedbackIssue(input: FeedbackInput, commitSha: string | null): FeedbackIssue {
+export function feedbackIssue(input: FeedbackInput, commitSha: string | null, imageUrl: string | null = null): FeedbackIssue {
   const fence = "`".repeat(Math.max(3, ...Array.from(input.text.matchAll(/`+/g), ([run]) => run.length + 1)));
   const body = [
     `${fence}text`,
     input.text,
     fence,
     "",
+    ...(imageUrl ? [`![Screenshot](${imageUrl})`, ""] : []),
     "### Context",
     `- Figma: ${input.figmaUrl ?? "none"}`,
     `- Page: ${input.pageUrl}`,
