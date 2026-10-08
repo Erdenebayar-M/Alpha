@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { ERRORS } from '../lib/errors';
 import { ok } from '../lib/response';
 import { prisma } from '../lib/db/client';
-import { publicArticleListQuerySchema } from '@app/shared';
+import { publicArticleListQuerySchema, validateArticleBody } from '@app/shared';
 import { paginationSkipTake, paginationMeta } from '../lib/pagination';
 
 // The first unauthenticated content route (spec #77) — mounted with no auth
@@ -69,7 +69,16 @@ articles.get('/:slug', async (c) => {
     select: PUBLIC_ARTICLE_DETAIL_SELECT,
   });
   if (!article) return ERRORS.NOT_FOUND(c, `Article ${slug} not found`);
-  return ok(c, { article });
+
+  // Rows stored before ADR 0005 keep their old shapes (no migration); parsing
+  // here hands clients only the canonical Body. A stored Body that no longer
+  // parses is corrupt data, not a client error.
+  const parsedBody = validateArticleBody(article.body);
+  if (!parsedBody.ok) {
+    console.error(`Stored Body for Article ${slug} failed to parse:`, parsedBody.errors);
+    return ERRORS.INTERNAL(c, 'Article could not be loaded');
+  }
+  return ok(c, { article: { ...article, body: parsedBody.data } });
 });
 
 export default articles;

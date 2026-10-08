@@ -186,7 +186,7 @@ describe('GET /:slug', () => {
     );
   });
 
-  it('returns the new Block kinds unchanged (issue #85)', async () => {
+  it('returns the new Block kinds, with list items in the canonical shape (issues #85, #174)', async () => {
     const richBody = [
       { id: 'b1', type: 'list', style: 'bullet', items: [[{ text: 'one' }]] },
       { id: 'b2', type: 'image', url: '/content/articles/pic.png', alt: 'Alt text' },
@@ -197,7 +197,33 @@ describe('GET /:slug', () => {
     const res = await getArticle('reading-tips-1');
     expect(res.status).toBe(200);
     const json = await body(res);
-    expect(json.data.article.body).toEqual(richBody);
+    expect(json.data.article.body).toEqual([
+      { id: 'b1', type: 'list', style: 'bullet', items: [{ spans: [{ text: 'one' }] }] },
+      { ...richBody[1], source: 'upload' },
+      ...richBody.slice(2),
+    ]);
+  });
+
+  it('serves a pre-ADR-0005 bare-array list item exactly like the { spans } shape (issue #174)', async () => {
+    const list = (items: unknown[]) => ({ id: 'b1', type: 'list', style: 'ordered', items });
+    mockFindFirst.mockResolvedValueOnce({ ...SUMMARY, body: [list([[{ text: 'Нэг' }], [{ text: 'Хоёр' }]])] });
+    const old = await body(await getArticle('reading-tips-1'));
+    mockFindFirst.mockResolvedValueOnce({
+      ...SUMMARY,
+      body: [list([{ spans: [{ text: 'Нэг' }] }, { spans: [{ text: 'Хоёр' }] }])],
+    });
+    const current = await body(await getArticle('reading-tips-1'));
+    expect(old.data.article.body).toEqual(current.data.article.body);
+    expect(old.data.article.body[0].items[0]).toEqual({ spans: [{ text: 'Нэг' }] });
+  });
+
+  it('returns INTERNAL when the stored Body no longer parses (issue #174)', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockFindFirst.mockResolvedValueOnce({ ...SUMMARY, body: [{ id: 'b1', type: 'nonsense' }] });
+    const res = await getArticle('reading-tips-1');
+    expect(res.status).toBe(500);
+    expect((await body(res)).error.code).toBe('INTERNAL');
+    spy.mockRestore();
   });
 
   it('returns NOT_FOUND for a Draft slug', async () => {
