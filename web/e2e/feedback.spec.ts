@@ -194,6 +194,116 @@ test.describe("with the widget enabled", () => {
   });
 });
 
+test.describe("with an image", () => {
+  const R2 = {
+    R2_ACCOUNT_ID: "acct123",
+    R2_ACCESS_KEY_ID: "fixture-access-key",
+    R2_SECRET_ACCESS_KEY: "fixture-r2-secret",
+    R2_BUCKET_NAME: "orto-assets",
+    R2_PUBLIC_URL: "https://assets.example.test/",
+  };
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+  let puts: { url: string; headers: Headers; size: number }[] = [];
+  let issues: SentIssue[] = [];
+  let r2Status = 200;
+
+  test.beforeEach(() => {
+    Object.assign(process.env, R2, { FEEDBACK_ENABLED: "1", FEEDBACK_GITHUB_TOKEN: TOKEN });
+    puts = [];
+    issues = [];
+    r2Status = 200;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (init?.method === "PUT") {
+        puts.push({ url, headers: new Headers(init.headers), size: (init.body as Uint8Array).byteLength });
+        return new Response(null, { status: r2Status });
+      }
+      issues.push({ url, authorization: null, body: JSON.parse(String(init?.body)) });
+      return Response.json({ number: 7, html_url: "https://github.com/Erdenebayar-M/Alpha/issues/7" }, { status: 201 });
+    }) as typeof fetch;
+  });
+  test.afterEach(() => {
+    globalThis.fetch = realFetch;
+    for (const key of [...Object.keys(R2), "FEEDBACK_ENABLED", "FEEDBACK_GITHUB_TOKEN"]) delete process.env[key];
+  });
+
+  function submitWithImage(file: Blob | string | null, ip = `203.0.113.${100 + nextIp++}`, payload: unknown = valid) {
+    const form = new FormData();
+    form.set("payload", JSON.stringify(payload));
+    if (typeof file === "string") form.set("image", file);
+    else if (file !== null) form.set("image", file, "shot.png");
+    return POST(new Request(`${ORIGIN}/api/feedback`, { method: "POST", headers: { "x-forwarded-for": ip }, body: form }));
+  }
+
+  test("an image is stored under feedback/ in R2 and embedded in the issue", async () => {
+    const res = await submitWithImage(new Blob([PNG], { type: "image/png" }));
+    expect(res.status).toBe(201);
+    expect(puts).toHaveLength(1);
+    const { url, headers } = puts[0];
+    expect(url).toMatch(/^https:\/\/acct123\.r2\.cloudflarestorage\.com\/orto-assets\/feedback\/[0-9a-f-]{36}\.png$/);
+    expect(headers.get("content-type")).toBe("image/png");
+    expect(headers.get("authorization")).toMatch(/^AWS4-HMAC-SHA256 Credential=fixture-access-key\/\d{8}\/auto\/s3\/aws4_request, SignedHeaders=.*, Signature=[0-9a-f]{64}$/);
+    const key = url.split("/orto-assets/")[1];
+    expect(issues[0].body.body).toContain(`![Screenshot](https://assets.example.test/${key})`);
+  });
+
+  test("R2 credentials reach neither the response nor the issue", async () => {
+    const res = await submitWithImage(new Blob([PNG]));
+    const everything = JSON.stringify([await res.json(), issues]);
+    expect(everything).not.toContain("fixture-r2-secret");
+    expect(everything).not.toContain("fixture-access-key");
+  });
+
+  test("a multipart submission with no image works as the text-only one", async () => {
+    expect((await submitWithImage(null)).status).toBe(201);
+    expect((await submitWithImage(new Blob([]))).status).toBe(201);
+    expect(puts).toHaveLength(0);
+    expect(issues[0].body.body).not.toContain("![Screenshot]");
+  });
+
+  test("the file's claimed type is ignored: only real PNG/JPEG/GIF/WebP bytes are stored", async () => {
+    const svg = new Blob(['<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'], { type: "image/png" });
+    for (const file of [svg, new Blob(["just text"], { type: "image/png" }), "not a file"]) {
+      const res = await submitWithImage(file);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: "INVALID_IMAGE" });
+    }
+    expect(puts).toHaveLength(0);
+    expect(issues).toHaveLength(0);
+  });
+
+  test("an oversized image is refused without a store or an issue", async () => {
+    const big = new Uint8Array(3 * 1024 * 1024 + 1);
+    big.set(PNG);
+    const res = await submitWithImage(new Blob([big]));
+    expect(res.status).toBe(413);
+    expect(puts).toHaveLength(0);
+    expect(issues).toHaveLength(0);
+  });
+
+  test("a rejected image doesn't use up the rate limit", async () => {
+    const ip = "198.51.100.77";
+    for (let i = 0; i < 12; i++) expect((await submitWithImage(new Blob(["x"]), ip)).status).toBe(400);
+    expect((await submitWithImage(new Blob([PNG]), ip)).status).toBe(201);
+  });
+
+  test("a failed upload fails the submission rather than filing an issue without its screenshot", async () => {
+    r2Status = 403;
+    const res = await submitWithImage(new Blob([PNG]));
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: "UPSTREAM_ERROR" });
+    expect(issues).toHaveLength(0);
+  });
+
+  test("an image with R2 unconfigured fails the submission", async () => {
+    delete process.env.R2_BUCKET_NAME;
+    const res = await submitWithImage(new Blob([PNG]));
+    expect(res.status).toBe(502);
+    expect(puts).toHaveLength(0);
+    expect(issues).toHaveLength(0);
+  });
+});
+
 test.describe("disabled", () => {
   test("without the flag, or with it on a Production deploy, the widget is off", () => {
     process.env.FEEDBACK_GITHUB_TOKEN = TOKEN;

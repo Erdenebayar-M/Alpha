@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { feedback as copy } from "@/lib/content";
+import { FEEDBACK_IMAGE_ACCEPT } from "@/lib/feedback/image";
 import { FEEDBACK_TEXT_MAX } from "@/lib/feedback/input";
 
 type Status =
@@ -20,15 +21,17 @@ const controlClass = "w-full rounded-xl border border-border-card bg-white p-3 t
 /**
  * The dev site's floating feedback button and its form, in a native modal
  * <dialog> (focus trap and Esc for free). Sends the text, an optional Figma
- * link and the page's address and viewport to app/api/feedback, which files the
- * GitHub issue. Only rendered by FeedbackWidget when the widget is enabled.
+ * link, an optional screenshot (when `imagesEnabled`) and the page's address
+ * and viewport to app/api/feedback, which files the GitHub issue. Only
+ * rendered by FeedbackWidget when the widget is enabled.
  */
-export default function FeedbackPanel() {
+export default function FeedbackPanel({ imagesEnabled }: { imagesEnabled: boolean }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [text, setText] = useState("");
   const [figmaUrl, setFigmaUrl] = useState("");
+  const imageRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const ids = { title: useId(), text: useId(), figma: useId(), hint: useId() };
+  const ids = { title: useId(), text: useId(), figma: useId(), hint: useId(), image: useId(), imageHint: useId() };
 
   function open() {
     if (status.kind !== "sending") setStatus({ kind: "idle" });
@@ -39,22 +42,29 @@ export default function FeedbackPanel() {
     event.preventDefault();
     setStatus({ kind: "sending" });
     try {
+      const payload = JSON.stringify({
+        text,
+        figmaUrl,
+        // No query or hash: they can carry a live token (/reset-password?token=…).
+        pageUrl: window.location.origin + window.location.pathname,
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      });
+      const image = imageRef.current?.files?.[0];
+      // With a screenshot the body is multipart (the browser sets the boundary);
+      // without one it is the plain JSON the route has always taken.
+      const form = new FormData();
+      form.set("payload", payload);
+      if (image) form.set("image", image);
       const res = await fetch("/api/feedback", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          text,
-          figmaUrl,
-          // No query or hash: they can carry a live token (/reset-password?token=…).
-          pageUrl: window.location.origin + window.location.pathname,
-          viewport: { width: window.innerWidth, height: window.innerHeight },
-        }),
+        ...(image ? { body: form } : { headers: { "content-type": "application/json" }, body: payload }),
       });
       const json = (await res.json().catch(() => ({}))) as { issueNumber?: number; error?: string };
       if (res.ok && typeof json.issueNumber === "number") {
         setStatus({ kind: "sent", issueNumber: json.issueNumber });
         setText("");
         setFigmaUrl("");
+        if (imageRef.current) imageRef.current.value = "";
         return;
       }
       const code = (json.error ?? "UPSTREAM_ERROR") as ErrorCode;
@@ -130,6 +140,25 @@ export default function FeedbackPanel() {
               {copy.figmaHint}
             </p>
           </div>
+
+          {imagesEnabled && (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={ids.image} className={labelClass}>
+                {copy.imageLabel}
+              </label>
+              <input
+                ref={imageRef}
+                id={ids.image}
+                type="file"
+                accept={FEEDBACK_IMAGE_ACCEPT}
+                aria-describedby={ids.imageHint}
+                className={controlClass}
+              />
+              <p id={ids.imageHint} className="text-xs text-text-nav">
+                {copy.imageHint}
+              </p>
+            </div>
+          )}
 
           <div aria-live="polite">
             {status.kind === "sent" && <p className="text-sm font-bold text-brand-blue">{copy.sent(status.issueNumber)}</p>}
