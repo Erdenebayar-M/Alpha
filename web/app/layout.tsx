@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import { siteConfig } from "@/lib/site-config";
+import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 
 // Nunito ships full Cyrillic Extended coverage, so the Mongolian-specific
 // glyphs Өө/Үү render correctly — same font, same verified coverage, as the
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Үндсэн агуулга руу шилжих
         </a>
         {children}
+        <FeedbackWidget />
       </body>
     </html>
   );

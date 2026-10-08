@@ -127,6 +127,10 @@
   --color-account-field: #f8fafd;
   --color-account-danger: #d92d20;
   --color-account-danger-tint: #fff1f0;
+  /* A form's error text and errored field border (auth forms, feedback
+   * widget): the Palette's red, given a utility here since the Palette
+   * block below deliberately generates none. */
+  --color-form-error: var(--color-palette-red);
   --color-task-border: #dde8f5;
   --color-task-tile: #f8fbff;
   /* Sentence word chips + their dashed drop target (nodes 1255:16730 / 1255:16736).

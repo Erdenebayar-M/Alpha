@@ -634,3 +634,27 @@ export const devGate = {
   submitLabel: "Нэвтрэх",
   wrongPassword: "Нууц үг буруу байна.",
 } as const;
+
+// Dev-site feedback widget (components/feedback/, app/api/feedback) — dev
+// deploys only, never in production, so not in Figma; wording drafted,
+// awaiting owner approval. Error keys are the route's error codes.
+export const feedback = {
+  openLabel: "Санал хүсэлт",
+  title: "Өөрчлөлт хүсэх",
+  intro: "Энэ хуудсанд юуг өөрчлөхийг бичнэ үү. Хуудасны хаяг, дэлгэцийн хэмжээ автоматаар хавсаргагдана.",
+  textLabel: "Юуг өөрчлөх вэ?",
+  figmaLabel: "Figma холбоос (заавал биш)",
+  figmaPlaceholder: "https://www.figma.com/design/…",
+  figmaHint: "Байршил, өнгө, зайн өөрчлөлтөд Figma холбоос хэрэгтэй. Текст, зургийн засварт хэрэггүй.",
+  submitLabel: "Илгээх",
+  sendingLabel: "Илгээж байна…",
+  closeLabel: "Хаах",
+  sent: (issueNumber: number) => `Илгээгдлээ (#${issueNumber}). Баярлалаа!`,
+  errors: {
+    VALIDATION_ERROR: "Текстээ шалгаад дахин оролдоно уу.",
+    INVALID_FIGMA_URL: "Figma холбоос https://www.figma.com/… хаягаар эхлэх ёстой.",
+    PAYLOAD_TOO_LARGE: "Текст хэт урт байна. Богиносгоод дахин оролдоно уу.",
+    RATE_LIMITED: "Хэт олон удаа илгээлээ. Хэдэн минутын дараа дахин оролдоно уу.",
+    UPSTREAM_ERROR: "Илгээж чадсангүй. Дахин оролдоно уу.",
+  },
+} as const;

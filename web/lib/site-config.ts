@@ -8,6 +8,8 @@ export const siteConfig = {
   description:
     "5-7 насны хүүхдийн Монгол хэлний зөв бичих чадварыг тодорхойлж, түвшинд нь тохирсон суралцах төлөвлөгөө санал болгодог хөгжлийн үнэлгээ.",
   url: "https://www.orto.my",
+  // Where the dev site's feedback widget files its GitHub issues (app/api/feedback).
+  feedbackRepo: "Erdenebayar-M/Alpha",
 
   assessmentUrl: "/register-child",
   // The signed-in parent's Account page.
