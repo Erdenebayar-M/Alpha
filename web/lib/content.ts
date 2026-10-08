@@ -647,7 +647,7 @@ export const feedback = {
   figmaPlaceholder: "https://www.figma.com/design/…",
   figmaHint: "Байршил, өнгө, зайн өөрчлөлтөд Figma холбоос хэрэгтэй. Текст, зургийн засварт хэрэггүй.",
   imageLabel: "Зураг (заавал биш)",
-  imageHint: "PNG, JPG, GIF эсвэл WebP, 3 МБ хүртэл.",
+  imageHint: (maxMb: number) => `PNG, JPG, GIF эсвэл WebP, ${maxMb} МБ хүртэл.`,
   submitLabel: "Илгээх",
   sendingLabel: "Илгээж байна…",
   closeLabel: "Хаах",

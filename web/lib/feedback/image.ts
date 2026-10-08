@@ -5,7 +5,7 @@
 // Vercel's request body limit is 4.5 MB, so the image has to leave room under it.
 export const FEEDBACK_IMAGE_MAX_BYTES = 3 * 1024 * 1024;
 // The whole multipart body: the image, the JSON part and the multipart framing.
-export const FEEDBACK_MULTIPART_MAX_BYTES = FEEDBACK_IMAGE_MAX_BYTES + 64_000;
+export const FEEDBACK_MULTIPART_MAX_BYTES = FEEDBACK_IMAGE_MAX_BYTES + 128_000;
 
 export type FeedbackImage = { bytes: Uint8Array; contentType: string; extension: string };
 

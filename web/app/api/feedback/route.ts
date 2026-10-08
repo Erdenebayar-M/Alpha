@@ -23,16 +23,20 @@ export async function POST(request: Request) {
   const token = feedbackToken();
   if (!token) return new Response(null, { status: 404 });
 
-  const multipart = (request.headers.get("content-type") ?? "").startsWith("multipart/form-data");
+  const contentType = request.headers.get("content-type") ?? "";
+  const multipart = contentType.toLowerCase().startsWith("multipart/form-data");
+  // Multipart only ever carries a screenshot, so without R2 refuse it unread.
+  if (multipart && !r2Config()) return Response.json({ error: "UPSTREAM_ERROR" }, { status: 502 });
   const raw = await readCapped(request, multipart ? FEEDBACK_MULTIPART_MAX_BYTES : FEEDBACK_BODY_MAX_BYTES);
   if (raw === "too-large") return Response.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
 
   let payload: unknown;
   let file: FormDataEntryValue | null = null;
   if (multipart) {
-    const form = await parseForm(raw, request.headers.get("content-type")!);
+    const form = await parseForm(raw, contentType);
     const field = form?.get("payload");
-    payload = typeof field === "string" ? parseJson(field) : null;
+    // The JSON part is held to the same cap as a text-only body.
+    payload = typeof field === "string" && field.length <= FEEDBACK_BODY_MAX_BYTES ? parseJson(field) : null;
     file = form?.get("image") ?? null;
   } else {
     payload = parseJson(raw === null ? null : new TextDecoder().decode(raw));

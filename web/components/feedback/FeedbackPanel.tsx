@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { feedback as copy } from "@/lib/content";
-import { FEEDBACK_IMAGE_ACCEPT } from "@/lib/feedback/image";
+import { FEEDBACK_IMAGE_ACCEPT, FEEDBACK_IMAGE_MAX_BYTES } from "@/lib/feedback/image";
 import { FEEDBACK_TEXT_MAX } from "@/lib/feedback/input";
 
 type Status =
@@ -40,6 +40,11 @@ export default function FeedbackPanel({ imagesEnabled }: { imagesEnabled: boolea
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Caught here so a too-big file isn't uploaded just to be refused.
+    if ((imageRef.current?.files?.[0]?.size ?? 0) > FEEDBACK_IMAGE_MAX_BYTES) {
+      setStatus({ kind: "error", message: copy.errors.PAYLOAD_TOO_LARGE });
+      return;
+    }
     setStatus({ kind: "sending" });
     try {
       const payload = JSON.stringify({
@@ -67,7 +72,8 @@ export default function FeedbackPanel({ imagesEnabled }: { imagesEnabled: boolea
         if (imageRef.current) imageRef.current.value = "";
         return;
       }
-      const code = (json.error ?? "UPSTREAM_ERROR") as ErrorCode;
+      // Vercel can refuse an oversized body with a 413 that isn't ours (no JSON).
+      const code = (json.error ?? (res.status === 413 ? "PAYLOAD_TOO_LARGE" : "UPSTREAM_ERROR")) as ErrorCode;
       setStatus({ kind: "error", message: copy.errors[code] ?? copy.errors.UPSTREAM_ERROR });
     } catch {
       setStatus({ kind: "error", message: copy.errors.UPSTREAM_ERROR });
@@ -155,7 +161,7 @@ export default function FeedbackPanel({ imagesEnabled }: { imagesEnabled: boolea
                 className={controlClass}
               />
               <p id={ids.imageHint} className="text-xs text-text-nav">
-                {copy.imageHint}
+                {copy.imageHint(FEEDBACK_IMAGE_MAX_BYTES / (1024 * 1024))}
               </p>
             </div>
           )}
