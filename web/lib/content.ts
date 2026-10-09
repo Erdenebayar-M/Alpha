@@ -96,34 +96,20 @@ export const categoryByApiValue = {
 } as const satisfies Record<string, Category>;
 export type ArticleCategoryValue = keyof typeof categoryByApiValue;
 
-export interface Article {
-  readonly category: Category;
-  readonly title: string;
-  readonly excerpt: string;
-  readonly href: string;
-}
-
 // The homepage's Featured article (Figma node 1401:22062), directly under the
 // Category pills — the one Published Article staff have promoted (see
-// web/CONTEXT.md). Modelled as an Article rather than a one-off shape so the
-// Articles-for-parents grid (a future ticket) can reuse the same interface.
+// web/CONTEXT.md). Only the section's own copy lives here: the Article itself
+// comes from the backend (lib/api/server/publicArticles.ts).
 export const featuredArticle = {
   heading: "Онцлох нийтлэл",
-  article: {
-    category: "Зөв бичих",
-    title: "Хүүхэд яагаад нэг үгийг дахин дахин өөрөөр бичдэг вэ?",
-    excerpt:
-      "Хүүхэд нэг үгийг өчигдөр зөв бичсэн атлаа өнөөдөр буруу бичихэд “мэдэж байгаа мөртлөө анхаарсангүй” гэж бодох амархан...",
-    href: siteConfig.featuredArticleUrl,
-  },
   // Accessible name for the illustration (ORto, the хойн/хонь word clouds and
   // arrow, and the books — nodes 1401:22076, 1401:22282), which carries no
-  // on-canvas text of its own beyond the two words it's demonstrating.
+  // on-canvas text of its own beyond the two words it's demonstrating. It
+  // stands in for an Article without a Thumbnail.
   artLabel: "ОРто, «хойн» гэдэг үгийг «хонь» гэж дахин дахин буруу бичсэн, дэргэд нь ном үүрсэн байгаа зураг",
   readMoreLabel: (title: string) => `«${title}» нийтлэлийг унших`,
 } as const satisfies {
   heading: string;
-  article: Article;
   artLabel: string;
   readMoreLabel: (title: string) => string;
 };
@@ -138,7 +124,7 @@ export interface ArticleCardCopy {
 // under the Featured article — three more Articles for parents to browse
 // (see web/CONTEXT.md's Article entry). Unlike the Featured article, each
 // card's own face shows a generic "Завгүй" eyebrow label rather than a
-// Category badge, so this doesn't model cards as `Article`s (no `category`
+// Category badge, so this doesn't model cards as Articles (no `category`
 // or `excerpt` is on canvas) — just the `label`/`title`/`href` Figma
 // actually shows. "Завгүй"/"Lorum" are Figma's own placeholders, repeated
 // verbatim per card rather than invented per-card copy.
