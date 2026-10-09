@@ -65,8 +65,14 @@ export async function uploadFeedbackImage(image: FeedbackImage, config: R2Config
       cache: "no-store",
       signal: AbortSignal.timeout(15_000),
     });
-    return res.ok ? `${config.publicUrl}/${key}` : null;
-  } catch {
+    if (res.ok) return `${config.publicUrl}/${key}`;
+    // R2's error body is S3 XML: the <Code> (AccessDenied, SignatureDoesNotMatch,
+    // NoSuchBucket…) names the misconfiguration. No credentials are logged.
+    const code = /<Code>([^<]+)<\/Code>/.exec(await res.text().catch(() => ""))?.[1] ?? "unknown";
+    console.error(`[feedback] R2 upload refused: ${res.status} ${code} (bucket ${config.bucket})`);
+    return null;
+  } catch (error) {
+    console.error(`[feedback] R2 upload failed: ${error instanceof Error ? error.message : String(error)} (host ${host})`);
     return null;
   }
 }
