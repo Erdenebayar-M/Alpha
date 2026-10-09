@@ -1,0 +1,54 @@
+name: sync-dev-content
+
+# Keeps the dev database's content in step with production: every 15 minutes
+# (GitHub may start a scheduled run a few minutes late) or on demand from the
+# Actions tab. Runs backend/prisma/devFixtures.ts — see "Dev Fixtures" in
+# backend/CLAUDE.md for what it copies and what it never reads.
+#
+# Scheduled runs only fire from the workflow file on the default branch
+# (master), but the job checks out dev: the dev database follows dev's schema.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never two syncs writing at once; a run already going is left to finish.
+concurrency:
+  group: sync-dev-content
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+      PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      PROD_API_URL: ${{ secrets.PROD_API_URL }}
+      DEMO_ACCOUNT_PASSWORD: ${{ secrets.DEMO_ACCOUNT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # backend/ and shared/ are npm workspaces, so install from the repo root.
+      - run: npm ci
+
+      # backend/generated/ is not committed; the script imports the Prisma client from it.
+      - run: npm run db:generate
+
+      # Apply dev's pending migrations to the dev database first, so a copy
+      # never fails on a column or enum value dev hasn't got yet.
+      - run: npm run db:migrate
+
+      - run: npm run fixtures:dev
