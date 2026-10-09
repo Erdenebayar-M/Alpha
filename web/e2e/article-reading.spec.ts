@@ -149,3 +149,17 @@ test("the stray Collections heading is not shown above the card", async ({ page 
   await page.goto("/articles/fixture-article");
   await expect(page.getByText("Сэдвээр нь судлаад илүү их ойлголттой болж аваарай")).toHaveCount(0);
 });
+
+test("link previews carry the title, excerpt and Thumbnail", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const meta = (attr: "name" | "property", key: string) => page.locator(`head meta[${attr}="${key}"]`);
+  await expect(meta("name", "description")).toHaveAttribute("content", "Fixture article excerpt");
+  await expect(meta("property", "og:description")).toHaveAttribute("content", "Fixture article excerpt");
+  const image = "http://localhost:3211/content/images/fixture-thumbnail.svg";
+  await expect(meta("property", "og:image")).toHaveAttribute("content", image);
+  await expect(meta("property", "og:image:width")).toHaveAttribute("content", "389");
+  await expect(meta("property", "og:image:height")).toHaveAttribute("content", "303");
+  await expect(meta("property", "og:image:alt")).toHaveAttribute("content", "Fixture thumbnail alt");
+  await expect(meta("name", "twitter:image")).toHaveAttribute("content", image);
+  await expect(meta("name", "twitter:image:alt")).toHaveAttribute("content", "Fixture thumbnail alt");
+});

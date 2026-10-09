@@ -102,20 +102,26 @@ function toArticleSummary(raw: unknown): ArticleSummary | null {
   ) {
     return null;
   }
-  const thumbnail = resolveThumbnailUrl(a.thumbnail_url);
   return {
     slug: a.slug,
     title: a.title,
     excerpt: a.excerpt || null,
     category: a.category as ArticleCategoryValue,
-    thumbnail: thumbnail && {
-      ...thumbnail,
-      alt: a.thumbnail_alt || null,
-      width: a.thumbnail_width,
-      height: a.thumbnail_height,
-    },
+    thumbnail: toThumbnail(a),
     publishedAt: a.published_at,
     isFeatured: a.is_featured,
+  };
+}
+
+/** The Thumbnail of a raw backend Article (summary or detail), or null when it has none web can use. */
+export function toThumbnail(a: Record<string, unknown>): Thumbnail | null {
+  const resolved = resolveThumbnailUrl(isString(a.thumbnail_url) ? a.thumbnail_url : null);
+  if (!resolved) return null;
+  return {
+    ...resolved,
+    alt: (isString(a.thumbnail_alt) && a.thumbnail_alt) || null,
+    width: typeof a.thumbnail_width === "number" ? a.thumbnail_width : null,
+    height: typeof a.thumbnail_height === "number" ? a.thumbnail_height : null,
   };
 }
 
