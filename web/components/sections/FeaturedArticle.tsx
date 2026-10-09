@@ -1,11 +1,14 @@
 import Reveal from "@/components/animations/Reveal";
 import { revealItem } from "@/components/animations/revealItem";
+import ArticleThumbnail from "@/components/article/ArticleThumbnail";
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import FeaturedArticleArt from "@/components/sections/FeaturedArticleArt";
 import RoundArrowLink from "@/components/ui/RoundArrowLink";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { featuredArticle } from "@/lib/content";
+import type { ArticleSummary } from "@/lib/api/server/publicArticles";
+import { categoryByApiValue, featuredArticle } from "@/lib/content";
+import { siteConfig } from "@/lib/site-config";
 
 /**
   * The homepage's Featured article (Figma node 1401:22062, "Онцлох нийтлэл
@@ -58,10 +61,14 @@ import { featuredArticle } from "@/lib/content";
  * floor-at-`lg`, scale-with-viewport, cap-at-1440px clamp() keeps this
  * heading's line break matching Figma's (see DiagnosticCard's comment for
  * the derivation).
+ *
+ * The Article itself is the backend's Featured article (the homepage only
+ * renders this section when there is one). Its Thumbnail fills the
+ * illustration panel; without one the bespoke illustration stands in, so the
+ * panel's shape never changes. An Article without an excerpt simply has no
+ * body paragraph.
  */
-export default function FeaturedArticle() {
-  const { article } = featuredArticle;
-
+export default function FeaturedArticle({ article }: { article: ArticleSummary }) {
   return (
     <section aria-labelledby="featured-article-heading" className="landing-section-gap-b">
       <Reveal mode="sequence">
@@ -79,20 +86,24 @@ export default function FeaturedArticle() {
                 className="art-panel-bg relative aspect-[389/303] w-full max-w-sm shrink-0 overflow-hidden rounded-[24px] lg:w-[34.763%] lg:max-w-none"
                 {...revealItem("slide", 1)}
               >
-                <FeaturedArticleArt className="absolute inset-0 size-full" />
+                {article.thumbnail ? (
+                  <ArticleThumbnail thumbnail={article.thumbnail} sizes="(min-width: 1024px) 389px, 384px" />
+                ) : (
+                  <FeaturedArticleArt className="absolute inset-0 size-full" />
+                )}
               </div>
 
               <div
                 className="flex flex-col items-center gap-4 lg:flex-1 lg:items-start lg:gap-[17px] lg:pl-[5.95%]"
                 {...revealItem("slide", 2)}
               >
-                <Badge variant="lilac">{article.category}</Badge>
+                <Badge variant="lilac">{categoryByApiValue[article.category]}</Badge>
                 <div className="flex flex-col gap-3 lg:gap-[15px]">
                   <h3 className="card-heading max-w-md lg:max-w-none">{article.title}</h3>
-                  <p className="card-body max-w-md lg:max-w-[589px]">{article.excerpt}</p>
+                  {article.excerpt && <p className="card-body max-w-md lg:max-w-[589px]">{article.excerpt}</p>}
                 </div>
                 <RoundArrowLink
-                  href={article.href}
+                  href={siteConfig.articleHref(article.slug)}
                   aria-label={featuredArticle.readMoreLabel(article.title)}
                   className="self-end"
                 />

@@ -6,10 +6,15 @@ import DiagnosticCard from "@/components/sections/DiagnosticCard";
 import FeaturedArticle from "@/components/sections/FeaturedArticle";
 import LandingHero from "@/components/sections/LandingHero";
 import LandingScene from "@/components/sections/LandingScene";
+import { fetchFeaturedArticle } from "@/lib/api/server/publicArticles";
 import { landingNav } from "@/lib/content";
 
 // Parents' landing page (Figma frame 1360:8561).
-export default function Home() {
+export default async function Home() {
+  // Null both when nothing is Featured and when the backend can't be reached
+  // (logged by the fetcher) — either way the section is left out.
+  const featured = await fetchFeaturedArticle();
+
   return (
     // Reserves the design's full 2706px height at `lg`+. No `overflow` here:
     // the horizontal guard lives on `html` (see HeroScene).
@@ -20,7 +25,7 @@ export default function Home() {
         <LandingHero />
         <CategoryPills />
         <DiagnosticCard />
-        <FeaturedArticle />
+        {featured && <FeaturedArticle article={featured} />}
         <ArticlesGrid />
         <CollectionsRow />
       </main>

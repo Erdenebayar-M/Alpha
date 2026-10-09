@@ -5,7 +5,8 @@ import { pathToFileURL } from "node:url";
  * Stand-in for the real backend's public `GET /api/articles/:slug`, so e2e
  * runs need no backend or database. Playwright's webServer starts it and
  * points the Next server's BACKEND_URL here (playwright.config.ts). Serves
- * one Published Article, plus the auth routes the sign-in, sign-up,
+ * one Published Article, the public article list (see articleScenarios),
+ * plus the auth routes the sign-in, sign-up,
  * confirm-email, forgot-password and reset-password pages and the Google
  * callback call
  * (see FIXTURE_PARENT), `GET /api/auth/me` that proxy.ts checks a session
@@ -229,6 +230,82 @@ async function asParent(req, res, respond) {
   send(res, 200, "application/json", JSON.stringify({ success: true, data: respond(body) }));
 }
 
+// Public article list (`GET /api/articles`): Published Article summaries,
+// newest first, in the shape the real route's summary select returns. Which
+// set it serves is a scenario a spec switches with `POST /__articles-scenario`
+// (home-articles.spec.ts mirrors these titles), each with titles unique to it so stale data from
+// another scenario can't pass a check. `down` answers 500.
+//
+// E2E runs on `next dev`, where a request sent with `cache-control: no-cache`
+// (home-articles.spec.ts) makes Next skip the homepage's 5-minute fetch
+// revalidation, so a scenario switch shows on the next load. A production
+// build ignores that header: if e2e moves to one, the article fetches would
+// need a cache tag plus a test-only on-demand revalidation route instead.
+const THUMBNAIL_PATH = "/content/images/fixture-thumbnail.svg";
+
+function summary(slug, title, { category = "READING", excerpt = null, thumbnail = false, thumbnailAlt = null, featured = false, publishedAt }) {
+  return {
+    slug,
+    title,
+    excerpt,
+    category,
+    // Backend-relative, as the real backend stores a locally served upload —
+    // web resolves it against the backend origin.
+    thumbnail_url: thumbnail ? THUMBNAIL_PATH : null,
+    thumbnail_alt: thumbnail ? thumbnailAlt : null,
+    thumbnail_width: thumbnail ? 389 : null,
+    thumbnail_height: thumbnail ? 303 : null,
+    reading_time_minutes: 4,
+    published_at: publishedAt,
+    is_featured: featured,
+  };
+}
+
+const articleScenarios = {
+  normal: [
+    summary("normal-newest", "Normal newest article", { publishedAt: "2026-10-05T00:00:00.000Z" }),
+    summary("normal-featured", "Normal featured article", {
+      category: "ORTHOGRAPHY",
+      excerpt: "Normal featured excerpt",
+      thumbnail: true,
+      thumbnailAlt: "Normal featured thumbnail",
+      featured: true,
+      publishedAt: "2026-10-04T00:00:00.000Z",
+    }),
+    summary("normal-second", "Normal second article", { category: "SPELLING", thumbnail: true, publishedAt: "2026-10-03T00:00:00.000Z" }),
+    summary("normal-third", "Normal third article", { excerpt: "Normal third excerpt", publishedAt: "2026-10-02T00:00:00.000Z" }),
+  ],
+  "bare-featured": [
+    summary("bare-featured", "Bare featured article", { featured: true, publishedAt: "2026-10-04T00:00:00.000Z" }),
+  ],
+  "no-featured": [
+    summary("no-featured-first", "No-featured first article", { publishedAt: "2026-10-04T00:00:00.000Z" }),
+    summary("no-featured-second", "No-featured second article", { publishedAt: "2026-10-03T00:00:00.000Z" }),
+  ],
+  down: [],
+};
+let articleScenario = "normal";
+
+function listArticles(req, res) {
+  if (articleScenario === "down") return fail(res, 500, "INTERNAL", "Fixture backend is down");
+  const params = new URL(req.url ?? "/", `http://localhost:${PORT}`).searchParams;
+  const page = Number(params.get("page") ?? 1);
+  const perPage = Number(params.get("per_page") ?? 12);
+  const matching = articleScenarios[articleScenario].filter((article) => params.get("featured") !== "true" || article.is_featured);
+  const articles = matching.slice((page - 1) * perPage, page * perPage);
+  const meta = { page, per_page: perPage, total: matching.length, has_next: page * perPage < matching.length };
+  send(res, 200, "application/json", JSON.stringify({ success: true, data: { articles, meta } }));
+}
+
+async function setArticleScenario(req, res) {
+  const body = await readJson(req);
+  if (!(body?.scenario in articleScenarios)) return fail(res, 400, "VALIDATION_ERROR", "Unknown scenario");
+  articleScenario = body.scenario;
+  // The titles let the spec check its mirror of them hasn't drifted.
+  const titles = articleScenarios[articleScenario].map((article) => article.title);
+  send(res, 200, "application/json", JSON.stringify({ success: true, data: { scenario: articleScenario, titles } }));
+}
+
 function send(res, status, contentType, body) {
   res.writeHead(status, { "content-type": contentType });
   res.end(body);
@@ -262,7 +339,9 @@ export function startFixtureBackend() {
       const email = new URL(req.url ?? "/", `http://localhost:${PORT}`).searchParams.get("email");
       return send(res, 200, "application/json", JSON.stringify(registerBodies.get(email) ?? null));
     }
-    if (pathname === "/fixture.svg") return send(res, 200, "image/svg+xml", IMAGE_SVG);
+    if (pathname === "/fixture.svg" || pathname === THUMBNAIL_PATH) return send(res, 200, "image/svg+xml", IMAGE_SVG);
+    if (req.method === "POST" && pathname === "/__articles-scenario") return setArticleScenario(req, res);
+    if (req.method === "GET" && pathname === "/api/articles") return listArticles(req, res);
     if (pathname === `/api/articles/${FIXTURE_SLUG}`) {
       return send(res, 200, "application/json", JSON.stringify({ success: true, data: { article } }));
     }

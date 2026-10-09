@@ -36,10 +36,8 @@ export const siteConfig = {
     spellingOut: "#",
   },
 
-  // TODO: replace with the real Featured article destination once Articles
-  // have their own reading page. The homepage's Featured article card links
-  // here (see web/CONTEXT.md for the Article/Featured article glossary).
-  featuredArticleUrl: "#",
+  // A Published Article's reading page (app/articles/[slug]).
+  articleHref: (slug: string) => `/articles/${encodeURIComponent(slug)}`,
 
   // TODO: replace with the real per-Article destinations once Articles have
   // their own reading page. The homepage's Articles-for-parents grid cards
