@@ -7,6 +7,7 @@ const TITLES = {
   normal: ["Normal newest article", "Normal featured article", "Normal second article", "Normal third article"],
   "bare-featured": ["Bare featured article"],
   "no-featured": ["No-featured first article", "No-featured second article"],
+  "two-articles": ["Two-articles first article", "Two-articles featured article", "Two-articles second article"],
   down: [],
 } as const satisfies Record<string, readonly string[]>;
 type ArticleScenario = keyof typeof TITLES;
@@ -40,6 +41,7 @@ async function useScenario(scenario: ArticleScenario) {
 test.afterAll(() => useScenario("normal"));
 
 const featuredSection = (page: Page) => page.getByRole("region", { name: "Онцлох нийтлэл" });
+const gridSection = (page: Page) => page.getByRole("region", { name: "Эцэг эхчүүдэд туслах нийтлэлүүд" });
 
 function otherScenarioTitles(scenario: ArticleScenario) {
   return Object.entries(TITLES).flatMap(([name, titles]) => (name === scenario ? [] : titles));
@@ -73,6 +75,65 @@ test("the Featured card shows the Featured Article and links to its reading page
   await expectNoOtherScenario(page, "normal");
 });
 
+test("the grid shows the newest non-Featured Articles, newest first, each linking to its reading page", async ({ page }) => {
+  await useScenario("normal");
+  await page.goto("/");
+  const section = gridSection(page);
+  const cards = section.getByRole("link");
+
+  // Four are Published; the Featured one (second) is left out of the grid.
+  await expect(cards).toHaveCount(3);
+  await expect(cards.nth(0)).toHaveAttribute("href", "/articles/normal-newest");
+  await expect(cards.nth(1)).toHaveAttribute("href", "/articles/normal-second");
+  await expect(cards.nth(2)).toHaveAttribute("href", "/articles/normal-third");
+  await expect(cards.nth(0)).toContainText(TITLES.normal[0]);
+  await expect(cards.nth(1)).toContainText(TITLES.normal[2]);
+  await expect(cards.nth(2)).toContainText(TITLES.normal[3]);
+  // The Category name is the eyebrow, never the old placeholder.
+  await expect(cards.nth(0)).toContainText("Унших");
+  await expect(cards.nth(1)).toContainText("Үсэглэх");
+  await expect(section.getByText("Завгүй")).toHaveCount(0);
+  await expect(section.getByText("Lorum")).toHaveCount(0);
+  await expect(page.getByText(TITLES.normal[1])).toHaveCount(1); // only in the Featured card
+
+  // A Thumbnail replaces the scene art and is lazy; without staff alt text it
+  // is decorative (the link is named by the title). One without a Thumbnail
+  // falls back to the scene for its Category.
+  const withThumbnail = cards.nth(1).locator('img[src*="fixture-thumbnail"]');
+  await expect(withThumbnail).toHaveAttribute("loading", "lazy");
+  await expect(withThumbnail).toHaveAttribute("alt", "");
+  await expect(cards.nth(1).locator('img[src*="article-card-3-scene"]')).toHaveCount(0);
+  await expect(cards.nth(0).locator('img[src*="article-card-1-scene"]')).toHaveCount(1);
+  await expect(cards.nth(0).locator('img[src*="fixture-thumbnail"]')).toHaveCount(0);
+});
+
+test("with fewer than three Articles the grid shows just those", async ({ page }) => {
+  await useScenario("two-articles");
+  await page.goto("/");
+
+  await expect(gridSection(page).getByRole("link")).toHaveCount(2);
+  await expect(gridSection(page).getByText(TITLES["two-articles"][0])).toBeVisible();
+  await expect(gridSection(page).getByText(TITLES["two-articles"][2])).toBeVisible();
+  const thumbnail = gridSection(page).getByRole("img", { name: "Two-articles first thumbnail" });
+  await expect(thumbnail).toHaveAttribute("loading", "lazy");
+  await expectNoOtherScenario(page, "two-articles");
+});
+
+test("with a lone Featured Article the grid is not rendered", async ({ page }) => {
+  await useScenario("bare-featured");
+  await page.goto("/");
+
+  await expect(page.locator("#articles-grid-heading")).toHaveCount(0);
+});
+
+test("with no Featured Article the grid still lists the newest Articles", async ({ page }) => {
+  await useScenario("no-featured");
+  await page.goto("/");
+
+  await expect(gridSection(page).getByRole("link")).toHaveCount(2);
+  await expect(gridSection(page).getByText(TITLES["no-featured"][0])).toBeVisible();
+});
+
 test("a Featured Article with no excerpt or Thumbnail still renders a complete card", async ({ page }) => {
   await useScenario("bare-featured");
   await page.goto("/");
@@ -96,13 +157,14 @@ test("with no Featured Article the Featured section is not rendered", async ({ p
   await expectNoOtherScenario(page, "no-featured");
 });
 
-test("with the backend down the Featured section is hidden and the homepage still loads", async ({ page }) => {
+test("with the backend down the Featured section and grid are hidden and the homepage still loads", async ({ page }) => {
   await useScenario("down");
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator("#featured-article-heading")).toHaveCount(0);
+  await expect(page.locator("#articles-grid-heading")).toHaveCount(0);
   for (const title of otherScenarioTitles("down")) await expect(page.getByText(title)).toHaveCount(0);
 });
 
@@ -131,4 +193,32 @@ test("the Featured card fits every width and its link shows focus", async ({ pag
   await page.keyboard.press("Tab");
   await expect(link).toBeFocused();
   await expect(link).not.toHaveCSS("box-shadow", "none");
+});
+
+test("the grid fits every width and its links show focus", async ({ page }) => {
+  await useScenario("normal");
+  await page.goto("/");
+  const section = gridSection(page);
+  const links = section.getByRole("link");
+
+  for (const width of [320, 375, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await section.scrollIntoViewIfNeeded();
+    // Once the Reveal slide-in has settled, every card lies inside the viewport.
+    for (let i = 0; i < 3; i++) {
+      await links.nth(i).scrollIntoViewIfNeeded();
+      await expect
+        .poll(async () => {
+          const box = (await links.nth(i).boundingBox())!;
+          return box.x >= 0 && box.x + box.width <= width + 1;
+        }, { message: `card ${i} at ${width}px` })
+        .toBe(true);
+    }
+  }
+
+  await links.first().focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(links.first()).toBeFocused();
+  await expect(links.first()).not.toHaveCSS("box-shadow", "none");
 });

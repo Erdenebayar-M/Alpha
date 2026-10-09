@@ -39,11 +39,6 @@ export const siteConfig = {
   // A Published Article's reading page (app/articles/[slug]).
   articleHref: (slug: string) => `/articles/${encodeURIComponent(slug)}`,
 
-  // TODO: replace with the real per-Article destinations once Articles have
-  // their own reading page. The homepage's Articles-for-parents grid cards
-  // all link here for now (see web/CONTEXT.md for the Article glossary).
-  articleUrl: "#",
-
   // TODO: replace with the real per-Collection destinations once Collections
   // have their own pages. The homepage's Collections row cards all link here
   // for now (see web/CONTEXT.md for the Collection glossary).

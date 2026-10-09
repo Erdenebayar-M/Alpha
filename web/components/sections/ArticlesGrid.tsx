@@ -3,45 +3,42 @@ import { revealItem } from "@/components/animations/revealItem";
 import ArticleCard, { type ArticleCardArt } from "@/components/ui/ArticleCard";
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { articlesGrid } from "@/lib/content";
+import type { ArticleSummary } from "@/lib/api/server/publicArticles";
+import { articlesGrid, type ArticleCategoryValue } from "@/lib/content";
 
-// Per-card art (asset paths + geometry) isn't copy, so it's kept here rather
-// than in lib/content.ts — paired with articlesGrid.items by index, the same
-// split FeaturedArticleArt draws between its own local Boxes and
-// featuredArticle's copy. Card 1's green Khishigee export is taller
-// (321x196) than cards 2/3's own exports (321x185, see ArticleCard's own
-// comment for why all three are flattened exports); only card 1 carries the
-// two flower pairs Figma places outside its exported scene.
-//
-// Typed as an exact 3-tuple, matching articlesGrid.items's own 3-tuple type
-// (lib/content.ts) — the two are zipped by index below, so this is the
-// other half of the compile-time tripwire that catches the two drifting out
-// of sync (an added/removed card in one file without the other).
-const art: readonly [ArticleCardArt, ArticleCardArt, ArticleCardArt] = [
-  {
+// Per-Category fallback art (asset paths + geometry) for an Article without a
+// Thumbnail — not copy, so it's kept here rather than in lib/content.ts. Keyed
+// by Category so an Article's scene is stable. The READING scene is the green
+// Khishigee export, taller (321x196) than the other two (321x185, see
+// ArticleCard's own comment for why all are flattened exports); only it
+// carries the two flower pairs Figma places outside its exported scene.
+const art: Record<ArticleCategoryValue, ArticleCardArt> = {
+  READING: {
     scene: { src: "/images/landing/article-card-1-scene.svg", width: 321, height: 196 },
     flowers: [
       { src: "/images/landing/article-card-1-flower-left.svg", box: { x: 67, y: 205, width: 34, height: 41.547 } },
       { src: "/images/landing/article-card-1-flower-right.svg", box: { x: 236, y: 224, width: 34, height: 41.552 } },
     ],
   },
-  { scene: { src: "/images/landing/article-card-2-scene.svg", width: 321, height: 185 } },
-  { scene: { src: "/images/landing/article-card-3-scene.svg", width: 321, height: 185 } },
-];
+  ORTHOGRAPHY: { scene: { src: "/images/landing/article-card-2-scene.svg", width: 321, height: 185 } },
+  SPELLING: { scene: { src: "/images/landing/article-card-3-scene.svg", width: 321, height: 185 } },
+};
 
 /**
   * The homepage's Articles-for-parents grid (Figma node 1371:9792,
  * "Эцэг эхчүүдэд туслах нийтлэлүүд"), directly under the Featured article —
- * three more Article cards for parents to browse (see web/CONTEXT.md's
- * Article entry). One `ArticleCard` component, three cards from one data
- * array (`articlesGrid.items` zipped with the `art` config above), per the
- * root "don't hand-write the same structure twice" rule.
+ * up to three more Articles for parents to browse (see web/CONTEXT.md's
+ * Article entry). One `ArticleCard` component, one card per Article from a
+ * single map, per the root "don't hand-write the same structure twice" rule.
+ * With no Articles the section is left out.
  *
  * Figma has no mobile frame for this row; below `lg` the cards stack full-
  * width in a single column rather than the 3-up row, matching the pattern
  * every other homepage section uses.
  */
-export default function ArticlesGrid() {
+export default function ArticlesGrid({ articles }: { articles: readonly ArticleSummary[] }) {
+  if (articles.length === 0) return null;
+
   return (
     <section aria-labelledby="articles-grid-heading" className="landing-section-gap-b">
       <Reveal mode="sequence">
@@ -51,10 +48,10 @@ export default function ArticlesGrid() {
           </div>
 
           <div className="flex flex-col gap-5 lg:flex-row lg:gap-[20px]">
-            {articlesGrid.items.map((card, index) => (
+            {articles.map((article, index) => (
               // `flex w-full` lets the card's own `w-full` keep sizing it against the row.
-              <div key={index} className="flex w-full" {...revealItem("slide", index + 1)}>
-                <ArticleCard card={card} art={art[index]} />
+              <div key={article.slug} className="flex w-full" {...revealItem("slide", index + 1)}>
+                <ArticleCard article={article} art={art[article.category]} />
               </div>
             ))}
           </div>

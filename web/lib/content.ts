@@ -114,34 +114,12 @@ export const featuredArticle = {
   readMoreLabel: (title: string) => string;
 };
 
-export interface ArticleCardCopy {
-  readonly label: string;
-  readonly title: string;
-  readonly href: string;
-}
-
 // The homepage's Articles-for-parents grid (Figma node 1371:9792), directly
-// under the Featured article — three more Articles for parents to browse
-// (see web/CONTEXT.md's Article entry). Unlike the Featured article, each
-// card's own face shows a generic "Завгүй" eyebrow label rather than a
-// Category badge, so this doesn't model cards as Articles (no `category`
-// or `excerpt` is on canvas) — just the `label`/`title`/`href` Figma
-// actually shows. "Завгүй"/"Lorum" are Figma's own placeholders, repeated
-// verbatim per card rather than invented per-card copy.
-//
-// `items` is typed as an exact 3-tuple (not `readonly ArticleCardCopy[]`) so
-// that ArticlesGrid.tsx's own per-card `art` config — a same-length tuple
-// zipped to this one by index — fails to typecheck the moment the two drift
-// out of sync, rather than reading `undefined` off the end of a shorter
-// array at render.
+// under the Featured article. Only the section's heading is copy: the cards
+// are the backend's newest Published Articles (lib/api/server/publicArticles.ts).
 export const articlesGrid = {
   heading: "Эцэг эхчүүдэд туслах нийтлэлүүд",
-  items: [
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-  ],
-} as const satisfies { heading: string; items: readonly [ArticleCardCopy, ArticleCardCopy, ArticleCardCopy] };
+} as const satisfies { heading: string };
 
 export interface CollectionCardCopy {
   readonly title: string;
@@ -160,7 +138,7 @@ export interface CollectionCardCopy {
 // `items` is typed as an exact 5-tuple (not `readonly CollectionCardCopy[]`)
 // so that CollectionsRow.tsx's own per-card `art` config — a same-length
 // tuple zipped to this one by index — fails to typecheck the moment the two
-// drift out of sync, matching articlesGrid's own tuple above.
+// drift out of sync.
 export const collectionsRow = {
   heading: "Сэдвээр нь судлаад илүү их ойлголттой болж аваарай",
   items: [

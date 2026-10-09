@@ -282,6 +282,12 @@ const articleScenarios = {
     summary("no-featured-first", "No-featured first article", { publishedAt: "2026-10-04T00:00:00.000Z" }),
     summary("no-featured-second", "No-featured second article", { publishedAt: "2026-10-03T00:00:00.000Z" }),
   ],
+  // Two non-featured Articles besides the Featured one: the grid shows just those.
+  "two-articles": [
+    summary("two-articles-first", "Two-articles first article", { category: "SPELLING", thumbnail: true, thumbnailAlt: "Two-articles first thumbnail", publishedAt: "2026-10-05T00:00:00.000Z" }),
+    summary("two-articles-featured", "Two-articles featured article", { featured: true, publishedAt: "2026-10-04T00:00:00.000Z" }),
+    summary("two-articles-second", "Two-articles second article", { category: "ORTHOGRAPHY", publishedAt: "2026-10-03T00:00:00.000Z" }),
+  ],
   down: [],
 };
 let articleScenario = "normal";

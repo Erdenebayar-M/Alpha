@@ -25,6 +25,7 @@ export interface ArticleSummary {
   category: ArticleCategoryValue;
   thumbnail: Thumbnail | null;
   publishedAt: string;
+  isFeatured: boolean;
 }
 
 // About five minutes, so a newly Published or Featured Article reaches the
@@ -41,6 +42,16 @@ const TIMEOUT_MS = 5000;
 export async function fetchFeaturedArticle(): Promise<ArticleSummary | null> {
   const articles = await fetchArticleList({ featured: "true", per_page: "1" });
   return articles[0] ?? null;
+}
+
+/**
+ * Up to `limit` of the newest Published Articles other than the Featured one
+ * (so none shows twice on the homepage), newest first. At most one Article is
+ * Featured, so asking for one more than `limit` always leaves enough.
+ */
+export async function fetchLatestArticles(limit: number): Promise<ArticleSummary[]> {
+  const articles = await fetchArticleList({ per_page: String(limit + 1) });
+  return articles.filter((article) => !article.isFeatured).slice(0, limit);
 }
 
 /**
@@ -86,7 +97,8 @@ function toArticleSummary(raw: unknown): ArticleSummary | null {
     !isNullableString(a.thumbnail_alt) ||
     !isNullableNumber(a.thumbnail_width) ||
     !isNullableNumber(a.thumbnail_height) ||
-    !isString(a.published_at)
+    !isString(a.published_at) ||
+    typeof a.is_featured !== "boolean"
   ) {
     return null;
   }
@@ -103,6 +115,7 @@ function toArticleSummary(raw: unknown): ArticleSummary | null {
       height: a.thumbnail_height,
     },
     publishedAt: a.published_at,
+    isFeatured: a.is_featured,
   };
 }
 
