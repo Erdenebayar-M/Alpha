@@ -1,8 +1,11 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { type Box, boxStyle } from "@/lib/box";
-import type { ArticleCardCopy } from "@/lib/content";
+import ArticleThumbnail from "@/components/article/ArticleThumbnail";
+import type { ArticleSummary } from "@/lib/api/server/publicArticles";
 import { cn } from "@/lib/cn";
+import { categoryByApiValue } from "@/lib/content";
+import { siteConfig } from "@/lib/site-config";
 
 // The illustration panel's own tight box (node 1401:20821 "Rectangle 56"),
 // 321x255 — everything in the panel is positioned in this coordinate space.
@@ -66,7 +69,7 @@ export interface ArticleCardArt {
 }
 
 interface ArticleCardProps {
-  card: ArticleCardCopy;
+  article: ArticleSummary;
   art: ArticleCardArt;
 }
 
@@ -74,9 +77,11 @@ interface ArticleCardProps {
  * One card of the homepage's Articles-for-parents grid (Figma node
  * 1401:20820 "Frame 96" and its two siblings, 1401:20869 / 1401:20947):
  * a gradient frame around a 321x255 illustration panel, with a white
- * footer showing the card's label and title. Rendered three times by
- * ArticlesGrid from one data array (copy) + one art config per card (asset
- * paths and geometry) — this file only knows how to draw *a* card.
+ * footer showing the Article's Category and title. Rendered up to three
+ * times by ArticlesGrid, one per Article, each with the art config for its
+ * Category (asset paths and geometry) — this file only knows how to draw *a*
+ * card. An Article's Thumbnail fills the panel; without one, the Category's
+ * scene art stands in.
  *
  * The frame reuses `card-frame` (globals.css) — the gradient/radius half of
  * `card-surface` split out on its own, since this card's flex layout
@@ -104,7 +109,7 @@ interface ArticleCardProps {
  * demonstration), so it's `aria-hidden`; the card's accessible name comes
  * from its own visible label/title text since the whole card is one link.
  */
-export default function ArticleCard({ card, art }: ArticleCardProps) {
+export default function ArticleCard({ article, art }: ArticleCardProps) {
   const sceneBox: Box = {
     x: 0,
     y: PANEL_HEIGHT - GRASS_HEIGHT,
@@ -114,7 +119,7 @@ export default function ArticleCard({ card, art }: ArticleCardProps) {
 
   return (
     <a
-      href={card.href}
+      href={siteConfig.articleHref(article.slug)}
       className={cn(
         "card-frame focus-ring flex w-full flex-col p-5",
         "transition-[filter] duration-150 hover:brightness-95"
@@ -129,23 +134,29 @@ export default function ArticleCard({ card, art }: ArticleCardProps) {
           <div className="h-[100cqw] w-[100cqh]" style={panelGradientRotatedStyle} />
         </div>
 
-        <div className="pointer-events-none absolute" style={boxStyle(sceneBox, PANEL_WIDTH, PANEL_HEIGHT)}>
-          <Image src={art.scene.src} alt="" aria-hidden="true" fill />
-        </div>
-        {art.flowers?.map((flower) => (
-          <div
-            key={flower.src}
-            className="pointer-events-none absolute"
-            style={boxStyle(flower.box, PANEL_WIDTH, PANEL_HEIGHT)}
-          >
-            <Image src={flower.src} alt="" aria-hidden="true" fill />
-          </div>
-        ))}
+        {article.thumbnail ? (
+          <ArticleThumbnail thumbnail={article.thumbnail} sizes="(min-width: 1024px) 321px, 100vw" />
+        ) : (
+          <>
+            <div className="pointer-events-none absolute" style={boxStyle(sceneBox, PANEL_WIDTH, PANEL_HEIGHT)}>
+              <Image src={art.scene.src} alt="" aria-hidden="true" fill />
+            </div>
+            {art.flowers?.map((flower) => (
+              <div
+                key={flower.src}
+                className="pointer-events-none absolute"
+                style={boxStyle(flower.box, PANEL_WIDTH, PANEL_HEIGHT)}
+              >
+                <Image src={flower.src} alt="" aria-hidden="true" fill />
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 rounded-b-[32px] bg-white p-7 drop-shadow-[0_20px_20px_rgba(31,46,82,0.04)]">
-        <p className="text-base font-extrabold text-text-navy">{card.label}</p>
-        <p className="text-[22px] leading-[1.3] font-extrabold text-article-title">{card.title}</p>
+        <p className="text-base font-extrabold text-text-navy">{categoryByApiValue[article.category]}</p>
+        <p className="text-[22px] leading-[1.3] font-extrabold text-article-title">{article.title}</p>
       </div>
     </a>
   );
