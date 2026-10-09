@@ -34,6 +34,12 @@ const span = (text, extra = {}) => ({ text, ...extra });
 const article = {
   slug: FIXTURE_SLUG,
   title: "Fixture article title",
+  excerpt: "Fixture article excerpt",
+  // Backend-relative, as a locally served upload is stored (see THUMBNAIL_PATH).
+  thumbnail_url: "/content/images/fixture-thumbnail.svg",
+  thumbnail_alt: "Fixture thumbnail alt",
+  thumbnail_width: 389,
+  thumbnail_height: 303,
   category: "READING",
   body: [
     { id: "b1", type: "paragraph", alignment: "center", content: [span("Centered paragraph text")] },

@@ -21,7 +21,18 @@ import { categoryByApiValue, landingNav } from "@/lib/content";
 export async function generateMetadata({ params }: PageProps<"/articles/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const article = await fetchPublicArticle(slug);
-  return article ? { title: article.title } : {};
+  if (!article) return {};
+  const { title, excerpt, thumbnail } = article;
+  // Open Graph and Twitter don't inherit each other's image, so both get it.
+  const images = thumbnail
+    ? [{ url: thumbnail.src, width: thumbnail.width ?? undefined, height: thumbnail.height ?? undefined, alt: thumbnail.alt ?? undefined }]
+    : undefined;
+  return {
+    title,
+    description: excerpt ?? undefined,
+    openGraph: { title, description: excerpt ?? undefined, images },
+    twitter: { card: images ? "summary_large_image" : "summary", title, description: excerpt ?? undefined, images },
+  };
 }
 
 export default async function ArticlePage({ params }: PageProps<"/articles/[slug]">) {
