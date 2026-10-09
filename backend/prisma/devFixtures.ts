@@ -4,7 +4,8 @@
  *
  *   1. Learning content — Words and Tasks copied from the production database
  *      over a read-only transaction, human edits and asset URLs included.
- *   2. Articles — published ones copied from production's public read API.
+ *   2. Articles — published ones copied from production's public read API;
+ *      any other Article Published in dev goes back to Draft.
  *   3. Demo accounts — DEMO_PARENTS, email-confirmed, each with Learners.
  *
  * Only Word and Task are ever read from production: never Parent, Learner,
@@ -156,10 +157,23 @@ async function syncArticles(db: PrismaClient, source: PublicArticle[]) {
     existing.map((a) => ({ id: a.slug, ...a, published_at: a.published_at?.toISOString() ?? null })),
   );
   logPlan("Articles:", plan);
+
+  // Dev's Published set mirrors production's: an Article Published here but
+  // not there (unpublished or deleted in production, or published only in dev)
+  // goes back to Draft, as the admin Unpublish does. Never deleted.
+  const notInProduction = { status: "PUBLISHED" as const, slug: { notIn: source.map((a) => a.slug) } };
+  const toUnpublish = await db.article.count({ where: notInProduction });
+  console.log(`          ${toUnpublish} to unpublish (not Published in production)`);
   if (isDryRun) return;
 
   const featured = source.find((a) => a.is_featured);
   await db.$transaction(async (tx) => {
+    if (toUnpublish > 0) {
+      await tx.article.updateMany({
+        where: notInProduction,
+        data: { status: "DRAFT", is_featured: false, version: { increment: 1 } },
+      });
+    }
     // At most one Featured Article (partial unique index): clear any other
     // before production's lands.
     if (featured) {
