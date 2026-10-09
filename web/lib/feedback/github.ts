@@ -18,10 +18,14 @@ export async function createGitHubIssue(issue: FeedbackIssue, token: string): Pr
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[feedback] GitHub issue refused: ${res.status}`);
+      return null;
+    }
     const { number, html_url } = (await res.json()) as { number?: unknown; html_url?: unknown };
     return typeof number === "number" && typeof html_url === "string" ? { issueNumber: number, issueUrl: html_url } : null;
-  } catch {
+  } catch (error) {
+    console.error(`[feedback] GitHub issue failed: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 }

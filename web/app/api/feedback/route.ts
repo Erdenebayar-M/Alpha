@@ -26,7 +26,10 @@ export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   const multipart = contentType.toLowerCase().startsWith("multipart/form-data");
   // Multipart only ever carries a screenshot, so without R2 refuse it unread.
-  if (multipart && !r2Config()) return Response.json({ error: "UPSTREAM_ERROR" }, { status: 502 });
+  if (multipart && !r2Config()) {
+    console.error("[feedback] image sent but an R2_* variable is missing");
+    return Response.json({ error: "UPSTREAM_ERROR" }, { status: 502 });
+  }
   const raw = await readCapped(request, multipart ? FEEDBACK_MULTIPART_MAX_BYTES : FEEDBACK_BODY_MAX_BYTES);
   if (raw === "too-large") return Response.json({ error: "PAYLOAD_TOO_LARGE" }, { status: 413 });
 
