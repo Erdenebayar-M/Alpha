@@ -14,6 +14,7 @@ import type {
   ListBlock,
   ParagraphBlock,
   QuoteBlock,
+  TextAlignment,
   VideoBlock,
 } from "./types";
 
@@ -29,17 +30,27 @@ function backgroundStyle(background: ColorValue | undefined): CSSProperties | un
   return background ? { backgroundColor: tintCss(background) } : undefined;
 }
 
-// The article reading page is Figma frame 1422:6961 (app/articles/[slug]),
-// which doesn't specify Body typography of its own, so these are plain,
-// generic tokens already used elsewhere on the site for the same job
-// (Header/Button's default UI ink, the card family's heading ink) rather
-// than anything designed specifically for this component.
-const BODY_TEXT_CLASS = "text-base leading-relaxed text-text-nav-strong";
-const HEADING_TEXT_CLASS = "font-extrabold text-text-navy";
+// A text Block's Text alignment (ADR 0004); left is the default and never stored.
+function alignmentClass(alignment: TextAlignment | undefined): string | undefined {
+  if (alignment === "center") return "text-center";
+  if (alignment === "right") return "text-right";
+  return undefined;
+}
+
+// Body typography from the article reading page, Figma frame 70:9243
+// (app/articles/[slug]). Body text is the file's "Comic relief" text style,
+// 18/31 — set in Nunito (web/AGENTS.md) — in the card ink (#090909, the list
+// items' variable-bound fill; the paragraph's raw #070707 is the same ink
+// to the eye). Subheadings and the pull-quote share one heading ink.
+const BODY_TEXT_CLASS = "text-lg leading-[31px] text-card-ink";
+const HEADING_TEXT_CLASS = "font-bold text-article-heading";
 
 function Paragraph({ block }: { block: ParagraphBlock }) {
   return (
-    <p className={cn(BODY_TEXT_CLASS, backgroundClass(block.background))} style={backgroundStyle(block.background)}>
+    <p
+      className={cn(BODY_TEXT_CLASS, alignmentClass(block.alignment), backgroundClass(block.background))}
+      style={backgroundStyle(block.background)}
+    >
       <InlineContent spans={block.content} />
     </p>
   );
@@ -55,7 +66,10 @@ function Heading({ block }: { block: HeadingBlock }) {
     <Tag
       className={cn(
         HEADING_TEXT_CLASS,
-        block.level === 2 ? "text-2xl" : "text-xl",
+        // h2 is 70:9456 (26/31); the frame draws no h3, so it steps down one size.
+        "leading-[31px]",
+        block.level === 2 ? "text-[26px]" : "text-[22px]",
+        alignmentClass(block.alignment),
         backgroundClass(block.background)
       )}
       style={style}
@@ -74,12 +88,6 @@ function markerGlyph(style: ListBlock["style"], index: number, startsAt: number 
   return style === "bullet" ? "•" : `${(startsAt ?? 1) + index}.`;
 }
 
-function alignmentClass(alignment: ListBlock["alignment"]): string | undefined {
-  if (alignment === "center") return "text-center";
-  if (alignment === "right") return "text-right";
-  return undefined;
-}
-
 function List({ block }: { block: ListBlock }) {
   const Tag = block.style === "ordered" ? "ol" : "ul";
   return (
@@ -87,7 +95,8 @@ function List({ block }: { block: ListBlock }) {
       start={block.startsAt}
       className={cn(
         BODY_TEXT_CLASS,
-        "flex flex-col gap-2 pl-6 list-none",
+        // 70:9457–70:9468: the frame spaces list items by the card's 20px gap.
+        "flex flex-col gap-5 pl-6 list-none",
         alignmentClass(block.alignment),
         backgroundClass(block.background)
       )}
@@ -111,12 +120,15 @@ function List({ block }: { block: ListBlock }) {
 // The pull-quote's quotation marks are drawn here, never typed by the author
 // (web/CONTEXT.md **Quote**). Real glyphs rather than CSS pseudo-elements so
 // they survive copy/paste; hidden from assistive tech, which announces the
-// blockquote itself.
+// blockquote itself. Styled as Figma 70:9469 (Comic Neue Bold Italic 40px,
+// set in Nunito). Figma's 31px line height is shorter than the 40px type and
+// only holds for one line, so a wrapping Quote gets 1.2 instead.
 function Quote({ block }: { block: QuoteBlock }) {
   return (
     <blockquote
       className={cn(
-        "text-2xl italic leading-snug text-text-navy",
+        HEADING_TEXT_CLASS,
+        "text-[28px] italic leading-[1.2] sm:text-[40px]",
         alignmentClass(block.alignment),
         backgroundClass(block.background)
       )}
@@ -128,7 +140,7 @@ function Quote({ block }: { block: QuoteBlock }) {
         <span aria-hidden="true">”</span>
       </p>
       {block.attribution && (
-        <footer className="mt-2 text-sm not-italic text-text-nav">— {block.attribution}</footer>
+        <footer className="mt-2 text-sm font-normal not-italic text-text-nav">— {block.attribution}</footer>
       )}
     </blockquote>
   );
@@ -138,7 +150,11 @@ function Callout({ block }: { block: CalloutBlock }) {
   return (
     <div
       role="note"
-      className={cn(BODY_TEXT_CLASS, "rounded-2xl border border-border-soft bg-surface-page px-5 py-4")}
+      className={cn(
+        BODY_TEXT_CLASS,
+        "rounded-2xl border border-border-soft bg-surface-page px-5 py-4",
+        alignmentClass(block.alignment)
+      )}
       style={backgroundStyle(block.background)}
     >
       <InlineContent spans={block.content} />
@@ -259,14 +275,14 @@ function BlockView({ block }: { block: ArticleBlock }) {
   }
 }
 
-// Reading layout (issue #115, Figma frame 1422:6961) — a site rule authors
-// can't change, unrelated to Text alignment. Measured at the 1440px frame:
-// the reading column is ≈775px, centered in the card; subheadings and Quotes
-// instead start ≈60px in from the card's inner edge, hanging left of the
-// column while sharing its right edge. Below `lg` the card and column just
-// shrink and the hang collapses to zero.
-const READING_COLUMN_CLASS = "mx-auto w-full max-w-[775px]";
-const HANGING_CLASS = "w-full lg:pl-[60px] lg:pr-[calc((100%-775px)/2)]";
+// Reading layout (issue #115, Figma frame 70:9243) — a site rule authors
+// can't change, unrelated to Text alignment. Two columns, both centred in the
+// card: paragraphs, lists and media sit on the 844px reading column (70:9453,
+// 70:9454); subheadings and Quotes on a wider 962px one (70:9456, 70:9469),
+// so they hang left of the text below them. Below those widths each column
+// just fills the card and the hang shrinks to zero.
+const READING_COLUMN_CLASS = "mx-auto w-full max-w-[844px]";
+const HANGING_CLASS = "mx-auto w-full max-w-[962px]";
 
 function layoutClass(block: ArticleBlock): string {
   return block.type === "heading" || block.type === "quote" ? HANGING_CLASS : READING_COLUMN_CLASS;
@@ -278,11 +294,11 @@ function layoutClass(block: ArticleBlock): string {
  * applied (issue #108, shared/docs/adr/0003): a span's `color`/`highlight`,
  * a heading's `color`, and any text Block's `background` as a tinted padded
  * surface. Blocks sit on the reading layout above. Mounted by the reading
- * page at /articles/[slug] (Figma frame 1422:6961).
+ * page at /articles/[slug] (Figma frame 70:9243).
  */
 export function ArticleBody({ blocks }: { blocks: ArticleBodyBlocks }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {blocks.map((block) => (
         <div key={block.id} className={layoutClass(block)}>
           <BlockView block={block} />
