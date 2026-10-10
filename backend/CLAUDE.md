@@ -95,7 +95,7 @@ The codebase applies these principles consistently. New routes and features must
 
 **6. Input Validation at Every Boundary**
 - All routes use Zod `safeParse`; errors flatten into `ERRORS.VALIDATION_ERROR`
-- No `$queryRaw` / `$executeRaw` — all DB access through Prisma's type-safe client
+- No `$queryRaw` / `$executeRaw` — all DB access through Prisma's type-safe client (one scoped exception: the dev-fixtures script's fixed `SET TRANSACTION READ ONLY` — see Dev Fixtures)
 - Asset URLs validated against `assetUrlSchema` allowlist before storage
 
 **7. Rate Limiting** — defined in `src/lib/auth/rateLimit.ts`
@@ -157,6 +157,18 @@ Defined in `prisma/schema.prisma`. Full 3-tier structure:
 **Execution**: `Attempt` + `ErrorLog`
 - Attempts scored: `0 / 0.25 / 0.5 / 0.75 / 1.0`
 - 38 error codes: `A1–A3`, `B1–B4`, `C1–C6`, `D1–D5`, `E1–E7`, `F1–F4`, `G1–G5`, `H1–H4`
+
+## Dev Fixtures
+
+`npm run fixtures:dev` (`prisma/devFixtures.ts`, #160) fills a freshly migrated dev database with what the product owner needs to test end to end: Words and Tasks, published Articles, and demo Parent accounts (`src/lib/dev-fixtures/demo-accounts.ts`). Every demo account is already email-confirmed and has Learners. `--dry-run` reports what would change.
+
+- **Content is copied from the production database, not rebuilt.** Words and Tasks are read from `PROD_DATABASE_URL` inside a `READ ONLY` transaction (with this branch's Prisma client, so production must be migrated at least as far as the branch), so Postgres itself rejects a write on that connection. That brings across admin edits (`is_edited`), root ↔ form links, and image and audio URLs. Rebuilding from the approved sources can't reproduce them: the word-bank workbooks and the LLM lemma cache live outside the repo, admin edits exist only in the database, and the validated task files predate the v3 task types (#170), so `seed` rejects them all. `SET TRANSACTION READ ONLY` is the codebase's only `$executeRaw`, a fixed string with no input, because Prisma has no API for it.
+- **Only `Word` and `Task` are read from production.** Parent, Learner, Attempt, ErrorLog, tokens and other personal or usage data are never read.
+- **Articles come through production's public read API** (`PROD_API_URL` + `GET /api/articles[/:slug]`), so only what any visitor can see is copied. They are keyed by slug. Production's Featured Article displaces any other in the target. Dev's Published set mirrors production's: any Article Published in the target but not in production (unpublished or deleted there, or published only in dev) is set back to Draft and un-Featured, as the admin Unpublish does — never deleted.
+- **It refuses to write to production.** Dev and production are both on Neon, so production is recognised by its compute endpoint (`assertNotProduction`, `src/lib/dev-fixtures/production-guard.ts`). On Neon that is the `ep-…` endpoint id, whatever hostname carries it (pooled, direct, with or without a cell label); elsewhere it is host and port. The database name and credentials are ignored, so two databases on one local server count as the same endpoint. An IP or private alias for production's endpoint isn't recognised: always pass Neon hostnames.
+- **It can be re-run safely.** Rows that already match production are left alone, and nothing is ever deleted (a dev Task may already have Attempts). The demo password is rehashed only when it changes, and a change bumps `token_version`, signing out sessions on the old one. A demo Learner's own progress and edits are kept across runs.
+- **Runs on a schedule:** `.github/workflows/sync-dev-content.yml` runs it every 15 minutes (and on demand) against the dev database, checking out `dev` and applying its pending migrations first. Secrets: `DEV_DATABASE_URL`, `PROD_DATABASE_URL`, `PROD_API_URL`, `DEMO_ACCOUNT_PASSWORD`.
+- **Config:** `DATABASE_URL` is the target. `PROD_DATABASE_URL`, `PROD_API_URL` and `DEMO_ACCOUNT_PASSWORD` are also required. The password must pass the Sign-up rules, and it is kept out of the repo because the dev API is public.
 
 ## Prisma Client
 

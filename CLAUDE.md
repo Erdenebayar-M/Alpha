@@ -90,6 +90,7 @@ npm run dev:backend     # Hono on :3001
 | `npm run dev:backend`                        | Start Hono backend                |
 | `npm run test:backend`                       | Jest suite                        |
 | `npm run seed`                               | Seed Word and Task tables         |
+| `npm run fixtures:dev`                       | Dev DB: prod content, articles, demo accounts |
 | `npm run db:migrate`                         | Apply pending migrations          |
 | `npm run db:generate`                        | Regenerate Prisma client          |
 | `npm --workspace=@app/backend run db:studio` | Browse database                   |
@@ -173,6 +174,10 @@ Issues live in GitHub Issues (github.com/Erdenebayar-M/Alpha), managed via the `
 ### Triage labels
 
 Default five canonical labels (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Branch flow
+
+Feature PRs target `dev`; `dev` → `master` is promoted manually by the developer. Agents never merge their own PRs. See `docs/agents/branch-flow.md`.
 
 ### Domain docs
 

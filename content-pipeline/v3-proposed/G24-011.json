@@ -1,0 +1,230 @@
+{
+  "task_id": "G24-011",
+  "variants": [
+    {
+      "id": "G24-011-v2",
+      "task_type": "TT_3_2",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nТ_ног бэлэн болсон байна.",
+      "correct_answer": "о",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"тоног\" — балархай эгшигтэй үг.",
+      "options": {
+        "display_text": "Т_ног бэлэн болсон байна.",
+        "blank_position": 1,
+        "blank_answer": "о",
+        "context_word": "тоног"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:43.363Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT2_FILL → TT_3_2: best guess from primary_skill S3"
+    },
+    {
+      "id": "G24-011-v3",
+      "task_type": "TT_3_2",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nСандал м_дон, маш бат бөх.",
+      "correct_answer": "о",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"модон\" — балархай эгшигтэй үг.",
+      "options": {
+        "display_text": "Сандал м_дон, маш бат бөх.",
+        "blank_position": 8,
+        "blank_answer": "о",
+        "context_word": "модон"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": null,
+        "reviewed_at": "2026-04-19T06:04:45.970Z",
+        "model": "anthropic/claude-haiku-4-5",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT2_FILL → TT_3_2: best guess from primary_skill S3"
+    },
+    {
+      "id": "G24-011-v1",
+      "task_type": "TT_3_2",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nДэвт_р цэвэр байна.",
+      "correct_answer": "э",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"дэвтэр\" — балархай эгшигтэй.",
+      "options": {
+        "display_text": "Дэвт_р цэвэр байна.",
+        "blank_position": 4,
+        "blank_answer": "э",
+        "context_word": "дэвтэр"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:47.607Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT2_FILL → TT_3_2: best guess from primary_skill S3"
+    },
+    {
+      "id": "G24-011-v2",
+      "task_type": "TT_3_2",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nӨд_р бүр хичээллэдэг.",
+      "correct_answer": "ө",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"өдөр\" — балархай эгшигтэй.",
+      "options": {
+        "display_text": "Өд_р бүр хичээллэдэг.",
+        "blank_position": 2,
+        "blank_answer": "ө",
+        "context_word": "өдөр"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:49.568Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT2_FILL → TT_3_2: best guess from primary_skill S3"
+    },
+    {
+      "id": "G24-011-v3",
+      "task_type": "TT_3_2",
+      "title": "Дутуу хэсгийг нөхөөрэй",
+      "prompt_text": "Хоосон зайг нөхөөрэй:\nСанд_л модон байна.",
+      "correct_answer": "а",
+      "audio_url": null,
+      "image_url": null,
+      "primary_skill": "S3",
+      "secondary_skill": null,
+      "level_target": "M2",
+      "error_targets": [
+        "C4"
+      ],
+      "grade_band": [
+        "G2",
+        "G3"
+      ],
+      "difficulty": 3,
+      "estimated_time_seconds": 25,
+      "lesson_slot_fit": "CORE",
+      "feedback_text": "\"сандал\" — балархай эгшигтэй.",
+      "options": {
+        "display_text": "Санд_л модон байна.",
+        "blank_position": 4,
+        "blank_answer": "а",
+        "context_word": "сандал"
+      },
+      "review": {
+        "approved": true,
+        "issues": [],
+        "severity": "ok",
+        "fix_suggestion": "",
+        "reviewed_at": "2026-05-04T04:01:51.527Z",
+        "model": "google/gemini-2.5-flash",
+        "provider": "openrouter"
+      },
+      "grade_levels": [
+        "G2:M2",
+        "G3:M2"
+      ],
+      "is_diagnostic": false,
+      "needs_review": true,
+      "migration_note": "TT2_FILL → TT_3_2: best guess from primary_skill S3"
+    }
+  ]
+}

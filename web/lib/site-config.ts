@@ -8,6 +8,8 @@ export const siteConfig = {
   description:
     "5-7 насны хүүхдийн Монгол хэлний зөв бичих чадварыг тодорхойлж, түвшинд нь тохирсон суралцах төлөвлөгөө санал болгодог хөгжлийн үнэлгээ.",
   url: "https://www.orto.my",
+  // Where the dev site's feedback widget files its GitHub issues (app/api/feedback).
+  feedbackRepo: "Erdenebayar-M/Alpha",
 
   assessmentUrl: "/register-child",
   // The signed-in parent's Account page.
@@ -34,15 +36,8 @@ export const siteConfig = {
     spellingOut: "#",
   },
 
-  // TODO: replace with the real Featured article destination once Articles
-  // have their own reading page. The homepage's Featured article card links
-  // here (see web/CONTEXT.md for the Article/Featured article glossary).
-  featuredArticleUrl: "#",
-
-  // TODO: replace with the real per-Article destinations once Articles have
-  // their own reading page. The homepage's Articles-for-parents grid cards
-  // all link here for now (see web/CONTEXT.md for the Article glossary).
-  articleUrl: "#",
+  // A Published Article's reading page (app/articles/[slug]).
+  articleHref: (slug: string) => `/articles/${encodeURIComponent(slug)}`,
 
   // TODO: replace with the real per-Collection destinations once Collections
   // have their own pages. The homepage's Collections row cards all link here

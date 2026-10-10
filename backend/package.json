@@ -11,6 +11,7 @@
     "seed": "ts-node prisma/seed.ts",
     "db:seed": "ts-node prisma/seed.ts",
     "db:seed:dry": "ts-node prisma/seed.ts --dry-run",
+    "fixtures:dev": "ts-node prisma/devFixtures.ts",
     "import:wordbank": "ts-node prisma/importWordBank.ts",
     "import:wordbank:dry": "ts-node prisma/importWordBank.ts --dry-run",
     "db:migrate": "prisma migrate deploy",

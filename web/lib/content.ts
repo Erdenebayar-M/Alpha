@@ -96,66 +96,30 @@ export const categoryByApiValue = {
 } as const satisfies Record<string, Category>;
 export type ArticleCategoryValue = keyof typeof categoryByApiValue;
 
-export interface Article {
-  readonly category: Category;
-  readonly title: string;
-  readonly excerpt: string;
-  readonly href: string;
-}
-
 // The homepage's Featured article (Figma node 1401:22062), directly under the
 // Category pills — the one Published Article staff have promoted (see
-// web/CONTEXT.md). Modelled as an Article rather than a one-off shape so the
-// Articles-for-parents grid (a future ticket) can reuse the same interface.
+// web/CONTEXT.md). Only the section's own copy lives here: the Article itself
+// comes from the backend (lib/api/server/publicArticles.ts).
 export const featuredArticle = {
   heading: "Онцлох нийтлэл",
-  article: {
-    category: "Зөв бичих",
-    title: "Хүүхэд яагаад нэг үгийг дахин дахин өөрөөр бичдэг вэ?",
-    excerpt:
-      "Хүүхэд нэг үгийг өчигдөр зөв бичсэн атлаа өнөөдөр буруу бичихэд “мэдэж байгаа мөртлөө анхаарсангүй” гэж бодох амархан...",
-    href: siteConfig.featuredArticleUrl,
-  },
   // Accessible name for the illustration (ORto, the хойн/хонь word clouds and
   // arrow, and the books — nodes 1401:22076, 1401:22282), which carries no
-  // on-canvas text of its own beyond the two words it's demonstrating.
+  // on-canvas text of its own beyond the two words it's demonstrating. It
+  // stands in for an Article without a Thumbnail.
   artLabel: "ОРто, «хойн» гэдэг үгийг «хонь» гэж дахин дахин буруу бичсэн, дэргэд нь ном үүрсэн байгаа зураг",
   readMoreLabel: (title: string) => `«${title}» нийтлэлийг унших`,
 } as const satisfies {
   heading: string;
-  article: Article;
   artLabel: string;
   readMoreLabel: (title: string) => string;
 };
 
-export interface ArticleCardCopy {
-  readonly label: string;
-  readonly title: string;
-  readonly href: string;
-}
-
 // The homepage's Articles-for-parents grid (Figma node 1371:9792), directly
-// under the Featured article — three more Articles for parents to browse
-// (see web/CONTEXT.md's Article entry). Unlike the Featured article, each
-// card's own face shows a generic "Завгүй" eyebrow label rather than a
-// Category badge, so this doesn't model cards as `Article`s (no `category`
-// or `excerpt` is on canvas) — just the `label`/`title`/`href` Figma
-// actually shows. "Завгүй"/"Lorum" are Figma's own placeholders, repeated
-// verbatim per card rather than invented per-card copy.
-//
-// `items` is typed as an exact 3-tuple (not `readonly ArticleCardCopy[]`) so
-// that ArticlesGrid.tsx's own per-card `art` config — a same-length tuple
-// zipped to this one by index — fails to typecheck the moment the two drift
-// out of sync, rather than reading `undefined` off the end of a shorter
-// array at render.
+// under the Featured article. Only the section's heading is copy: the cards
+// are the backend's newest Published Articles (lib/api/server/publicArticles.ts).
 export const articlesGrid = {
   heading: "Эцэг эхчүүдэд туслах нийтлэлүүд",
-  items: [
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-    { label: "Завгүй", title: "Lorum", href: siteConfig.articleUrl },
-  ],
-} as const satisfies { heading: string; items: readonly [ArticleCardCopy, ArticleCardCopy, ArticleCardCopy] };
+} as const satisfies { heading: string };
 
 export interface CollectionCardCopy {
   readonly title: string;
@@ -174,7 +138,7 @@ export interface CollectionCardCopy {
 // `items` is typed as an exact 5-tuple (not `readonly CollectionCardCopy[]`)
 // so that CollectionsRow.tsx's own per-card `art` config — a same-length
 // tuple zipped to this one by index — fails to typecheck the moment the two
-// drift out of sync, matching articlesGrid's own tuple above.
+// drift out of sync.
 export const collectionsRow = {
   heading: "Сэдвээр нь судлаад илүү их ойлголттой болж аваарай",
   items: [
@@ -623,4 +587,41 @@ export const account = {
   },
   // After Sign in / Sign up — not in the frame; wording drafted, awaiting owner approval.
   welcome: (name: string) => `Тавтай морил, ${name}!`,
+} as const;
+
+// Dev-site password gate (proxy.ts, lib/devGate.ts) — dev deploys only, never
+// in production, so not in Figma; wording drafted, awaiting owner approval.
+export const devGate = {
+  title: "Туршилтын хувилбар",
+  intro: "Энэ бол хөгжүүлэлтийн туршилтын сайт. Үргэлжлүүлэхийн тулд нууц үгээ оруулна уу.",
+  passwordLabel: signIn.passwordLabel,
+  submitLabel: "Нэвтрэх",
+  wrongPassword: "Нууц үг буруу байна.",
+} as const;
+
+// Dev-site feedback widget (components/feedback/, app/api/feedback) — dev
+// deploys only, never in production, so not in Figma; wording drafted,
+// awaiting owner approval. Error keys are the route's error codes.
+export const feedback = {
+  openLabel: "Санал хүсэлт",
+  title: "Өөрчлөлт хүсэх",
+  intro: "Энэ хуудсанд юуг өөрчлөхийг бичнэ үү. Хуудасны хаяг, дэлгэцийн хэмжээ автоматаар хавсаргагдана.",
+  textLabel: "Юуг өөрчлөх вэ?",
+  figmaLabel: "Figma холбоос (заавал биш)",
+  figmaPlaceholder: "https://www.figma.com/design/…",
+  figmaHint: "Байршил, өнгө, зайн өөрчлөлтөд Figma холбоос хэрэгтэй. Текст, зургийн засварт хэрэггүй.",
+  imageLabel: "Зураг (заавал биш)",
+  imageHint: (maxMb: number) => `PNG, JPG, GIF эсвэл WebP, ${maxMb} МБ хүртэл.`,
+  submitLabel: "Илгээх",
+  sendingLabel: "Илгээж байна…",
+  closeLabel: "Хаах",
+  sent: (issueNumber: number) => `Илгээгдлээ (#${issueNumber}). Баярлалаа!`,
+  errors: {
+    VALIDATION_ERROR: "Текстээ шалгаад дахин оролдоно уу.",
+    INVALID_FIGMA_URL: "Figma холбоос https://www.figma.com/… хаягаар эхлэх ёстой.",
+    PAYLOAD_TOO_LARGE: "Текст эсвэл зураг хэт том байна. Багасгаад дахин оролдоно уу.",
+    INVALID_IMAGE: "Зураг PNG, JPG, GIF эсвэл WebP байх ёстой.",
+    RATE_LIMITED: "Хэт олон удаа илгээлээ. Хэдэн минутын дараа дахин оролдоно уу.",
+    UPSTREAM_ERROR: "Илгээж чадсангүй. Дахин оролдоно уу.",
+  },
 } as const;

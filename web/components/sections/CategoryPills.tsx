@@ -31,13 +31,20 @@ import { cn } from "@/lib/cn";
  * fit 320px.
  *
  * `current` marks the pill of the Article being read (its own Category) with
- * aria-current and a solid fill; without it every pill renders as before.
+ * aria-current and, per the reading page's Figma frame 70:9243 (pill
+ * 70:9442), a 6px brand-green border over the same lilac fill; without it
+ * every pill renders as before.
  */
 export default function CategoryPills({ current }: { current?: Category }) {
   return (
+    // overflow-x-clip: the right-hand pills slide in from 40px right, and at
+    // 320px Chromium keeps that offset in the page's scrollable overflow even
+    // after the animation has settled. The nav spans the viewport, so
+    // clipping its sides hides nothing (pills and focus rings sit inside the
+    // gutter); `clip`, unlike `hidden`, doesn't make it a scroll container.
     <nav
       aria-label={categoryPills.navLabel}
-      className="relative isolate pt-8 pb-10 lg:pt-[30px] lg:pb-[45px]"
+      className="relative isolate overflow-x-clip pt-8 pb-10 lg:pt-[30px] lg:pb-[45px]"
     >
       <Reveal mode="sequence">
         <Container>
@@ -57,8 +64,8 @@ export default function CategoryPills({ current }: { current?: Category }) {
                     href={pill.href}
                     aria-current={isCurrent ? "true" : undefined}
                     className={cn(
-                      "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
-                      isCurrent ? "bg-pill-lilac-current" : "bg-pill-lilac",
+                      "focus-ring flex min-h-[72px] items-center justify-center rounded-[24px] bg-pill-lilac px-4 py-4 text-center text-base leading-snug font-bold text-hero-ink transition-[filter] duration-150 hover:brightness-95",
+                      isCurrent && "border-6 border-brand-green",
                       "lg:h-[85px] lg:min-h-0 lg:rounded-[32px] lg:px-[11.538%] lg:py-[16px] lg:text-[26px] lg:leading-[31px]",
                     )}
                   >
