@@ -79,6 +79,16 @@ const article = {
       style: "bullet",
       items: [{ spans: [span("Plain bullet one")] }, { spans: [span("Plain bullet two")] }],
     },
+    {
+      id: "b9",
+      type: "paragraph",
+      indent: true,
+      content: [
+        span(
+          "Indented paragraph text that runs long enough to wrap onto a second line, so the first line starts further in than the lines after it do at every viewport width.",
+        ),
+      ],
+    },
   ],
 };
 

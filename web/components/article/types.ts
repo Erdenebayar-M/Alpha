@@ -49,6 +49,8 @@ export interface ParagraphBlock {
   content: InlineSpan[];
   background?: ColorValue;
   alignment?: TextAlignment;
+  /** First-line indent (ADR 0006): stored only when on, and only on a left-aligned paragraph. */
+  indent?: true;
 }
 
 export interface HeadingBlock {

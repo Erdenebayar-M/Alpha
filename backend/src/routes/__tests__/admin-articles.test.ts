@@ -915,6 +915,53 @@ describe('POST / — Text alignment (issue #110)', () => {
   });
 });
 
+describe('POST / — First-line indent (ADR 0006)', () => {
+  async function expectRejected(block: object) {
+    const res = await createArticle({ ...VALID_BODY, body: [block] });
+    expect(res.status).toBe(400);
+    const json = await body(res);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+    expect(json.error.details.body[0]).toMatch(/^Block 0: /);
+    expect(mockCreate).not.toHaveBeenCalled();
+  }
+
+  it('accepts an indent on a left-aligned paragraph, stored as given', async () => {
+    const blocks = [{ id: 'b1', type: 'paragraph', content: [{ text: 'Догол мөр' }], indent: true }];
+    const res = await createArticle({ ...VALID_BODY, body: blocks });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ body: blocks }) }));
+  });
+
+  it('rejects indent: false — the indent is stored only when on', async () => {
+    await expectRejected({ id: 'b1', type: 'paragraph', content: [{ text: 'hi' }], indent: false });
+  });
+
+  it.each(['center', 'right'])('rejects an indent on a %s-aligned paragraph', async (alignment) => {
+    await expectRejected({ id: 'b1', type: 'paragraph', content: [{ text: 'hi' }], alignment, indent: true });
+  });
+
+  it.each([
+    ['heading', { id: 'b1', type: 'heading', level: 2, text: 'Intro', indent: true }],
+    ['list', { id: 'b1', type: 'list', style: 'bullet', items: [[{ text: 'one' }]], indent: true }],
+    ['quote', { id: 'b1', type: 'quote', content: [{ text: 'well said' }], indent: true }],
+    ['callout', { id: 'b1', type: 'callout', content: [{ text: 'tip' }], indent: true }],
+    ['divider', { id: 'b1', type: 'divider', indent: true }],
+    ['image', { id: 'b1', type: 'image', url: '/content/articles/pic.png', alt: 'A child reading', indent: true }],
+    ['video', { id: 'b1', type: 'video', provider: 'youtube', video_id: 'dQw4w9WgXcQ', indent: true }],
+    ['link_card', { id: 'b1', type: 'link_card', url: 'https://example.com/guide', title: 'A guide', indent: true }],
+  ])('rejects an indent on a %s Block, naming the Block position', async (_label, block) => {
+    await expectRejected(block);
+  });
+
+  it('accepts an existing Body without any indent fields unchanged', async () => {
+    const res = await createArticle({ ...VALID_BODY, body: PARAGRAPH_AND_HEADING_BODY });
+    expect(res.status).toBe(201);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ body: PARAGRAPH_AND_HEADING_BODY }) }),
+    );
+  });
+});
+
 describe('GET /', () => {
   const SUMMARY = {
     id: 'article-1',

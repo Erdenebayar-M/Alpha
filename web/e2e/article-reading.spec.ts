@@ -163,3 +163,20 @@ test("link previews carry the title, excerpt and Thumbnail", async ({ page }) =>
   await expect(meta("name", "twitter:image")).toHaveAttribute("content", image);
   await expect(meta("name", "twitter:image:alt")).toHaveAttribute("content", "Fixture thumbnail alt");
 });
+
+test("an indented paragraph starts its first line further in, and its following lines at the normal edge", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/articles/fixture-article");
+  const indented = page.getByText("Indented paragraph text");
+  // One rect per rendered line of the paragraph's text.
+  const lines = await indented.evaluate((p) => {
+    const range = document.createRange();
+    range.selectNodeContents(p);
+    return [...range.getClientRects()].map((r) => r.x);
+  });
+  expect(lines.length).toBeGreaterThan(1);
+  const edge = await left(page.getByText("Paragraph splitting the list"));
+  // About two characters in: the site owns the width (2em of 18px body text).
+  expect(lines[0] - edge).toBeCloseTo(36, 0);
+  for (const x of lines.slice(1)) expect(x).toBeCloseTo(edge, 0);
+});

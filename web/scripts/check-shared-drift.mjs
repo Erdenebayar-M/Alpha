@@ -136,6 +136,11 @@ for (const field of listFields) {
   assert(articleTypesTs.includes(field), `List field "${field}" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
 }
 
+// ── 6b. First-line indent (ADR 0006) ─────────────────────────────────────
+
+assert(sharedArticleTs.includes("indent:"), `Paragraph field "indent" (mirrored in web/components/article/types.ts) is missing from shared/src/validators/article.ts.`);
+assert(articleTypesTs.includes("indent?:"), `Paragraph field "indent" exists in shared/ but web/components/article/types.ts's mirror has drifted and no longer declares it.`);
+
 // ── 7. Login rules (issue #120) ─────────────────────────────────────────
 // web/lib/auth/loginRules.ts mirrors loginSchema (client validation +
 // the sign-in route handler), and the sign-in page maps the backend's error
