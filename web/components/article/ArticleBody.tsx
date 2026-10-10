@@ -240,6 +240,8 @@ function LinkCardView({ block }: { block: LinkCardBlock }) {
   return (
     <a
       href={block.url}
+      target="_blank"
+      rel="noopener noreferrer"
       className="flex gap-4 rounded-2xl border border-border-card p-4 transition-colors hover:bg-surface-page"
     >
       {block.image && (

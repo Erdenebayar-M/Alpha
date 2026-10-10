@@ -7,6 +7,13 @@ import type { InlineSpan } from "./types";
 // background rather than one box spanning the gap between lines.
 const highlightStyle: CSSProperties = { boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" };
 
+// A web Link opens in a new tab so the reader keeps their place in the Article;
+// a mailto: Link hands off to the mail app and a same-origin path stays put.
+// A fixed site rule — nothing about it is stored in the Body.
+function newTabProps(href: string): { target: "_blank"; rel: string } | undefined {
+  return /^https?:/i.test(href) ? { target: "_blank", rel: "noopener noreferrer" } : undefined;
+}
+
 function spanKey(index: number, span: InlineSpan): string {
   return `${index}-${span.text}`;
 }
@@ -22,7 +29,7 @@ function Span({ span }: { span: InlineSpan }) {
 
   if (span.href) {
     return (
-      <a href={span.href} className={cn(weight, "text-brand-blue underline underline-offset-2")}>
+      <a href={span.href} {...newTabProps(span.href)} className={cn(weight, "text-brand-blue underline underline-offset-2")}>
         {span.text}
       </a>
     );

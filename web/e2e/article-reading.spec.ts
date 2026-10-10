@@ -180,3 +180,33 @@ test("an indented paragraph starts its first line further in, and its following 
   expect(lines[0] - edge).toBeCloseTo(36, 0);
   for (const x of lines.slice(1)) expect(x).toBeCloseTo(edge, 0);
 });
+
+test("a web Link opens in a new tab without leaking the opener", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const link = page.getByRole("link", { name: "the web link" });
+  await expect(link).toHaveAttribute("href", "https://example.com/page");
+  await expect(link).toHaveAttribute("target", "_blank");
+  await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+});
+
+test("a Link card opens in a new tab without leaking the opener", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const card = page.getByRole("link", { name: /Fixture link card/ });
+  await expect(card).toHaveAttribute("href", "https://example.com/card");
+  await expect(card).toHaveAttribute("target", "_blank");
+  await expect(card).toHaveAttribute("rel", "noopener noreferrer");
+});
+
+test("an email Link has no new-tab target and keeps the site's link styling", async ({ page }) => {
+  await page.goto("/articles/fixture-article");
+  const mail = page.getByRole("link", { name: "write by email" });
+  await expect(mail).toHaveAttribute("href", "mailto:hello@example.com");
+  await expect(mail).not.toHaveAttribute("target", /.*/);
+  const web = page.getByRole("link", { name: "the web link" });
+  for (const link of [mail, web]) {
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+  }
+  expect(await mail.evaluate((el) => getComputedStyle(el).color)).toBe(
+    await web.evaluate((el) => getComputedStyle(el).color),
+  );
+});

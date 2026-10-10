@@ -89,6 +89,23 @@ const article = {
         ),
       ],
     },
+    {
+      id: "b10",
+      type: "paragraph",
+      content: [
+        span("Read "),
+        span("the web link", { href: "https://example.com/page" }),
+        span(" or "),
+        span("write by email", { href: "mailto:hello@example.com" }),
+      ],
+    },
+    {
+      id: "b11",
+      type: "link_card",
+      url: "https://example.com/card",
+      title: "Fixture link card",
+      description: "Fixture link card description",
+    },
   ],
 };
 
