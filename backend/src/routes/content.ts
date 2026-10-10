@@ -1347,6 +1347,7 @@ const wordsListQuerySchema = z.object({
   has_forms: z.enum(['true', 'all']).default('all'), // 'true' → only roots that have inflected forms
   scope:     z.enum(['roots', 'all']).default('roots'), // 'all' → also include inflected-form rows, flattened into the same list
   needs_audio: z.enum(['true']).optional(), // 'true' → only words flagged audio_ok with no audio_url yet
+  has_image: z.enum(['true']).optional(), // 'true' → only words whose own image_url is set (image_ok is not consulted)
   sort_by:   z.enum([
     'word', 'category', 'app_level', 'part_of_speech', 'spelling_tag',
     'char_count', 'syllable_count',
@@ -1369,7 +1370,7 @@ content.get('/words', async (c) => {
   if (!parsed.success) {
     return ERRORS.VALIDATION_ERROR(c, 'Invalid query', parsed.error.flatten().fieldErrors);
   }
-  const { grade, category, app_level, task_type, skill, secondary_skill, difficulty, q, active, has_forms, scope, needs_audio, sort_by, sort_dir, page, per_page } = parsed.data;
+  const { grade, category, app_level, task_type, skill, secondary_skill, difficulty, q, active, has_forms, scope, needs_audio, has_image, sort_by, sort_dir, page, per_page } = parsed.data;
 
   // Always-on constraints — never relaxed.
   const baseWhere = {
@@ -1380,6 +1381,7 @@ content.get('/words', async (c) => {
     ...(active !== 'all' ? { is_active: active === 'true' } : {}),
     ...(has_forms === 'true' ? { forms: { some: {} } } : {}),
     ...(needs_audio === 'true' ? { audio_ok: true, audio_url: null } : {}),
+    ...(has_image === 'true' ? { image_url: { not: null } } : {}),
   };
 
   // Optional preference clauses, each dropped in turn by the relaxation ladder

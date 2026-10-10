@@ -236,6 +236,23 @@ describe('GET /words — grade_band filter', () => {
       expect.objectContaining({ audio_ok: true, audio_url: null }),
     );
   });
+
+  it('omits the has_image clause when absent', async () => {
+    const res = await get('/words');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).not.toHaveProperty('image_url');
+  });
+
+  it('has_image=true filters to words with an image_url, ignoring image_ok', async () => {
+    const res = await get('/words?has_image=true');
+    expect(res.status).toBe(200);
+    const call = mockFindMany.mock.calls[0][0];
+    expect(call.where).toEqual(
+      expect.objectContaining({ image_url: { not: null } }),
+    );
+    expect(call.where).not.toHaveProperty('image_ok');
+  });
 });
 
 // ─── GET /words/facets — grades flattened from grade_band ────────────────────
