@@ -45,10 +45,18 @@ function alignmentClass(alignment: TextAlignment | undefined): string | undefine
 const BODY_TEXT_CLASS = "text-lg leading-[31px] text-card-ink";
 const HEADING_TEXT_CLASS = "font-bold text-article-heading";
 
+// First-line indent (ADR 0006): the site owns the width — about two characters.
+const FIRST_LINE_INDENT_CLASS = "indent-[2em]";
+
 function Paragraph({ block }: { block: ParagraphBlock }) {
   return (
     <p
-      className={cn(BODY_TEXT_CLASS, alignmentClass(block.alignment), backgroundClass(block.background))}
+      className={cn(
+        BODY_TEXT_CLASS,
+        alignmentClass(block.alignment),
+        block.indent && FIRST_LINE_INDENT_CLASS,
+        backgroundClass(block.background),
+      )}
       style={backgroundStyle(block.background)}
     >
       <InlineContent spans={block.content} />

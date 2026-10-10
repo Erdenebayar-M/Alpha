@@ -111,13 +111,23 @@ export const inlineSpanSchema = z
     }
   });
 
-export const paragraphBlockSchema = z.object({
-  id: z.string().min(1),
-  type: z.literal('paragraph'),
-  content: z.array(inlineSpanSchema).min(1),
-  background: colorValueSchema.optional(),
-  alignment: textAlignmentSchema.optional(),
-});
+// `indent` is the First-line indent (ADR 0006): on or off, stored only when
+// on, like `alignment` never stores left. Only a left-aligned paragraph may
+// carry it; every other Block kind declares it `never`.
+export const paragraphBlockSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.literal('paragraph'),
+    content: z.array(inlineSpanSchema).min(1),
+    background: colorValueSchema.optional(),
+    alignment: textAlignmentSchema.optional(),
+    indent: z.literal(true).optional(),
+  })
+  .superRefine((block, ctx) => {
+    if (block.indent && block.alignment !== undefined) {
+      ctx.addIssue({ code: 'custom', message: 'Only a left-aligned paragraph can have a first-line indent', path: ['indent'] });
+    }
+  });
 
 export const headingBlockSchema = z.object({
   id: z.string().min(1),
@@ -127,6 +137,7 @@ export const headingBlockSchema = z.object({
   color: colorValueSchema.optional(),
   background: colorValueSchema.optional(),
   alignment: textAlignmentSchema.optional(),
+  indent: z.never().optional(),
 });
 
 // One level only: an item is an array of inline spans, never another list —
@@ -164,6 +175,7 @@ export const listBlockSchema = z.object({
   startsAt: z.number().int().positive().optional(),
   background: colorValueSchema.optional(),
   alignment: textAlignmentSchema.optional(),
+  indent: z.never().optional(),
 });
 
 export const quoteBlockSchema = z.object({
@@ -173,6 +185,7 @@ export const quoteBlockSchema = z.object({
   attribution: z.string().min(1).optional(),
   background: colorValueSchema.optional(),
   alignment: textAlignmentSchema.optional(),
+  indent: z.never().optional(),
 });
 
 export const calloutBlockSchema = z.object({
@@ -181,6 +194,7 @@ export const calloutBlockSchema = z.object({
   content: z.array(inlineSpanSchema).min(1),
   background: colorValueSchema.optional(),
   alignment: textAlignmentSchema.optional(),
+  indent: z.never().optional(),
 });
 
 // `background` is declared (rather than left undeclared and silently
@@ -192,6 +206,7 @@ export const dividerBlockSchema = z.object({
   type: z.literal('divider'),
   background: z.never().optional(),
   alignment: z.never().optional(),
+  indent: z.never().optional(),
 });
 
 export const IMAGE_SOURCES = ['upload', 'link'] as const;
@@ -222,6 +237,7 @@ export const imageBlockSchema = z
     height: z.number().int().positive().optional(),
     background: z.never().optional(),
     alignment: z.never().optional(),
+    indent: z.never().optional(),
   })
   .superRefine((block, ctx) => {
     if (block.source === 'link' && !isHttpUrl(block.url)) {
@@ -258,6 +274,7 @@ export const linkCardBlockSchema = z.object({
   image: linkCardImageSchema.optional(),
   background: z.never().optional(),
   alignment: z.never().optional(),
+  indent: z.never().optional(),
 });
 
 // ── Video links ──────────────────────────────────────────────────────────
@@ -351,6 +368,7 @@ export const videoBlockSchema = z
     video_id: z.string().min(1).optional(),
     background: z.never().optional(),
     alignment: z.never().optional(),
+    indent: z.never().optional(),
   })
   .transform((val, ctx) => {
     if (val.url !== undefined) {
