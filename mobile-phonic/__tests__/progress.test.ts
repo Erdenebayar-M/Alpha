@@ -57,6 +57,19 @@ describe('progress store', () => {
     expect(useProgress.getState().profiles[0]).toMatchObject({ id: p.id, avatar: 'narhan', stickers: [], stars: {} });
   });
 
+  it('records a Game result on the active Profile only', () => {
+    const a = useProgress.getState().addProfile('orto')!;
+    const b = useProgress.getState().addProfile('buddy')!;
+    useProgress.getState().selectProfile(a.id);
+    const level = { id: 'l1', newSound: 'a', sticker: 's', games: [{ kind: 'trace' as const, id: 'g', sound: 'a' }] };
+    useProgress.getState().recordGameResult(level, 'g', { mistakes: 0, answers: [{ sound: 'a', correct: true }] });
+    const [pa, pb] = useProgress.getState().profiles;
+    expect(pa.stars.l1.g).toBe(3);
+    expect(pa.stickers).toEqual(['s']);
+    expect(pb.id).toBe(b.id);
+    expect(pb.stars).toEqual({});
+  });
+
   it('persists with a schema version', () => {
     expect(useProgress.persist.getOptions().version).toBe(SCHEMA_VERSION);
   });
