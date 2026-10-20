@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Orto",
+    "slug": "mobile-phonic",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "orto-phonic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#BFE6FF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.erdenebayar.phonic",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-audio", { "microphonePermission": false }],
+      "expo-image",
+      "expo-font"
+    ]
+  }
+}
