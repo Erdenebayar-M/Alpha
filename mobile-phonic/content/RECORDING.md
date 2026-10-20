@@ -20,6 +20,13 @@ continuous consonants ~1 s.
 | `ph_oe` | ө | `ph_s` | с (ссс) |
 | `ph_ue` | ү | | |
 
+## A2. Long vowels & diphthongs — World 3 (later, not needed for v1)
+
+Defined now so the app reads "аа" as one sound. Record when World 3 starts.
+
+`ph_aa` аа · `ph_oo` оо · `ph_uu` уу · `ph_ee` ээ · `ph_oeoe` өө · `ph_ueue` үү ·
+`ph_ii` ий · `ph_ai` ай · `ph_oi` ой · `ph_ui` уй · `ph_uei` үй · `ph_ei` эй
+
 ## B. Game instructions (5)
 
 | ID | Line |

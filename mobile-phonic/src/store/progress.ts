@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { Level } from '../content/schema';
+import { applyGameResult, type GameResult } from '../engine/progress';
 import { mmkvStorage } from './storage';
 
 // Bump on any breaking change to the persisted shape and add a `migrate` step (ADR 0001).
@@ -39,6 +41,8 @@ interface ProgressState {
   selectProfile: (id: string | null) => void;
   resetProfile: (id: string) => void;
   setSoundOn: (on: boolean) => void;
+  /** Records a finished Game for the active Profile (Stars, Sound accuracy, Sticker). */
+  recordGameResult: (level: Level, gameId: string, result: GameResult) => void;
 }
 
 const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -75,6 +79,12 @@ export const useProgress = create<ProgressState>()(
           profiles: s.profiles.map((p) => (p.id === id ? { ...p, ...emptyProgress() } : p)),
         })),
       setSoundOn: (on) => set((s) => ({ settings: { ...s.settings, soundOn: on } })),
+      recordGameResult: (level, gameId, result) =>
+        set((s) => ({
+          profiles: s.profiles.map((p) =>
+            p.id === s.activeProfileId ? applyGameResult(p, level, gameId, result) : p,
+          ),
+        })),
     }),
     { name: 'progress', version: SCHEMA_VERSION, storage: mmkvStorage },
   ),

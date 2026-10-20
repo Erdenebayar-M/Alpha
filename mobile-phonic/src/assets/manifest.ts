@@ -22,22 +22,25 @@ export const fontFiles = {
   [fonts.black]: require('../../assets/fonts/Nunito_900Black.ttf'),
 };
 
-export const images = {
-  chr_orto: { kind: 'file', source: require('../../assets/characters/orto.png') },
+const ORTO = require('../../assets/characters/orto.png');
+const todoArt = (note: string): ImageAsset => ({ kind: 'todo-art', note, fallback: ORTO });
+
+const characterImages = {
+  chr_orto: { kind: 'file', source: ORTO },
   chr_narhan: { kind: 'file', source: require('../../assets/characters/narhan.png') },
   chr_sprout: { kind: 'file', source: require('../../assets/characters/sprout.png') },
   chr_buddy: { kind: 'file', source: require('../../assets/characters/buddy.png') },
-  chr_orto_cheer: {
-    kind: 'todo-art',
-    note: 'Orto cheering, arms up — check Figma ahVCzzSLccRd0vOVLFiEKg',
-    fallback: require('../../assets/characters/orto.png'),
-  },
-  chr_orto_point: {
-    kind: 'todo-art',
-    note: 'Orto pointing at the play area',
-    fallback: require('../../assets/characters/orto.png'),
-  },
+  chr_orto_cheer: todoArt('Orto cheering, arms up — check Figma ahVCzzSLccRd0vOVLFiEKg'),
+  chr_orto_point: todoArt('Orto pointing at the play area'),
 } satisfies Record<string, ImageAsset>;
+
+// One Sticker per World 1 Level (st_w1_1 … st_w1_11): Mongolian animals/objects, art TODO.
+const stickerImages: Record<string, ImageAsset> = Object.fromEntries(
+  Array.from({ length: 11 }, (_, i) => [`st_w1_${i + 1}`, todoArt(`World 1 Level ${i + 1} sticker`)]),
+);
+
+/** Every image by Asset ID. Content (Stickers, word pictures) refers to these by string id. */
+export const images: Record<string, ImageAsset> = { ...characterImages, ...stickerImages };
 
 // IDs match content/RECORDING.md exactly. Sounds are spoken as sounds, not letter names.
 export const audio = {
@@ -52,6 +55,19 @@ export const audio = {
   ph_n: say('ннн'),
   ph_l: say('ллл'),
   ph_s: say('ссс'),
+  // World 3 long vowels and diphthongs: defined now so "маа" is never read as м-а-а.
+  ph_aa: say('аа'),
+  ph_oo: say('оо'),
+  ph_uu: say('уу'),
+  ph_ee: say('ээ'),
+  ph_oeoe: say('өө'),
+  ph_ueue: say('үү'),
+  ph_ii: say('ий'),
+  ph_ai: say('ай'),
+  ph_oi: say('ой'),
+  ph_ui: say('уй'),
+  ph_uei: say('үй'),
+  ph_ei: say('эй'),
 
   ins_hear_tap: say('Сонсоод, зөв үсгийг нь дараарай.'),
   ins_trace: say('Хуруугаараа үсгээ зураарай.'),
@@ -72,15 +88,36 @@ export const audio = {
   fl_level_done: say('Түвшин дууслаа!'),
   fl_sticker: say('Шинэ наалт авлаа!'),
   fl_world_done: say('Энэ ертөнцийг бүтэн дуусгалаа!'),
+
+  // World 1 draft words (content/RECORDING.md section F once approved).
+  w_am: say('ам'),
+  w_an: say('ан'),
+  w_nom: say('ном'),
+  w_num: say('нум'),
+  w_mal: say('мал'),
+  w_lam: say('лам'),
+  w_selem: say('сэлэм'),
+  w_us: say('ус'),
+  w_sam: say('сам'),
+  w_nas: say('нас'),
+  w_sum: say('сум'),
+  w_il: say('ил'),
+  w_mos: say('мөс'),
+  w_suem: say('сүм'),
+  w_ues: say('үс'),
 } satisfies Record<string, AudioAsset>;
 
-export type ImageId = keyof typeof images;
+/** Images code refers to directly (characters); content ids are validated strings. */
+export type ImageId = keyof typeof characterImages;
 export type AudioId = keyof typeof audio;
 
-export const imageSource = (id: ImageId): ImageSourcePropType => {
-  const a: ImageAsset = images[id];
-  return a.kind === 'file' ? a.source : a.fallback;
-};
+const sourceOf = (a: ImageAsset): ImageSourcePropType => (a.kind === 'file' ? a.source : a.fallback);
+
+/** Images code names directly — a typo is a type error. */
+export const imageSource = (id: ImageId): ImageSourcePropType => sourceOf(characterImages[id]);
+
+/** Images named by content (Stickers, word pictures); validation guarantees the id exists. */
+export const contentImageSource = (id: string): ImageSourcePropType => sourceOf(images[id] ?? todoArt(`missing ${id}`));
 
 /** Everything still standing in for real assets; the release build must see this empty. */
 export const listPlaceholders = (): string[] => [
