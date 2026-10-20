@@ -17,6 +17,9 @@ Phase 2 of a Mongolian Spelling & Dictation Learning Application — adaptive ed
 
 Alongside the `backend`/`shared` npm workspaces, this repo also contains:
 - `mobile/` — the Expo/React Native learner app.
+- `mobile-phonic/` — "Orto", a standalone offline Expo phonics game for ages
+  ~4–8 (not an npm workspace). See `mobile-phonic/CONTEXT.md` and its
+  `docs/adr/`.
 - `web/` — a standalone Next.js marketing site (not an npm workspace
   member; install/run from inside `web/`). See `web/AGENTS.md`.
 
